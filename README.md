@@ -26,6 +26,12 @@ Machine-readable output is available too:
 PYTHONPATH=src python3 -m repo_scout --format json .
 ```
 
+Ignore extra local files or directories without editing `.gitignore`:
+
+```bash
+PYTHONPATH=src python3 -m repo_scout --ignore "*.log" --ignore private .
+```
+
 Install it locally in editable mode:
 
 ```bash

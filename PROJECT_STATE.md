@@ -9,6 +9,7 @@
 - Package skeleton with an installable `repo-scout` console command.
 - Text and JSON snapshot output.
 - Repository scanning for Git state, expected project documents, file counts by extension, total bytes, and largest files.
+- Repeatable `--ignore` filters for local files or directories that should be excluded from a scan.
 - Unit tests covering scanner behavior and JSON CLI output.
 
 ## How To Run
@@ -20,4 +21,4 @@ python3 -m unittest discover -s tests
 
 ## Next Small Task
 
-Add an `--ignore` option so users can exclude extra local directories or generated files without editing `.gitignore`.
+Add a `--max-files` or `--max-bytes` guard for very large repositories.

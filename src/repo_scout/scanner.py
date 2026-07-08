@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
+import fnmatch
 from pathlib import Path
 import subprocess
 from typing import Any, Iterable
@@ -28,14 +29,17 @@ EXCLUDED_DIRS = {
 }
 
 
-def scan_project(path: str | Path) -> dict[str, Any]:
+def scan_project(
+    path: str | Path, ignore_patterns: Iterable[str] = ()
+) -> dict[str, Any]:
     root = Path(path).expanduser().resolve()
     if not root.exists():
         raise FileNotFoundError(f"{root} does not exist")
     if not root.is_dir():
         raise NotADirectoryError(f"{root} is not a directory")
 
-    files = _discover_files(root)
+    normalized_ignores = _normalize_ignore_patterns(ignore_patterns)
+    files = _discover_files(root, normalized_ignores)
     entries = [_file_entry(root, file_path) for file_path in files]
     by_extension = Counter(_extension_label(Path(entry["path"])) for entry in entries)
 
@@ -43,6 +47,7 @@ def scan_project(path: str | Path) -> dict[str, Any]:
         "root": str(root),
         "git": _git_summary(root),
         "docs": _doc_summary(root),
+        "filters": {"ignored": list(normalized_ignores)},
         "files": {
             "total": len(entries),
             "total_bytes": sum(entry["bytes"] for entry in entries),
@@ -54,15 +59,21 @@ def scan_project(path: str | Path) -> dict[str, Any]:
     }
 
 
-def _discover_files(root: Path) -> list[Path]:
+def _discover_files(root: Path, ignore_patterns: tuple[str, ...]) -> list[Path]:
     git_files = _git_list_files(root)
     if git_files is not None:
-        return sorted(
-            (root / relative_path for relative_path in git_files),
-            key=lambda path: path.as_posix(),
-        )
+        candidates = (root / relative_path for relative_path in git_files)
+    else:
+        candidates = _walk_files(root)
 
-    return sorted(_walk_files(root), key=lambda path: path.as_posix())
+    return sorted(
+        (
+            path
+            for path in candidates
+            if not _matches_ignore(path.relative_to(root), ignore_patterns)
+        ),
+        key=lambda path: path.as_posix(),
+    )
 
 
 def _walk_files(root: Path) -> Iterable[Path]:
@@ -98,6 +109,32 @@ def _file_entry(root: Path, file_path: Path) -> dict[str, Any]:
 def _extension_label(path: Path) -> str:
     suffix = path.suffix.lower()
     return suffix if suffix else "[no extension]"
+
+
+def _normalize_ignore_patterns(ignore_patterns: Iterable[str]) -> tuple[str, ...]:
+    return tuple(
+        pattern.strip().replace("\\", "/")
+        for pattern in ignore_patterns
+        if pattern.strip()
+    )
+
+
+def _matches_ignore(relative_path: Path, ignore_patterns: tuple[str, ...]) -> bool:
+    path = relative_path.as_posix()
+    parts = relative_path.parts
+
+    for pattern in ignore_patterns:
+        normalized = pattern.rstrip("/")
+        if fnmatch.fnmatchcase(path, normalized):
+            return True
+        if "/" not in normalized and any(
+            fnmatch.fnmatchcase(part, normalized) for part in parts
+        ):
+            return True
+        if path == normalized or path.startswith(f"{normalized}/"):
+            return True
+
+    return False
 
 
 def _doc_summary(root: Path) -> dict[str, list[str]]:
@@ -152,4 +189,3 @@ def _git_lines(root: Path, *args: str) -> list[str] | None:
         return None
 
     return completed.stdout.splitlines()
-

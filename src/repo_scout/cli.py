@@ -25,6 +25,15 @@ def build_parser() -> argparse.ArgumentParser:
         default="text",
         help="Output format. Defaults to text.",
     )
+    parser.add_argument(
+        "--ignore",
+        action="append",
+        default=[],
+        metavar="PATTERN",
+        help=(
+            "Ignore files or directories matching PATTERN. Can be used more than once."
+        ),
+    )
     return parser
 
 
@@ -33,7 +42,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     try:
-        snapshot = scan_project(args.path)
+        snapshot = scan_project(args.path, ignore_patterns=args.ignore)
     except (FileNotFoundError, NotADirectoryError) as exc:
         print(f"repo-scout: {exc}", file=sys.stderr)
         return 2
@@ -58,6 +67,10 @@ def format_snapshot(snapshot: dict[str, Any]) -> str:
         f"Docs: {_format_docs(docs)}",
         f"Files: {files['total']} scanned, {files['total_bytes']} bytes",
     ]
+
+    ignored = snapshot["filters"]["ignored"]
+    if ignored:
+        lines.append(f"Ignored: {', '.join(ignored)}")
 
     extensions = files["by_extension"]
     if extensions:
@@ -93,4 +106,3 @@ def _format_docs(docs: dict[str, list[str]]) -> str:
     present = len(docs["present"])
     missing = len(docs["missing"])
     return f"{present} present, {missing} missing"
-

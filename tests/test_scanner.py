@@ -33,7 +33,20 @@ class ScanProjectTests(unittest.TestCase):
             self.assertIn("README.md", snapshot["docs"]["present"])
             self.assertIn("CHANGELOG.md", snapshot["docs"]["missing"])
 
+    def test_scan_project_applies_extra_ignore_patterns(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "README.md").write_text("# Example\n", encoding="utf-8")
+            (root / "debug.log").write_text("debug\n", encoding="utf-8")
+            (root / "private").mkdir()
+            (root / "private" / "note.txt").write_text("secret\n", encoding="utf-8")
+
+            snapshot = scan_project(root, ignore_patterns=["*.log", "private"])
+
+            self.assertEqual(snapshot["files"]["total"], 1)
+            self.assertEqual(snapshot["files"]["by_extension"], {".md": 1})
+            self.assertEqual(snapshot["filters"]["ignored"], ["*.log", "private"])
+
 
 if __name__ == "__main__":
     unittest.main()
-

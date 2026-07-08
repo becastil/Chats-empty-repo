@@ -12,3 +12,6 @@ The first version uses only the Python standard library. This keeps installation
 
 The scanner avoids timestamps in its output so tests remain stable and repeated runs are easier to compare.
 
+## 2026-07-08: Use Simple Glob Ignore Patterns
+
+User-supplied ignore filters use standard shell-style glob matching against repository-relative paths and path parts. This keeps `--ignore` understandable without introducing a separate pattern language.
