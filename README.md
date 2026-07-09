@@ -13,6 +13,15 @@ It currently reports:
 
 The tool has no cloud dependencies and does not require API keys.
 
+The repository also includes a small web companion for browsing the workflow and
+switching between representative text and JSON snapshot output. Run its local
+preview with:
+
+```bash
+npm install
+npm run dev
+```
+
 ## Quick Start
 
 Run from a checkout:

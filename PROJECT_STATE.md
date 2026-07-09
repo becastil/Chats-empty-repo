@@ -4,6 +4,8 @@
 
 `repo-scout` is a dependency-free Python CLI that summarizes local repository state for developer handoffs, reviews, and work-session orientation.
 
+The repository also includes a small hosted web companion that explains the CLI and lets visitors switch between sample text and JSON snapshots.
+
 ## Implemented
 
 - Package skeleton with an installable `repo-scout` console command.
@@ -13,6 +15,8 @@
 - `--max-files` guard that stops scans once the filtered file count exceeds a user-supplied limit.
 - Optional `--languages` summary derived from common filenames and file extensions.
 - Unit tests covering scanner behavior and JSON CLI output.
+- Responsive Repo Scout web companion with a server-rendered snapshot lab and accessible format toggle.
+- Sites hosting metadata and a Cloudflare Workers-compatible production build.
 
 ## How To Run
 

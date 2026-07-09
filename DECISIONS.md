@@ -23,3 +23,7 @@ User-supplied ignore filters use standard shell-style glob matching against repo
 ## 2026-07-09: Keep Language Detection Optional and Transparent
 
 Language totals are derived from a small built-in filename and extension map and only appear when `--languages` is requested. Raw extension counts remain available so callers can inspect the underlying evidence, while unknown files are grouped under `Other` instead of being silently omitted.
+
+## 2026-07-09: Add a Static Companion Surface
+
+The CLI remains the source of truth for local scans, while a small static web companion makes the workflow legible to visitors without requiring a checkout, server-side storage, or API credentials. The page uses a representative snapshot and keeps the interactive behavior limited to output-format switching and command copying.

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - 2026-07-09
+
+- Added a responsive Repo Scout web companion with sample Text and JSON snapshot views.
+- Added production build, lint, and rendered HTML coverage for the hosted surface.
+- Added Sites hosting metadata for the deployable web build.
+
 ## 0.1.3 - 2026-07-09
 
 - Added an opt-in `--languages` summary alongside raw extension counts.
