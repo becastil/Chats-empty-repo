@@ -99,6 +99,48 @@ class CliTests(unittest.TestCase):
             self.assertIn("Attention:", stdout.getvalue())
             self.assertIn("README.md is", stdout.getvalue())
 
+    def test_cli_writes_output_and_requires_force_to_replace(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "README.md").write_text("# Example\n", encoding="utf-8")
+            output = root / "report.md"
+
+            stderr = io.StringIO()
+            with redirect_stderr(stderr):
+                first_exit_code = main(
+                    ["--format", "markdown", "--output", str(output), str(root)]
+                )
+
+            first_report = output.read_text(encoding="utf-8")
+            self.assertEqual(first_exit_code, 0)
+            self.assertIn("# Repo Scout Snapshot", first_report)
+            self.assertIn("wrote", stderr.getvalue())
+
+            overwrite_stderr = io.StringIO()
+            with redirect_stderr(overwrite_stderr):
+                second_exit_code = main(
+                    ["--format", "markdown", "--output", str(output), str(root)]
+                )
+
+            self.assertEqual(second_exit_code, 4)
+            self.assertIn("--force", overwrite_stderr.getvalue())
+            self.assertEqual(output.read_text(encoding="utf-8"), first_report)
+
+            with redirect_stderr(io.StringIO()):
+                forced_exit_code = main(
+                    [
+                        "--format",
+                        "json",
+                        "--output",
+                        str(output),
+                        "--force",
+                        str(root),
+                    ]
+                )
+
+            self.assertEqual(forced_exit_code, 0)
+            self.assertEqual(json.loads(output.read_text(encoding="utf-8"))["root"], str(root.resolve()))
+
     def test_markdown_report_shows_custom_attention_threshold(self) -> None:
         with TemporaryDirectory() as tmp:
             root = Path(tmp)

@@ -2,4 +2,4 @@
 
 ## Near Term
 
-- Add a direct `--output` flag for writing reports without shell redirection.
+- Add snapshot schema version metadata for future format changes.

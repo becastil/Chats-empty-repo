@@ -57,6 +57,13 @@ PYTHONPATH=src python3 -m repo_scout --format markdown --compare before.json aft
 Comparison JSON reports numeric deltas, added and removed document entries,
 Git changes, and attention-status changes.
 
+Write reports directly and require `--force` before replacing an existing file:
+
+```bash
+PYTHONPATH=src python3 -m repo_scout --format markdown --output handoff.md .
+PYTHONPATH=src python3 -m repo_scout --format markdown --output handoff.md --force .
+```
+
 Ignore extra local files or directories without editing `.gitignore`:
 
 ```bash

@@ -143,6 +143,49 @@ class ComparisonCliTests(unittest.TestCase):
             self.assertIn("- **Status:** `unchanged`", report)
             self.assertIn("No changes detected.", report)
 
+    def test_cli_can_write_comparison_report_to_output(self) -> None:
+        with TemporaryDirectory() as tmp:
+            snapshot_path = Path(tmp) / "snapshot.json"
+            output_path = Path(tmp) / "comparison.json"
+            snapshot_path.write_text(
+                json.dumps(
+                    snapshot(
+                        total=1,
+                        total_bytes=10,
+                        extensions={".md": 1},
+                        present=["README.md"],
+                        missing=[],
+                        branch="main",
+                        dirty_files=0,
+                        attention_status="clear",
+                        attention_items=0,
+                    )
+                ),
+                encoding="utf-8",
+            )
+
+            from contextlib import redirect_stderr
+            import io
+
+            with redirect_stderr(io.StringIO()):
+                exit_code = main(
+                    [
+                        "--format",
+                        "json",
+                        "--compare",
+                        str(snapshot_path),
+                        str(snapshot_path),
+                        "--output",
+                        str(output_path),
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(
+                json.loads(output_path.read_text(encoding="utf-8"))["status"],
+                "unchanged",
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

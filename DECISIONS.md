@@ -39,3 +39,7 @@ Attention findings are added as a separate status-and-items field so existing sn
 ## 2026-07-09: Compare Saved JSON Snapshots
 
 Snapshot comparison accepts JSON files produced by the existing `--format json` mode. It returns explicit numeric deltas and added or removed entries, keeps the original snapshots untouched, and supports text, JSON, and Markdown output so the same comparison can serve both agents and human handoffs.
+
+## 2026-07-09: Protect Direct Report Writes
+
+`--output` refuses to replace an existing file unless the caller also passes `--force`. This keeps handoff reports from being silently overwritten while retaining an explicit escape hatch for repeatable automation.

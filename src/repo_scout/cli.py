@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from pathlib import Path
 import sys
 from typing import Any, Sequence
 
@@ -11,6 +12,9 @@ from .scanner import (
     ScanLimitExceeded,
     scan_project,
 )
+
+
+OUTPUT_ERROR_EXIT_CODE = 4
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -29,6 +33,16 @@ def build_parser() -> argparse.ArgumentParser:
         nargs=2,
         metavar=("BEFORE", "AFTER"),
         help="Compare two saved JSON snapshots instead of scanning a directory.",
+    )
+    parser.add_argument(
+        "--output",
+        metavar="PATH",
+        help="Write the rendered report to PATH instead of stdout.",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Allow --output to replace an existing file.",
     )
     parser.add_argument(
         "--format",
@@ -73,6 +87,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
+    if args.force and args.output is None:
+        print("repo-scout: --force requires --output", file=sys.stderr)
+        return 2
+
     if args.compare:
         try:
             comparison = compare_snapshot_files(*args.compare)
@@ -81,12 +99,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 2
 
         if args.format == "json":
-            print(json.dumps(comparison, indent=2, sort_keys=True))
+            report = json.dumps(comparison, indent=2, sort_keys=True)
         elif args.format == "markdown":
-            print(format_comparison_markdown(comparison))
+            report = format_comparison_markdown(comparison)
         else:
-            print(format_comparison(comparison))
-        return 0
+            report = format_comparison(comparison)
+        return _emit_report(report, args.output, args.force)
 
     try:
         snapshot = scan_project(
@@ -104,12 +122,35 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 3
 
     if args.format == "json":
-        print(json.dumps(snapshot, indent=2, sort_keys=True))
+        report = json.dumps(snapshot, indent=2, sort_keys=True)
     elif args.format == "markdown":
-        print(format_markdown(snapshot))
+        report = format_markdown(snapshot)
     else:
-        print(format_snapshot(snapshot))
+        report = format_snapshot(snapshot)
 
+    return _emit_report(report, args.output, args.force)
+
+
+def _emit_report(report: str, output: str | None, force: bool) -> int:
+    if output is None:
+        print(report)
+        return 0
+
+    target = Path(output).expanduser()
+    if target.exists() and not force:
+        print(
+            f"repo-scout: output already exists: {target}; pass --force to replace it",
+            file=sys.stderr,
+        )
+        return OUTPUT_ERROR_EXIT_CODE
+
+    try:
+        target.write_text(f"{report.rstrip()}\n", encoding="utf-8")
+    except OSError as exc:
+        print(f"repo-scout: could not write {target}: {exc}", file=sys.stderr)
+        return OUTPUT_ERROR_EXIT_CODE
+
+    print(f"repo-scout: wrote {target}", file=sys.stderr)
     return 0
 
 
