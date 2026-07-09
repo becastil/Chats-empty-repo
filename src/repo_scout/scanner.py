@@ -15,6 +15,8 @@ EXPECTED_DOCS = (
     "DECISIONS.md",
 )
 
+DEFAULT_LARGE_FILE_BYTES = 100_000
+
 EXCLUDED_DIRS = {
     ".git",
     ".mypy_cache",
@@ -92,6 +94,7 @@ def scan_project(
     ignore_patterns: Iterable[str] = (),
     max_files: int | None = None,
     include_languages: bool = False,
+    large_file_bytes: int = DEFAULT_LARGE_FILE_BYTES,
 ) -> dict[str, Any]:
     root = Path(path).expanduser().resolve()
     if not root.exists():
@@ -100,11 +103,15 @@ def scan_project(
         raise NotADirectoryError(f"{root} is not a directory")
     if max_files is not None and max_files < 1:
         raise ValueError("max_files must be a positive integer")
+    if large_file_bytes < 1:
+        raise ValueError("large_file_bytes must be a positive integer")
 
     normalized_ignores = _normalize_ignore_patterns(ignore_patterns)
     files = _discover_files(root, normalized_ignores, max_files)
     entries = [_file_entry(root, file_path) for file_path in files]
     by_extension = Counter(_extension_label(Path(entry["path"])) for entry in entries)
+    git_summary = _git_summary(root)
+    doc_summary = _doc_summary(root)
 
     file_summary = {
         "total": len(entries),
@@ -122,9 +129,16 @@ def scan_project(
 
     return {
         "root": str(root),
-        "git": _git_summary(root),
-        "docs": _doc_summary(root),
-        "filters": {"ignored": list(normalized_ignores), "max_files": max_files},
+        "git": git_summary,
+        "docs": doc_summary,
+        "filters": {
+            "ignored": list(normalized_ignores),
+            "max_files": max_files,
+            "large_file_bytes": large_file_bytes,
+        },
+        "attention": _attention_summary(
+            git_summary, doc_summary, entries, large_file_bytes
+        ),
         "files": file_summary,
     }
 
@@ -225,6 +239,60 @@ def _doc_summary(root: Path) -> dict[str, list[str]]:
     present = [doc for doc in EXPECTED_DOCS if (root / doc).is_file()]
     missing = [doc for doc in EXPECTED_DOCS if doc not in present]
     return {"present": present, "missing": missing}
+
+
+def _attention_summary(
+    git: dict[str, Any],
+    docs: dict[str, list[str]],
+    entries: list[dict[str, Any]],
+    large_file_bytes: int,
+) -> dict[str, Any]:
+    items: list[dict[str, Any]] = []
+
+    dirty_files = git["dirty_files"]
+    if dirty_files:
+        suffix = "file" if dirty_files == 1 else "files"
+        items.append(
+            {
+                "kind": "dirty_git",
+                "count": dirty_files,
+                "message": f"Git has {dirty_files} changed {suffix}.",
+            }
+        )
+
+    missing_docs = docs["missing"]
+    if missing_docs:
+        items.append(
+            {
+                "kind": "missing_docs",
+                "paths": missing_docs,
+                "message": (
+                    "Missing project documents: "
+                    + ", ".join(missing_docs)
+                    + "."
+                ),
+            }
+        )
+
+    large_entries = sorted(
+        (entry for entry in entries if entry["bytes"] >= large_file_bytes),
+        key=lambda entry: (-entry["bytes"], entry["path"]),
+    )
+    for entry in large_entries[:5]:
+        items.append(
+            {
+                "kind": "large_file",
+                "path": entry["path"],
+                "bytes": entry["bytes"],
+                "threshold_bytes": large_file_bytes,
+                "message": (
+                    f"{entry['path']} is {entry['bytes']} bytes "
+                    f"(threshold: {large_file_bytes})."
+                ),
+            }
+        )
+
+    return {"status": "needs-attention" if items else "clear", "items": items}
 
 
 def _git_summary(root: Path) -> dict[str, Any]:

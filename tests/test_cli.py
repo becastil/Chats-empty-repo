@@ -75,12 +75,43 @@ class CliTests(unittest.TestCase):
             self.assertIn("# Repo Scout Snapshot", report)
             self.assertIn("## Project Documents", report)
             self.assertIn("- Missing:", report)
+            self.assertIn("## Attention Needed", report)
+            self.assertIn("Missing project documents:", report)
             self.assertIn("## Extensions", report)
             self.assertIn("| `.py` | 1 |", report)
             self.assertIn("## Languages", report)
             self.assertIn("| Python | 1 |", report)
             self.assertIn("- Ignored: `*.log`", report)
             self.assertNotIn("debug.log", report)
+
+    def test_cli_can_customize_large_file_attention_threshold(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "README.md").write_text("# Example\n", encoding="utf-8")
+
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                exit_code = main(
+                    ["--large-file-bytes", "1", str(root)]
+                )
+
+            self.assertEqual(exit_code, 0)
+            self.assertIn("Attention:", stdout.getvalue())
+            self.assertIn("README.md is", stdout.getvalue())
+
+    def test_markdown_report_shows_custom_attention_threshold(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "README.md").write_text("# Example\n", encoding="utf-8")
+
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                exit_code = main(
+                    ["--format", "markdown", "--large-file-bytes", "1", str(root)]
+                )
+
+            self.assertEqual(exit_code, 0)
+            self.assertIn("- Large-file threshold: 1 bytes", stdout.getvalue())
 
     def test_cli_applies_repeated_ignore_patterns(self) -> None:
         with TemporaryDirectory() as tmp:

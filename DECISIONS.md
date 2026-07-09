@@ -31,3 +31,7 @@ The CLI remains the source of truth for local scans, while a small static web co
 ## 2026-07-09: Make Markdown a First-Class Output Format
 
 Markdown output is generated from the same deterministic snapshot used by text and JSON modes. It favors copy-pasteable summary bullets and tables for handoffs and pull requests while preserving JSON as the machine-readable contract.
+
+## 2026-07-09: Keep Attention Checks Additive and Tunable
+
+Attention findings are added as a separate status-and-items field so existing snapshot consumers can ignore them safely. Large-file warnings use a documented 100,000-byte default and a CLI override because repository size expectations vary by project.

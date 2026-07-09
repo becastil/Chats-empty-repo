@@ -5,7 +5,11 @@ import json
 import sys
 from typing import Any, Sequence
 
-from .scanner import ScanLimitExceeded, scan_project
+from .scanner import (
+    DEFAULT_LARGE_FILE_BYTES,
+    ScanLimitExceeded,
+    scan_project,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -41,6 +45,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="Stop scanning if more than COUNT files match the scan filters.",
     )
     parser.add_argument(
+        "--large-file-bytes",
+        type=_positive_int,
+        default=DEFAULT_LARGE_FILE_BYTES,
+        metavar="BYTES",
+        help=(
+            "Flag files at or above BYTES in the attention summary. "
+            f"Defaults to {DEFAULT_LARGE_FILE_BYTES}."
+        ),
+    )
+    parser.add_argument(
         "--languages",
         action="store_true",
         help="Include a best-effort file count grouped by language name.",
@@ -58,6 +72,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             ignore_patterns=args.ignore,
             max_files=args.max_files,
             include_languages=args.languages,
+            large_file_bytes=args.large_file_bytes,
         )
     except (FileNotFoundError, NotADirectoryError) as exc:
         print(f"repo-scout: {exc}", file=sys.stderr)
@@ -97,6 +112,8 @@ def format_snapshot(snapshot: dict[str, Any]) -> str:
     if max_files is not None:
         lines.append(f"Max files: {max_files}")
 
+    _append_text_attention(lines, snapshot["attention"])
+
     extensions = files["by_extension"]
     if extensions:
         lines.append("Extensions:")
@@ -122,6 +139,16 @@ def format_snapshot(snapshot: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _append_text_attention(lines: list[str], attention: dict[str, Any]) -> None:
+    items = attention["items"]
+    if not items:
+        lines.append("Attention: none")
+        return
+
+    lines.append("Attention:")
+    lines.extend(f"  ! {item['message']}" for item in items)
+
+
 def format_markdown(snapshot: dict[str, Any]) -> str:
     git = snapshot["git"]
     docs = snapshot["docs"]
@@ -144,7 +171,11 @@ def format_markdown(snapshot: dict[str, Any]) -> str:
         if docs["missing"]:
             lines.append(f"- Missing: {', '.join(_markdown_code(doc) for doc in docs['missing'])}")
 
-    if filters["ignored"] or filters["max_files"] is not None:
+    if (
+        filters["ignored"]
+        or filters["max_files"] is not None
+        or filters["large_file_bytes"] != DEFAULT_LARGE_FILE_BYTES
+    ):
         lines.extend(["", "## Scan Filters"])
         if filters["ignored"]:
             lines.append(
@@ -152,6 +183,15 @@ def format_markdown(snapshot: dict[str, Any]) -> str:
             )
         if filters["max_files"] is not None:
             lines.append(f"- Max files: {filters['max_files']}")
+        if filters["large_file_bytes"] != DEFAULT_LARGE_FILE_BYTES:
+            lines.append(f"- Large-file threshold: {filters['large_file_bytes']} bytes")
+
+    lines.extend(["", "## Attention Needed"])
+    attention_items = snapshot["attention"]["items"]
+    if attention_items:
+        lines.extend(f"- {item['message']}" for item in attention_items)
+    else:
+        lines.append("- None detected.")
 
     extensions = files["by_extension"]
     if extensions:

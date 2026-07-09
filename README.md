@@ -9,6 +9,7 @@ It currently reports:
 - Total scanned files and bytes
 - File counts by extension
 - Optional best-effort file counts by language name
+- Attention summary for dirty Git state, missing docs, and large files
 - Largest files in the scanned tree
 
 The tool has no cloud dependencies and does not require API keys.
@@ -65,6 +66,14 @@ PYTHONPATH=src python3 -m repo_scout --languages .
 
 Language detection uses common filenames and file extensions. Unrecognized files are
 grouped under `Other`.
+
+Show the attention summary with a custom large-file threshold:
+
+```bash
+PYTHONPATH=src python3 -m repo_scout --format markdown --large-file-bytes 250000 .
+```
+
+The default threshold is 100,000 bytes.
 
 Install it locally in editable mode:
 

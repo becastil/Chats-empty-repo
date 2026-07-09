@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import sys
+import subprocess
 from tempfile import TemporaryDirectory
 import unittest
 
@@ -31,6 +32,10 @@ class ScanProjectTests(unittest.TestCase):
             self.assertEqual(snapshot["files"]["by_extension"][".toml"], 1)
             self.assertEqual(snapshot["files"]["by_extension"]["[no extension]"], 1)
             self.assertNotIn("by_language", snapshot["files"])
+            self.assertEqual(snapshot["attention"]["status"], "needs-attention")
+            self.assertEqual(
+                snapshot["attention"]["items"][0]["kind"], "missing_docs"
+            )
             self.assertIn("README.md", snapshot["docs"]["present"])
             self.assertIn("CHANGELOG.md", snapshot["docs"]["missing"])
 
@@ -81,6 +86,35 @@ class ScanProjectTests(unittest.TestCase):
 
             self.assertEqual(snapshot["files"]["total"], 1)
             self.assertEqual(snapshot["filters"]["max_files"], 1)
+
+    def test_scan_project_reports_large_files_at_threshold(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "small.txt").write_text("small", encoding="utf-8")
+            (root / "large.txt").write_text("large file", encoding="utf-8")
+
+            snapshot = scan_project(root, large_file_bytes=6)
+
+            large_items = [
+                item
+                for item in snapshot["attention"]["items"]
+                if item["kind"] == "large_file"
+            ]
+            self.assertEqual([item["path"] for item in large_items], ["large.txt"])
+            self.assertEqual(large_items[0]["threshold_bytes"], 6)
+
+    def test_scan_project_reports_dirty_git_state(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            subprocess.run(
+                ["git", "init", "-q", str(root)], check=True, capture_output=True
+            )
+            (root / "README.md").write_text("# Example\n", encoding="utf-8")
+
+            snapshot = scan_project(root)
+
+            self.assertEqual(snapshot["git"]["dirty_files"], 1)
+            self.assertEqual(snapshot["attention"]["items"][0]["kind"], "dirty_git")
 
 
 if __name__ == "__main__":
