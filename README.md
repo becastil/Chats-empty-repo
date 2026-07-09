@@ -36,6 +36,15 @@ Machine-readable output is available too:
 PYTHONPATH=src python3 -m repo_scout --format json .
 ```
 
+Create a handoff or pull-request-ready report:
+
+```bash
+PYTHONPATH=src python3 -m repo_scout --format markdown --languages .
+```
+
+Markdown output includes the summary, project document status, active filters,
+file composition tables, and largest files.
+
 Ignore extra local files or directories without editing `.gitignore`:
 
 ```bash

@@ -1,10 +1,12 @@
 # Changelog
 
-## Unreleased - 2026-07-09
+## 0.1.4 - 2026-07-09
 
 - Added a responsive Repo Scout web companion with sample Text and JSON snapshot views.
 - Added production build, lint, and rendered HTML coverage for the hosted surface.
 - Added Sites hosting metadata for the deployable web build.
+- Added `--format markdown` for handoff notes and pull-request-ready reports.
+- Added Markdown report coverage for filters, documents, languages, and largest files.
 
 ## 0.1.3 - 2026-07-09
 

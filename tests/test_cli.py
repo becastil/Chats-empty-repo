@@ -49,6 +49,39 @@ class CliTests(unittest.TestCase):
                 {"Markdown": 1, "Python": 1},
             )
 
+    def test_cli_can_emit_markdown_handoff_report(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "README.md").write_text("# Example\n", encoding="utf-8")
+            (root / "app.py").write_text("print('hi')\n", encoding="utf-8")
+            (root / "debug.log").write_text("noisy\n", encoding="utf-8")
+
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        "--format",
+                        "markdown",
+                        "--languages",
+                        "--ignore",
+                        "*.log",
+                        str(root),
+                    ]
+                )
+
+            report = stdout.getvalue()
+            self.assertEqual(exit_code, 0)
+            self.assertIn(f"- **Root:** `{root.resolve()}`", report)
+            self.assertIn("# Repo Scout Snapshot", report)
+            self.assertIn("## Project Documents", report)
+            self.assertIn("- Missing:", report)
+            self.assertIn("## Extensions", report)
+            self.assertIn("| `.py` | 1 |", report)
+            self.assertIn("## Languages", report)
+            self.assertIn("| Python | 1 |", report)
+            self.assertIn("- Ignored: `*.log`", report)
+            self.assertNotIn("debug.log", report)
+
     def test_cli_applies_repeated_ignore_patterns(self) -> None:
         with TemporaryDirectory() as tmp:
             root = Path(tmp)

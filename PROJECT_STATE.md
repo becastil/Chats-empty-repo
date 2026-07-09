@@ -14,6 +14,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 - Repeatable `--ignore` filters for local files or directories that should be excluded from a scan.
 - `--max-files` guard that stops scans once the filtered file count exceeds a user-supplied limit.
 - Optional `--languages` summary derived from common filenames and file extensions.
+- Markdown handoff reports with summary bullets and stable file tables.
 - Unit tests covering scanner behavior and JSON CLI output.
 - Responsive Repo Scout web companion with a server-rendered snapshot lab and accessible format toggle.
 - Sites hosting metadata and a Cloudflare Workers-compatible production build.
@@ -27,4 +28,4 @@ python3 -m unittest discover -s tests
 
 ## Next Small Task
 
-Add Markdown report output for handoff notes and pull request descriptions.
+Add a compact "attention needed" section for missing docs, oversized files, or dirty Git state.

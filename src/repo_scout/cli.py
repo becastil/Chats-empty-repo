@@ -21,7 +21,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--format",
-        choices=("text", "json"),
+        choices=("text", "json", "markdown"),
         default="text",
         help="Output format. Defaults to text.",
     )
@@ -68,6 +68,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.format == "json":
         print(json.dumps(snapshot, indent=2, sort_keys=True))
+    elif args.format == "markdown":
+        print(format_markdown(snapshot))
     else:
         print(format_snapshot(snapshot))
 
@@ -118,6 +120,77 @@ def format_snapshot(snapshot: dict[str, Any]) -> str:
             lines.append(f"  {entry['path']} ({entry['bytes']} bytes)")
 
     return "\n".join(lines)
+
+
+def format_markdown(snapshot: dict[str, Any]) -> str:
+    git = snapshot["git"]
+    docs = snapshot["docs"]
+    files = snapshot["files"]
+    filters = snapshot["filters"]
+
+    lines = [
+        "# Repo Scout Snapshot",
+        "",
+        f"- **Root:** {_markdown_code(snapshot['root'])}",
+        f"- **Git:** {_markdown_code(_format_git(git))}",
+        f"- **Docs:** {_format_docs(docs)}",
+        f"- **Files:** {files['total']} scanned, {files['total_bytes']} bytes",
+    ]
+
+    if docs["present"] or docs["missing"]:
+        lines.extend(["", "## Project Documents"])
+        if docs["present"]:
+            lines.append(f"- Present: {', '.join(_markdown_code(doc) for doc in docs['present'])}")
+        if docs["missing"]:
+            lines.append(f"- Missing: {', '.join(_markdown_code(doc) for doc in docs['missing'])}")
+
+    if filters["ignored"] or filters["max_files"] is not None:
+        lines.extend(["", "## Scan Filters"])
+        if filters["ignored"]:
+            lines.append(
+                f"- Ignored: {', '.join(_markdown_code(pattern) for pattern in filters['ignored'])}"
+            )
+        if filters["max_files"] is not None:
+            lines.append(f"- Max files: {filters['max_files']}")
+
+    extensions = files["by_extension"]
+    if extensions:
+        lines.extend(["", "## Extensions", "", "| Extension | Files |", "| --- | ---: |"])
+        lines.extend(
+            f"| {_markdown_code(extension)} | {count} |"
+            for extension, count in sorted(
+                extensions.items(), key=lambda item: (-item[1], item[0])
+            )
+        )
+
+    languages = files.get("by_language")
+    if languages:
+        lines.extend(["", "## Languages", "", "| Language | Files |", "| --- | ---: |"])
+        lines.extend(
+            f"| {_markdown_cell(language)} | {count} |"
+            for language, count in sorted(
+                languages.items(), key=lambda item: (-item[1], item[0])
+            )
+        )
+
+    largest_files = files["largest"]
+    if largest_files:
+        lines.extend(["", "## Largest Files", "", "| Path | Bytes |", "| --- | ---: |"])
+        lines.extend(
+            f"| {_markdown_code(entry['path'])} | {entry['bytes']} |"
+            for entry in largest_files
+        )
+
+    return "\n".join(lines)
+
+
+def _markdown_code(value: str) -> str:
+    escaped = value.replace("`", "\\`")
+    return f"`{escaped}`"
+
+
+def _markdown_cell(value: str) -> str:
+    return value.replace("|", "\\|").replace("\n", " ")
 
 
 def _format_git(git: dict[str, Any]) -> str:
