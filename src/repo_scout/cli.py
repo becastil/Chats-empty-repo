@@ -5,7 +5,7 @@ import json
 import sys
 from typing import Any, Sequence
 
-from .scanner import scan_project
+from .scanner import ScanLimitExceeded, scan_project
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -34,6 +34,12 @@ def build_parser() -> argparse.ArgumentParser:
             "Ignore files or directories matching PATTERN. Can be used more than once."
         ),
     )
+    parser.add_argument(
+        "--max-files",
+        type=_positive_int,
+        metavar="COUNT",
+        help="Stop scanning if more than COUNT files match the scan filters.",
+    )
     return parser
 
 
@@ -42,10 +48,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     try:
-        snapshot = scan_project(args.path, ignore_patterns=args.ignore)
+        snapshot = scan_project(
+            args.path,
+            ignore_patterns=args.ignore,
+            max_files=args.max_files,
+        )
     except (FileNotFoundError, NotADirectoryError) as exc:
         print(f"repo-scout: {exc}", file=sys.stderr)
         return 2
+    except ScanLimitExceeded as exc:
+        print(f"repo-scout: {exc}", file=sys.stderr)
+        return 3
 
     if args.format == "json":
         print(json.dumps(snapshot, indent=2, sort_keys=True))
@@ -71,6 +84,10 @@ def format_snapshot(snapshot: dict[str, Any]) -> str:
     ignored = snapshot["filters"]["ignored"]
     if ignored:
         lines.append(f"Ignored: {', '.join(ignored)}")
+
+    max_files = snapshot["filters"]["max_files"]
+    if max_files is not None:
+        lines.append(f"Max files: {max_files}")
 
     extensions = files["by_extension"]
     if extensions:
@@ -106,3 +123,14 @@ def _format_docs(docs: dict[str, list[str]]) -> str:
     present = len(docs["present"])
     missing = len(docs["missing"])
     return f"{present} present, {missing} missing"
+
+
+def _positive_int(value: str) -> int:
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("must be a positive integer") from exc
+
+    if parsed < 1:
+        raise argparse.ArgumentTypeError("must be a positive integer")
+    return parsed

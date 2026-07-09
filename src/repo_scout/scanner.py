@@ -29,17 +29,25 @@ EXCLUDED_DIRS = {
 }
 
 
+class ScanLimitExceeded(RuntimeError):
+    """Raised when a scan exceeds a user-supplied safety limit."""
+
+
 def scan_project(
-    path: str | Path, ignore_patterns: Iterable[str] = ()
+    path: str | Path,
+    ignore_patterns: Iterable[str] = (),
+    max_files: int | None = None,
 ) -> dict[str, Any]:
     root = Path(path).expanduser().resolve()
     if not root.exists():
         raise FileNotFoundError(f"{root} does not exist")
     if not root.is_dir():
         raise NotADirectoryError(f"{root} is not a directory")
+    if max_files is not None and max_files < 1:
+        raise ValueError("max_files must be a positive integer")
 
     normalized_ignores = _normalize_ignore_patterns(ignore_patterns)
-    files = _discover_files(root, normalized_ignores)
+    files = _discover_files(root, normalized_ignores, max_files)
     entries = [_file_entry(root, file_path) for file_path in files]
     by_extension = Counter(_extension_label(Path(entry["path"])) for entry in entries)
 
@@ -47,7 +55,7 @@ def scan_project(
         "root": str(root),
         "git": _git_summary(root),
         "docs": _doc_summary(root),
-        "filters": {"ignored": list(normalized_ignores)},
+        "filters": {"ignored": list(normalized_ignores), "max_files": max_files},
         "files": {
             "total": len(entries),
             "total_bytes": sum(entry["bytes"] for entry in entries),
@@ -59,21 +67,28 @@ def scan_project(
     }
 
 
-def _discover_files(root: Path, ignore_patterns: tuple[str, ...]) -> list[Path]:
+def _discover_files(
+    root: Path, ignore_patterns: tuple[str, ...], max_files: int | None
+) -> list[Path]:
     git_files = _git_list_files(root)
     if git_files is not None:
         candidates = (root / relative_path for relative_path in git_files)
     else:
         candidates = _walk_files(root)
 
-    return sorted(
-        (
-            path
-            for path in candidates
-            if not _matches_ignore(path.relative_to(root), ignore_patterns)
-        ),
-        key=lambda path: path.as_posix(),
-    )
+    files = []
+    for path in candidates:
+        if _matches_ignore(path.relative_to(root), ignore_patterns):
+            continue
+
+        files.append(path)
+        if max_files is not None and len(files) > max_files:
+            raise ScanLimitExceeded(
+                f"scan exceeded --max-files={max_files}; "
+                "raise the limit or add --ignore patterns"
+            )
+
+    return sorted(files, key=lambda path: path.as_posix())
 
 
 def _walk_files(root: Path) -> Iterable[Path]:

@@ -32,6 +32,12 @@ Ignore extra local files or directories without editing `.gitignore`:
 PYTHONPATH=src python3 -m repo_scout --ignore "*.log" --ignore private .
 ```
 
+Protect large scans with a file-count limit:
+
+```bash
+PYTHONPATH=src python3 -m repo_scout --max-files 5000 .
+```
+
 Install it locally in editable mode:
 
 ```bash

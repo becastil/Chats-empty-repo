@@ -15,3 +15,7 @@ The scanner avoids timestamps in its output so tests remain stable and repeated 
 ## 2026-07-08: Use Simple Glob Ignore Patterns
 
 User-supplied ignore filters use standard shell-style glob matching against repository-relative paths and path parts. This keeps `--ignore` understandable without introducing a separate pattern language.
+
+## 2026-07-09: Add File Count Guard Before Byte Guard
+
+`--max-files` was added before a byte-size guard because file count is cheap to evaluate during discovery and gives users a clear safety valve for very large repositories.

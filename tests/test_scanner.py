@@ -7,7 +7,7 @@ import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from repo_scout.scanner import scan_project
+from repo_scout.scanner import ScanLimitExceeded, scan_project
 
 
 class ScanProjectTests(unittest.TestCase):
@@ -46,6 +46,25 @@ class ScanProjectTests(unittest.TestCase):
             self.assertEqual(snapshot["files"]["total"], 1)
             self.assertEqual(snapshot["files"]["by_extension"], {".md": 1})
             self.assertEqual(snapshot["filters"]["ignored"], ["*.log", "private"])
+
+    def test_scan_project_raises_when_max_files_is_exceeded(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "one.py").write_text("", encoding="utf-8")
+            (root / "two.py").write_text("", encoding="utf-8")
+
+            with self.assertRaises(ScanLimitExceeded):
+                scan_project(root, max_files=1)
+
+    def test_scan_project_records_max_files_filter_when_allowed(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "README.md").write_text("# Example\n", encoding="utf-8")
+
+            snapshot = scan_project(root, max_files=1)
+
+            self.assertEqual(snapshot["files"]["total"], 1)
+            self.assertEqual(snapshot["filters"]["max_files"], 1)
 
 
 if __name__ == "__main__":

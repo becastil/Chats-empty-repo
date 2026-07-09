@@ -2,7 +2,6 @@
 
 ## Near Term
 
-- Add a `--max-files` or `--max-bytes` guard for very large repositories.
 - Include optional language names alongside raw file extensions.
 
 ## Later

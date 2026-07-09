@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2 - 2026-07-09
+
+- Added a `--max-files` CLI guard that stops scans when too many files match.
+- Included the active max-file limit in snapshot filter metadata.
+- Added tests for successful guarded scans and limit-exceeded errors.
+
 ## 0.1.1 - 2026-07-08
 
 - Added repeatable `--ignore` CLI filters for excluding local files or directories from snapshots.
