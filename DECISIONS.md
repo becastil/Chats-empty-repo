@@ -35,3 +35,7 @@ Markdown output is generated from the same deterministic snapshot used by text a
 ## 2026-07-09: Keep Attention Checks Additive and Tunable
 
 Attention findings are added as a separate status-and-items field so existing snapshot consumers can ignore them safely. Large-file warnings use a documented 100,000-byte default and a CLI override because repository size expectations vary by project.
+
+## 2026-07-09: Compare Saved JSON Snapshots
+
+Snapshot comparison accepts JSON files produced by the existing `--format json` mode. It returns explicit numeric deltas and added or removed entries, keeps the original snapshots untouched, and supports text, JSON, and Markdown output so the same comparison can serve both agents and human handoffs.

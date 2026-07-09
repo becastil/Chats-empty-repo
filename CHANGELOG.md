@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.5 - 2026-07-09
+## 0.1.6 - 2026-07-09
 
 - Added a responsive Repo Scout web companion with sample Text and JSON snapshot views.
 - Added production build, lint, and rendered HTML coverage for the hosted surface.
@@ -9,6 +9,8 @@
 - Added Markdown report coverage for filters, documents, languages, and largest files.
 - Added an additive attention summary for dirty Git state, missing docs, and large files.
 - Added `--large-file-bytes` to tune the large-file warning threshold.
+- Added `--compare BEFORE AFTER` for saved snapshot drift reports.
+- Added comparison output in text, JSON, and Markdown with regression coverage.
 
 ## 0.1.3 - 2026-07-09
 

@@ -2,4 +2,4 @@
 
 ## Near Term
 
-- Support comparing two snapshots to show project drift over time.
+- Add a direct `--output` flag for writing reports without shell redirection.

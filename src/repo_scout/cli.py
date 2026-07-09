@@ -5,6 +5,7 @@ import json
 import sys
 from typing import Any, Sequence
 
+from .comparison import SnapshotReadError, compare_snapshot_files
 from .scanner import (
     DEFAULT_LARGE_FILE_BYTES,
     ScanLimitExceeded,
@@ -22,6 +23,12 @@ def build_parser() -> argparse.ArgumentParser:
         nargs="?",
         default=".",
         help="Project directory to scan. Defaults to the current directory.",
+    )
+    parser.add_argument(
+        "--compare",
+        nargs=2,
+        metavar=("BEFORE", "AFTER"),
+        help="Compare two saved JSON snapshots instead of scanning a directory.",
     )
     parser.add_argument(
         "--format",
@@ -65,6 +72,21 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+
+    if args.compare:
+        try:
+            comparison = compare_snapshot_files(*args.compare)
+        except SnapshotReadError as exc:
+            print(f"repo-scout: {exc}", file=sys.stderr)
+            return 2
+
+        if args.format == "json":
+            print(json.dumps(comparison, indent=2, sort_keys=True))
+        elif args.format == "markdown":
+            print(format_comparison_markdown(comparison))
+        else:
+            print(format_comparison(comparison))
+        return 0
 
     try:
         snapshot = scan_project(
@@ -222,6 +244,192 @@ def format_markdown(snapshot: dict[str, Any]) -> str:
         )
 
     return "\n".join(lines)
+
+
+def format_comparison(comparison: dict[str, Any]) -> str:
+    before = comparison["before"]
+    after = comparison["after"]
+    files = comparison["files"]
+    lines = [
+        "Repo Scout Comparison",
+        f"Status: {comparison['status']}",
+        f"Before: {before['label']}",
+        f"After: {after['label']}",
+        f"Files: {_format_numeric_change(files['total'])}",
+        f"Bytes: {_format_numeric_change(files['total_bytes'])}",
+    ]
+
+    if comparison["status"] == "unchanged":
+        lines.append("No changes detected.")
+        return "\n".join(lines)
+
+    _append_text_counter_change(lines, "Extensions", files["by_extension"])
+    if "by_language" in files:
+        _append_text_counter_change(lines, "Languages", files["by_language"])
+
+    docs = comparison["docs"]
+    doc_lines = []
+    for section in ("present", "missing"):
+        if docs[section]["added"]:
+            doc_lines.append(
+                f"  {section.title()} added: {', '.join(docs[section]['added'])}"
+            )
+        if docs[section]["removed"]:
+            doc_lines.append(
+                f"  {section.title()} removed: {', '.join(docs[section]['removed'])}"
+            )
+    if doc_lines:
+        lines.append("Documents:")
+        lines.extend(doc_lines)
+
+    git = comparison["git"]
+    if git["is_repo"]["changed"] or git["branch"]["changed"] or git["dirty_files"]["delta"]:
+        lines.append("Git:")
+        if git["is_repo"]["changed"]:
+            lines.append(f"  Repository: {_format_value_change(git['is_repo'])}")
+        if git["branch"]["changed"]:
+            lines.append(f"  Branch: {_format_value_change(git['branch'])}")
+        if git["dirty_files"]["delta"]:
+            lines.append(
+                f"  Changed files: {_format_numeric_change(git['dirty_files'])}"
+            )
+
+    attention = comparison["attention"]
+    if attention["status"]["changed"] or attention["item_count"]["delta"]:
+        lines.append("Attention:")
+        if attention["status"]["changed"]:
+            lines.append(f"  Status: {_format_value_change(attention['status'])}")
+        if attention["item_count"]["delta"]:
+            lines.append(
+                f"  Items: {_format_numeric_change(attention['item_count'])}"
+            )
+
+    return "\n".join(lines)
+
+
+def format_comparison_markdown(comparison: dict[str, Any]) -> str:
+    before = comparison["before"]
+    after = comparison["after"]
+    files = comparison["files"]
+    lines = [
+        "# Repo Scout Comparison",
+        "",
+        f"- **Status:** {_markdown_code(comparison['status'])}",
+        f"- **Before:** {_markdown_code(before['label'])}",
+        f"- **After:** {_markdown_code(after['label'])}",
+        "",
+        "## File Totals",
+        "",
+        "| Metric | Before | After | Delta |",
+        "| --- | ---: | ---: | ---: |",
+        _markdown_numeric_row("Files", files["total"]),
+        _markdown_numeric_row("Bytes", files["total_bytes"]),
+    ]
+
+    if comparison["status"] == "unchanged":
+        lines.extend(["", "No changes detected."])
+        return "\n".join(lines)
+
+    _append_markdown_counter_change(
+        lines, "Extension Changes", files["by_extension"]
+    )
+    if "by_language" in files:
+        _append_markdown_counter_change(lines, "Language Changes", files["by_language"])
+
+    docs = comparison["docs"]
+    doc_rows = []
+    for section in ("present", "missing"):
+        for path in docs[section]["added"]:
+            doc_rows.append(f"- {section.title()} added: {_markdown_code(path)}")
+        for path in docs[section]["removed"]:
+            doc_rows.append(f"- {section.title()} removed: {_markdown_code(path)}")
+    if doc_rows:
+        lines.extend(["", "## Document Changes", ""])
+        lines.extend(doc_rows)
+
+    git = comparison["git"]
+    if git["is_repo"]["changed"] or git["branch"]["changed"] or git["dirty_files"]["delta"]:
+        lines.extend(["", "## Git Changes", ""])
+        if git["is_repo"]["changed"]:
+            lines.append(f"- Repository: {_markdown_value_change(git['is_repo'])}")
+        if git["branch"]["changed"]:
+            lines.append(f"- Branch: {_markdown_value_change(git['branch'])}")
+        if git["dirty_files"]["delta"]:
+            lines.append(
+                f"- Changed files: {_markdown_numeric_change(git['dirty_files'])}"
+            )
+
+    attention = comparison["attention"]
+    if attention["status"]["changed"] or attention["item_count"]["delta"]:
+        lines.extend(["", "## Attention Changes", ""])
+        if attention["status"]["changed"]:
+            lines.append(f"- Status: {_markdown_value_change(attention['status'])}")
+        if attention["item_count"]["delta"]:
+            lines.append(
+                f"- Items: {_markdown_numeric_change(attention['item_count'])}"
+            )
+
+    return "\n".join(lines)
+
+
+def _append_text_counter_change(
+    lines: list[str], title: str, change: dict[str, Any]
+) -> None:
+    if not (change["added"] or change["removed"] or change["changed"]):
+        return
+    lines.append(f"{title}:")
+    lines.extend(f"  Added: {name} ({count})" for name, count in change["added"].items())
+    lines.extend(f"  Removed: {name} ({count})" for name, count in change["removed"].items())
+    lines.extend(
+        f"  Changed: {name} ({_format_numeric_change(values)})"
+        for name, values in change["changed"].items()
+    )
+
+
+def _append_markdown_counter_change(
+    lines: list[str], title: str, change: dict[str, Any]
+) -> None:
+    rows = []
+    for name, count in change["added"].items():
+        rows.append((name, 0, count, count))
+    for name, count in change["removed"].items():
+        rows.append((name, count, 0, -count))
+    for name, values in change["changed"].items():
+        rows.append((name, values["before"], values["after"], values["delta"]))
+    if not rows:
+        return
+
+    lines.extend(
+        ["", f"## {title}", "", "| Name | Before | After | Delta |", "| --- | ---: | ---: | ---: |"]
+    )
+    lines.extend(
+        f"| {_markdown_code(name)} | {before} | {after} | {_signed(delta)} |"
+        for name, before, after, delta in sorted(rows)
+    )
+
+
+def _format_numeric_change(change: dict[str, int]) -> str:
+    return f"{change['before']} -> {change['after']} ({_signed(change['delta'])})"
+
+
+def _format_value_change(change: dict[str, Any]) -> str:
+    return f"{change['before']} -> {change['after']}"
+
+
+def _markdown_numeric_row(label: str, change: dict[str, int]) -> str:
+    return f"| {label} | {change['before']} | {change['after']} | {_signed(change['delta'])} |"
+
+
+def _markdown_numeric_change(change: dict[str, int]) -> str:
+    return f"{change['before']} -> {change['after']} ({_signed(change['delta'])})"
+
+
+def _markdown_value_change(change: dict[str, Any]) -> str:
+    return f"{_markdown_code(str(change['before']))} -> {_markdown_code(str(change['after']))}"
+
+
+def _signed(value: int) -> str:
+    return f"+{value}" if value > 0 else str(value)
 
 
 def _markdown_code(value: str) -> str:

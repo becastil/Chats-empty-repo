@@ -16,6 +16,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 - Optional `--languages` summary derived from common filenames and file extensions.
 - Markdown handoff reports with summary bullets and stable file tables.
 - Attention summary for dirty Git state, missing docs, and configurable large-file thresholds.
+- Snapshot comparison for file, document, Git, and attention drift.
 - Unit tests covering scanner behavior and JSON CLI output.
 - Responsive Repo Scout web companion with a server-rendered snapshot lab and accessible format toggle.
 - Sites hosting metadata and a Cloudflare Workers-compatible production build.
@@ -29,4 +30,4 @@ python3 -m unittest discover -s tests
 
 ## Next Small Task
 
-Support comparing two snapshots to show project drift over time.
+Add a direct `--output` flag for writing reports without shell redirection.

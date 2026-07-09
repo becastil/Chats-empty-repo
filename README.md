@@ -46,6 +46,17 @@ PYTHONPATH=src python3 -m repo_scout --format markdown --languages .
 Markdown output includes the summary, project document status, active filters,
 file composition tables, and largest files.
 
+Compare two saved JSON snapshots to see project drift:
+
+```bash
+PYTHONPATH=src python3 -m repo_scout --format json . > before.json
+PYTHONPATH=src python3 -m repo_scout --format json . > after.json
+PYTHONPATH=src python3 -m repo_scout --format markdown --compare before.json after.json
+```
+
+Comparison JSON reports numeric deltas, added and removed document entries,
+Git changes, and attention-status changes.
+
 Ignore extra local files or directories without editing `.gitignore`:
 
 ```bash
