@@ -28,6 +28,60 @@ EXCLUDED_DIRS = {
     "venv",
 }
 
+LANGUAGE_BY_FILENAME = {
+    "cmakelists.txt": "CMake",
+    "dockerfile": "Dockerfile",
+    "makefile": "Makefile",
+}
+
+LANGUAGE_BY_SUFFIX = {
+    ".bash": "Shell",
+    ".c": "C",
+    ".cc": "C++",
+    ".cpp": "C++",
+    ".cs": "C#",
+    ".css": "CSS",
+    ".cxx": "C++",
+    ".dart": "Dart",
+    ".ex": "Elixir",
+    ".exs": "Elixir",
+    ".fish": "Shell",
+    ".go": "Go",
+    ".h": "C/C++ Header",
+    ".html": "HTML",
+    ".htm": "HTML",
+    ".java": "Java",
+    ".js": "JavaScript",
+    ".json": "JSON",
+    ".jsx": "JavaScript",
+    ".kt": "Kotlin",
+    ".kts": "Kotlin",
+    ".less": "Less",
+    ".lua": "Lua",
+    ".md": "Markdown",
+    ".php": "PHP",
+    ".ps1": "PowerShell",
+    ".py": "Python",
+    ".r": "R",
+    ".rb": "Ruby",
+    ".rs": "Rust",
+    ".sass": "Sass",
+    ".scala": "Scala",
+    ".scss": "SCSS",
+    ".sh": "Shell",
+    ".sql": "SQL",
+    ".svelte": "Svelte",
+    ".swift": "Swift",
+    ".toml": "TOML",
+    ".ts": "TypeScript",
+    ".tsx": "TypeScript",
+    ".vue": "Vue",
+    ".xml": "XML",
+    ".yaml": "YAML",
+    ".yml": "YAML",
+    ".zsh": "Shell",
+}
+
 
 class ScanLimitExceeded(RuntimeError):
     """Raised when a scan exceeds a user-supplied safety limit."""
@@ -37,6 +91,7 @@ def scan_project(
     path: str | Path,
     ignore_patterns: Iterable[str] = (),
     max_files: int | None = None,
+    include_languages: bool = False,
 ) -> dict[str, Any]:
     root = Path(path).expanduser().resolve()
     if not root.exists():
@@ -51,19 +106,26 @@ def scan_project(
     entries = [_file_entry(root, file_path) for file_path in files]
     by_extension = Counter(_extension_label(Path(entry["path"])) for entry in entries)
 
+    file_summary = {
+        "total": len(entries),
+        "total_bytes": sum(entry["bytes"] for entry in entries),
+        "by_extension": dict(sorted(by_extension.items())),
+        "largest": sorted(
+            entries, key=lambda entry: (-entry["bytes"], entry["path"])
+        )[:5],
+    }
+    if include_languages:
+        by_language = Counter(
+            _language_label(Path(entry["path"])) for entry in entries
+        )
+        file_summary["by_language"] = dict(sorted(by_language.items()))
+
     return {
         "root": str(root),
         "git": _git_summary(root),
         "docs": _doc_summary(root),
         "filters": {"ignored": list(normalized_ignores), "max_files": max_files},
-        "files": {
-            "total": len(entries),
-            "total_bytes": sum(entry["bytes"] for entry in entries),
-            "by_extension": dict(sorted(by_extension.items())),
-            "largest": sorted(
-                entries, key=lambda entry: (-entry["bytes"], entry["path"])
-            )[:5],
-        },
+        "files": file_summary,
     }
 
 
@@ -124,6 +186,13 @@ def _file_entry(root: Path, file_path: Path) -> dict[str, Any]:
 def _extension_label(path: Path) -> str:
     suffix = path.suffix.lower()
     return suffix if suffix else "[no extension]"
+
+
+def _language_label(path: Path) -> str:
+    filename_language = LANGUAGE_BY_FILENAME.get(path.name.lower())
+    if filename_language is not None:
+        return filename_language
+    return LANGUAGE_BY_SUFFIX.get(path.suffix.lower(), "Other")
 
 
 def _normalize_ignore_patterns(ignore_patterns: Iterable[str]) -> tuple[str, ...]:

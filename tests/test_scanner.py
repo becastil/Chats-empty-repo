@@ -30,8 +30,24 @@ class ScanProjectTests(unittest.TestCase):
             self.assertEqual(snapshot["files"]["by_extension"][".py"], 1)
             self.assertEqual(snapshot["files"]["by_extension"][".toml"], 1)
             self.assertEqual(snapshot["files"]["by_extension"]["[no extension]"], 1)
+            self.assertNotIn("by_language", snapshot["files"])
             self.assertIn("README.md", snapshot["docs"]["present"])
             self.assertIn("CHANGELOG.md", snapshot["docs"]["missing"])
+
+    def test_scan_project_can_group_files_by_language(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "Dockerfile").write_text("FROM scratch\n", encoding="utf-8")
+            (root / "LICENSE").write_text("MIT\n", encoding="utf-8")
+            (root / "app.py").write_text("print('hi')\n", encoding="utf-8")
+            (root / "config.yaml").write_text("enabled: true\n", encoding="utf-8")
+
+            snapshot = scan_project(root, include_languages=True)
+
+            self.assertEqual(
+                snapshot["files"]["by_language"],
+                {"Dockerfile": 1, "Other": 1, "Python": 1, "YAML": 1},
+            )
 
     def test_scan_project_applies_extra_ignore_patterns(self) -> None:
         with TemporaryDirectory() as tmp:

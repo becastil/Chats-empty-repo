@@ -8,6 +8,7 @@ It currently reports:
 - Presence of common project state documents
 - Total scanned files and bytes
 - File counts by extension
+- Optional best-effort file counts by language name
 - Largest files in the scanned tree
 
 The tool has no cloud dependencies and does not require API keys.
@@ -37,6 +38,15 @@ Protect large scans with a file-count limit:
 ```bash
 PYTHONPATH=src python3 -m repo_scout --max-files 5000 .
 ```
+
+Add a language-level summary while keeping raw extension counts:
+
+```bash
+PYTHONPATH=src python3 -m repo_scout --languages .
+```
+
+Language detection uses common filenames and file extensions. Unrecognized files are
+grouped under `Other`.
 
 Install it locally in editable mode:
 

@@ -11,6 +11,7 @@
 - Repository scanning for Git state, expected project documents, file counts by extension, total bytes, and largest files.
 - Repeatable `--ignore` filters for local files or directories that should be excluded from a scan.
 - `--max-files` guard that stops scans once the filtered file count exceeds a user-supplied limit.
+- Optional `--languages` summary derived from common filenames and file extensions.
 - Unit tests covering scanner behavior and JSON CLI output.
 
 ## How To Run
@@ -22,4 +23,4 @@ python3 -m unittest discover -s tests
 
 ## Next Small Task
 
-Include optional language names alongside raw file extensions.
+Add Markdown report output for handoff notes and pull request descriptions.

@@ -40,6 +40,11 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="COUNT",
         help="Stop scanning if more than COUNT files match the scan filters.",
     )
+    parser.add_argument(
+        "--languages",
+        action="store_true",
+        help="Include a best-effort file count grouped by language name.",
+    )
     return parser
 
 
@@ -52,6 +57,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             args.path,
             ignore_patterns=args.ignore,
             max_files=args.max_files,
+            include_languages=args.languages,
         )
     except (FileNotFoundError, NotADirectoryError) as exc:
         print(f"repo-scout: {exc}", file=sys.stderr)
@@ -96,6 +102,14 @@ def format_snapshot(snapshot: dict[str, Any]) -> str:
             extensions.items(), key=lambda item: (-item[1], item[0])
         ):
             lines.append(f"  {extension}: {count}")
+
+    languages = files.get("by_language")
+    if languages:
+        lines.append("Languages:")
+        for language, count in sorted(
+            languages.items(), key=lambda item: (-item[1], item[0])
+        ):
+            lines.append(f"  {language}: {count}")
 
     largest_files = files["largest"]
     if largest_files:

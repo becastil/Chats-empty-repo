@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.3 - 2026-07-09
+
+- Added an opt-in `--languages` summary alongside raw extension counts.
+- Recognized common source, markup, configuration, and build file types without adding dependencies.
+- Grouped unrecognized files under `Other` and added scanner and CLI coverage.
+
 ## 0.1.2 - 2026-07-09
 
 - Added a `--max-files` CLI guard that stops scans when too many files match.

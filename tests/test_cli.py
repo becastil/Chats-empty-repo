@@ -28,6 +28,26 @@ class CliTests(unittest.TestCase):
             self.assertEqual(snapshot["root"], str(root.resolve()))
             self.assertEqual(snapshot["files"]["total"], 1)
             self.assertEqual(snapshot["docs"]["present"], ["README.md"])
+            self.assertNotIn("by_language", snapshot["files"])
+
+    def test_cli_can_include_language_summary(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "README.md").write_text("# Example\n", encoding="utf-8")
+            (root / "app.py").write_text("print('hi')\n", encoding="utf-8")
+
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                exit_code = main(
+                    ["--format", "json", "--languages", str(root)]
+                )
+
+            self.assertEqual(exit_code, 0)
+            snapshot = json.loads(stdout.getvalue())
+            self.assertEqual(
+                snapshot["files"]["by_language"],
+                {"Markdown": 1, "Python": 1},
+            )
 
     def test_cli_applies_repeated_ignore_patterns(self) -> None:
         with TemporaryDirectory() as tmp:
