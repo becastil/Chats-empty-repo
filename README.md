@@ -31,7 +31,7 @@ not require a checkout, package installation, administrator access, or an API
 key:
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.5/repo-scout-0.3.5.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.6/repo-scout-0.3.6.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 ```
 
@@ -41,7 +41,7 @@ need the `repo-scout-distribution`, `repo-scout-policy`,
 `repo-scout-rollout`, or `repo-scout-pilot` commands:
 
 ```bash
-python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.5/repo_scout-0.3.5-py3-none-any.whl
+python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.6/repo_scout-0.3.6-py3-none-any.whl
 repo-scout --languages .
 ```
 
@@ -265,6 +265,16 @@ The report validates each release artifact contract and separates portable,
 wheel, source, manifest, and unknown requests. Counts can include CI downloads,
 maintainer checks, and retries, so they are not unique installs or revenue. See
 [DISTRIBUTION.md](DISTRIBUTION.md) for the channel contract.
+
+Save a JSON report as the weekly baseline, then pass it back on the next run for
+signed request deltas and release-set changes:
+
+```bash
+curl -fsSL 'https://api.github.com/repos/becastil/Chats-empty-repo/releases?per_page=100' \
+  -o releases.json
+repo-scout-distribution --format json releases.json > distribution-baseline.json
+repo-scout-distribution releases.json --baseline distribution-baseline.json
+```
 
 Run the tests:
 

@@ -150,3 +150,9 @@ and separates portable, wheel, source, checksum, and unknown artifact requests.
 Those counts can include Repo Scout's own CI, maintainer checks, and retries, so
 they are directional reach evidence only. They must be reviewed beside pilot
 source and purchase-readiness reports rather than presented as users or sales.
+
+Weekly schema-2 baselines turn cumulative release counters into signed channel
+movement and flag evidence resets or removals. These deltas make distribution
+experiments comparable over time, but they retain the same CI and maintainer
+confounders and therefore remain directional until a buyer self-reports a source
+or enters the paid funnel.

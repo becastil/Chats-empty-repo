@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this distribution-reporting commit: 32 / 1,000 (3.2%).
-- Remaining after this distribution-reporting commit: 968 commits.
+- Progress after this distribution-baseline commit: 33 / 1,000 (3.3%).
+- Remaining after this distribution-baseline commit: 967 commits.
 
 ## Commit Standard
 

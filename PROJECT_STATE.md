@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 32 of 1,000, with 968 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 33 of 1,000, with 967 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -79,15 +79,17 @@ The delivery goal is 1,000 meaningful commits. This update is commit 32 of 1,000
 - Dependency-free distribution reporting from exported public GitHub release records.
 - Version-aware portable, wheel, source, and checksum artifact contract audits.
 - Explicit separation of primary artifact requests from unique installs, activation, pilot demand, and revenue.
+- Backward-compatible weekly distribution baselines with signed per-channel request deltas.
+- New-release, removed-release, removed-asset, and decreasing-counter evidence warnings.
 
 ## How To Run
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.5/repo-scout-0.3.5.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.6/repo-scout-0.3.6.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 python3 -m unittest discover -s tests
 ```
 
 ## Next Small Task
 
-Capture a weekly distribution baseline alongside the pilot funnel, then connect self-reported discovery source to the first public requests.
+Review weekly signed distribution deltas beside the pilot funnel, then connect self-reported discovery source to the first public requests.

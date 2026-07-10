@@ -49,11 +49,27 @@ curl -fsSL 'https://api.github.com/repos/becastil/Chats-empty-repo/releases?per_
   | repo-scout-distribution
 ```
 
-`repo-scout-distribution` performs no network calls. Its schema-1 JSON and text
+`repo-scout-distribution` performs no network calls. Its schema-2 JSON and text
 reports validate the version-aware artifact contract, separate portable and
 wheel primary requests from source, manifest, and unknown requests, and flag
 missing or unexpected assets. The portable artifact became required in
 `v0.3.4`; earlier releases remain valid without it.
+
+For weekly movement, save the current JSON report and compare the next public
+release export to it:
+
+```bash
+curl -fsSL 'https://api.github.com/repos/becastil/Chats-empty-repo/releases?per_page=100' \
+  -o releases.json
+repo-scout-distribution --format json releases.json > distribution-baseline.json
+repo-scout-distribution releases.json --baseline distribution-baseline.json
+```
+
+Schema 2 accepts schema-1 and schema-2 baselines. It reports signed channel
+deltas plus new and removed releases. A download counter decrease, removed
+artifact, or removed release is a warning because GitHub release assets are
+expected to be immutable. Baselines contain public aggregate release metadata,
+not repository source or customer data.
 
 GitHub counts requests rather than unique users. Wheel counts include Repo
 Scout's own verified CI bootstrap, and all channels may include maintainer

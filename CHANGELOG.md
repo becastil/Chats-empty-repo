@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.6 - 2026-07-10
+
+- Added `--baseline REPORT` for signed weekly release-request comparisons.
+- Added schema-2 change records for portable, wheel, source, manifest, unknown, and combined primary artifact deltas.
+- Reported new and removed stable releases independently from download movement.
+- Accepted schema-1 and schema-2 distribution reports as baselines.
+- Warned when cumulative counters decrease or baseline releases and assets disappear.
+- Kept no-baseline output explicit and preserved GitHub request-count caveats in every report.
+- Added real public-data dogfooding and comprehensive baseline, compatibility, CLI, reset, removal, and validation coverage.
+
 ## 0.3.5 - 2026-07-10
 
 - Added `repo-scout-distribution` for dependency-free reporting from exported GitHub release JSON.

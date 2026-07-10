@@ -7,7 +7,7 @@
 
 ## Near Term
 
-- Capture a weekly public release-request baseline alongside the pilot funnel, accounting for known CI and maintainer traffic.
+- Review weekly signed release-request deltas alongside the pilot funnel, accounting for known CI and maintainer traffic.
 - Collect the first three public pilot requests, work the prioritized sales queue, and compare purchase readiness by source.
 - Add a private pilot contact path after public intake validates demand.
 
