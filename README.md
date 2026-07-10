@@ -196,6 +196,11 @@ repo-scout .
 
 Repo Scout requires Python 3.11 or newer and has no runtime dependencies.
 
+Versioned wheel and source releases are also available from GitHub with
+SHA-256 manifests and build-provenance attestations. Install and verify a
+specific release using the commands in
+[docs/releases.md](docs/releases.md).
+
 Run the tests:
 
 ```bash

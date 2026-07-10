@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.7 - 2026-07-10
+
+- Added a tag-driven GitHub release workflow for wheel and source distributions.
+- Added exact tag, package-version, artifact-name, and artifact-set validation.
+- Added deterministic SHA-256 manifests and GitHub build-provenance attestations.
+- Hash-locked all release-only build dependencies and pinned every release action by commit.
+- Added clean-environment smoke tests for all three installed commands before publication.
+- Added release contract tests covering version drift, missing artifacts, unexpected artifacts, permissions, pins, and dependency hashes.
+- Added the MIT license text to the repository and packaged distributions.
+- Documented version-specific installation, checksum verification, provenance verification, and the maintainer release contract.
+
 ## 0.2.6 - 2026-07-10
 
 - Added deterministic follow-up reporting for stale open lead, qualified, and offered pilot issues.

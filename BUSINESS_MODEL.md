@@ -25,8 +25,13 @@ initial revenue before licensing or billing infrastructure is built.
 - Saved snapshot comparison and bounded changed-path details.
 - A copy-ready, read-only GitHub Actions policy gate with failure evidence.
 - Offline starter policies for baseline, Python, npm, and agent-ready services.
+- Versioned GitHub release artifacts with checksums and verifiable build provenance.
 
 The free CLI should be good enough to adopt without a sales conversation.
+
+Verified GitHub releases remove source-checkout trust and installation friction
+from pilot onboarding. PyPI distribution, billing, and license enforcement stay
+deferred until paid demand justifies their operational cost.
 
 ### Founding Team Pilot
 

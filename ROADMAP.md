@@ -7,8 +7,8 @@
 
 ## Near Term
 
-- Publish signed, versioned release artifacts for paid distribution readiness.
 - Add lead-source attribution to pilot intake and funnel reporting.
+- Update the external CI example to install a verified Repo Scout release.
 
 ## Revenue Validation
 
