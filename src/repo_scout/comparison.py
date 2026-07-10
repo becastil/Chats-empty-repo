@@ -150,6 +150,11 @@ def _schema_version(snapshot: Mapping[str, Any]) -> int:
     version = snapshot.get("schema_version", SNAPSHOT_SCHEMA_VERSION)
     if not isinstance(version, int) or isinstance(version, bool):
         raise SnapshotReadError("snapshot schema_version must be an integer")
+    if version != SNAPSHOT_SCHEMA_VERSION:
+        raise SnapshotReadError(
+            f"unsupported snapshot schema_version {version}; "
+            f"supported version is {SNAPSHOT_SCHEMA_VERSION}"
+        )
     return version
 
 

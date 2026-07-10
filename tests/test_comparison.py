@@ -76,7 +76,7 @@ class ComparisonCliTests(unittest.TestCase):
                 attention_status="needs-attention",
                 attention_items=2,
             )
-            after_snapshot["schema_version"] = 2
+            after_snapshot["schema_version"] = 1
             after_path.write_text(json.dumps(after_snapshot), encoding="utf-8")
 
             from contextlib import redirect_stdout
@@ -92,7 +92,7 @@ class ComparisonCliTests(unittest.TestCase):
             self.assertEqual(exit_code, 0)
             self.assertEqual(comparison["status"], "changed")
             self.assertEqual(comparison["schema_version"]["before"], 1)
-            self.assertEqual(comparison["schema_version"]["after"], 2)
+            self.assertEqual(comparison["schema_version"]["after"], 1)
             self.assertEqual(comparison["files"]["total"]["delta"], 1)
             self.assertEqual(
                 comparison["files"]["by_extension"]["changed"][".py"]["delta"],
@@ -184,6 +184,38 @@ class ComparisonCliTests(unittest.TestCase):
                 json.loads(output_path.read_text(encoding="utf-8"))["status"],
                 "unchanged",
             )
+
+    def test_cli_rejects_unsupported_future_schema(self) -> None:
+        with TemporaryDirectory() as tmp:
+            before_path = Path(tmp) / "before.json"
+            after_path = Path(tmp) / "after.json"
+            before_data = snapshot(
+                total=1,
+                total_bytes=10,
+                extensions={".md": 1},
+                present=["README.md"],
+                missing=[],
+                branch="main",
+                dirty_files=0,
+                attention_status="clear",
+                attention_items=0,
+            )
+            after_data = dict(before_data)
+            after_data["schema_version"] = 2
+            before_path.write_text(json.dumps(before_data), encoding="utf-8")
+            after_path.write_text(json.dumps(after_data), encoding="utf-8")
+
+            from contextlib import redirect_stderr
+            import io
+
+            stderr = io.StringIO()
+            with redirect_stderr(stderr):
+                exit_code = main(
+                    ["--compare", str(before_path), str(after_path)]
+                )
+
+            self.assertEqual(exit_code, 2)
+            self.assertIn("unsupported snapshot schema_version 2", stderr.getvalue())
 
 
 if __name__ == "__main__":

@@ -19,6 +19,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 - Snapshot comparison for file, document, Git, and attention drift.
 - Direct report writing with overwrite protection and explicit `--force` support.
 - Versioned snapshot metadata with backward-compatible comparison defaults.
+- Explicit rejection of unsupported future snapshot schema versions.
 - Unit tests covering scanner behavior and JSON CLI output.
 - Responsive Repo Scout web companion with a server-rendered snapshot lab and accessible format toggle.
 - Sites hosting metadata and a Cloudflare Workers-compatible production build.
@@ -32,4 +33,4 @@ python3 -m unittest discover -s tests
 
 ## Next Small Task
 
-Add explicit validation for unsupported future snapshot schema versions.
+Add bounded changed-file details to snapshot comparisons.

@@ -2,4 +2,4 @@
 
 ## Near Term
 
-- Add explicit validation for unsupported future snapshot schema versions.
+- Add bounded changed-file details to snapshot comparisons.

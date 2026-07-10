@@ -47,3 +47,7 @@ Snapshot comparison accepts JSON files produced by the existing `--format json` 
 ## 2026-07-10: Version the Snapshot Contract
 
 Every new snapshot declares schema version 1. Comparison treats missing schema metadata as version 1 so existing saved files remain usable, while an explicit version change appears as a comparison finding for future migrations.
+
+## 2026-07-10: Reject Unsupported Snapshot Versions
+
+Comparison accepts the current schema and metadata-free legacy snapshots, but rejects any other explicit version before reading its fields. This prevents a future format from being misreported as a valid comparison.

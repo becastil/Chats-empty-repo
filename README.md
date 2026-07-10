@@ -58,7 +58,8 @@ Comparison JSON reports numeric deltas, added and removed document entries,
 Git changes, and attention-status changes.
 
 Snapshots include `schema_version: 1`. Older snapshots without that field are
-read as version 1 for comparison compatibility.
+read as version 1 for comparison compatibility; unsupported future versions
+are rejected with a clear error.
 
 Write reports directly and require `--force` before replacing an existing file:
 
