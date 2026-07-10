@@ -1,11 +1,16 @@
 # Changelog
 
-## Unreleased
+## 0.3.3 - 2026-07-10
 
 - Replaced the hosted single-repository policy mockup with cross-repository rollout proof for policy-fingerprint and scanned-commit coverage.
 - Showed both ready and remediation-required repository outcomes so the paid rollout workflow demonstrates operational value without implying every check passes.
 - Added the aggregate `repo-scout-rollout` command, bundle-reported freshness caveat, and an explicit $299 application CTA to the founding-team offer.
 - Expanded production-render coverage for the new rollout evidence and conversion copy.
+- Added a deterministic sales queue for every open pre-payment pilot deal.
+- Prioritized disclosed ready, approval-dependent, exploratory, and unclear intent without counting any of it as revenue.
+- Added stage-specific next actions with stable stage, activity-age, and issue-number ordering.
+- Kept stale follow-up as a separate inactivity signal and excluded closed, paid, lost, and converted deals from sales actions.
+- Documented the schema-5 queue contract and expanded funnel, text-output, and release-version coverage.
 
 ## 0.3.2 - 2026-07-10
 

@@ -7,7 +7,7 @@
 
 ## Near Term
 
-- Collect the first three public pilot requests from the cross-repository rollout offer and compare purchase readiness by source.
+- Collect the first three public pilot requests, work the prioritized sales queue, and compare purchase readiness by source.
 - Add a private pilot contact path after public intake validates demand.
 
 ## Revenue Validation

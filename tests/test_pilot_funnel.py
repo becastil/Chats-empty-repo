@@ -63,7 +63,7 @@ class PilotFunnelTests(unittest.TestCase):
 
         report = build_funnel(payload, as_of=date(2026, 7, 10))
 
-        self.assertEqual(report["schema_version"], 4)
+        self.assertEqual(report["schema_version"], 5)
         self.assertEqual(report["summary"]["tracked_issues"], 8)
         self.assertEqual(report["summary"]["ignored_issues"], 1)
         self.assertEqual(report["summary"]["booked_pilots"], 4)
@@ -73,6 +73,7 @@ class PilotFunnelTests(unittest.TestCase):
         self.assertEqual(report["summary"]["annual_conversions"], 2)
         self.assertEqual(report["summary"]["lost_pilots"], 2)
         self.assertEqual(report["summary"]["stale_deals"], 2)
+        self.assertEqual(report["summary"]["sales_actions"], 2)
         self.assertEqual(report["summary"]["attributed_issues"], 8)
         self.assertEqual(report["summary"]["unattributed_issues"], 0)
         self.assertEqual(report["summary"]["unknown_source_issues"], 0)
@@ -122,6 +123,16 @@ class PilotFunnelTests(unittest.TestCase):
             report["summary"]["stale_deals"],
             len(report["follow_up"]["deals"]),
         )
+        self.assertEqual(
+            [deal["number"] for deal in report["sales_queue"]["deals"]],
+            [1, 2],
+        )
+        self.assertEqual(
+            report["sales_queue"]["deals"][0]["next_action"],
+            "Qualify the team and send the $299 pilot terms.",
+        )
+        self.assertEqual(report["sales_queue"]["deals"][0]["priority"], 1)
+        self.assertEqual(report["sales_queue"]["deals"][1]["priority"], 2)
         self.assertEqual(
             report["by_source"]["github"],
             {
@@ -380,6 +391,10 @@ class PilotFunnelTests(unittest.TestCase):
         self.assertEqual(report["summary"]["remaining_pilots"], 1)
         self.assertEqual(report["summary"]["remaining_revenue_usd"], 400)
         self.assertEqual(report["summary"]["stale_deals"], 0)
+        self.assertIn(
+            "$400 pilot terms",
+            report["sales_queue"]["deals"][0]["next_action"],
+        )
 
     def test_main_reads_stdin_and_reports_empty_pipeline(self) -> None:
         stdout = io.StringIO()
@@ -400,7 +415,113 @@ class PilotFunnelTests(unittest.TestCase):
         self.assertIn("Stale deals:\n  none", stdout.getvalue())
         self.assertIn("Sources:\n  none", stdout.getvalue())
         self.assertIn("Purchase readiness:\n  none", stdout.getvalue())
+        self.assertIn("Sales actions: 0 open pre-payment deals", stdout.getvalue())
+        self.assertIn("Sales queue:\n  none", stdout.getvalue())
         self.assertIn("Warnings:\n  none", stdout.getvalue())
+
+    def test_sales_queue_prioritizes_readiness_stage_and_age(self) -> None:
+        source = "### How did you hear about Repo Scout?\n\nRepo Scout website"
+
+        def issue(
+            number: int,
+            *,
+            stage_labels: list[str],
+            readiness: str,
+            updated_at: str,
+            state: str = "OPEN",
+        ) -> dict[str, object]:
+            return {
+                "number": number,
+                "title": f"Pilot {number}",
+                "state": state,
+                "updatedAt": updated_at,
+                "body": f"{source}\n\n### Purchase readiness\n\n{readiness}",
+                "labels": stage_labels,
+            }
+
+        payload = [
+            issue(
+                1,
+                stage_labels=["pilot-lead"],
+                readiness="Ready to purchase the $299 pilot",
+                updated_at="2026-07-01T00:00:00Z",
+            ),
+            issue(
+                2,
+                stage_labels=["pilot-lead", "pilot-qualified", "pilot-offered"],
+                readiness="Ready to purchase the $299 pilot",
+                updated_at="2026-07-09T00:00:00Z",
+            ),
+            issue(
+                3,
+                stage_labels=["pilot-lead", "pilot-qualified"],
+                readiness="Need internal approval for $299",
+                updated_at="2026-07-08T00:00:00Z",
+            ),
+            issue(
+                8,
+                stage_labels=["pilot-lead", "pilot-qualified", "pilot-offered"],
+                readiness="Ready to purchase the $299 pilot",
+                updated_at="2026-07-05T00:00:00Z",
+            ),
+            issue(
+                4,
+                stage_labels=["pilot-lead"],
+                readiness="Exploring before requesting budget",
+                updated_at="2026-07-07T00:00:00Z",
+            ),
+            issue(
+                5,
+                stage_labels=["pilot-lead"],
+                readiness="Edited answer",
+                updated_at="2026-07-06T00:00:00Z",
+            ),
+            issue(
+                6,
+                stage_labels=["pilot-lead", "pilot-qualified", "pilot-offered"],
+                readiness="Ready to purchase the $299 pilot",
+                updated_at="2026-07-01T00:00:00Z",
+                state="CLOSED",
+            ),
+            issue(
+                7,
+                stage_labels=[
+                    "pilot-lead",
+                    "pilot-qualified",
+                    "pilot-offered",
+                    "pilot-paid",
+                ],
+                readiness="Ready to purchase the $299 pilot",
+                updated_at="2026-07-01T00:00:00Z",
+            ),
+        ]
+
+        report = build_funnel(payload, as_of=date(2026, 7, 10))
+        queue = report["sales_queue"]["deals"]
+
+        self.assertEqual([deal["number"] for deal in queue], [8, 2, 1, 3, 4, 5])
+        self.assertEqual(
+            [deal["priority"] for deal in queue], [1, 1, 1, 2, 3, 4]
+        )
+        self.assertEqual(
+            [deal["next_action"] for deal in queue],
+            [
+                "Confirm the purchase and payment path.",
+                "Confirm the purchase and payment path.",
+                "Qualify the team and send the $299 pilot terms.",
+                "Send an internal approval brief.",
+                "Qualify the repository standard and evidence need.",
+                "Clarify purchase readiness before advancing.",
+            ],
+        )
+        self.assertIsNone(report["deals"][5]["next_action"])
+        self.assertIsNone(report["deals"][6]["sales_priority"])
+        text_report = format_funnel(report)
+        self.assertIn("Sales actions: 6 open pre-payment deals", text_report)
+        self.assertIn(
+            "#2 [P1, offered, ready] Confirm the purchase and payment path.",
+            text_report,
+        )
 
     def test_main_rejects_invalid_json(self) -> None:
         stderr = io.StringIO()

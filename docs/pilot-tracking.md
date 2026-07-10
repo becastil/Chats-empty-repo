@@ -48,10 +48,19 @@ Use `--format json` for a machine-readable report. `--pilot-price` and
 `--target-pilots` change the commercial assumptions without changing issue
 data.
 
-Funnel JSON declares `schema_version: 4`. Its `follow_up` object records the
+Funnel JSON declares `schema_version: 5`. Its `follow_up` object records the
 UTC `as_of` date, the inactivity threshold, and a deterministic deal list.
 Omit `--as-of` to use the current UTC date. `--stale-days` changes the default
 seven-day threshold.
+
+The `sales_queue.deals` array contains every open lead, qualified, or offered
+pilot, including fresh deals. Priorities come only from the declared readiness
+answer: ready is `P1`, needs approval is `P2`, exploring is `P3`, and missing
+or unrecognized readiness is `P4`. Within one priority, offered deals come
+before qualified deals, then leads; older issue activity breaks ties before
+issue number. Each record includes a stage-specific `next_action`. The queue
+does not apply labels, send messages, infer willingness to pay, or count
+revenue.
 
 The request form also asks how the buyer discovered Repo Scout. The reporter
 maps that issue-body answer to a stable source key:
@@ -104,7 +113,9 @@ The readiness summary is willingness-to-pay evidence, not accounting. A
 ## Operating Cadence
 
 Run the report weekly and before each roadmap review. Resolve label, source,
-and readiness warnings before sharing totals. The follow-up list includes only
+and readiness warnings before sharing totals. Work the sales queue from lowest
+priority number to highest, recording the actual outcome separately. The
+follow-up list includes only
 open `pilot-lead`, `pilot-qualified`, and `pilot-offered` issues whose UTC
 `updatedAt` date is at least the threshold age. The boundary is inclusive.
 

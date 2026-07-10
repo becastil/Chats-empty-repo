@@ -10,7 +10,7 @@ import sys
 from typing import Any, Sequence, TextIO
 
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 DEFAULT_PILOT_PRICE_USD = 299
 DEFAULT_TARGET_PILOTS = 3
 DEFAULT_STALE_DAYS = 7
@@ -61,6 +61,31 @@ READINESS_BY_ANSWER = {
 }
 DECLARED_READINESS = tuple(readiness for readiness, _ in READINESS_OPTIONS)
 READINESS_KEYS = (*DECLARED_READINESS, "unattributed", "unknown")
+SALES_PRIORITY_BY_READINESS = {
+    "ready": 1,
+    "needs_approval": 2,
+    "exploring": 3,
+    "unattributed": 4,
+    "unknown": 4,
+}
+SALES_STAGE_ORDER = {"offered": 0, "qualified": 1, "lead": 2}
+SALES_ACTIONS = {
+    "ready": {
+        "lead": "Qualify the team and send the ${pilot_price_usd} pilot terms.",
+        "qualified": "Send the ${pilot_price_usd} pilot terms.",
+        "offered": "Confirm the purchase and payment path.",
+    },
+    "needs_approval": {
+        "lead": "Qualify the team and prepare an internal approval brief.",
+        "qualified": "Send an internal approval brief.",
+        "offered": "Resolve the internal approval blocker.",
+    },
+    "exploring": {
+        "lead": "Qualify the repository standard and evidence need.",
+        "qualified": "Share rollout proof and confirm decision criteria.",
+        "offered": "Confirm budget timing and decision criteria.",
+    },
+}
 
 
 class FunnelInputError(ValueError):
@@ -106,6 +131,7 @@ def build_funnel(
     deals: list[dict[str, Any]] = []
     warnings: list[dict[str, Any]] = []
     stale_deals: list[dict[str, Any]] = []
+    sales_actions: list[dict[str, Any]] = []
     ignored_issues = 0
     booked_pilots = 0
     annual_conversions = 0
@@ -223,6 +249,26 @@ def build_funnel(
                     )
                 )
 
+        sales_priority: int | None = None
+        next_action: str | None = None
+        if stage in FOLLOW_UP_STAGES and issue.state == "OPEN":
+            sales_priority = SALES_PRIORITY_BY_READINESS[readiness]
+            next_action = _sales_action(stage, readiness, pilot_price_usd)
+            sales_actions.append(
+                {
+                    "number": issue.number,
+                    "title": issue.title,
+                    "url": issue.url,
+                    "stage": stage,
+                    "source": source,
+                    "purchase_readiness": readiness,
+                    "priority": sales_priority,
+                    "next_action": next_action,
+                    "age_days": age_days,
+                    "updated_at": _format_timestamp(issue.updated_at),
+                }
+            )
+
         needs_follow_up = False
         if stage in FOLLOW_UP_STAGES and issue.state == "CLOSED":
             warnings.append(
@@ -251,6 +297,8 @@ def build_funnel(
                         "stage": stage,
                         "source": source,
                         "purchase_readiness": readiness,
+                        "priority": sales_priority,
+                        "next_action": next_action,
                         "age_days": age_days,
                         "updated_at": _format_timestamp(issue.updated_at),
                     }
@@ -288,6 +336,8 @@ def build_funnel(
                 "updated_at": _format_timestamp(issue.updated_at),
                 "age_days": age_days,
                 "needs_follow_up": needs_follow_up,
+                "sales_priority": sales_priority,
+                "next_action": next_action,
             }
         )
 
@@ -315,6 +365,7 @@ def build_funnel(
             "annual_conversions": annual_conversions,
             "lost_pilots": lost_pilots,
             "stale_deals": len(stale_deals),
+            "sales_actions": len(sales_actions),
             "attributed_issues": attributed_issues,
             "unattributed_issues": unattributed_issues,
             "unknown_source_issues": unknown_source_issues,
@@ -332,6 +383,9 @@ def build_funnel(
                 key=lambda deal: (-deal["age_days"], deal["number"]),
             ),
         },
+        "sales_queue": {
+            "deals": sorted(sales_actions, key=_sales_queue_sort_key),
+        },
         "by_stage": by_stage,
         "by_source": by_source,
         "by_readiness": by_readiness,
@@ -344,6 +398,7 @@ def format_funnel(report: dict[str, Any]) -> str:
     summary = report["summary"]
     pricing = report["pricing"]
     follow_up_label = "deal" if summary["stale_deals"] == 1 else "deals"
+    sales_action_label = "deal" if summary["sales_actions"] == 1 else "deals"
     lines = [
         "Repo Scout Pilot Funnel",
         (
@@ -377,6 +432,10 @@ def format_funnel(report: dict[str, Any]) -> str:
             f"{follow_up_label} "
             f"({report['follow_up']['stale_days']}+ days as of "
             f"{report['follow_up']['as_of']})"
+        ),
+        (
+            f"Sales actions: {summary['sales_actions']} open pre-payment "
+            f"{sales_action_label}"
         ),
         "Stages:",
     ]
@@ -445,6 +504,18 @@ def format_funnel(report: dict[str, Any]) -> str:
                 f"  #{deal['number']} [{deal['stage']}, "
                 f"{deal['purchase_readiness']}, {deal['age_days']} days] "
                 f"{deal['title']} (updated {deal['updated_at']}){suffix}"
+            )
+    else:
+        lines.append("  none")
+
+    lines.append("Sales queue:")
+    if report["sales_queue"]["deals"]:
+        for deal in report["sales_queue"]["deals"]:
+            suffix = f" {deal['url']}" if deal["url"] else ""
+            lines.append(
+                f"  #{deal['number']} [P{deal['priority']}, {deal['stage']}, "
+                f"{deal['purchase_readiness']}] {deal['next_action']} "
+                f"{deal['title']}{suffix}"
             )
     else:
         lines.append("  none")
@@ -647,6 +718,25 @@ def _record_segment_totals(
     totals["booked_revenue_usd"] += int(is_booked) * pilot_price_usd
     totals["annual_conversions"] += int(has_converted)
     totals["lost_pilots"] += int(has_lost)
+
+
+def _sales_action(stage: str, readiness: str, pilot_price_usd: int) -> str:
+    if readiness not in SALES_ACTIONS:
+        return "Clarify purchase readiness before advancing."
+    return SALES_ACTIONS[readiness][stage].format(
+        pilot_price_usd=pilot_price_usd
+    )
+
+
+def _sales_queue_sort_key(deal: dict[str, Any]) -> tuple[int, int, int, int]:
+    age_days = deal["age_days"]
+    age_rank = -age_days if isinstance(age_days, int) and age_days >= 0 else 1
+    return (
+        deal["priority"],
+        SALES_STAGE_ORDER[deal["stage"]],
+        age_rank,
+        deal["number"],
+    )
 
 
 def _classify_lead_source(

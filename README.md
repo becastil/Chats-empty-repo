@@ -220,7 +220,9 @@ distance to the three-pilot goal, annual conversions, losses, label drift, and
 open pre-payment issues inactive for at least seven UTC calendar days. It also
 attributes qualification and booked revenue to the request form's self-reported
 discovery channel and groups ready, approval-dependent, and exploratory intent
-without treating intent as cash.
+without treating intent as cash. A deterministic sales queue ranks every open
+pre-payment deal by declared readiness and funnel stage, then names the next
+conversion action without advancing labels automatically.
 See [docs/pilot-tracking.md](docs/pilot-tracking.md) for stage definitions and
 privacy rules.
 

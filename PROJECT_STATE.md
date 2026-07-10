@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 29 of 1,000, with 971 remaining. Quality, test coverage, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 30 of 1,000, with 970 remaining. Quality, test coverage, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -71,6 +71,8 @@ The delivery goal is 1,000 meaningful commits. This update is commit 29 of 1,000
 - Schema-4 funnel reporting for readiness-stage, revenue, conversion, and loss outcomes.
 - Explicit missing, unknown, and ambiguous readiness warnings for legacy or edited issues.
 - Hosted cross-repository rollout proof with policy-fingerprint coverage, scanned-commit coverage, remediation visibility, and a price-specific pilot CTA.
+- Deterministic sales-action queues ranked by disclosed purchase readiness, funnel stage, issue age, and issue number.
+- Stage-specific next actions for ready, approval-dependent, exploratory, missing, and unrecognized purchase intent.
 
 ## How To Run
 
@@ -81,4 +83,4 @@ python3 -m unittest discover -s tests
 
 ## Next Small Task
 
-Collect the first public pilot requests from the strengthened rollout offer and compare purchase readiness by source.
+Collect the first public pilot requests, work the prioritized sales queue, and compare purchase readiness by source.

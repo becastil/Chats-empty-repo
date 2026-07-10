@@ -117,9 +117,16 @@ touchpoint caused a purchase.
 
 The intake also requires one public purchase-readiness answer: ready to buy the
 $299 pilot, needs internal approval, or exploring before requesting budget.
-Schema-4 funnel totals connect each readiness state to qualification, offers,
+Funnel totals connect each readiness state to qualification, offers,
 booked revenue, conversion, and loss. Readiness is self-reported intent, not
 cash; only `pilot-paid` or a later paid stage counts as booked revenue.
+
+Schema-5 reporting also turns every open pre-payment request into a prioritized
+sales action. Ready buyers surface first, approval-dependent buyers receive an
+approval-oriented action, exploratory buyers receive a proof or decision-criteria
+action, and unclear answers require clarification. Funnel stage and issue age
+order deals within those groups. The queue is an operating aid, not an automated
+decision, and it neither sends outreach nor changes booked-revenue semantics.
 
 ## Product Filter
 
