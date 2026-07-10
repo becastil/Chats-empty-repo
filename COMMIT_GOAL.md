@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this sales-queue commit: 30 / 1,000 (3.0%).
-- Remaining after this sales-queue commit: 970 commits.
+- Progress after this portable-distribution commit: 31 / 1,000 (3.1%).
+- Remaining after this portable-distribution commit: 969 commits.
 
 ## Commit Standard
 

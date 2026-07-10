@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.4 - 2026-07-10
+
+- Added a single-file `repo-scout-X.Y.Z.pyz` for checkout-free, no-install CLI adoption.
+- Added release-time zipapp building, source filtering, direct execution smoke tests, checksums, provenance attestations, and immutable publication.
+- Moved the README and hosted companion quick starts from source checkout commands to the portable release.
+- Added direct portable and wheel install paths plus complete artifact verification guidance.
+- Added public package URLs, distribution channel contracts, adoption metrics, and the PyPI naming constraint.
+- Expanded release, archive-content, functional zipapp, metadata, and rendered-site coverage.
+
 ## 0.3.3 - 2026-07-10
 
 - Replaced the hosted single-repository policy mockup with cross-repository rollout proof for policy-fingerprint and scanned-commit coverage.

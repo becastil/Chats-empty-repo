@@ -174,9 +174,12 @@ h1 { max-width: 690px; margin: 1.35rem 0 1.5rem; font-size: 5.2rem; line-height:
 .closing-band h2 { margin: .8rem 0 0; font-size: 3.6rem; }
 .install-block { justify-self: end; width: min(100%, 420px); padding: 1.15rem; background: var(--yellow); }
 .install-block > span { display: block; margin-bottom: .7rem; color: #5c4a12; }
-.install-block code { display: block; overflow-wrap: anywhere; color: var(--ink); font-family: "SFMono-Regular", Consolas, monospace; font-size: .76rem; line-height: 1.6; }
-.install-block button { margin-top: 1rem; padding: .55rem .7rem; border: 1px solid var(--ink); background: transparent; color: var(--ink); cursor: pointer; font-size: .7rem; font-weight: 700; }
-.install-block button:hover, .install-block button:focus-visible { background: var(--ink); color: var(--white); }
+.install-block code { display: block; overflow-wrap: anywhere; white-space: pre-wrap; color: var(--ink); font-family: "SFMono-Regular", Consolas, monospace; font-size: .7rem; line-height: 1.65; }
+.install-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem; margin-top: 1rem; }
+.install-actions button { padding: .55rem .7rem; border: 1px solid var(--ink); background: transparent; color: var(--ink); cursor: pointer; font-size: .7rem; font-weight: 700; }
+.install-actions button:hover, .install-actions button:focus-visible { background: var(--ink); color: var(--white); }
+.install-actions a { color: var(--ink); font-size: .7rem; font-weight: 700; text-underline-offset: 3px; }
+.install-actions a:hover, .install-actions a:focus-visible { color: var(--coral-dark); }
 .site-footer { width: min(1180px, calc(100% - 3rem)); margin: 0 auto; display: flex; justify-content: space-between; gap: 1rem; padding: 1.5rem 0 2rem; color: var(--muted); font-size: .67rem; }
 
 :focus-visible { outline: 3px solid var(--coral); outline-offset: 3px; }

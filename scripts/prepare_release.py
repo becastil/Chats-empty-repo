@@ -15,6 +15,7 @@ import tomllib
 ARTIFACT_TEMPLATE = (
     "repo_scout-{version}-py3-none-any.whl",
     "repo_scout-{version}.tar.gz",
+    "repo-scout-{version}.pyz",
 )
 CHECKSUMS_NAME = "SHA256SUMS"
 SEMVER_TAG = re.compile(r"v[0-9]+\.[0-9]+\.[0-9]+\Z")

@@ -25,6 +25,7 @@ initial revenue before licensing or billing infrastructure is built.
 - Saved snapshot comparison and bounded changed-path details.
 - A copy-ready, read-only GitHub Actions policy gate with failure evidence.
 - Offline starter policies for baseline, Python, npm, and agent-ready services.
+- A no-install, single-file zipapp for the primary CLI.
 - Versioned GitHub release artifacts with checksums and verifiable build provenance.
 
 The free CLI should be good enough to adopt without a sales conversation.
@@ -78,7 +79,7 @@ committed once and reused in CI.
 
 ## Conversion Path
 
-1. A developer adopts the free CLI for handoffs or reviews.
+1. A developer downloads the portable release and adopts the free CLI for handoffs or reviews.
 2. The team initializes and commits the closest starter policy.
 3. The team copies the GitHub Actions gate into its first repository.
 4. The team records a passing rollout bundle and needs the same standard across repositories.
@@ -137,3 +138,9 @@ of the near-term roadmap.
 The 1,000-commit delivery goal does not weaken this filter. Commit count is a
 measure of sustained execution; revenue evidence remains the measure of product
 success.
+
+Distribution work must reduce the path from discovery to a successful local
+scan, team CI activation, or a qualified pilot request. Portable and wheel
+downloads, repository traffic, and source attribution are adoption evidence;
+they do not replace booked revenue. The supported channel contract and metrics
+live in `DISTRIBUTION.md`.

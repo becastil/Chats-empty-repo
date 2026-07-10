@@ -4,15 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "repo-scout"
-version = "0.3.3"
-description = "A local CLI that summarizes repository health and handoff context."
+version = "0.3.4"
+description = "Local repository snapshots and policy enforcement for developer teams."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [
   { name = "Repo Scout contributors" }
 ]
 license = "MIT"
-keywords = ["cli", "developer-tools", "repository", "handoff"]
+keywords = ["cli", "developer-tools", "repository", "policy", "ci", "handoff"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Console",
@@ -29,6 +29,12 @@ repo-scout = "repo_scout.cli:main"
 repo-scout-pilot = "repo_scout.pilot_funnel:main"
 repo-scout-policy = "repo_scout.policy_templates:main"
 repo-scout-rollout = "repo_scout.rollout_summary:main"
+
+[project.urls]
+Homepage = "https://repo-scout.becastil.chatgpt.site"
+Documentation = "https://github.com/becastil/Chats-empty-repo#readme"
+Source = "https://github.com/becastil/Chats-empty-repo"
+Issues = "https://github.com/becastil/Chats-empty-repo/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]

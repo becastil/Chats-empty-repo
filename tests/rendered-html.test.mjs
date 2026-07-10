@@ -26,12 +26,24 @@ test("server-renders the Repo Scout companion page", async () => {
 
   const html = await response.text();
   assert.match(html, /<title>Repo Scout \| Local repository policy for teams<\/title>/i);
+  assert.match(html, /One-file local repository snapshots/i);
   assert.match(html, /property="og:image" content="http:\/\/localhost\/og\.png"/i);
   assert.match(html, /name="twitter:card" content="summary_large_image"/i);
   assert.match(html, /Repo Scout for every handoff\./i);
   assert.match(html, /Repo Scout Snapshot/i);
   assert.match(html, /Languages:/i);
   assert.match(html, /--languages \./i);
+  assert.match(html, /Copy no-install setup/i);
+  assert.match(html, /One file\. Python 3\.11\+\. No API key\./i);
+  assert.match(html, /curl -fL/i);
+  assert.match(html, /repo-scout-0\.3\.4\.pyz/i);
+  assert.match(html, /python3 \/tmp\/repo-scout\.pyz --languages \./i);
+  assert.match(html, /Download v/i);
+  assert.match(
+    html,
+    /releases\/download\/v0\.3\.4\/repo-scout-0\.3\.4\.pyz/i,
+  );
+  assert.doesNotMatch(html, /PYTHONPATH=src python3 -m repo_scout/i);
   assert.match(html, /Snapshot lab/i);
   assert.match(html, /id="team-pilot"/i);
   assert.match(html, /Prove one policy across every repository\./i);

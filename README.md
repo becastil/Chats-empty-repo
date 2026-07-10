@@ -26,22 +26,35 @@ npm run dev
 
 ## Quick Start
 
-Run from a checkout:
+Download the portable release and scan the current repository. This path does
+not require a checkout, package installation, administrator access, or an API
+key:
 
 ```bash
-PYTHONPATH=src python3 -m repo_scout .
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.4/repo-scout-0.3.4.pyz -o /tmp/repo-scout.pyz
+python3 /tmp/repo-scout.pyz --languages .
+```
+
+Repo Scout requires Python 3.11 or newer. The portable file contains the free
+primary CLI. Install the wheel when you also
+need the `repo-scout-policy`, `repo-scout-rollout`, or `repo-scout-pilot`
+commands:
+
+```bash
+python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.4/repo_scout-0.3.4-py3-none-any.whl
+repo-scout --languages .
 ```
 
 Machine-readable output is available too:
 
 ```bash
-PYTHONPATH=src python3 -m repo_scout --format json .
+python3 /tmp/repo-scout.pyz --format json .
 ```
 
 Create a handoff or pull-request-ready report:
 
 ```bash
-PYTHONPATH=src python3 -m repo_scout --format markdown --languages .
+python3 /tmp/repo-scout.pyz --format markdown --languages .
 ```
 
 Markdown output includes the summary, project document status, active filters,
@@ -50,9 +63,9 @@ file composition tables, and largest files.
 Compare two saved JSON snapshots to see project drift:
 
 ```bash
-PYTHONPATH=src python3 -m repo_scout --format json . > before.json
-PYTHONPATH=src python3 -m repo_scout --format json . > after.json
-PYTHONPATH=src python3 -m repo_scout --format markdown --compare before.json after.json
+python3 /tmp/repo-scout.pyz --format json . > before.json
+python3 /tmp/repo-scout.pyz --format json . > after.json
+python3 /tmp/repo-scout.pyz --format markdown --compare before.json after.json
 ```
 
 Comparison JSON reports numeric deltas, added and removed document entries,
@@ -68,26 +81,26 @@ are rejected with a clear error.
 Write reports directly and require `--force` before replacing an existing file:
 
 ```bash
-PYTHONPATH=src python3 -m repo_scout --format markdown --output handoff.md .
-PYTHONPATH=src python3 -m repo_scout --format markdown --output handoff.md --force .
+python3 /tmp/repo-scout.pyz --format markdown --output handoff.md .
+python3 /tmp/repo-scout.pyz --format markdown --output handoff.md --force .
 ```
 
 Ignore extra local files or directories without editing `.gitignore`:
 
 ```bash
-PYTHONPATH=src python3 -m repo_scout --ignore "*.log" --ignore private .
+python3 /tmp/repo-scout.pyz --ignore "*.log" --ignore private .
 ```
 
 Protect large scans with a file-count limit:
 
 ```bash
-PYTHONPATH=src python3 -m repo_scout --max-files 5000 .
+python3 /tmp/repo-scout.pyz --max-files 5000 .
 ```
 
 Add a language-level summary while keeping raw extension counts:
 
 ```bash
-PYTHONPATH=src python3 -m repo_scout --languages .
+python3 /tmp/repo-scout.pyz --languages .
 ```
 
 Language detection uses common filenames and file extensions. Unrecognized files are
@@ -96,7 +109,7 @@ grouped under `Other`.
 Show the attention summary with a custom large-file threshold:
 
 ```bash
-PYTHONPATH=src python3 -m repo_scout --format markdown --large-file-bytes 250000 .
+python3 /tmp/repo-scout.pyz --format markdown --large-file-bytes 250000 .
 ```
 
 The default threshold is 100,000 bytes.
@@ -104,7 +117,7 @@ The default threshold is 100,000 bytes.
 Fail CI after still emitting the report when attention is required:
 
 ```bash
-PYTHONPATH=src python3 -m repo_scout --format markdown --fail-on-attention .
+python3 /tmp/repo-scout.pyz --format markdown --fail-on-attention .
 ```
 
 Exit code 5 means the scan completed but attention findings were present.
@@ -112,7 +125,7 @@ Exit code 5 means the scan completed but attention findings were present.
 Apply a shared team policy and fail CI when the repository violates it:
 
 ```bash
-PYTHONPATH=src python3 -m repo_scout --format markdown --policy examples/team-policy.toml .
+python3 /tmp/repo-scout.pyz --format markdown --policy examples/team-policy.toml .
 ```
 
 Policy files use a strict, versioned TOML contract:
@@ -235,9 +248,9 @@ repo-scout .
 
 Repo Scout requires Python 3.11 or newer and has no runtime dependencies.
 
-Versioned wheel and source releases are also available from GitHub with
-SHA-256 manifests and build-provenance attestations. Install and verify a
-specific release using the commands in
+Portable, wheel, and source releases are available from GitHub with SHA-256
+manifests and build-provenance attestations. Install and verify a specific
+release using the commands in
 [docs/releases.md](docs/releases.md).
 
 Run the tests:

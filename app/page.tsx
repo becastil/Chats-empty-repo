@@ -2,6 +2,12 @@
 
 import { useState } from "react";
 
+const releaseVersion = "0.3.4";
+const portableUrl =
+  `https://github.com/becastil/Chats-empty-repo/releases/download/v${releaseVersion}/repo-scout-${releaseVersion}.pyz`;
+const quickStart = `curl -fL ${portableUrl} -o /tmp/repo-scout.pyz
+python3 /tmp/repo-scout.pyz --languages .`;
+
 const snapshotText = `Repo Scout Snapshot
 Root: /workspace/checkout
 Git: main, clean
@@ -66,7 +72,7 @@ export default function Home() {
   const output = format === "text" ? snapshotText : snapshotJson;
 
   async function copyCommand() {
-    await navigator.clipboard?.writeText("python3 -m repo_scout --languages .");
+    await navigator.clipboard?.writeText(quickStart);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1800);
   }
@@ -104,10 +110,10 @@ export default function Home() {
             <div className="hero-actions">
               <a className="button button-primary" href="#snapshot">Explore a snapshot <span aria-hidden="true">-&gt;</span></a>
               <button className="button button-secondary" type="button" onClick={copyCommand}>
-                {copied ? "Copied" : "Copy quick start"}
+                {copied ? "Copied" : "Copy no-install setup"}
               </button>
             </div>
-            <p className="microcopy">Dependency-free. Runs locally. No API key.</p>
+            <p className="microcopy">One file. Python 3.11+. No API key.</p>
             <a className="pilot-inline-link" href="#team-pilot">
               Team policy pilot: $299 for 90 days <span aria-hidden="true">-&gt;</span>
             </a>
@@ -252,9 +258,12 @@ export default function Home() {
             <h2 id="closing-title">Start free. Standardize when the team is ready.</h2>
           </div>
           <div className="install-block">
-            <span>quick start</span>
-            <code>PYTHONPATH=src python3 -m repo_scout --languages .</code>
-            <button type="button" onClick={copyCommand}>{copied ? "Copied" : "Copy command"}</button>
+            <span>portable quick start</span>
+            <code>{quickStart}</code>
+            <div className="install-actions">
+              <button type="button" onClick={copyCommand}>{copied ? "Copied" : "Copy setup"}</button>
+              <a href={portableUrl}>Download v{releaseVersion}</a>
+            </div>
           </div>
         </section>
       </div>
