@@ -31,17 +31,17 @@ not require a checkout, package installation, administrator access, or an API
 key:
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.4/repo-scout-0.3.4.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.5/repo-scout-0.3.5.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 ```
 
 Repo Scout requires Python 3.11 or newer. The portable file contains the free
 primary CLI. Install the wheel when you also
-need the `repo-scout-policy`, `repo-scout-rollout`, or `repo-scout-pilot`
-commands:
+need the `repo-scout-distribution`, `repo-scout-policy`,
+`repo-scout-rollout`, or `repo-scout-pilot` commands:
 
 ```bash
-python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.4/repo_scout-0.3.4-py3-none-any.whl
+python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.5/repo_scout-0.3.5-py3-none-any.whl
 repo-scout --languages .
 ```
 
@@ -252,6 +252,19 @@ Portable, wheel, and source releases are available from GitHub with SHA-256
 manifests and build-provenance attestations. Install and verify a specific
 release using the commands in
 [docs/releases.md](docs/releases.md).
+
+Measure the public artifact request signal without granting the reporter network
+or repository credentials:
+
+```bash
+curl -fsSL 'https://api.github.com/repos/becastil/Chats-empty-repo/releases?per_page=100' \
+  | repo-scout-distribution
+```
+
+The report validates each release artifact contract and separates portable,
+wheel, source, manifest, and unknown requests. Counts can include CI downloads,
+maintainer checks, and retries, so they are not unique installs or revenue. See
+[DISTRIBUTION.md](DISTRIBUTION.md) for the channel contract.
 
 Run the tests:
 

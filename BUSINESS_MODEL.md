@@ -141,6 +141,12 @@ success.
 
 Distribution work must reduce the path from discovery to a successful local
 scan, team CI activation, or a qualified pilot request. Portable and wheel
-downloads, repository traffic, and source attribution are adoption evidence;
+downloads, repository traffic, and source attribution are distribution evidence;
 they do not replace booked revenue. The supported channel contract and metrics
 live in `DISTRIBUTION.md`.
+
+The local `repo-scout-distribution` report audits public release completeness
+and separates portable, wheel, source, checksum, and unknown artifact requests.
+Those counts can include Repo Scout's own CI, maintainer checks, and retries, so
+they are directional reach evidence only. They must be reviewed beside pilot
+source and purchase-readiness reports rather than presented as users or sales.

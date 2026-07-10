@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 31 of 1,000, with 969 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 32 of 1,000, with 968 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -76,15 +76,18 @@ The delivery goal is 1,000 meaningful commits. This update is commit 31 of 1,000
 - Single-file, no-install zipapp distribution for the free primary CLI.
 - Release checksums, provenance attestations, and direct-execution smoke tests covering the portable artifact.
 - Public package URLs and checkout-free website and README onboarding.
+- Dependency-free distribution reporting from exported public GitHub release records.
+- Version-aware portable, wheel, source, and checksum artifact contract audits.
+- Explicit separation of primary artifact requests from unique installs, activation, pilot demand, and revenue.
 
 ## How To Run
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.4/repo-scout-0.3.4.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.5/repo-scout-0.3.5.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 python3 -m unittest discover -s tests
 ```
 
 ## Next Small Task
 
-Measure portable and wheel release adoption, then connect distribution source to the first public pilot requests.
+Capture a weekly distribution baseline alongside the pilot funnel, then connect self-reported discovery source to the first public requests.

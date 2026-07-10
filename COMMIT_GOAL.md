@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this portable-distribution commit: 31 / 1,000 (3.1%).
-- Remaining after this portable-distribution commit: 969 commits.
+- Progress after this distribution-reporting commit: 32 / 1,000 (3.2%).
+- Remaining after this distribution-reporting commit: 968 commits.
 
 ## Commit Standard
 

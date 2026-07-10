@@ -1,12 +1,22 @@
 # Changelog
 
+## 0.3.5 - 2026-07-10
+
+- Added `repo-scout-distribution` for dependency-free reporting from exported GitHub release JSON.
+- Added version-aware artifact contracts that require portable zipapps from `v0.3.4` while preserving valid earlier releases.
+- Separated portable and wheel primary requests from source, manifest, and unknown artifact requests.
+- Added stable text and schema-1 JSON output with latest-release details, channel totals, portable share, and contract warnings.
+- Rejected malformed releases, duplicate tags or assets, invalid counts, and non-semantic stable tags.
+- Explicitly documented CI, maintainer verification, retries, and GitHub's non-unique request semantics so distribution signals cannot be reported as installs or revenue.
+- Added release smoke coverage for the fifth installed command and comprehensive reporter contract, drift, CLI, and validation tests.
+
 ## 0.3.4 - 2026-07-10
 
 - Added a single-file `repo-scout-X.Y.Z.pyz` for checkout-free, no-install CLI adoption.
 - Added release-time zipapp building, source filtering, direct execution smoke tests, checksums, provenance attestations, and immutable publication.
 - Moved the README and hosted companion quick starts from source checkout commands to the portable release.
 - Added direct portable and wheel install paths plus complete artifact verification guidance.
-- Added public package URLs, distribution channel contracts, adoption metrics, and the PyPI naming constraint.
+- Added public package URLs, distribution channel contracts, reach metrics, and the PyPI naming constraint.
 - Expanded release, archive-content, functional zipapp, metadata, and rendered-site coverage.
 
 ## 0.3.3 - 2026-07-10

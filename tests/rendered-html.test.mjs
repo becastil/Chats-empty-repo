@@ -36,12 +36,12 @@ test("server-renders the Repo Scout companion page", async () => {
   assert.match(html, /Copy no-install setup/i);
   assert.match(html, /One file\. Python 3\.11\+\. No API key\./i);
   assert.match(html, /curl -fL/i);
-  assert.match(html, /repo-scout-0\.3\.4\.pyz/i);
+  assert.match(html, /repo-scout-0\.3\.5\.pyz/i);
   assert.match(html, /python3 \/tmp\/repo-scout\.pyz --languages \./i);
   assert.match(html, /Download v/i);
   assert.match(
     html,
-    /releases\/download\/v0\.3\.4\/repo-scout-0\.3\.4\.pyz/i,
+    /releases\/download\/v0\.3\.5\/repo-scout-0\.3\.5\.pyz/i,
   );
   assert.doesNotMatch(html, /PYTHONPATH=src python3 -m repo_scout/i);
   assert.match(html, /Snapshot lab/i);

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const releaseVersion = "0.3.4";
+const releaseVersion = "0.3.5";
 const portableUrl =
   `https://github.com/becastil/Chats-empty-repo/releases/download/v${releaseVersion}/repo-scout-${releaseVersion}.pyz`;
 const quickStart = `curl -fL ${portableUrl} -o /tmp/repo-scout.pyz
