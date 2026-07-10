@@ -35,6 +35,14 @@ def load_policy(path: str | Path) -> dict[str, Any]:
     return _validate_policy(policy, source)
 
 
+def parse_policy(content: str, source: str = "<policy>") -> dict[str, Any]:
+    try:
+        policy = tomllib.loads(content)
+    except tomllib.TOMLDecodeError as exc:
+        raise PolicyError(f"invalid TOML in {source}: {exc}") from exc
+    return _validate_policy(policy, source)
+
+
 def evaluate_policy(
     snapshot: dict[str, Any], policy: dict[str, Any]
 ) -> dict[str, Any]:
@@ -109,7 +117,7 @@ def evaluate_policy(
     }
 
 
-def _validate_policy(policy: Any, source: Path) -> dict[str, Any]:
+def _validate_policy(policy: Any, source: str | Path) -> dict[str, Any]:
     if not isinstance(policy, dict):
         raise PolicyError(f"policy must be a TOML table: {source}")
 
@@ -155,7 +163,7 @@ def _validate_policy(policy: Any, source: Path) -> dict[str, Any]:
     }
 
 
-def _validate_required_files(value: Any, source: Path) -> list[str]:
+def _validate_required_files(value: Any, source: str | Path) -> list[str]:
     if not isinstance(value, list) or not value:
         raise PolicyError(
             f"repository.required_files must be a non-empty array: {source}"

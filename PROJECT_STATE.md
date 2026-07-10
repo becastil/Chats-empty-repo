@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 18 of 1,000, with 982 remaining. Quality, test coverage, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 19 of 1,000, with 981 remaining. Quality, test coverage, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -28,6 +28,8 @@ The delivery goal is 1,000 meaningful commits. This update is commit 18 of 1,000
 - CI gating with exit code 5 when attention findings are present.
 - Strict version-controlled TOML team policies for required files, repository size, and clean Git state.
 - Policy results in every report format with exit code 6 for CI violations.
+- Four packaged starter profiles for baseline, Python, npm, and agent-ready services.
+- `repo-scout-policy` discovery, inspection, and overwrite-safe initialization commands.
 - A dogfooded GitHub Actions policy gate with read-only permissions and immutable action pins.
 - Copy-ready CI and policy templates that preserve Markdown evidence when enforcement fails.
 - A $299 founding-team pilot offer with explicit revenue validation milestones.
@@ -50,4 +52,4 @@ python3 -m unittest discover -s tests
 
 ## Next Small Task
 
-Add repository-type starter policies for common pilot onboarding paths.
+Add deterministic stale-lead follow-up reporting to the pilot funnel.

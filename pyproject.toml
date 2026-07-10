@@ -4,14 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "repo-scout"
-version = "0.2.4"
+version = "0.2.5"
 description = "A local CLI that summarizes repository health and handoff context."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [
   { name = "Repo Scout contributors" }
 ]
-license = { text = "MIT" }
+license = "MIT"
 keywords = ["cli", "developer-tools", "repository", "handoff"]
 classifiers = [
   "Development Status :: 3 - Alpha",
@@ -27,6 +27,10 @@ classifiers = [
 [project.scripts]
 repo-scout = "repo_scout.cli:main"
 repo-scout-pilot = "repo_scout.pilot_funnel:main"
+repo-scout-policy = "repo_scout.policy_templates:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+repo_scout = ["templates/policies/*.toml"]

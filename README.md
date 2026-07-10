@@ -137,6 +137,20 @@ means the scan completed and at least one team-policy rule failed. Policy
 failure takes precedence over exit code 5 when `--fail-on-attention` is also
 active.
 
+Initialize an offline starter policy for a common repository type:
+
+```bash
+repo-scout-policy list
+repo-scout-policy show python-service
+repo-scout-policy init python-service
+```
+
+Profiles are available for baseline services, Python services, npm services,
+and agent-ready services. Initialization protects existing files unless
+`--force` is explicit. Review and commit the policy before enforcement because
+the profiles require a clean Git worktree. See
+[docs/policy-starters.md](docs/policy-starters.md) for the full profile matrix.
+
 Run the same policy automatically on pull requests with the copy-ready GitHub
 Actions workflow:
 

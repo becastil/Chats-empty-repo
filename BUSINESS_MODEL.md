@@ -24,6 +24,7 @@ initial revenue before licensing or billing infrastructure is built.
 - Attention findings and CI-friendly exit codes.
 - Saved snapshot comparison and bounded changed-path details.
 - A copy-ready, read-only GitHub Actions policy gate with failure evidence.
+- Offline starter policies for baseline, Python, npm, and agent-ready services.
 
 The free CLI should be good enough to adopt without a sales conversation.
 
@@ -48,10 +49,11 @@ committed once and reused in CI.
 ## Conversion Path
 
 1. A developer adopts the free CLI for handoffs or reviews.
-2. The team copies the GitHub Actions gate into its first repository.
-3. The team commits a shared policy and applies it with `--policy` across repositories.
-4. The engineering lead reviews the hosted offer and submits a qualified pilot request.
-5. The engineering lead buys a pilot for shared policies and rollout support.
+2. The team initializes and commits the closest starter policy.
+3. The team copies the GitHub Actions gate into its first repository.
+4. The team needs one custom standard applied consistently across repositories.
+5. The engineering lead reviews the hosted offer and submits a qualified pilot request.
+6. The engineering lead buys a pilot for shared policies and rollout support.
 
 The current request form is a public GitHub issue and warns teams not to share
 source code or sensitive details. A private intake channel is deferred until

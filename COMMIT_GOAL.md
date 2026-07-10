@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this revenue-tracking commit: 18 / 1,000 (1.8%).
-- Remaining after this revenue-tracking commit: 982 commits.
+- Progress after this policy-onboarding commit: 19 / 1,000 (1.9%).
+- Remaining after this policy-onboarding commit: 981 commits.
 
 ## Commit Standard
 

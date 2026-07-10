@@ -7,8 +7,8 @@
 
 ## Near Term
 
-- Add repository-type starter policies for common pilot onboarding paths.
 - Add deterministic stale-lead follow-up reporting to the pilot funnel.
+- Publish signed, versioned release artifacts for paid distribution readiness.
 
 ## Revenue Validation
 

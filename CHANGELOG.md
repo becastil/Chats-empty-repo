@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.5 - 2026-07-10
+
+- Added four packaged starter policies for baseline, Python, npm, and agent-ready services.
+- Added `repo-scout-policy list` with human-readable and stable JSON catalogs.
+- Added `repo-scout-policy show` for exact, read-only TOML inspection.
+- Added overwrite-safe `repo-scout-policy init` with custom output paths and atomic `--force` replacement.
+- Applied the same strict policy validator to in-memory package resources and local files.
+- Added profile enforcement, output safety, missing-resource, deterministic catalog, and package-data coverage.
+- Updated package license metadata to the modern SPDX expression format.
+- Documented profile selection, clean-worktree onboarding, GitHub Actions handoff, and the paid custom-policy path.
+
 ## 0.2.4 - 2026-07-10
 
 - Added `repo-scout-pilot` for dependency-free pilot funnel reporting from GitHub issue JSON.

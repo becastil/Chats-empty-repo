@@ -31,6 +31,10 @@ max_total_bytes = 100000000
 require_clean_git = true
 ```
 
+The installed `repo-scout-policy init` command can generate a baseline,
+Python, npm, or agent-ready profile before the workflow is copied. Review and
+commit the generated file first; see [Starter Policy Profiles](policy-starters.md).
+
 Start with rules the team already follows. Add stricter limits after the first
 successful run so rollout work is separated from existing repository debt.
 
