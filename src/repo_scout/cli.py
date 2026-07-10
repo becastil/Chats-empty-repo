@@ -9,6 +9,7 @@ from typing import Any, Sequence
 from .comparison import SnapshotReadError, compare_snapshot_files
 from .scanner import (
     DEFAULT_LARGE_FILE_BYTES,
+    SNAPSHOT_SCHEMA_VERSION,
     ScanLimitExceeded,
     scan_project,
 )
@@ -161,6 +162,7 @@ def format_snapshot(snapshot: dict[str, Any]) -> str:
 
     lines = [
         "Repo Scout Snapshot",
+        f"Schema: {SNAPSHOT_SCHEMA_VERSION}",
         f"Root: {snapshot['root']}",
         f"Git: {_format_git(git)}",
         f"Docs: {_format_docs(docs)}",
@@ -221,6 +223,7 @@ def format_markdown(snapshot: dict[str, Any]) -> str:
     lines = [
         "# Repo Scout Snapshot",
         "",
+        f"- **Schema:** {_markdown_code(str(SNAPSHOT_SCHEMA_VERSION))}",
         f"- **Root:** {_markdown_code(snapshot['root'])}",
         f"- **Git:** {_markdown_code(_format_git(git))}",
         f"- **Docs:** {_format_docs(docs)}",
@@ -294,6 +297,7 @@ def format_comparison(comparison: dict[str, Any]) -> str:
     lines = [
         "Repo Scout Comparison",
         f"Status: {comparison['status']}",
+        f"Schema: {_format_value_change(comparison['schema_version'])}",
         f"Before: {before['label']}",
         f"After: {after['label']}",
         f"Files: {_format_numeric_change(files['total'])}",
@@ -356,6 +360,7 @@ def format_comparison_markdown(comparison: dict[str, Any]) -> str:
         "# Repo Scout Comparison",
         "",
         f"- **Status:** {_markdown_code(comparison['status'])}",
+        f"- **Schema:** {_markdown_value_change(comparison['schema_version'])}",
         f"- **Before:** {_markdown_code(before['label'])}",
         f"- **After:** {_markdown_code(after['label'])}",
         "",
@@ -370,6 +375,16 @@ def format_comparison_markdown(comparison: dict[str, Any]) -> str:
     if comparison["status"] == "unchanged":
         lines.extend(["", "No changes detected."])
         return "\n".join(lines)
+
+    if comparison["schema_version"]["changed"]:
+        lines.extend(
+            [
+                "",
+                "## Schema Change",
+                "",
+                f"- Snapshot schema: {_markdown_value_change(comparison['schema_version'])}",
+            ]
+        )
 
     _append_markdown_counter_change(
         lines, "Extension Changes", files["by_extension"]

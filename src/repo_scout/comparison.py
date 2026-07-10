@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 from typing import Any, Mapping
 
+from .scanner import SNAPSHOT_SCHEMA_VERSION
+
 
 class SnapshotReadError(ValueError):
     """Raised when a saved snapshot cannot be read or validated."""
@@ -38,6 +40,9 @@ def compare_snapshots(
     after_attention = _attention(after)
 
     result = {
+        "schema_version": _value_change(
+            _schema_version(before), _schema_version(after)
+        ),
         "before": {
             "label": before_label,
             "root": str(before.get("root", "")),
@@ -141,6 +146,13 @@ def _attention(snapshot: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+def _schema_version(snapshot: Mapping[str, Any]) -> int:
+    version = snapshot.get("schema_version", SNAPSHOT_SCHEMA_VERSION)
+    if not isinstance(version, int) or isinstance(version, bool):
+        raise SnapshotReadError("snapshot schema_version must be an integer")
+    return version
+
+
 def _counter(value: Any) -> dict[str, int]:
     if not isinstance(value, dict):
         raise SnapshotReadError("snapshot count section must be an object")
@@ -193,6 +205,9 @@ def _counter_change(
 
 
 def _has_changes(comparison: Mapping[str, Any]) -> bool:
+    if comparison["schema_version"]["changed"]:
+        return True
+
     files = comparison["files"]
     if files["total"]["delta"] or files["total_bytes"]["delta"]:
         return True

@@ -43,3 +43,7 @@ Snapshot comparison accepts JSON files produced by the existing `--format json` 
 ## 2026-07-09: Protect Direct Report Writes
 
 `--output` refuses to replace an existing file unless the caller also passes `--force`. This keeps handoff reports from being silently overwritten while retaining an explicit escape hatch for repeatable automation.
+
+## 2026-07-10: Version the Snapshot Contract
+
+Every new snapshot declares schema version 1. Comparison treats missing schema metadata as version 1 so existing saved files remain usable, while an explicit version change appears as a comparison finding for future migrations.

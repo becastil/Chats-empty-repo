@@ -2,4 +2,4 @@
 
 ## Near Term
 
-- Add snapshot schema version metadata for future format changes.
+- Add explicit validation for unsupported future snapshot schema versions.

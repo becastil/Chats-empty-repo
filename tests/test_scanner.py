@@ -26,6 +26,7 @@ class ScanProjectTests(unittest.TestCase):
             snapshot = scan_project(root)
 
             self.assertFalse(snapshot["git"]["is_repo"])
+            self.assertEqual(snapshot["schema_version"], 1)
             self.assertEqual(snapshot["files"]["total"], 4)
             self.assertEqual(snapshot["files"]["by_extension"][".md"], 1)
             self.assertEqual(snapshot["files"]["by_extension"][".py"], 1)

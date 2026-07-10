@@ -16,6 +16,7 @@ EXPECTED_DOCS = (
 )
 
 DEFAULT_LARGE_FILE_BYTES = 100_000
+SNAPSHOT_SCHEMA_VERSION = 1
 
 EXCLUDED_DIRS = {
     ".git",
@@ -128,6 +129,7 @@ def scan_project(
         file_summary["by_language"] = dict(sorted(by_language.items()))
 
     return {
+        "schema_version": SNAPSHOT_SCHEMA_VERSION,
         "root": str(root),
         "git": git_summary,
         "docs": doc_summary,

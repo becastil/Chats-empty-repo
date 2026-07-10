@@ -65,22 +65,19 @@ class ComparisonCliTests(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
-            after_path.write_text(
-                json.dumps(
-                    snapshot(
-                        total=3,
-                        total_bytes=35,
-                        extensions={".md": 1, ".py": 2},
-                        present=["README.md", "ROADMAP.md"],
-                        missing=[],
-                        branch="feature",
-                        dirty_files=2,
-                        attention_status="needs-attention",
-                        attention_items=2,
-                    )
-                ),
-                encoding="utf-8",
+            after_snapshot = snapshot(
+                total=3,
+                total_bytes=35,
+                extensions={".md": 1, ".py": 2},
+                present=["README.md", "ROADMAP.md"],
+                missing=[],
+                branch="feature",
+                dirty_files=2,
+                attention_status="needs-attention",
+                attention_items=2,
             )
+            after_snapshot["schema_version"] = 2
+            after_path.write_text(json.dumps(after_snapshot), encoding="utf-8")
 
             from contextlib import redirect_stdout
             import io
@@ -94,6 +91,8 @@ class ComparisonCliTests(unittest.TestCase):
             comparison = json.loads(stdout.getvalue())
             self.assertEqual(exit_code, 0)
             self.assertEqual(comparison["status"], "changed")
+            self.assertEqual(comparison["schema_version"]["before"], 1)
+            self.assertEqual(comparison["schema_version"]["after"], 2)
             self.assertEqual(comparison["files"]["total"]["delta"], 1)
             self.assertEqual(
                 comparison["files"]["by_extension"]["changed"][".py"]["delta"],

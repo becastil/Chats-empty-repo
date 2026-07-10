@@ -25,6 +25,7 @@ class CliTests(unittest.TestCase):
 
             self.assertEqual(exit_code, 0)
             snapshot = json.loads(stdout.getvalue())
+            self.assertEqual(snapshot["schema_version"], 1)
             self.assertEqual(snapshot["root"], str(root.resolve()))
             self.assertEqual(snapshot["files"]["total"], 1)
             self.assertEqual(snapshot["docs"]["present"], ["README.md"])

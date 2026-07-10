@@ -57,6 +57,9 @@ PYTHONPATH=src python3 -m repo_scout --format markdown --compare before.json aft
 Comparison JSON reports numeric deltas, added and removed document entries,
 Git changes, and attention-status changes.
 
+Snapshots include `schema_version: 1`. Older snapshots without that field are
+read as version 1 for comparison compatibility.
+
 Write reports directly and require `--force` before replacing an existing file:
 
 ```bash
