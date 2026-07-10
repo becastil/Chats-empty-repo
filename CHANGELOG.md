@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.9 - 2026-07-10
 
 - Replaced the customer CI example's pinned source checkout with the published `v0.2.8` wheel.
 - Added independent wheel-digest and release-manifest verification before installation.
@@ -10,6 +10,10 @@
 - Applied the same verified-release bootstrap to Repo Scout's dogfood policy workflow.
 - Expanded CI contract tests to forbid source-checkout and `PYTHONPATH` regressions and require every integrity control.
 - Documented failure behavior and the atomic three-value release-pin upgrade process.
+- Added `--rollout-checklist` for deterministic first-repository onboarding evidence in Markdown policy reports.
+- Added automated policy, Git, worktree, and attention readiness checks without pre-checking human actions.
+- Preserved rollout evidence before policy exit code 6 and rejected misleading non-policy, non-Markdown, and comparison combinations.
+- Added passing, remediation, output, and misuse coverage plus pilot rollout and evidence-privacy documentation.
 
 ## 0.2.8 - 2026-07-10
 

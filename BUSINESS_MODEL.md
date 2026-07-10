@@ -47,6 +47,7 @@ The pilot includes:
 - A shared, version-controlled repository policy.
 - CI enforcement guidance and rollout support.
 - One custom policy pack for the team's repository standards.
+- First-repository readiness evidence and a reusable rollout checklist.
 - Direct feedback access and priority fixes during the pilot.
 
 The paid value is consistency across repositories and teams, not access to the
@@ -61,7 +62,7 @@ committed once and reused in CI.
 1. A developer adopts the free CLI for handoffs or reviews.
 2. The team initializes and commits the closest starter policy.
 3. The team copies the GitHub Actions gate into its first repository.
-4. The team needs one custom standard applied consistently across repositories.
+4. The team records a passing rollout bundle and needs the same standard across repositories.
 5. The engineering lead reviews the hosted offer and submits a qualified pilot request.
 6. The engineering lead buys a pilot for shared policies and rollout support.
 

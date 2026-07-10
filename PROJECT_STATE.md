@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 23 of 1,000, with 977 remaining. Quality, test coverage, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 24 of 1,000, with 976 remaining. Quality, test coverage, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -54,6 +54,9 @@ The delivery goal is 1,000 meaningful commits. This update is commit 23 of 1,000
 - Copy-ready and dogfooded CI bootstrap from a versioned Repo Scout wheel instead of a source checkout.
 - Independent wheel digest, release manifest, source commit, tag, signer workflow, and hosted-runner verification.
 - Runner-temp virtual-environment installation that leaves the protected checkout unchanged.
+- Markdown first-repository rollout bundles generated from evaluated team-policy evidence.
+- Automated readiness checks separated from explicit, unchecked team handoff actions.
+- Rollout remediation evidence preserved before policy exit code 6.
 
 ## How To Run
 
@@ -64,4 +67,4 @@ python3 -m unittest discover -s tests
 
 ## Next Small Task
 
-Generate a pilot onboarding checklist and evidence bundle for first-repository rollout.
+Summarize rollout readiness across multiple pilot repositories.

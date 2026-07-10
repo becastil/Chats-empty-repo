@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this verified-CI-bootstrap commit: 23 / 1,000 (2.3%).
-- Remaining after this verified-CI-bootstrap commit: 977 commits.
+- Progress after this rollout-evidence commit: 24 / 1,000 (2.4%).
+- Remaining after this rollout-evidence commit: 976 commits.
 
 ## Commit Standard
 

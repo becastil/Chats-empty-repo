@@ -59,6 +59,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="Apply a version-controlled TOML team policy and exit 6 on violations.",
     )
     parser.add_argument(
+        "--rollout-checklist",
+        action="store_true",
+        help=(
+            "Append first-repository rollout readiness and handoff actions to "
+            "a Markdown policy report."
+        ),
+    )
+    parser.add_argument(
         "--format",
         choices=("text", "json", "markdown"),
         default="text",
@@ -103,6 +111,27 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.force and args.output is None:
         print("repo-scout: --force requires --output", file=sys.stderr)
+        return 2
+
+    if args.rollout_checklist and args.compare:
+        print(
+            "repo-scout: --rollout-checklist cannot be used with --compare",
+            file=sys.stderr,
+        )
+        return 2
+
+    if args.rollout_checklist and not args.policy:
+        print(
+            "repo-scout: --rollout-checklist requires --policy",
+            file=sys.stderr,
+        )
+        return 2
+
+    if args.rollout_checklist and args.format != "markdown":
+        print(
+            "repo-scout: --rollout-checklist requires --format markdown",
+            file=sys.stderr,
+        )
         return 2
 
     if args.compare and args.fail_on_attention:
@@ -160,7 +189,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.format == "json":
         report = json.dumps(snapshot, indent=2, sort_keys=True)
     elif args.format == "markdown":
-        report = format_markdown(snapshot)
+        report = format_markdown(
+            snapshot,
+            include_rollout_checklist=args.rollout_checklist,
+        )
     else:
         report = format_snapshot(snapshot)
 
@@ -271,7 +303,9 @@ def _append_text_attention(lines: list[str], attention: dict[str, Any]) -> None:
     lines.extend(f"  ! {item['message']}" for item in items)
 
 
-def format_markdown(snapshot: dict[str, Any]) -> str:
+def format_markdown(
+    snapshot: dict[str, Any], *, include_rollout_checklist: bool = False
+) -> str:
     git = snapshot["git"]
     docs = snapshot["docs"]
     files = snapshot["files"]
@@ -364,7 +398,96 @@ def format_markdown(snapshot: dict[str, Any]) -> str:
             for entry in largest_files
         )
 
+    if include_rollout_checklist:
+        _append_rollout_checklist(lines, snapshot)
+
     return "\n".join(lines)
+
+
+def _append_rollout_checklist(
+    lines: list[str], snapshot: dict[str, Any]
+) -> None:
+    policy = snapshot.get("policy")
+    if policy is None:
+        raise ValueError("rollout checklist requires evaluated policy data")
+
+    git = snapshot["git"]
+    policy_passes = policy["status"] == "pass"
+    is_clean_repository = git["is_repo"] and git["dirty_files"] == 0
+    readiness = (
+        "ready-for-ci"
+        if policy_passes and is_clean_repository
+        else "remediation-required"
+    )
+    violation_count = len(policy["violations"])
+    violation_label = "violation" if violation_count == 1 else "violations"
+    rule_label = "rule" if policy["rules_checked"] == 1 else "rules"
+    attention_count = len(snapshot["attention"]["items"])
+    attention_label = "finding" if attention_count == 1 else "findings"
+
+    lines.extend(
+        [
+            "",
+            "## First-Repository Rollout",
+            "",
+            f"- **Readiness:** {_markdown_code(readiness)}",
+            f"- **Policy evidence:** {_markdown_code(policy['status'])}",
+            "",
+            "### Automated Readiness",
+            "",
+            (
+                f"- [x] Team policy version {policy['version']} was loaded and "
+                f"evaluated across {policy['rules_checked']} {rule_label}."
+            ),
+        ]
+    )
+
+    if policy_passes:
+        lines.append("- [x] Repository baseline passes every configured policy rule.")
+    else:
+        lines.append(
+            f"- [ ] Resolve {violation_count} policy {violation_label} before "
+            "enabling required CI."
+        )
+
+    if git["is_repo"]:
+        branch = git["branch"] or "detached HEAD"
+        lines.append(
+            f"- [x] Git repository detected on {_markdown_code(branch)}."
+        )
+    else:
+        lines.append("- [ ] Initialize Git before starting the rollout.")
+
+    if is_clean_repository:
+        lines.append("- [x] Git worktree was clean at scan time.")
+    elif git["is_repo"]:
+        lines.append(
+            f"- [ ] Resolve {git['dirty_files']} changed files before the "
+            "rollout handoff."
+        )
+    else:
+        lines.append("- [ ] A clean Git worktree could not be verified.")
+
+    if attention_count:
+        lines.append(
+            f"- [ ] Review {attention_count} additional attention "
+            f"{attention_label}."
+        )
+    else:
+        lines.append("- [x] No additional attention findings were detected.")
+
+    lines.extend(
+        [
+            "",
+            "### Team Handoff",
+            "",
+            "- [ ] Commit the team policy and verified Repo Scout workflow in one reviewed pull request.",
+            "- [ ] Assign an engineering owner for policy exceptions and remediation.",
+            "- [ ] Require the Repo Scout check after the baseline passes.",
+            "- [ ] Record one week of CI evidence before enrolling another repository.",
+            "- [ ] Select the next repository and reuse the approved policy pack.",
+        ]
+    )
 
 
 def format_comparison(comparison: dict[str, Any]) -> str:

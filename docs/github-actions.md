@@ -38,6 +38,10 @@ commit the generated file first; see [Starter Policy Profiles](policy-starters.m
 Start with rules the team already follows. Add stricter limits after the first
 successful run so rollout work is separated from existing repository debt.
 
+Before enabling the required check, generate a
+[first-repository rollout bundle](pilot-rollout.md) to preserve the local
+baseline, remediation list, ownership handoff, and next-repository sequence.
+
 ## Read A Failure
 
 The `Repo Scout policy` check returns exit code 6 when a policy rule fails. Its

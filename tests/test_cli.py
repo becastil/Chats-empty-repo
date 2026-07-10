@@ -4,6 +4,7 @@ from contextlib import redirect_stderr, redirect_stdout
 import io
 import json
 from pathlib import Path
+import subprocess
 import sys
 from tempfile import TemporaryDirectory
 import unittest
@@ -183,6 +184,147 @@ required_files = ["README.md", "SECURITY.md"]
             self.assertIn("## Team Policy", passing_stdout.getvalue())
             self.assertIn("- Status: `pass`", passing_stdout.getvalue())
 
+    def test_cli_appends_ready_first_repository_rollout_evidence(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for document in (
+                "README.md",
+                "PROJECT_STATE.md",
+                "ROADMAP.md",
+                "CHANGELOG.md",
+                "DECISIONS.md",
+            ):
+                (root / document).write_text("ok\n", encoding="utf-8")
+            policy_path = root / "repo-scout-policy.toml"
+            policy_path.write_text(
+                """version = 1
+[repository]
+required_files = ["README.md"]
+require_clean_git = true
+""",
+                encoding="utf-8",
+            )
+            self._commit_repository(root)
+
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        "--format",
+                        "markdown",
+                        "--policy",
+                        str(policy_path),
+                        "--rollout-checklist",
+                        str(root),
+                    ]
+                )
+
+            report = stdout.getvalue()
+            self.assertEqual(exit_code, 0)
+            self.assertIn("## First-Repository Rollout", report)
+            self.assertIn("- **Readiness:** `ready-for-ci`", report)
+            self.assertIn(
+                "- [x] Team policy version 1 was loaded and evaluated across 2 rules.",
+                report,
+            )
+            self.assertIn(
+                "- [x] Repository baseline passes every configured policy rule.",
+                report,
+            )
+            self.assertIn("- [x] Git worktree was clean at scan time.", report)
+            self.assertIn(
+                "- [x] No additional attention findings were detected.", report
+            )
+            self.assertIn("### Team Handoff", report)
+            self.assertIn(
+                "- [ ] Record one week of CI evidence before enrolling another repository.",
+                report,
+            )
+
+    def test_rollout_evidence_is_written_before_policy_exit_six(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "README.md").write_text("# Example\n", encoding="utf-8")
+            policy_path = root / "repo-scout-policy.toml"
+            policy_path.write_text(
+                """version = 1
+[repository]
+required_files = ["README.md", "SECURITY.md"]
+""",
+                encoding="utf-8",
+            )
+            output = root / "rollout-evidence.md"
+
+            with redirect_stderr(io.StringIO()):
+                exit_code = main(
+                    [
+                        "--format",
+                        "markdown",
+                        "--policy",
+                        str(policy_path),
+                        "--rollout-checklist",
+                        "--output",
+                        str(output),
+                        str(root),
+                    ]
+                )
+
+            report = output.read_text(encoding="utf-8")
+            self.assertEqual(exit_code, 6)
+            self.assertIn("- **Readiness:** `remediation-required`", report)
+            self.assertIn(
+                "- [ ] Resolve 1 policy violation before enabling required CI.",
+                report,
+            )
+            self.assertIn("- [ ] Initialize Git before starting the rollout.", report)
+            self.assertIn("### Team Handoff", report)
+
+    def test_rollout_checklist_requires_policy_markdown_scan(self) -> None:
+        stderr = io.StringIO()
+        with redirect_stderr(stderr):
+            missing_policy = main(
+                ["--format", "markdown", "--rollout-checklist", "."]
+            )
+        self.assertEqual(missing_policy, 2)
+        self.assertIn("requires --policy", stderr.getvalue())
+
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            policy_path = root / "policy.toml"
+            policy_path.write_text(
+                "version = 1\n[repository]\nmax_files = 10\n",
+                encoding="utf-8",
+            )
+            stderr = io.StringIO()
+            with redirect_stderr(stderr):
+                wrong_format = main(
+                    [
+                        "--policy",
+                        str(policy_path),
+                        "--rollout-checklist",
+                        str(root),
+                    ]
+                )
+            self.assertEqual(wrong_format, 2)
+            self.assertIn("requires --format markdown", stderr.getvalue())
+
+            stderr = io.StringIO()
+            with redirect_stderr(stderr):
+                comparison_mode = main(
+                    [
+                        "--compare",
+                        "before.json",
+                        "after.json",
+                        "--format",
+                        "markdown",
+                        "--policy",
+                        str(policy_path),
+                        "--rollout-checklist",
+                    ]
+                )
+            self.assertEqual(comparison_mode, 2)
+            self.assertIn("cannot be used with --compare", stderr.getvalue())
+
     def test_cli_rejects_invalid_team_policy(self) -> None:
         with TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -297,6 +439,23 @@ max_files = 10
 
             self.assertEqual(exit_code, 3)
             self.assertIn("exceeded --max-files=1", stderr.getvalue())
+
+    @staticmethod
+    def _commit_repository(root: Path) -> None:
+        commands = [
+            ("init", "--quiet"),
+            ("config", "user.name", "Repo Scout Tests"),
+            ("config", "user.email", "tests@example.invalid"),
+            ("add", "."),
+            ("commit", "--quiet", "-m", "Initial commit"),
+        ]
+        for command in commands:
+            subprocess.run(
+                ["git", "-C", str(root), *command],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
 
 
 if __name__ == "__main__":

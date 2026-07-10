@@ -137,6 +137,18 @@ means the scan completed and at least one team-policy rule failed. Policy
 failure takes precedence over exit code 5 when `--fail-on-attention` is also
 active.
 
+Generate a first-repository rollout bundle from the same policy evidence:
+
+```bash
+repo-scout --format markdown --policy repo-scout-policy.toml \
+  --rollout-checklist --output repo-scout-rollout.md .
+```
+
+The bundle records automated readiness without pre-checking human rollout
+actions, and it is still written before policy exit code 6. See
+[docs/pilot-rollout.md](docs/pilot-rollout.md) for the evidence contract and
+privacy guidance.
+
 Initialize an offline starter policy for a common repository type:
 
 ```bash

@@ -7,7 +7,7 @@
 
 ## Near Term
 
-- Generate a pilot onboarding checklist and evidence bundle for first-repository rollout.
+- Summarize rollout readiness across multiple pilot repositories.
 - Add a private pilot contact path after public intake validates demand.
 
 ## Revenue Validation
