@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.3 - 2026-07-10
+
+- Added a GitHub Actions policy gate that dogfoods Repo Scout on pull requests and `main`.
+- Added copy-ready workflow and policy templates for founding-team pilot repositories.
+- Pinned GitHub actions and an isolated external Repo Scout checkout to immutable commits with read-only permissions.
+- Preserved Markdown policy evidence in the job summary and a 14-day artifact even when enforcement fails.
+- Added repeatable clean-worktree coverage for the exact example command and policy contract.
+- Documented setup, rollout sequencing, exit codes, report access, and dependency-pin maintenance.
+
 ## 0.2.2 - 2026-07-10
 
 - Added the $299 founding-team pilot offer and conversion CTA to the hosted companion.

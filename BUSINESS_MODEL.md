@@ -23,6 +23,7 @@ initial revenue before licensing or billing infrastructure is built.
 - Local repository snapshots in text, JSON, and Markdown.
 - Attention findings and CI-friendly exit codes.
 - Saved snapshot comparison and bounded changed-path details.
+- A copy-ready, read-only GitHub Actions policy gate with failure evidence.
 
 The free CLI should be good enough to adopt without a sales conversation.
 
@@ -47,7 +48,7 @@ committed once and reused in CI.
 ## Conversion Path
 
 1. A developer adopts the free CLI for handoffs or reviews.
-2. The team adds `--fail-on-attention` to CI.
+2. The team copies the GitHub Actions gate into its first repository.
 3. The team commits a shared policy and applies it with `--policy` across repositories.
 4. The engineering lead reviews the hosted offer and submits a qualified pilot request.
 5. The engineering lead buys a pilot for shared policies and rollout support.

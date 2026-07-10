@@ -137,6 +137,18 @@ means the scan completed and at least one team-policy rule failed. Policy
 failure takes precedence over exit code 5 when `--fail-on-attention` is also
 active.
 
+Run the same policy automatically on pull requests with the copy-ready GitHub
+Actions workflow:
+
+```text
+examples/github-actions/repo-scout-policy.yml
+examples/github-actions/repo-scout-policy.toml
+```
+
+The workflow uses read-only permissions, immutable dependency pins, job-summary
+evidence, and a downloadable Markdown report. See
+[docs/github-actions.md](docs/github-actions.md) for setup and failure handling.
+
 ## Team Pilot
 
 Repo Scout's free core stays local and dependency-free. The $299 founding-team

@@ -1,0 +1,53 @@
+name: Repo Scout policy
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: repo-scout-policy-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  policy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.11"
+
+      - name: Enforce repository policy
+        env:
+          PYTHONPATH: ${{ github.workspace }}/src
+        run: >-
+          python -m repo_scout --format markdown
+          --policy examples/team-policy.toml
+          --output "$RUNNER_TEMP/repo-scout-policy-report.md" --force .
+
+      - name: Add report to job summary
+        if: ${{ always() }}
+        run: |
+          if [[ -f "$RUNNER_TEMP/repo-scout-policy-report.md" ]]; then
+            cat "$RUNNER_TEMP/repo-scout-policy-report.md" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload policy report
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: repo-scout-policy-report
+          path: ${{ runner.temp }}/repo-scout-policy-report.md
+          if-no-files-found: warn
+          retention-days: 14
