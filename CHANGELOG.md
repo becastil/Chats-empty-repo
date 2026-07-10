@@ -17,6 +17,7 @@
 - Added bounded added and removed path details to snapshot comparisons.
 - Added `--fail-on-attention` with exit code 5 for CI enforcement.
 - Added the founding-team pilot business model and revenue milestones.
+- Established a tracked goal of 1,000 meaningful, revenue-aligned commits.
 
 ## 0.1.3 - 2026-07-09
 

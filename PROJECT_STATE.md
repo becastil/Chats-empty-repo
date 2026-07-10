@@ -8,6 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
+The delivery goal is 1,000 meaningful commits. This update is commit 14 of 1,000, with 986 remaining. Quality, test coverage, and revenue alignment take priority over commit volume.
+
 ## Implemented
 
 - Package skeleton with an installable `repo-scout` console command.

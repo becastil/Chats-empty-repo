@@ -1,5 +1,10 @@
 # Roadmap
 
+## Delivery Goal
+
+- Reach 1,000 meaningful, tested commits without artificial commit splitting.
+- Update `COMMIT_GOAL.md` with the new count on every successful run.
+
 ## Near Term
 
 - Add version-controlled TOML policy files for the paid Team pilot.

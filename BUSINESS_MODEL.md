@@ -59,3 +59,7 @@ basic local scanner.
 New work must improve acquisition, activation, conversion, or retention for the
 paid team workflow. Generic features that do not strengthen that path stay out
 of the near-term roadmap.
+
+The 1,000-commit delivery goal does not weaken this filter. Commit count is a
+measure of sustained execution; revenue evidence remains the measure of product
+success.

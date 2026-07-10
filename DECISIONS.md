@@ -63,3 +63,7 @@ The local scanner, reports, comparisons, and basic CI gate remain free to maximi
 ## 2026-07-10: Emit Reports Before Failing CI
 
 `--fail-on-attention` always renders or writes the requested report before returning exit code 5. This preserves the evidence needed to fix a failed CI job while giving automation a stable failure signal.
+
+## 2026-07-10: Count Meaningful Commits, Not Activity
+
+The project targets 1,000 commits, but only coherent improvements that pass tests and reach `origin/main` count. Empty commits and artificial change splitting are prohibited because the commit target is a persistence mechanism, not a substitute for product or revenue progress.
