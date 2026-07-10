@@ -75,6 +75,10 @@ targets. Qualified leads and written offers remain pipeline, not booked
 revenue. Label warnings must be resolved before totals are used in a roadmap or
 sales decision.
 
+Open lead, qualified, and offered issues inactive for seven UTC calendar days
+appear in the funnel's follow-up list. This is an operating prompt based on
+GitHub issue activity, not evidence that a buyer was or was not contacted.
+
 ## Product Filter
 
 New work must improve acquisition, activation, conversion, or retention for the

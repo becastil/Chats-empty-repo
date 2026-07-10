@@ -7,8 +7,8 @@
 
 ## Near Term
 
-- Add deterministic stale-lead follow-up reporting to the pilot funnel.
 - Publish signed, versioned release artifacts for paid distribution readiness.
+- Add lead-source attribution to pilot intake and funnel reporting.
 
 ## Revenue Validation
 

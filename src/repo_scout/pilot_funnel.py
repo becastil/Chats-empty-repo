@@ -2,15 +2,17 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass
+from datetime import date, datetime, timezone
 import json
 from pathlib import Path
 import sys
 from typing import Any, Sequence, TextIO
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 DEFAULT_PILOT_PRICE_USD = 299
 DEFAULT_TARGET_PILOTS = 3
+DEFAULT_STALE_DAYS = 7
 
 STAGE_LABELS = (
     "pilot-lead",
@@ -33,6 +35,7 @@ DISPLAY_STAGES = (
     "conflict",
     "untracked",
 )
+FOLLOW_UP_STAGES = {"lead", "qualified", "offered"}
 
 
 class FunnelInputError(ValueError):
@@ -45,12 +48,16 @@ class PilotIssue:
     title: str
     url: str
     labels: frozenset[str]
+    state: str
+    updated_at: datetime | None
 
 
 def build_funnel(
     payload: Any,
     pilot_price_usd: int = DEFAULT_PILOT_PRICE_USD,
     target_pilots: int = DEFAULT_TARGET_PILOTS,
+    as_of: date | None = None,
+    stale_days: int = DEFAULT_STALE_DAYS,
 ) -> dict[str, Any]:
     if not isinstance(payload, list):
         raise FunnelInputError("issue export must be a JSON array")
@@ -58,10 +65,16 @@ def build_funnel(
         raise FunnelInputError("pilot price must be a positive integer")
     if target_pilots < 1:
         raise FunnelInputError("target pilots must be a positive integer")
+    if stale_days < 1:
+        raise FunnelInputError("stale days must be a positive integer")
+    report_date = as_of or _utc_today()
+    if isinstance(report_date, datetime) or not isinstance(report_date, date):
+        raise FunnelInputError("as-of must be a date")
 
     by_stage = {stage: 0 for stage in DISPLAY_STAGES}
     deals: list[dict[str, Any]] = []
     warnings: list[dict[str, Any]] = []
+    stale_deals: list[dict[str, Any]] = []
     ignored_issues = 0
     booked_pilots = 0
     annual_conversions = 0
@@ -144,6 +157,52 @@ def build_funnel(
                     )
                 )
 
+        age_days: int | None = None
+        if issue.updated_at is not None:
+            age_days = (report_date - issue.updated_at.date()).days
+            if age_days < 0:
+                warnings.append(
+                    _warning(
+                        issue,
+                        "future_updated_at",
+                        (
+                            f"Issue updated date {issue.updated_at.date()} is after "
+                            f"report date {report_date}."
+                        ),
+                    )
+                )
+
+        needs_follow_up = False
+        if stage in FOLLOW_UP_STAGES and issue.state == "CLOSED":
+            warnings.append(
+                _warning(
+                    issue,
+                    "closed_without_lost",
+                    "Closed pre-payment issue needs the pilot-lost label.",
+                )
+            )
+        elif stage in FOLLOW_UP_STAGES and issue.state == "OPEN":
+            if issue.updated_at is None:
+                warnings.append(
+                    _warning(
+                        issue,
+                        "missing_updated_at",
+                        "Open pre-payment issue has no updatedAt timestamp.",
+                    )
+                )
+            elif age_days is not None and age_days >= stale_days:
+                needs_follow_up = True
+                stale_deals.append(
+                    {
+                        "number": issue.number,
+                        "title": issue.title,
+                        "url": issue.url,
+                        "stage": stage,
+                        "age_days": age_days,
+                        "updated_at": _format_timestamp(issue.updated_at),
+                    }
+                )
+
         by_stage[stage] += 1
         is_booked = furthest_stage >= STAGE_LABELS.index("pilot-paid")
         booked_pilots += int(is_booked)
@@ -156,6 +215,10 @@ def build_funnel(
                 "url": issue.url,
                 "stage": stage,
                 "booked": is_booked,
+                "state": issue.state,
+                "updated_at": _format_timestamp(issue.updated_at),
+                "age_days": age_days,
+                "needs_follow_up": needs_follow_up,
             }
         )
 
@@ -182,6 +245,15 @@ def build_funnel(
             ),
             "annual_conversions": annual_conversions,
             "lost_pilots": lost_pilots,
+            "stale_deals": len(stale_deals),
+        },
+        "follow_up": {
+            "as_of": report_date.isoformat(),
+            "stale_days": stale_days,
+            "deals": sorted(
+                stale_deals,
+                key=lambda deal: (-deal["age_days"], deal["number"]),
+            ),
         },
         "by_stage": by_stage,
         "deals": sorted(deals, key=lambda deal: deal["number"]),
@@ -192,6 +264,7 @@ def build_funnel(
 def format_funnel(report: dict[str, Any]) -> str:
     summary = report["summary"]
     pricing = report["pricing"]
+    follow_up_label = "deal" if summary["stale_deals"] == 1 else "deals"
     lines = [
         "Repo Scout Pilot Funnel",
         (
@@ -208,6 +281,12 @@ def format_funnel(report: dict[str, Any]) -> str:
         ),
         f"Annual conversions: {summary['annual_conversions']}",
         f"Lost pilots: {summary['lost_pilots']}",
+        (
+            f"Follow-up: {summary['stale_deals']} stale open pre-payment "
+            f"{follow_up_label} "
+            f"({report['follow_up']['stale_days']}+ days as of "
+            f"{report['follow_up']['as_of']})"
+        ),
         "Stages:",
     ]
     for stage in DISPLAY_STAGES:
@@ -219,6 +298,17 @@ def format_funnel(report: dict[str, Any]) -> str:
             suffix = f" {deal['url']}" if deal["url"] else ""
             lines.append(
                 f"  #{deal['number']} [{deal['stage']}] {deal['title']}{suffix}"
+            )
+    else:
+        lines.append("  none")
+
+    lines.append("Stale deals:")
+    if report["follow_up"]["deals"]:
+        for deal in report["follow_up"]["deals"]:
+            suffix = f" {deal['url']}" if deal["url"] else ""
+            lines.append(
+                f"  #{deal['number']} [{deal['stage']}, {deal['age_days']} days] "
+                f"{deal['title']} (updated {deal['updated_at']}){suffix}"
             )
     else:
         lines.append("  none")
@@ -266,6 +356,19 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="COUNT",
         help=f"Paid-pilot target. Defaults to {DEFAULT_TARGET_PILOTS}.",
     )
+    parser.add_argument(
+        "--as-of",
+        type=_iso_date,
+        metavar="YYYY-MM-DD",
+        help="UTC report date for reproducible follow-up ages. Defaults to today.",
+    )
+    parser.add_argument(
+        "--stale-days",
+        type=_positive_int,
+        default=DEFAULT_STALE_DAYS,
+        metavar="DAYS",
+        help=f"Follow-up age threshold. Defaults to {DEFAULT_STALE_DAYS} days.",
+    )
     return parser
 
 
@@ -276,7 +379,13 @@ def main(argv: Sequence[str] | None = None, stdin: TextIO | None = None) -> int:
 
     try:
         payload = _read_payload(args.input, input_stream)
-        report = build_funnel(payload, args.pilot_price, args.target_pilots)
+        report = build_funnel(
+            payload,
+            pilot_price_usd=args.pilot_price,
+            target_pilots=args.target_pilots,
+            as_of=args.as_of,
+            stale_days=args.stale_days,
+        )
     except FunnelInputError as exc:
         print(f"repo-scout-pilot: {exc}", file=sys.stderr)
         return 2
@@ -336,21 +445,61 @@ def _parse_issue(raw_issue: Any, index: int) -> PilotIssue:
             )
         labels.add(name)
 
-    return PilotIssue(number, title.strip(), url, frozenset(labels))
+    state = raw_issue.get("state")
+    if not isinstance(state, str) or state.upper() not in {"OPEN", "CLOSED"}:
+        raise FunnelInputError(f"{location}.state must be OPEN or CLOSED")
+
+    updated_at = _parse_timestamp(raw_issue.get("updatedAt"), location)
+    return PilotIssue(
+        number,
+        title.strip(),
+        url,
+        frozenset(labels),
+        state.upper(),
+        updated_at,
+    )
 
 
 def _warning(
     issue: PilotIssue,
     kind: str,
     message: str,
-    labels: list[str],
+    labels: list[str] | None = None,
 ) -> dict[str, Any]:
     return {
         "issue_number": issue.number,
         "kind": kind,
         "message": message,
-        "labels": labels,
+        "labels": labels or [],
     }
+
+
+def _parse_timestamp(value: Any, location: str) -> datetime | None:
+    if value is None:
+        return None
+    if not isinstance(value, str) or not value:
+        raise FunnelInputError(f"{location}.updatedAt must be an ISO 8601 timestamp")
+
+    normalized = f"{value[:-1]}+00:00" if value.endswith("Z") else value
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError as exc:
+        raise FunnelInputError(
+            f"{location}.updatedAt must be an ISO 8601 timestamp"
+        ) from exc
+    if parsed.tzinfo is None:
+        raise FunnelInputError(f"{location}.updatedAt must include a timezone")
+    return parsed.astimezone(timezone.utc)
+
+
+def _format_timestamp(value: datetime | None) -> str | None:
+    if value is None:
+        return None
+    return value.isoformat().replace("+00:00", "Z")
+
+
+def _utc_today() -> date:
+    return datetime.now(timezone.utc).date()
 
 
 def _positive_int(value: str) -> int:
@@ -361,6 +510,13 @@ def _positive_int(value: str) -> int:
     if parsed < 1:
         raise argparse.ArgumentTypeError("must be a positive integer")
     return parsed
+
+
+def _iso_date(value: str) -> date:
+    try:
+        return date.fromisoformat(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("must be YYYY-MM-DD") from exc
 
 
 if __name__ == "__main__":

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.6 - 2026-07-10
+
+- Added deterministic follow-up reporting for stale open lead, qualified, and offered pilot issues.
+- Added `--as-of YYYY-MM-DD` and `--stale-days` controls with whole-day UTC semantics.
+- Added normalized activity timestamps, age, follow-up status, and stable priority ordering to funnel JSON schema 2.
+- Added warnings for closed pre-payment issues without loss labels, missing timestamps, and future activity dates.
+- Added boundary, timezone-offset, state/stage matrix, invalid timestamp, malformed option, text, and JSON coverage.
+- Documented that GitHub issue activity is an inactivity signal rather than evidence of buyer contact.
+
 ## 0.2.5 - 2026-07-10
 
 - Added four packaged starter policies for baseline, Python, npm, and agent-ready services.

@@ -178,11 +178,12 @@ customer data, or other sensitive details.
 Maintainers can turn the labeled requests into an auditable revenue funnel:
 
 ```bash
-gh issue list --repo becastil/Chats-empty-repo --state all --label pilot-lead --limit 100 --json number,title,state,labels,createdAt,updatedAt,closedAt,url | repo-scout-pilot
+gh issue list --repo becastil/Chats-empty-repo --state all --label pilot-lead --limit 100 --json number,title,state,labels,createdAt,updatedAt,closedAt,url | repo-scout-pilot --as-of "$(date -u +%F)"
 ```
 
 The dependency-free reporter counts booked pilots, booked revenue, remaining
-distance to the three-pilot goal, annual conversions, losses, and label drift.
+distance to the three-pilot goal, annual conversions, losses, label drift, and
+open pre-payment issues inactive for at least seven UTC calendar days.
 See [docs/pilot-tracking.md](docs/pilot-tracking.md) for stage definitions and
 privacy rules.
 

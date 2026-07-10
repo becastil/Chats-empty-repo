@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 19 of 1,000, with 981 remaining. Quality, test coverage, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 20 of 1,000, with 980 remaining. Quality, test coverage, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -40,6 +40,8 @@ The delivery goal is 1,000 meaningful commits. This update is commit 19 of 1,000
 - A dependency-free pilot funnel reporter with stable text and JSON revenue summaries.
 - Cumulative GitHub labels for lead, qualification, offer, payment, activation, conversion, and loss.
 - Label-drift warnings and tested $299 pilot / $897 target accounting semantics.
+- Deterministic stale-deal follow-up with explicit UTC dates, thresholds, and issue-activity ages.
+- Follow-up data-quality warnings for missing, future, and closed pre-payment records.
 - Host-derived Open Graph and X metadata with a product-specific social preview.
 - Sites hosting metadata and a Cloudflare Workers-compatible production build.
 
@@ -52,4 +54,4 @@ python3 -m unittest discover -s tests
 
 ## Next Small Task
 
-Add deterministic stale-lead follow-up reporting to the pilot funnel.
+Publish signed, versioned release artifacts for paid distribution readiness.

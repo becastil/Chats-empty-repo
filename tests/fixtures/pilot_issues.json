@@ -3,18 +3,24 @@
     "number": 1,
     "title": "New pilot request",
     "url": "https://example.invalid/issues/1",
+    "state": "OPEN",
+    "updatedAt": "2026-07-01T12:00:00Z",
     "labels": [{"name": "pilot-lead"}]
   },
   {
     "number": 2,
     "title": "Qualified platform team",
     "url": "https://example.invalid/issues/2",
+    "state": "OPEN",
+    "updatedAt": "2026-07-03T12:00:00Z",
     "labels": [{"name": "pilot-lead"}, {"name": "pilot-qualified"}]
   },
   {
     "number": 3,
     "title": "Paid founding team",
     "url": "https://example.invalid/issues/3",
+    "state": "OPEN",
+    "updatedAt": "2026-06-20T12:00:00Z",
     "labels": [
       {"name": "pilot-lead"},
       {"name": "pilot-qualified"},
@@ -26,6 +32,8 @@
     "number": 4,
     "title": "Active pilot with label drift",
     "url": "https://example.invalid/issues/4",
+    "state": "OPEN",
+    "updatedAt": "2026-06-20T12:00:00Z",
     "labels": [
       {"name": "pilot-lead"},
       {"name": "pilot-offered"},
@@ -36,12 +44,16 @@
     "number": 5,
     "title": "Lost pilot",
     "url": "https://example.invalid/issues/5",
+    "state": "CLOSED",
+    "updatedAt": "2026-06-20T12:00:00Z",
     "labels": [{"name": "pilot-lead"}, {"name": "pilot-lost"}]
   },
   {
     "number": 6,
     "title": "Annual conversion",
     "url": "https://example.invalid/issues/6",
+    "state": "CLOSED",
+    "updatedAt": "2026-06-20T12:00:00Z",
     "labels": [
       {"name": "pilot-lead"},
       {"name": "pilot-qualified"},
@@ -55,6 +67,8 @@
     "number": 7,
     "title": "Conflicting terminal labels",
     "url": "https://example.invalid/issues/7",
+    "state": "CLOSED",
+    "updatedAt": "2026-06-20T12:00:00Z",
     "labels": [
       {"name": "pilot-lead"},
       {"name": "pilot-qualified"},
@@ -69,12 +83,16 @@
     "number": 8,
     "title": "Unknown pilot label",
     "url": "https://example.invalid/issues/8",
+    "state": "OPEN",
+    "updatedAt": "2026-07-10T12:00:00Z",
     "labels": [{"name": "pilot-mystery"}]
   },
   {
     "number": 9,
     "title": "Unrelated product issue",
     "url": "https://example.invalid/issues/9",
+    "state": "OPEN",
+    "updatedAt": "2026-07-10T12:00:00Z",
     "labels": [{"name": "enhancement"}]
   }
 ]
