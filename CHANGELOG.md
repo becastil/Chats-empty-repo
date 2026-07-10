@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.2 - 2026-07-10
+
+- Added the $299 founding-team pilot offer and conversion CTA to the hosted companion.
+- Added implemented team-policy proof, 90-day scope, and the 10-repository limit to the offer.
+- Added a structured GitHub issue form that qualifies pilot requests without collecting source code.
+- Added a responsive pilot layout with stable breakpoint typography and accessible navigation targets.
+- Added product-specific Open Graph and X metadata with a generated 1200x630 social preview.
+- Expanded rendered production coverage for commercial content, conversion links, intake fields, and host-derived social metadata.
+
 ## 0.2.1 - 2026-07-10
 
 - Added strict, versioned TOML team policies through `--policy PATH`.

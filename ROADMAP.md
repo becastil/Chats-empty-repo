@@ -7,8 +7,8 @@
 
 ## Near Term
 
-- Add the founding-team pilot offer and conversion CTA to the hosted companion.
 - Add a copy-ready GitHub Actions example for team policy enforcement.
+- Add pilot-request tracking guidance for revenue validation.
 
 ## Revenue Validation
 

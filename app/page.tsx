@@ -7,6 +7,7 @@ Root: /workspace/checkout
 Git: main, clean
 Docs: 5 present, 0 missing
 Files: 13 scanned, 25,311 bytes
+Policy: pass (4 rules)
 
 Languages:
   Python: 6
@@ -17,6 +18,7 @@ Languages:
 const snapshotJson = `{
   "git": { "branch": "main", "dirty_files": 0 },
   "docs": { "present": 5, "missing": 0 },
+  "policy": { "status": "pass", "rules_checked": 4 },
   "files": {
     "total": 13,
     "total_bytes": 25311,
@@ -36,15 +38,25 @@ const controls = [
     copy: "Filter logs, build folders, or private notes without touching .gitignore.",
   },
   {
-    flag: "--max-files",
-    title: "Bound the scan",
-    copy: "Set a clear file-count limit before a large checkout becomes a surprise.",
+    flag: "--policy",
+    title: "Enforce one team standard",
+    copy: "Commit one TOML policy and run the same repository checks everywhere in CI.",
   },
   {
     flag: "--languages",
     title: "See the shape quickly",
     copy: "Add best-effort language totals while keeping raw extension counts intact.",
   },
+];
+
+const pilotRequestUrl =
+  "https://github.com/becastil/Chats-empty-repo/issues/new?template=founding-team-pilot.yml";
+
+const pilotBenefits = [
+  "One shared TOML policy for up to 10 repositories",
+  "CI rollout guidance for your existing workflow",
+  "One custom policy pack for your repository standards",
+  "Direct feedback access and priority fixes",
 ];
 
 export default function Home() {
@@ -73,7 +85,7 @@ export default function Home() {
         </a>
         <nav aria-label="Primary navigation">
           <a href="#snapshot">Snapshot</a>
-          <a href="#controls">Controls</a>
+          <a href="#team-pilot">Team pilot</a>
           <a className="nav-link-strong" href="https://github.com/becastil/Chats-empty-repo">
             Source <span aria-hidden="true">-&gt;</span>
           </a>
@@ -84,7 +96,7 @@ export default function Home() {
         <section className="hero" aria-labelledby="hero-title">
           <div className="hero-copy">
             <p className="eyebrow"><span className="eyebrow-dot" /> Local repository intelligence</p>
-            <h1 id="hero-title">Start every handoff with the shape of the repo.</h1>
+            <h1 id="hero-title">Repo Scout for every handoff.</h1>
             <p className="hero-lede">
               Repo Scout gives reviews, agents, and new teammates one compact page of context before anyone starts guessing.
             </p>
@@ -95,6 +107,9 @@ export default function Home() {
               </button>
             </div>
             <p className="microcopy">Dependency-free. Runs locally. No API key.</p>
+            <a className="pilot-inline-link" href="#team-pilot">
+              Team policy pilot: $299 for 90 days <span aria-hidden="true">-&gt;</span>
+            </a>
           </div>
 
           <div className="hero-panel" aria-label="Sample repository summary">
@@ -176,10 +191,55 @@ export default function Home() {
           </div>
         </section>
 
+        <section id="team-pilot" className="pilot-section" aria-labelledby="pilot-title">
+          <div className="pilot-copy">
+            <p className="section-number">04 / Founding team pilot</p>
+            <h2 id="pilot-title">One policy your repositories can prove.</h2>
+            <p className="pilot-lede">
+              For software teams using coding agents across multiple repositories,
+              Repo Scout turns local standards into the same explicit CI result
+              everywhere, without uploading source code.
+            </p>
+
+            <div className="policy-proof" aria-label="Example passing team policy">
+              <div className="policy-proof-heading">
+                <code>team-policy.toml</code>
+                <span><i aria-hidden="true" /> policy / pass</span>
+              </div>
+              <dl>
+                <div><dt>Required files</dt><dd>present</dd></div>
+                <div><dt>Repository size</dt><dd>within limits</dd></div>
+                <div><dt>Git worktree</dt><dd>clean</dd></div>
+                <div><dt>CI result</dt><dd>exit 0</dd></div>
+              </dl>
+              <code className="policy-command">repo-scout --policy team-policy.toml .</code>
+            </div>
+          </div>
+
+          <aside className="pilot-offer" aria-labelledby="pilot-offer-title">
+            <p className="pilot-kicker">Founding team pilot</p>
+            <div className="pilot-price">
+              <strong><sup>$</sup>299</strong>
+              <span>one time<br />90 days</span>
+            </div>
+            <h3 id="pilot-offer-title">Standardize up to 10 repositories.</h3>
+            <ol className="pilot-benefits">
+              {pilotBenefits.map((benefit) => <li key={benefit}>{benefit}</li>)}
+            </ol>
+            <a className="button button-pilot" href={pilotRequestUrl}>
+              Request a founding pilot <span aria-hidden="true">-&gt;</span>
+            </a>
+            <a className="pilot-details" href="https://github.com/becastil/Chats-empty-repo/blob/main/BUSINESS_MODEL.md">
+              Read the complete pilot terms
+            </a>
+            <p className="pilot-note">Seeking three founding teams before billing or license enforcement is built. Requests are public; never include source code or sensitive details.</p>
+          </aside>
+        </section>
+
         <section className="closing-band" aria-labelledby="closing-title">
           <div>
             <p className="eyebrow"><span className="eyebrow-dot" /> Ready for the next checkout</p>
-            <h2 id="closing-title">Make orientation part of the workflow.</h2>
+            <h2 id="closing-title">Start free. Standardize when the team is ready.</h2>
           </div>
           <div className="install-block">
             <span>quick start</span>

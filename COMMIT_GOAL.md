@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this policy commit: 15 / 1,000 (1.5%).
-- Remaining after this policy commit: 985 commits.
+- Progress after this conversion commit: 16 / 1,000 (1.6%).
+- Remaining after this conversion commit: 984 commits.
 
 ## Commit Standard
 

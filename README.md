@@ -144,7 +144,10 @@ pilot adds shared repository policies, CI rollout help, and one custom policy
 pack for up to 10 repositories over 90 days. See [BUSINESS_MODEL.md](BUSINESS_MODEL.md)
 for the offer and validation milestones.
 
-[Request a founding-team pilot](https://github.com/becastil/Chats-empty-repo/issues/new?title=Repo%20Scout%20founding-team%20pilot)
+[Request a founding-team pilot](https://github.com/becastil/Chats-empty-repo/issues/new?template=founding-team-pilot.yml)
+
+Pilot requests are public GitHub issues. Do not include source code, credentials,
+customer data, or other sensitive details.
 
 Install it locally in editable mode:
 

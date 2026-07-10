@@ -49,7 +49,12 @@ committed once and reused in CI.
 1. A developer adopts the free CLI for handoffs or reviews.
 2. The team adds `--fail-on-attention` to CI.
 3. The team commits a shared policy and applies it with `--policy` across repositories.
-4. The engineering lead buys a pilot for shared policies and rollout support.
+4. The engineering lead reviews the hosted offer and submits a qualified pilot request.
+5. The engineering lead buys a pilot for shared policies and rollout support.
+
+The current request form is a public GitHub issue and warns teams not to share
+source code or sensitive details. A private intake channel is deferred until
+pilot demand validates the additional infrastructure.
 
 ## Validation Milestones
 

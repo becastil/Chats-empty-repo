@@ -1,0 +1,58 @@
+name: Founding-team pilot
+description: Apply for the $299 Repo Scout team-policy pilot.
+title: "[Pilot] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for your interest in the Repo Scout founding-team pilot: $299 for 90 days, covering up to 10 repositories.
+
+        This request is public. Do not include source code, credentials, customer data, or other sensitive details.
+
+  - type: input
+    id: team_size
+    attributes:
+      label: Team size
+      description: Approximately how many developers would use Repo Scout?
+      placeholder: "12"
+    validations:
+      required: true
+
+  - type: input
+    id: repository_count
+    attributes:
+      label: Repository count
+      description: How many repositories should share the policy?
+      placeholder: "6"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: ci_provider
+    attributes:
+      label: CI provider
+      options:
+        - GitHub Actions
+        - GitLab CI
+        - CircleCI
+        - Buildkite
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: repository_standard
+    attributes:
+      label: Repository standard to enforce
+      description: Describe the first repository rule or handoff problem you want standardized. Keep the answer non-sensitive.
+      placeholder: Require the same security and ownership documents across every service.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: pilot_terms
+    attributes:
+      label: Pilot terms
+      options:
+        - label: I understand the founding-team pilot costs $299 for 90 days and covers up to 10 repositories.
+          required: true

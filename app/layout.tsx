@@ -1,11 +1,51 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "Repo Scout | Local repository intelligence",
-  description:
-    "A compact, dependency-free snapshot of a local repository for reviews and handoffs.",
-};
+const title = "Repo Scout | Local repository policy for teams";
+const description =
+  "Free local repository snapshots plus shared policy and CI rollout support for software teams.";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const requestHeaders = await headers();
+  const forwardedHost = requestHeaders.get("x-forwarded-host")?.split(",")[0].trim();
+  const host = forwardedHost || requestHeaders.get("host") || "localhost";
+  const forwardedProtocol = requestHeaders
+    .get("x-forwarded-proto")
+    ?.split(",")[0]
+    .trim();
+  const protocol =
+    forwardedProtocol === "http" || forwardedProtocol === "https"
+      ? forwardedProtocol
+      : host.startsWith("localhost")
+        ? "http"
+        : "https";
+  let origin = "http://localhost";
+
+  try {
+    origin = new URL(`${protocol}://${host}`).origin;
+  } catch {
+    // Keep metadata valid when a development proxy sends a malformed host.
+  }
+
+  const imageUrl = `${origin}/og.png`;
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      images: [{ url: imageUrl, width: 1200, height: 630, alt: description }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [imageUrl],
+    },
+  };
+}
 
 export default function RootLayout({
   children,
