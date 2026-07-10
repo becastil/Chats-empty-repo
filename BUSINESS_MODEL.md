@@ -84,6 +84,12 @@ Open lead, qualified, and offered issues inactive for seven UTC calendar days
 appear in the funnel's follow-up list. This is an operating prompt based on
 GitHub issue activity, not evidence that a buyer was or was not contacted.
 
+The intake records one required, self-reported discovery channel. Funnel source
+totals connect those channels to qualification, offers, booked revenue,
+conversion, and loss. Missing or edited legacy answers remain explicit warning
+buckets. This is directional acquisition evidence, not proof that a single
+touchpoint caused a purchase.
+
 ## Product Filter
 
 New work must improve acquisition, activation, conversion, or retention for the

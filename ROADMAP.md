@@ -7,8 +7,8 @@
 
 ## Near Term
 
-- Add lead-source attribution to pilot intake and funnel reporting.
 - Update the external CI example to install a verified Repo Scout release.
+- Add a private pilot contact path after public intake validates demand.
 
 ## Revenue Validation
 

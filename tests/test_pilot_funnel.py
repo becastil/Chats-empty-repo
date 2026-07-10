@@ -15,6 +15,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from repo_scout.pilot_funnel import (
     FunnelInputError,
+    SOURCE_FIELD_HEADING,
+    SOURCE_OPTIONS,
     build_funnel,
     format_funnel,
     main,
@@ -26,12 +28,28 @@ FIXTURE = ROOT / "tests/fixtures/pilot_issues.json"
 
 
 class PilotFunnelTests(unittest.TestCase):
+    def test_issue_form_source_options_match_the_reporter_taxonomy(self) -> None:
+        form = (
+            ROOT / ".github/ISSUE_TEMPLATE/founding-team-pilot.yml"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("id: discovery_source", form)
+        self.assertIn(f"label: {SOURCE_FIELD_HEADING}", form)
+        source_section = form[form.index("id: discovery_source") :]
+        next_field = source_section.find("\n  - type:")
+        source_section = source_section[:next_field]
+        positions = [
+            source_section.index(f"        - {answer}")
+            for _, answer in SOURCE_OPTIONS
+        ]
+        self.assertEqual(positions, sorted(positions))
+
     def test_build_funnel_tracks_revenue_stages_and_label_drift(self) -> None:
         payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
 
         report = build_funnel(payload, as_of=date(2026, 7, 10))
 
-        self.assertEqual(report["schema_version"], 2)
+        self.assertEqual(report["schema_version"], 3)
         self.assertEqual(report["summary"]["tracked_issues"], 8)
         self.assertEqual(report["summary"]["ignored_issues"], 1)
         self.assertEqual(report["summary"]["booked_pilots"], 4)
@@ -41,6 +59,9 @@ class PilotFunnelTests(unittest.TestCase):
         self.assertEqual(report["summary"]["annual_conversions"], 2)
         self.assertEqual(report["summary"]["lost_pilots"], 2)
         self.assertEqual(report["summary"]["stale_deals"], 2)
+        self.assertEqual(report["summary"]["attributed_issues"], 8)
+        self.assertEqual(report["summary"]["unattributed_issues"], 0)
+        self.assertEqual(report["summary"]["unknown_source_issues"], 0)
         self.assertEqual(
             report["by_stage"],
             {
@@ -83,8 +104,105 @@ class PilotFunnelTests(unittest.TestCase):
             len(report["follow_up"]["deals"]),
         )
         self.assertEqual(
+            report["by_source"]["github"],
+            {
+                "deals": 2,
+                "qualified_pilots": 2,
+                "offered_pilots": 2,
+                "booked_pilots": 2,
+                "booked_revenue_usd": 598,
+                "annual_conversions": 1,
+                "lost_pilots": 0,
+            },
+        )
+        self.assertEqual(report["by_source"]["website"]["deals"], 1)
+        self.assertEqual(report["by_source"]["outreach"]["booked_pilots"], 1)
+        self.assertEqual(report["by_source"]["referral"]["booked_pilots"], 1)
+        self.assertEqual(report["by_source"]["social"]["lost_pilots"], 1)
+        self.assertEqual(report["deals"][0]["source"], "website")
+        self.assertEqual(report["follow_up"]["deals"][0]["source"], "website")
+        self.assertEqual(
             report,
             build_funnel(list(reversed(payload)), as_of=date(2026, 7, 10)),
+        )
+
+    def test_source_attribution_handles_legacy_unknown_and_ambiguous_answers(
+        self,
+    ) -> None:
+        heading = "### How did you hear about Repo Scout?"
+        payload = [
+            {
+                "number": 1,
+                "title": "Paid GitHub lead",
+                "state": "OPEN",
+                "updatedAt": "2026-07-10T00:00:00Z",
+                "body": f"{heading}\n\nGitHub repository or release",
+                "labels": [
+                    "pilot-lead",
+                    "pilot-qualified",
+                    "pilot-offered",
+                    "pilot-paid",
+                ],
+            },
+            {
+                "number": 2,
+                "title": "Legacy lead without source",
+                "state": "OPEN",
+                "updatedAt": "2026-07-10T00:00:00Z",
+                "labels": ["pilot-lead"],
+            },
+            {
+                "number": 3,
+                "title": "Edited unknown source",
+                "state": "OPEN",
+                "updatedAt": "2026-07-10T00:00:00Z",
+                "body": f"{heading}\n\nConference",
+                "labels": ["pilot-lead", "pilot-qualified"],
+            },
+            {
+                "number": 4,
+                "title": "Duplicate source headings",
+                "state": "CLOSED",
+                "updatedAt": "2026-07-10T00:00:00Z",
+                "body": f"{heading}\n\nSearch\n\n{heading}\n\nDirect outreach",
+                "labels": ["pilot-lead", "pilot-lost"],
+            },
+        ]
+
+        report = build_funnel(
+            payload,
+            pilot_price_usd=400,
+            as_of=date(2026, 7, 10),
+        )
+
+        self.assertEqual(report["summary"]["attributed_issues"], 1)
+        self.assertEqual(report["summary"]["unattributed_issues"], 1)
+        self.assertEqual(report["summary"]["unknown_source_issues"], 2)
+        self.assertEqual(
+            [warning["kind"] for warning in report["warnings"]],
+            [
+                "missing_lead_source",
+                "unknown_lead_source",
+                "ambiguous_lead_source",
+            ],
+        )
+        self.assertEqual(report["by_source"]["github"]["booked_revenue_usd"], 400)
+        self.assertEqual(report["by_source"]["unattributed"]["deals"], 1)
+        self.assertEqual(report["by_source"]["unknown"]["deals"], 2)
+        self.assertEqual(report["by_source"]["unknown"]["qualified_pilots"], 1)
+        self.assertEqual(report["by_source"]["unknown"]["lost_pilots"], 1)
+        self.assertEqual(report["deals"][1]["source"], "unattributed")
+        self.assertIsNone(report["deals"][1]["source_raw"])
+        self.assertEqual(report["deals"][2]["source_raw"], "Conference")
+        self.assertEqual(
+            report["deals"][3]["source_raw"],
+            "Search; Direct outreach",
+        )
+        text_report = format_funnel(report)
+        self.assertIn("Attribution: 1 attributed / 1 missing / 2 unknown", text_report)
+        self.assertIn(
+            "github: 1 deal, 1 qualified, 1 offered, 1 booked ($400)",
+            text_report,
         )
 
     def test_main_emits_stable_json_with_custom_commercial_targets(self) -> None:
@@ -131,6 +249,7 @@ class PilotFunnelTests(unittest.TestCase):
         )
         self.assertIn("Deals:\n  none", stdout.getvalue())
         self.assertIn("Stale deals:\n  none", stdout.getvalue())
+        self.assertIn("Sources:\n  none", stdout.getvalue())
         self.assertIn("Warnings:\n  none", stdout.getvalue())
 
     def test_main_rejects_invalid_json(self) -> None:
@@ -212,6 +331,10 @@ class PilotFunnelTests(unittest.TestCase):
                 ],
             },
         ]
+        for issue in payload:
+            issue["body"] = (
+                "### How did you hear about Repo Scout?\n\nRepo Scout website"
+            )
 
         report = build_funnel(payload, as_of=date(2026, 7, 10), stale_days=7)
 
@@ -268,6 +391,21 @@ class PilotFunnelTests(unittest.TestCase):
                         }
                     ]
                 )
+
+        with self.assertRaisesRegex(
+            FunnelInputError, "body must be a string or null"
+        ):
+            build_funnel(
+                [
+                    {
+                        "number": 1,
+                        "title": "Pilot",
+                        "state": "OPEN",
+                        "body": 42,
+                        "labels": ["pilot-lead"],
+                    }
+                ]
+            )
 
         for state in (None, "UNKNOWN", 42):
             with self.subTest(state=state), self.assertRaisesRegex(

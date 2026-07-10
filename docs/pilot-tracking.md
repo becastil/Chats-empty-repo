@@ -35,7 +35,7 @@ gh issue list \
   --state all \
   --label pilot-lead \
   --limit 100 \
-  --json number,title,state,labels,createdAt,updatedAt,closedAt,url \
+  --json number,title,body,state,labels,createdAt,updatedAt,closedAt,url \
   | repo-scout-pilot --as-of "$(date -u +%F)"
 ```
 
@@ -43,10 +43,35 @@ Use `--format json` for a machine-readable report. `--pilot-price` and
 `--target-pilots` change the commercial assumptions without changing issue
 data.
 
-Funnel JSON declares `schema_version: 2`. Its `follow_up` object records the
+Funnel JSON declares `schema_version: 3`. Its `follow_up` object records the
 UTC `as_of` date, the inactivity threshold, and a deterministic deal list.
 Omit `--as-of` to use the current UTC date. `--stale-days` changes the default
 seven-day threshold.
+
+The request form also asks how the buyer discovered Repo Scout. The reporter
+maps that issue-body answer to a stable source key:
+
+| Source key | Intake answer |
+| --- | --- |
+| `github` | GitHub repository or release |
+| `website` | Repo Scout website |
+| `outreach` | Direct outreach |
+| `referral` | Teammate or referral |
+| `search` | Search |
+| `social` | Social media or community |
+| `other` | Other |
+
+The `by_source` object reports deals, qualified pilots, offered pilots, booked
+pilots, booked revenue, annual conversions, and losses for every source key.
+Deal records and stale follow-up records include their normalized source.
+Legacy issues without the form answer use `unattributed`; edited answers that
+do not match the taxonomy, or duplicate source headings, use `unknown`. Each
+case produces a warning rather than silently guessing a channel.
+
+Source attribution is self-reported discovery data. It does not prove which
+touchpoint caused a purchase, and it should be used directionally when deciding
+where to focus outreach. Repo Scout does not add cookies, tracking pixels, or a
+hosted analytics service for this report.
 
 The default report measures the current founding goal:
 
@@ -63,7 +88,7 @@ next report, and retain the refund evidence outside the public issue.
 ## Operating Cadence
 
 Run the report weekly and before each roadmap review. Resolve label warnings
-before sharing totals. The follow-up list includes only open `pilot-lead`,
+and source warnings before sharing totals. The follow-up list includes only open `pilot-lead`,
 `pilot-qualified`, and `pilot-offered` issues whose UTC `updatedAt` date is at
 least the threshold age. The boundary is inclusive.
 

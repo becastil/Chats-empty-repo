@@ -42,6 +42,22 @@ body:
     validations:
       required: true
 
+  - type: dropdown
+    id: discovery_source
+    attributes:
+      label: How did you hear about Repo Scout?
+      description: This helps us focus pilot outreach on channels that reach suitable teams.
+      options:
+        - GitHub repository or release
+        - Repo Scout website
+        - Direct outreach
+        - Teammate or referral
+        - Search
+        - Social media or community
+        - Other
+    validations:
+      required: true
+
   - type: textarea
     id: repository_standard
     attributes:

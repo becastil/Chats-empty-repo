@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.8 - 2026-07-10
+
+- Added a required discovery-channel field to the founding-team pilot request form.
+- Added stable source keys for GitHub, website, outreach, referral, search, social, other, unattributed, and unknown leads.
+- Added per-source qualification, offer, booked-pilot, booked-revenue, conversion, and loss totals to funnel JSON schema 3.
+- Added normalized source data to deal and stale follow-up records and source summaries to text reports.
+- Added warnings for missing, unknown, and duplicate issue-form source answers without guessing attribution.
+- Added deterministic fixtures and coverage for source revenue, legacy issues, edited answers, duplicate headings, and malformed bodies.
+- Documented self-reported attribution limits and updated the GitHub export contract to include issue bodies.
+
 ## 0.2.7 - 2026-07-10
 
 - Added a tag-driven GitHub release workflow for wheel and source distributions.

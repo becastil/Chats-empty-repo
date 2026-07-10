@@ -77,6 +77,10 @@ test("ships a qualified founding-team pilot intake", async () => {
   assert.match(form, /id: team_size/i);
   assert.match(form, /id: repository_count/i);
   assert.match(form, /id: ci_provider/i);
+  assert.match(form, /id: discovery_source/i);
+  assert.match(form, /How did you hear about Repo Scout\?/i);
+  assert.match(form, /GitHub repository or release/i);
+  assert.match(form, /Teammate or referral/i);
   assert.match(form, /id: repository_standard/i);
   assert.match(form, /required: true/i);
 });

@@ -5,11 +5,12 @@ from dataclasses import dataclass
 from datetime import date, datetime, timezone
 import json
 from pathlib import Path
+import re
 import sys
 from typing import Any, Sequence, TextIO
 
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 DEFAULT_PILOT_PRICE_USD = 299
 DEFAULT_TARGET_PILOTS = 3
 DEFAULT_STALE_DAYS = 7
@@ -36,6 +37,19 @@ DISPLAY_STAGES = (
     "untracked",
 )
 FOLLOW_UP_STAGES = {"lead", "qualified", "offered"}
+SOURCE_FIELD_HEADING = "How did you hear about Repo Scout?"
+SOURCE_OPTIONS = (
+    ("github", "GitHub repository or release"),
+    ("website", "Repo Scout website"),
+    ("outreach", "Direct outreach"),
+    ("referral", "Teammate or referral"),
+    ("search", "Search"),
+    ("social", "Social media or community"),
+    ("other", "Other"),
+)
+SOURCE_BY_ANSWER = {answer: source for source, answer in SOURCE_OPTIONS}
+ATTRIBUTED_SOURCES = tuple(source for source, _ in SOURCE_OPTIONS)
+SOURCE_KEYS = (*ATTRIBUTED_SOURCES, "unattributed", "unknown")
 
 
 class FunnelInputError(ValueError):
@@ -50,6 +64,7 @@ class PilotIssue:
     labels: frozenset[str]
     state: str
     updated_at: datetime | None
+    body: str
 
 
 def build_funnel(
@@ -72,6 +87,7 @@ def build_funnel(
         raise FunnelInputError("as-of must be a date")
 
     by_stage = {stage: 0 for stage in DISPLAY_STAGES}
+    by_source = {source: _empty_source_totals() for source in SOURCE_KEYS}
     deals: list[dict[str, Any]] = []
     warnings: list[dict[str, Any]] = []
     stale_deals: list[dict[str, Any]] = []
@@ -79,6 +95,9 @@ def build_funnel(
     booked_pilots = 0
     annual_conversions = 0
     lost_pilots = 0
+    attributed_issues = 0
+    unattributed_issues = 0
+    unknown_source_issues = 0
     seen_issue_numbers: set[int] = set()
     issues: list[PilotIssue] = []
 
@@ -109,6 +128,16 @@ def build_funnel(
                     labels=[label],
                 )
             )
+
+        source, source_raw, source_warning = _classify_lead_source(issue)
+        if source_warning is not None:
+            warnings.append(source_warning)
+        if source in ATTRIBUTED_SOURCES:
+            attributed_issues += 1
+        elif source == "unattributed":
+            unattributed_issues += 1
+        else:
+            unknown_source_issues += 1
 
         present_stages = [
             position
@@ -198,6 +227,7 @@ def build_funnel(
                         "title": issue.title,
                         "url": issue.url,
                         "stage": stage,
+                        "source": source,
                         "age_days": age_days,
                         "updated_at": _format_timestamp(issue.updated_at),
                     }
@@ -208,12 +238,26 @@ def build_funnel(
         booked_pilots += int(is_booked)
         annual_conversions += int(has_converted)
         lost_pilots += int(has_lost)
+        source_totals = by_source[source]
+        source_totals["deals"] += 1
+        source_totals["qualified_pilots"] += int(
+            furthest_stage >= STAGE_LABELS.index("pilot-qualified")
+        )
+        source_totals["offered_pilots"] += int(
+            furthest_stage >= STAGE_LABELS.index("pilot-offered")
+        )
+        source_totals["booked_pilots"] += int(is_booked)
+        source_totals["booked_revenue_usd"] += int(is_booked) * pilot_price_usd
+        source_totals["annual_conversions"] += int(has_converted)
+        source_totals["lost_pilots"] += int(has_lost)
         deals.append(
             {
                 "number": issue.number,
                 "title": issue.title,
                 "url": issue.url,
                 "stage": stage,
+                "source": source,
+                "source_raw": source_raw,
                 "booked": is_booked,
                 "state": issue.state,
                 "updated_at": _format_timestamp(issue.updated_at),
@@ -246,6 +290,9 @@ def build_funnel(
             "annual_conversions": annual_conversions,
             "lost_pilots": lost_pilots,
             "stale_deals": len(stale_deals),
+            "attributed_issues": attributed_issues,
+            "unattributed_issues": unattributed_issues,
+            "unknown_source_issues": unknown_source_issues,
         },
         "follow_up": {
             "as_of": report_date.isoformat(),
@@ -256,6 +303,7 @@ def build_funnel(
             ),
         },
         "by_stage": by_stage,
+        "by_source": by_source,
         "deals": sorted(deals, key=lambda deal: deal["number"]),
         "warnings": warnings,
     }
@@ -282,6 +330,11 @@ def format_funnel(report: dict[str, Any]) -> str:
         f"Annual conversions: {summary['annual_conversions']}",
         f"Lost pilots: {summary['lost_pilots']}",
         (
+            f"Attribution: {summary['attributed_issues']} attributed / "
+            f"{summary['unattributed_issues']} missing / "
+            f"{summary['unknown_source_issues']} unknown"
+        ),
+        (
             f"Follow-up: {summary['stale_deals']} stale open pre-payment "
             f"{follow_up_label} "
             f"({report['follow_up']['stale_days']}+ days as of "
@@ -292,12 +345,33 @@ def format_funnel(report: dict[str, Any]) -> str:
     for stage in DISPLAY_STAGES:
         lines.append(f"  {stage}: {report['by_stage'][stage]}")
 
+    lines.append("Sources:")
+    populated_sources = [
+        source for source in SOURCE_KEYS if report["by_source"][source]["deals"]
+    ]
+    if populated_sources:
+        for source in populated_sources:
+            totals = report["by_source"][source]
+            source_deal_label = "deal" if totals["deals"] == 1 else "deals"
+            lines.append(
+                f"  {source}: {totals['deals']} {source_deal_label}, "
+                f"{totals['qualified_pilots']} qualified, "
+                f"{totals['offered_pilots']} offered, "
+                f"{totals['booked_pilots']} booked "
+                f"(${totals['booked_revenue_usd']}), "
+                f"{totals['annual_conversions']} converted, "
+                f"{totals['lost_pilots']} lost"
+            )
+    else:
+        lines.append("  none")
+
     lines.append("Deals:")
     if report["deals"]:
         for deal in report["deals"]:
             suffix = f" {deal['url']}" if deal["url"] else ""
             lines.append(
-                f"  #{deal['number']} [{deal['stage']}] {deal['title']}{suffix}"
+                f"  #{deal['number']} [{deal['stage']}, {deal['source']}] "
+                f"{deal['title']}{suffix}"
             )
     else:
         lines.append("  none")
@@ -450,6 +524,13 @@ def _parse_issue(raw_issue: Any, index: int) -> PilotIssue:
         raise FunnelInputError(f"{location}.state must be OPEN or CLOSED")
 
     updated_at = _parse_timestamp(raw_issue.get("updatedAt"), location)
+    raw_body = raw_issue.get("body")
+    if raw_body is None:
+        body = ""
+    elif isinstance(raw_body, str):
+        body = raw_body
+    else:
+        raise FunnelInputError(f"{location}.body must be a string or null")
     return PilotIssue(
         number,
         title.strip(),
@@ -457,6 +538,7 @@ def _parse_issue(raw_issue: Any, index: int) -> PilotIssue:
         frozenset(labels),
         state.upper(),
         updated_at,
+        body,
     )
 
 
@@ -472,6 +554,75 @@ def _warning(
         "message": message,
         "labels": labels or [],
     }
+
+
+def _empty_source_totals() -> dict[str, int]:
+    return {
+        "deals": 0,
+        "qualified_pilots": 0,
+        "offered_pilots": 0,
+        "booked_pilots": 0,
+        "booked_revenue_usd": 0,
+        "annual_conversions": 0,
+        "lost_pilots": 0,
+    }
+
+
+def _classify_lead_source(
+    issue: PilotIssue,
+) -> tuple[str, str | None, dict[str, Any] | None]:
+    answers = _issue_form_answers(issue.body, SOURCE_FIELD_HEADING)
+    if not answers or answers == ["_No response_"]:
+        return (
+            "unattributed",
+            None,
+            _warning(
+                issue,
+                "missing_lead_source",
+                "Pilot issue has no lead source answer.",
+            ),
+        )
+    if len(answers) != 1:
+        return (
+            "unknown",
+            "; ".join(answers),
+            _warning(
+                issue,
+                "ambiguous_lead_source",
+                "Pilot issue contains multiple lead source answers.",
+            ),
+        )
+
+    raw_answer = answers[0]
+    source = SOURCE_BY_ANSWER.get(raw_answer)
+    if source is None:
+        return (
+            "unknown",
+            raw_answer,
+            _warning(
+                issue,
+                "unknown_lead_source",
+                f"Unknown lead source answer: {raw_answer}.",
+            ),
+        )
+    return source, raw_answer, None
+
+
+def _issue_form_answers(body: str, heading: str) -> list[str]:
+    normalized = body.replace("\r\n", "\n").replace("\r", "\n")
+    heading_pattern = re.compile(
+        rf"^###\s+{re.escape(heading)}[ \t]*$",
+        re.MULTILINE,
+    )
+    next_heading_pattern = re.compile(r"^###\s+", re.MULTILINE)
+    answers: list[str] = []
+    for match in heading_pattern.finditer(normalized):
+        remainder = normalized[match.end() :]
+        next_heading = next_heading_pattern.search(remainder)
+        value = remainder[: next_heading.start() if next_heading else None].strip()
+        if value:
+            answers.append(value)
+    return answers
 
 
 def _parse_timestamp(value: Any, location: str) -> datetime | None:

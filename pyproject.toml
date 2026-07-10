@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "repo-scout"
-version = "0.2.7"
+version = "0.2.8"
 description = "A local CLI that summarizes repository health and handoff context."
 readme = "README.md"
 requires-python = ">=3.11"

@@ -20,7 +20,7 @@ SPEC.loader.exec_module(prepare_release)
 
 class ReleaseManifestTests(unittest.TestCase):
     def test_current_project_versions_match(self) -> None:
-        self.assertEqual(prepare_release.load_project_version(ROOT), "0.2.7")
+        self.assertEqual(prepare_release.load_project_version(ROOT), "0.2.8")
 
     def test_writes_deterministic_checksums_for_exact_artifacts(self) -> None:
         with TemporaryDirectory() as tmp:

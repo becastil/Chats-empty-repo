@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 21 of 1,000, with 979 remaining. Quality, test coverage, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 22 of 1,000, with 978 remaining. Quality, test coverage, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -48,6 +48,9 @@ The delivery goal is 1,000 meaningful commits. This update is commit 21 of 1,000
 - Hash-locked release build tooling, deterministic SHA-256 manifests, and clean-environment command smoke tests.
 - GitHub build-provenance attestations and immutable-action release automation.
 - Explicit MIT license text included in packaged distributions.
+- Required self-reported discovery channels in founding-team pilot intake.
+- Schema-3 source attribution for qualification, offers, booked revenue, conversion, loss, and follow-up.
+- Explicit missing, unknown, and ambiguous source warnings for legacy or edited issues.
 
 ## How To Run
 
@@ -58,4 +61,4 @@ python3 -m unittest discover -s tests
 
 ## Next Small Task
 
-Add lead-source attribution to pilot intake and funnel reporting.
+Update the external CI example to install a verified Repo Scout release.
