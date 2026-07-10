@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.0 - 2026-07-10
+
+- Added schema-1 rollout metadata to first-repository Markdown evidence bundles.
+- Required explicit, strictly validated logical repository IDs for aggregatable evidence.
+- Added the dependency-free `repo-scout-rollout` command for deterministic multi-repository text and JSON summaries.
+- Added aggregate readiness, policy, violation, Git cleanliness, and attention counts with stable repository ordering.
+- Rejected duplicate repository IDs, missing or malformed metadata, unknown fields, unsupported schemas, invalid types, and contradictory evidence.
+- Made aggregate output counts-only by default with explicit `--details` repository disclosure.
+- Rejected duplicate JSON keys, boolean schema versions, and impossible non-Git dirty-file claims.
+- Labeled aggregate readiness as bundle-reported without claiming freshness or shared-policy equivalence.
+- Added release smoke coverage for the fourth installed command and comprehensive metadata, aggregation, order, and CLI tests.
+- Documented local multi-repository operation, metadata privacy, and the distinction between consistency checks and provenance.
+
 ## 0.2.9 - 2026-07-10
 
 - Replaced the customer CI example's pinned source checkout with the published `v0.2.8` wheel.

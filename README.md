@@ -141,13 +141,28 @@ Generate a first-repository rollout bundle from the same policy evidence:
 
 ```bash
 repo-scout --format markdown --policy repo-scout-policy.toml \
-  --rollout-checklist --output repo-scout-rollout.md .
+  --rollout-checklist --repository-id platform/api \
+  --output repo-scout-rollout.md .
 ```
 
 The bundle records automated readiness without pre-checking human rollout
 actions, and it is still written before policy exit code 6. See
 [docs/pilot-rollout.md](docs/pilot-rollout.md) for the evidence contract and
 privacy guidance.
+
+Summarize readiness across locally saved pilot bundles:
+
+```bash
+repo-scout-rollout api-rollout.md web-rollout.md
+repo-scout-rollout --details api-rollout.md web-rollout.md
+repo-scout-rollout --format json api-rollout.md web-rollout.md
+```
+
+The counts-only default omits repository IDs, branches, and evidence paths;
+`--details` opts into repository-level output. Results are explicitly
+bundle-reported rather than freshness or shared-policy proof. The aggregator
+rejects duplicate IDs, duplicate JSON keys, and malformed or contradictory
+metadata. It performs no uploads and requires no API key.
 
 Initialize an offline starter policy for a common repository type:
 

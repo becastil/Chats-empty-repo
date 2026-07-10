@@ -53,6 +53,11 @@ The pilot includes:
 The paid value is consistency across repositories and teams, not access to the
 basic local scanner.
 
+Rollout bundles carry a stable, non-sensitive metadata contract so a pilot lead
+can summarize bundle-reported readiness, policy failures, violations, worktree
+state, and attention across repositories without sending source code to Repo
+Scout. Counts are private by default; repository details require explicit opt-in.
+
 The first shared-policy release supports required files, repository file and
 byte limits, and clean Git enforcement through a strict TOML file that can be
 committed once and reused in CI.

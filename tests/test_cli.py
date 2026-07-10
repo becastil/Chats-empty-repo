@@ -12,6 +12,7 @@ import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from repo_scout.cli import main
+from repo_scout.rollout import parse_rollout_metadata
 
 
 class CliTests(unittest.TestCase):
@@ -215,6 +216,8 @@ require_clean_git = true
                         "--policy",
                         str(policy_path),
                         "--rollout-checklist",
+                        "--repository-id",
+                        "platform/api",
                         str(root),
                     ]
                 )
@@ -222,6 +225,7 @@ require_clean_git = true
             report = stdout.getvalue()
             self.assertEqual(exit_code, 0)
             self.assertIn("## First-Repository Rollout", report)
+            self.assertIn("- **Repository ID:** `platform/api`", report)
             self.assertIn("- **Readiness:** `ready-for-ci`", report)
             self.assertIn(
                 "- [x] Team policy version 1 was loaded and evaluated across 2 rules.",
@@ -240,6 +244,12 @@ require_clean_git = true
                 "- [ ] Record one week of CI evidence before enrolling another repository.",
                 report,
             )
+            metadata = parse_rollout_metadata(report)
+            self.assertEqual(metadata["schema_version"], 1)
+            self.assertEqual(metadata["repository_id"], "platform/api")
+            self.assertEqual(metadata["readiness"], "ready-for-ci")
+            self.assertEqual(metadata["policy"]["status"], "pass")
+            self.assertTrue(metadata["git"]["clean"])
 
     def test_rollout_evidence_is_written_before_policy_exit_six(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -263,6 +273,8 @@ required_files = ["README.md", "SECURITY.md"]
                         "--policy",
                         str(policy_path),
                         "--rollout-checklist",
+                        "--repository-id",
+                        "platform/api",
                         "--output",
                         str(output),
                         str(root),
@@ -310,6 +322,21 @@ required_files = ["README.md", "SECURITY.md"]
 
             stderr = io.StringIO()
             with redirect_stderr(stderr):
+                missing_repository_id = main(
+                    [
+                        "--format",
+                        "markdown",
+                        "--policy",
+                        str(policy_path),
+                        "--rollout-checklist",
+                        str(root),
+                    ]
+                )
+            self.assertEqual(missing_repository_id, 2)
+            self.assertIn("requires --repository-id", stderr.getvalue())
+
+            stderr = io.StringIO()
+            with redirect_stderr(stderr):
                 comparison_mode = main(
                     [
                         "--compare",
@@ -324,6 +351,31 @@ required_files = ["README.md", "SECURITY.md"]
                 )
             self.assertEqual(comparison_mode, 2)
             self.assertIn("cannot be used with --compare", stderr.getvalue())
+
+            stderr = io.StringIO()
+            with redirect_stderr(stderr):
+                orphan_repository_id = main(
+                    ["--repository-id", "platform/api", str(root)]
+                )
+            self.assertEqual(orphan_repository_id, 2)
+            self.assertIn("requires --rollout-checklist", stderr.getvalue())
+
+            stderr = io.StringIO()
+            with redirect_stderr(stderr):
+                invalid_repository_id = main(
+                    [
+                        "--format",
+                        "markdown",
+                        "--policy",
+                        str(policy_path),
+                        "--rollout-checklist",
+                        "--repository-id",
+                        " platform/api",
+                        str(root),
+                    ]
+                )
+            self.assertEqual(invalid_repository_id, 2)
+            self.assertIn("surrounding whitespace", stderr.getvalue())
 
     def test_cli_rejects_invalid_team_policy(self) -> None:
         with TemporaryDirectory() as tmp:

@@ -17,11 +17,11 @@ artifact from this repository's tagged source.
 Download a specific version rather than relying on a moving latest-release URL:
 
 ```bash
-gh release download v0.2.9 \
+gh release download v0.3.0 \
   --repo becastil/Chats-empty-repo \
   --pattern "repo_scout-*" \
   --pattern SHA256SUMS
-python3 -m pip install ./repo_scout-0.2.9-py3-none-any.whl
+python3 -m pip install ./repo_scout-0.3.0-py3-none-any.whl
 ```
 
 Repo Scout requires Python 3.11 or newer and has no runtime dependencies.
@@ -33,9 +33,9 @@ files:
 
 ```bash
 shasum -a 256 -c SHA256SUMS
-gh attestation verify repo_scout-0.2.9-py3-none-any.whl \
+gh attestation verify repo_scout-0.3.0-py3-none-any.whl \
   --repo becastil/Chats-empty-repo
-gh attestation verify repo_scout-0.2.9.tar.gz \
+gh attestation verify repo_scout-0.3.0.tar.gz \
   --repo becastil/Chats-empty-repo
 ```
 

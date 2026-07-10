@@ -20,7 +20,7 @@ SPEC.loader.exec_module(prepare_release)
 
 class ReleaseManifestTests(unittest.TestCase):
     def test_current_project_versions_match(self) -> None:
-        self.assertEqual(prepare_release.load_project_version(ROOT), "0.2.9")
+        self.assertEqual(prepare_release.load_project_version(ROOT), "0.3.0")
 
     def test_writes_deterministic_checksums_for_exact_artifacts(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -121,6 +121,10 @@ class ReleaseWorkflowTests(unittest.TestCase):
         self.assertIn("pip install --require-hashes", workflow)
         self.assertIn("python -m build --no-isolation --sdist --wheel", workflow)
         self.assertIn("subject-checksums: dist/SHA256SUMS", workflow)
+        self.assertIn(
+            '"$RUNNER_TEMP/repo-scout-release/bin/repo-scout-rollout" --help',
+            workflow,
+        )
         self.assertIn('gh release create "$GITHUB_REF_NAME"', workflow)
         self.assertIn("--verify-tag", workflow)
         self.assertNotIn("pull_request_target", workflow)

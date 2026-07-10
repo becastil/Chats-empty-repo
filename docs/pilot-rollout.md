@@ -13,6 +13,7 @@ worktree, then run:
 repo-scout --format markdown \
   --policy repo-scout-policy.toml \
   --rollout-checklist \
+  --repository-id platform/api \
   --output repo-scout-rollout.md \
   .
 ```
@@ -23,6 +24,12 @@ Use `--force` only when intentionally refreshing an existing bundle. Without
 `--rollout-checklist` requires both `--policy` and `--format markdown`. It
 cannot be used for snapshot comparisons because a before/after report does not
 establish a current rollout baseline.
+
+Use the same required `--repository-id` across local and CI runs, preferably
+the `owner/repository` name. Directory basenames are not accepted as implicit
+identity because unrelated repositories can share a directory name. IDs cannot
+be empty, exceed 128 characters, contain control characters, or have
+surrounding whitespace.
 
 ## Read The Evidence
 
@@ -42,6 +49,37 @@ The team handoff section always starts unchecked. A local scan cannot prove
 that a pull request was reviewed, an owner was assigned, a required check was
 enabled, or a week of CI evidence exists. Those boxes are completed by the
 pilot team as rollout work happens.
+
+Each bundle ends with a visible `Rollout Metadata` JSON block. Schema version 1
+contains only the logical repository ID, readiness, policy counts, Git state,
+and attention count. It excludes absolute repository and policy paths even
+though those remain visible elsewhere in the human evidence report.
+
+## Summarize Pilot Repositories
+
+Combine two or more evidence bundles without a database or hosted service:
+
+```bash
+repo-scout-rollout api-rollout.md web-rollout.md worker-rollout.md
+repo-scout-rollout --details api-rollout.md web-rollout.md
+repo-scout-rollout --format json api-rollout.md web-rollout.md > rollout-summary.json
+```
+
+The default summary reports counts only and omits repository IDs, branches,
+and evidence paths. `--details` explicitly includes those fields when an
+operator needs repository-level action. Results are labeled bundle-reported
+because the command does not verify evidence age or prove that every bundle
+used the same policy content. Detailed repository rows are sorted by logical
+ID, so input order does not change the result. Duplicate IDs, duplicate JSON
+keys, missing metadata, unknown fields, unsupported schemas, invalid types,
+and internally contradictory evidence fail with exit code 2 instead of being
+counted.
+
+Consistency validation is not a digital signature or freshness check. A person
+who can modify an evidence file can replace both its prose and metadata, and
+policy version alone does not prove two repositories used identical rules.
+Retain bundles in access-controlled artifacts or an approved internal system
+when decisions depend on their provenance.
 
 ## Failure Evidence
 

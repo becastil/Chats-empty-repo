@@ -8,6 +8,12 @@ from typing import Any, Sequence
 
 from .comparison import SnapshotReadError, compare_snapshot_files
 from .policy import PolicyError, evaluate_policy, load_policy
+from .rollout import (
+    RolloutEvidenceError,
+    build_rollout_metadata,
+    format_rollout_metadata,
+    validate_repository_id,
+)
 from .scanner import (
     DEFAULT_LARGE_FILE_BYTES,
     SNAPSHOT_SCHEMA_VERSION,
@@ -67,6 +73,13 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--repository-id",
+        metavar="ID",
+        help=(
+            "Stable logical repository name required for rollout evidence."
+        ),
+    )
+    parser.add_argument(
         "--format",
         choices=("text", "json", "markdown"),
         default="text",
@@ -120,6 +133,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         return 2
 
+    if args.repository_id and not args.rollout_checklist:
+        print(
+            "repo-scout: --repository-id requires --rollout-checklist",
+            file=sys.stderr,
+        )
+        return 2
+
     if args.rollout_checklist and not args.policy:
         print(
             "repo-scout: --rollout-checklist requires --policy",
@@ -133,6 +153,20 @@ def main(argv: Sequence[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 2
+
+    if args.rollout_checklist and args.repository_id is None:
+        print(
+            "repo-scout: --rollout-checklist requires --repository-id",
+            file=sys.stderr,
+        )
+        return 2
+
+    if args.repository_id is not None:
+        try:
+            args.repository_id = validate_repository_id(args.repository_id)
+        except RolloutEvidenceError as exc:
+            print(f"repo-scout: {exc}", file=sys.stderr)
+            return 2
 
     if args.compare and args.fail_on_attention:
         print(
@@ -189,9 +223,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.format == "json":
         report = json.dumps(snapshot, indent=2, sort_keys=True)
     elif args.format == "markdown":
+        rollout_repository_id = args.repository_id
         report = format_markdown(
             snapshot,
             include_rollout_checklist=args.rollout_checklist,
+            rollout_repository_id=rollout_repository_id,
         )
     else:
         report = format_snapshot(snapshot)
@@ -304,7 +340,10 @@ def _append_text_attention(lines: list[str], attention: dict[str, Any]) -> None:
 
 
 def format_markdown(
-    snapshot: dict[str, Any], *, include_rollout_checklist: bool = False
+    snapshot: dict[str, Any],
+    *,
+    include_rollout_checklist: bool = False,
+    rollout_repository_id: str | None = None,
 ) -> str:
     git = snapshot["git"]
     docs = snapshot["docs"]
@@ -399,26 +438,25 @@ def format_markdown(
         )
 
     if include_rollout_checklist:
-        _append_rollout_checklist(lines, snapshot)
+        if rollout_repository_id is None:
+            raise ValueError("rollout checklist requires a repository ID")
+        _append_rollout_checklist(lines, snapshot, rollout_repository_id)
 
     return "\n".join(lines)
 
 
 def _append_rollout_checklist(
-    lines: list[str], snapshot: dict[str, Any]
+    lines: list[str], snapshot: dict[str, Any], repository_id: str
 ) -> None:
     policy = snapshot.get("policy")
     if policy is None:
         raise ValueError("rollout checklist requires evaluated policy data")
 
     git = snapshot["git"]
-    policy_passes = policy["status"] == "pass"
-    is_clean_repository = git["is_repo"] and git["dirty_files"] == 0
-    readiness = (
-        "ready-for-ci"
-        if policy_passes and is_clean_repository
-        else "remediation-required"
-    )
+    metadata = build_rollout_metadata(snapshot, repository_id)
+    policy_passes = metadata["policy"]["status"] == "pass"
+    is_clean_repository = metadata["git"]["clean"]
+    readiness = metadata["readiness"]
     violation_count = len(policy["violations"])
     violation_label = "violation" if violation_count == 1 else "violations"
     rule_label = "rule" if policy["rules_checked"] == 1 else "rules"
@@ -430,6 +468,7 @@ def _append_rollout_checklist(
             "",
             "## First-Repository Rollout",
             "",
+            f"- **Repository ID:** {_markdown_code(repository_id)}",
             f"- **Readiness:** {_markdown_code(readiness)}",
             f"- **Policy evidence:** {_markdown_code(policy['status'])}",
             "",
@@ -486,6 +525,12 @@ def _append_rollout_checklist(
             "- [ ] Require the Repo Scout check after the baseline passes.",
             "- [ ] Record one week of CI evidence before enrolling another repository.",
             "- [ ] Select the next repository and reuse the approved policy pack.",
+            "",
+            "## Rollout Metadata",
+            "",
+            "```json",
+            format_rollout_metadata(metadata),
+            "```",
         ]
     )
 
