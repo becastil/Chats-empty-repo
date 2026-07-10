@@ -1,12 +1,17 @@
 # Changelog
 
-## Unreleased
+## 0.3.2 - 2026-07-10
 
 - Upgraded copy-ready and dogfood policy workflows to the independently pinned and attested `v0.3.1` release.
 - Generated schema-2 rollout evidence in CI with GitHub's stable `owner/repository` identity.
 - Preserved passing and remediation bundles in job summaries and 14-day `repo-scout-rollout-evidence` artifacts.
 - Added workflow contract and execution coverage for fingerprints, exact scanned commits, readiness, and policy-failure evidence.
 - Documented artifact access, pull-request merge commits, local aggregation, and the no-hosted-service pilot workflow.
+- Added a required public purchase-readiness answer for ready, approval-dependent, and exploratory pilot requests.
+- Added schema-4 readiness totals by funnel stage, booked revenue, annual conversion, and loss.
+- Added normalized readiness and original answers to deal records and readiness context to stale follow-up records.
+- Added explicit warnings and buckets for legacy, edited, unknown, and duplicate readiness answers.
+- Kept self-reported purchase intent separate from booked revenue, which still requires `pilot-paid` or a later paid stage.
 
 ## 0.3.1 - 2026-07-10
 

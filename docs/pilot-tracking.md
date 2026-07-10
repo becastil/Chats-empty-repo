@@ -5,6 +5,11 @@ turns their cumulative labels into a deterministic funnel report. The reporter
 reads a local JSON export; it does not call GitHub, store credentials, or treat
 an offer as revenue.
 
+Every new request declares one public purchase-readiness state: ready to
+purchase the $299 pilot, needs internal approval, or exploring before requesting
+budget. Do not infer a stronger state from free text or move a deal forward
+based on readiness alone.
+
 ## Funnel Labels
 
 Keep each earlier milestone label when a request advances:
@@ -43,7 +48,7 @@ Use `--format json` for a machine-readable report. `--pilot-price` and
 `--target-pilots` change the commercial assumptions without changing issue
 data.
 
-Funnel JSON declares `schema_version: 3`. Its `follow_up` object records the
+Funnel JSON declares `schema_version: 4`. Its `follow_up` object records the
 UTC `as_of` date, the inactivity threshold, and a deterministic deal list.
 Omit `--as-of` to use the current UTC date. `--stale-days` changes the default
 seven-day threshold.
@@ -68,6 +73,13 @@ Legacy issues without the form answer use `unattributed`; edited answers that
 do not match the taxonomy, or duplicate source headings, use `unknown`. Each
 case produces a warning rather than silently guessing a channel.
 
+The `by_readiness` object reports the same funnel and revenue totals for
+`ready`, `needs_approval`, `exploring`, `unattributed`, and `unknown`. Deal
+records include normalized `purchase_readiness` and the original
+`purchase_readiness_raw` answer; stale follow-up records carry the normalized
+state for prioritization. Missing, unrecognized, and duplicate answers produce
+warnings rather than a guessed readiness state.
+
 Source attribution is self-reported discovery data. It does not prove which
 touchpoint caused a purchase, and it should be used directionally when deciding
 where to focus outreach. Repo Scout does not add cookies, tracking pixels, or a
@@ -85,12 +97,16 @@ stage. A later `pilot-lost` label does not erase cash already received. If a
 payment is refunded, remove `pilot-paid` and later paid-stage labels before the
 next report, and retain the refund evidence outside the public issue.
 
+The readiness summary is willingness-to-pay evidence, not accounting. A
+`ready` request contributes $0 until payment is received and the issue reaches
+`pilot-paid`.
+
 ## Operating Cadence
 
-Run the report weekly and before each roadmap review. Resolve label warnings
-and source warnings before sharing totals. The follow-up list includes only open `pilot-lead`,
-`pilot-qualified`, and `pilot-offered` issues whose UTC `updatedAt` date is at
-least the threshold age. The boundary is inclusive.
+Run the report weekly and before each roadmap review. Resolve label, source,
+and readiness warnings before sharing totals. The follow-up list includes only
+open `pilot-lead`, `pilot-qualified`, and `pilot-offered` issues whose UTC
+`updatedAt` date is at least the threshold age. The boundary is inclusive.
 
 GitHub `updatedAt` measures issue inactivity, not customer contact. Comments,
 label changes, and title edits all refresh it, so a fresh issue is not evidence

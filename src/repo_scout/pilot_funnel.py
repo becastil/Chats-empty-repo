@@ -10,7 +10,7 @@ import sys
 from typing import Any, Sequence, TextIO
 
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 DEFAULT_PILOT_PRICE_USD = 299
 DEFAULT_TARGET_PILOTS = 3
 DEFAULT_STALE_DAYS = 7
@@ -50,6 +50,17 @@ SOURCE_OPTIONS = (
 SOURCE_BY_ANSWER = {answer: source for source, answer in SOURCE_OPTIONS}
 ATTRIBUTED_SOURCES = tuple(source for source, _ in SOURCE_OPTIONS)
 SOURCE_KEYS = (*ATTRIBUTED_SOURCES, "unattributed", "unknown")
+READINESS_FIELD_HEADING = "Purchase readiness"
+READINESS_OPTIONS = (
+    ("ready", "Ready to purchase the $299 pilot"),
+    ("needs_approval", "Need internal approval for $299"),
+    ("exploring", "Exploring before requesting budget"),
+)
+READINESS_BY_ANSWER = {
+    answer: readiness for readiness, answer in READINESS_OPTIONS
+}
+DECLARED_READINESS = tuple(readiness for readiness, _ in READINESS_OPTIONS)
+READINESS_KEYS = (*DECLARED_READINESS, "unattributed", "unknown")
 
 
 class FunnelInputError(ValueError):
@@ -87,7 +98,11 @@ def build_funnel(
         raise FunnelInputError("as-of must be a date")
 
     by_stage = {stage: 0 for stage in DISPLAY_STAGES}
-    by_source = {source: _empty_source_totals() for source in SOURCE_KEYS}
+    by_source = {source: _empty_segment_totals() for source in SOURCE_KEYS}
+    by_readiness = {
+        readiness: _empty_segment_totals() for readiness in READINESS_KEYS
+    }
+    readiness_counts = {readiness: 0 for readiness in READINESS_KEYS}
     deals: list[dict[str, Any]] = []
     warnings: list[dict[str, Any]] = []
     stale_deals: list[dict[str, Any]] = []
@@ -138,6 +153,13 @@ def build_funnel(
             unattributed_issues += 1
         else:
             unknown_source_issues += 1
+
+        readiness, readiness_raw, readiness_warning = _classify_purchase_readiness(
+            issue
+        )
+        if readiness_warning is not None:
+            warnings.append(readiness_warning)
+        readiness_counts[readiness] += 1
 
         present_stages = [
             position
@@ -228,6 +250,7 @@ def build_funnel(
                         "url": issue.url,
                         "stage": stage,
                         "source": source,
+                        "purchase_readiness": readiness,
                         "age_days": age_days,
                         "updated_at": _format_timestamp(issue.updated_at),
                     }
@@ -238,18 +261,18 @@ def build_funnel(
         booked_pilots += int(is_booked)
         annual_conversions += int(has_converted)
         lost_pilots += int(has_lost)
-        source_totals = by_source[source]
-        source_totals["deals"] += 1
-        source_totals["qualified_pilots"] += int(
-            furthest_stage >= STAGE_LABELS.index("pilot-qualified")
-        )
-        source_totals["offered_pilots"] += int(
-            furthest_stage >= STAGE_LABELS.index("pilot-offered")
-        )
-        source_totals["booked_pilots"] += int(is_booked)
-        source_totals["booked_revenue_usd"] += int(is_booked) * pilot_price_usd
-        source_totals["annual_conversions"] += int(has_converted)
-        source_totals["lost_pilots"] += int(has_lost)
+        is_qualified = furthest_stage >= STAGE_LABELS.index("pilot-qualified")
+        is_offered = furthest_stage >= STAGE_LABELS.index("pilot-offered")
+        for totals in (by_source[source], by_readiness[readiness]):
+            _record_segment_totals(
+                totals,
+                is_qualified=is_qualified,
+                is_offered=is_offered,
+                is_booked=is_booked,
+                has_converted=has_converted,
+                has_lost=has_lost,
+                pilot_price_usd=pilot_price_usd,
+            )
         deals.append(
             {
                 "number": issue.number,
@@ -258,6 +281,8 @@ def build_funnel(
                 "stage": stage,
                 "source": source,
                 "source_raw": source_raw,
+                "purchase_readiness": readiness,
+                "purchase_readiness_raw": readiness_raw,
                 "booked": is_booked,
                 "state": issue.state,
                 "updated_at": _format_timestamp(issue.updated_at),
@@ -293,6 +318,11 @@ def build_funnel(
             "attributed_issues": attributed_issues,
             "unattributed_issues": unattributed_issues,
             "unknown_source_issues": unknown_source_issues,
+            "ready_issues": readiness_counts["ready"],
+            "needs_approval_issues": readiness_counts["needs_approval"],
+            "exploring_issues": readiness_counts["exploring"],
+            "missing_readiness_issues": readiness_counts["unattributed"],
+            "unknown_readiness_issues": readiness_counts["unknown"],
         },
         "follow_up": {
             "as_of": report_date.isoformat(),
@@ -304,6 +334,7 @@ def build_funnel(
         },
         "by_stage": by_stage,
         "by_source": by_source,
+        "by_readiness": by_readiness,
         "deals": sorted(deals, key=lambda deal: deal["number"]),
         "warnings": warnings,
     }
@@ -333,6 +364,13 @@ def format_funnel(report: dict[str, Any]) -> str:
             f"Attribution: {summary['attributed_issues']} attributed / "
             f"{summary['unattributed_issues']} missing / "
             f"{summary['unknown_source_issues']} unknown"
+        ),
+        (
+            f"Purchase readiness: {summary['ready_issues']} ready / "
+            f"{summary['needs_approval_issues']} need approval / "
+            f"{summary['exploring_issues']} exploring / "
+            f"{summary['missing_readiness_issues']} missing / "
+            f"{summary['unknown_readiness_issues']} unknown"
         ),
         (
             f"Follow-up: {summary['stale_deals']} stale open pre-payment "
@@ -365,12 +403,35 @@ def format_funnel(report: dict[str, Any]) -> str:
     else:
         lines.append("  none")
 
+    lines.append("Purchase readiness:")
+    populated_readiness = [
+        readiness
+        for readiness in READINESS_KEYS
+        if report["by_readiness"][readiness]["deals"]
+    ]
+    if populated_readiness:
+        for readiness in populated_readiness:
+            totals = report["by_readiness"][readiness]
+            deal_label = "deal" if totals["deals"] == 1 else "deals"
+            lines.append(
+                f"  {readiness}: {totals['deals']} {deal_label}, "
+                f"{totals['qualified_pilots']} qualified, "
+                f"{totals['offered_pilots']} offered, "
+                f"{totals['booked_pilots']} booked "
+                f"(${totals['booked_revenue_usd']}), "
+                f"{totals['annual_conversions']} converted, "
+                f"{totals['lost_pilots']} lost"
+            )
+    else:
+        lines.append("  none")
+
     lines.append("Deals:")
     if report["deals"]:
         for deal in report["deals"]:
             suffix = f" {deal['url']}" if deal["url"] else ""
             lines.append(
-                f"  #{deal['number']} [{deal['stage']}, {deal['source']}] "
+                f"  #{deal['number']} [{deal['stage']}, {deal['source']}, "
+                f"{deal['purchase_readiness']}] "
                 f"{deal['title']}{suffix}"
             )
     else:
@@ -381,7 +442,8 @@ def format_funnel(report: dict[str, Any]) -> str:
         for deal in report["follow_up"]["deals"]:
             suffix = f" {deal['url']}" if deal["url"] else ""
             lines.append(
-                f"  #{deal['number']} [{deal['stage']}, {deal['age_days']} days] "
+                f"  #{deal['number']} [{deal['stage']}, "
+                f"{deal['purchase_readiness']}, {deal['age_days']} days] "
                 f"{deal['title']} (updated {deal['updated_at']}){suffix}"
             )
     else:
@@ -556,7 +618,7 @@ def _warning(
     }
 
 
-def _empty_source_totals() -> dict[str, int]:
+def _empty_segment_totals() -> dict[str, int]:
     return {
         "deals": 0,
         "qualified_pilots": 0,
@@ -566,6 +628,25 @@ def _empty_source_totals() -> dict[str, int]:
         "annual_conversions": 0,
         "lost_pilots": 0,
     }
+
+
+def _record_segment_totals(
+    totals: dict[str, int],
+    *,
+    is_qualified: bool,
+    is_offered: bool,
+    is_booked: bool,
+    has_converted: bool,
+    has_lost: bool,
+    pilot_price_usd: int,
+) -> None:
+    totals["deals"] += 1
+    totals["qualified_pilots"] += int(is_qualified)
+    totals["offered_pilots"] += int(is_offered)
+    totals["booked_pilots"] += int(is_booked)
+    totals["booked_revenue_usd"] += int(is_booked) * pilot_price_usd
+    totals["annual_conversions"] += int(has_converted)
+    totals["lost_pilots"] += int(has_lost)
 
 
 def _classify_lead_source(
@@ -606,6 +687,46 @@ def _classify_lead_source(
             ),
         )
     return source, raw_answer, None
+
+
+def _classify_purchase_readiness(
+    issue: PilotIssue,
+) -> tuple[str, str | None, dict[str, Any] | None]:
+    answers = _issue_form_answers(issue.body, READINESS_FIELD_HEADING)
+    if not answers or answers == ["_No response_"]:
+        return (
+            "unattributed",
+            None,
+            _warning(
+                issue,
+                "missing_purchase_readiness",
+                "Pilot issue has no purchase readiness answer.",
+            ),
+        )
+    if len(answers) != 1:
+        return (
+            "unknown",
+            "; ".join(answers),
+            _warning(
+                issue,
+                "ambiguous_purchase_readiness",
+                "Pilot issue contains multiple purchase readiness answers.",
+            ),
+        )
+
+    raw_answer = answers[0]
+    readiness = READINESS_BY_ANSWER.get(raw_answer)
+    if readiness is None:
+        return (
+            "unknown",
+            raw_answer,
+            _warning(
+                issue,
+                "unknown_purchase_readiness",
+                f"Unknown purchase readiness answer: {raw_answer}.",
+            ),
+        )
+    return readiness, raw_answer, None
 
 
 def _issue_form_answers(body: str, heading: str) -> list[str]:

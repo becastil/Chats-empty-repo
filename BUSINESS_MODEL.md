@@ -109,6 +109,12 @@ conversion, and loss. Missing or edited legacy answers remain explicit warning
 buckets. This is directional acquisition evidence, not proof that a single
 touchpoint caused a purchase.
 
+The intake also requires one public purchase-readiness answer: ready to buy the
+$299 pilot, needs internal approval, or exploring before requesting budget.
+Schema-4 funnel totals connect each readiness state to qualification, offers,
+booked revenue, conversion, and loss. Readiness is self-reported intent, not
+cash; only `pilot-paid` or a later paid stage counts as booked revenue.
+
 ## Product Filter
 
 New work must improve acquisition, activation, conversion, or retention for the

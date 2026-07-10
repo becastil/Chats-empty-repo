@@ -15,6 +15,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from repo_scout.pilot_funnel import (
     FunnelInputError,
+    READINESS_FIELD_HEADING,
+    READINESS_OPTIONS,
     SOURCE_FIELD_HEADING,
     SOURCE_OPTIONS,
     build_funnel,
@@ -44,12 +46,24 @@ class PilotFunnelTests(unittest.TestCase):
         ]
         self.assertEqual(positions, sorted(positions))
 
+        self.assertIn("id: purchase_readiness", form)
+        self.assertIn(f"label: {READINESS_FIELD_HEADING}", form)
+        readiness_section = form[form.index("id: purchase_readiness") :]
+        next_field = readiness_section.find("\n  - type:")
+        readiness_section = readiness_section[:next_field]
+        readiness_positions = [
+            readiness_section.index(f"        - {answer}")
+            for _, answer in READINESS_OPTIONS
+        ]
+        self.assertEqual(readiness_positions, sorted(readiness_positions))
+        self.assertIn("required: true", readiness_section)
+
     def test_build_funnel_tracks_revenue_stages_and_label_drift(self) -> None:
         payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
 
         report = build_funnel(payload, as_of=date(2026, 7, 10))
 
-        self.assertEqual(report["schema_version"], 3)
+        self.assertEqual(report["schema_version"], 4)
         self.assertEqual(report["summary"]["tracked_issues"], 8)
         self.assertEqual(report["summary"]["ignored_issues"], 1)
         self.assertEqual(report["summary"]["booked_pilots"], 4)
@@ -62,6 +76,11 @@ class PilotFunnelTests(unittest.TestCase):
         self.assertEqual(report["summary"]["attributed_issues"], 8)
         self.assertEqual(report["summary"]["unattributed_issues"], 0)
         self.assertEqual(report["summary"]["unknown_source_issues"], 0)
+        self.assertEqual(report["summary"]["ready_issues"], 3)
+        self.assertEqual(report["summary"]["needs_approval_issues"], 3)
+        self.assertEqual(report["summary"]["exploring_issues"], 2)
+        self.assertEqual(report["summary"]["missing_readiness_issues"], 0)
+        self.assertEqual(report["summary"]["unknown_readiness_issues"], 0)
         self.assertEqual(
             report["by_stage"],
             {
@@ -122,6 +141,44 @@ class PilotFunnelTests(unittest.TestCase):
         self.assertEqual(report["deals"][0]["source"], "website")
         self.assertEqual(report["follow_up"]["deals"][0]["source"], "website")
         self.assertEqual(
+            report["follow_up"]["deals"][0]["purchase_readiness"], "ready"
+        )
+        self.assertEqual(
+            report["follow_up"]["deals"][1]["purchase_readiness"],
+            "needs_approval",
+        )
+        self.assertEqual(
+            report["by_readiness"]["ready"],
+            {
+                "deals": 3,
+                "qualified_pilots": 2,
+                "offered_pilots": 2,
+                "booked_pilots": 2,
+                "booked_revenue_usd": 598,
+                "annual_conversions": 1,
+                "lost_pilots": 0,
+            },
+        )
+        self.assertEqual(
+            report["by_readiness"]["needs_approval"],
+            {
+                "deals": 3,
+                "qualified_pilots": 3,
+                "offered_pilots": 2,
+                "booked_pilots": 2,
+                "booked_revenue_usd": 598,
+                "annual_conversions": 1,
+                "lost_pilots": 1,
+            },
+        )
+        self.assertEqual(report["by_readiness"]["exploring"]["deals"], 2)
+        self.assertEqual(report["by_readiness"]["exploring"]["lost_pilots"], 1)
+        self.assertEqual(
+            sum(totals["deals"] for totals in report["by_readiness"].values()),
+            report["summary"]["tracked_issues"],
+        )
+        self.assertEqual(report["deals"][0]["purchase_readiness"], "ready")
+        self.assertEqual(
             report,
             build_funnel(list(reversed(payload)), as_of=date(2026, 7, 10)),
         )
@@ -130,13 +187,17 @@ class PilotFunnelTests(unittest.TestCase):
         self,
     ) -> None:
         heading = "### How did you hear about Repo Scout?"
+        readiness = "### Purchase readiness"
         payload = [
             {
                 "number": 1,
                 "title": "Paid GitHub lead",
                 "state": "OPEN",
                 "updatedAt": "2026-07-10T00:00:00Z",
-                "body": f"{heading}\n\nGitHub repository or release",
+                "body": (
+                    f"{heading}\n\nGitHub repository or release\n\n"
+                    f"{readiness}\n\nReady to purchase the $299 pilot"
+                ),
                 "labels": [
                     "pilot-lead",
                     "pilot-qualified",
@@ -149,6 +210,7 @@ class PilotFunnelTests(unittest.TestCase):
                 "title": "Legacy lead without source",
                 "state": "OPEN",
                 "updatedAt": "2026-07-10T00:00:00Z",
+                "body": f"{readiness}\n\nExploring before requesting budget",
                 "labels": ["pilot-lead"],
             },
             {
@@ -156,7 +218,10 @@ class PilotFunnelTests(unittest.TestCase):
                 "title": "Edited unknown source",
                 "state": "OPEN",
                 "updatedAt": "2026-07-10T00:00:00Z",
-                "body": f"{heading}\n\nConference",
+                "body": (
+                    f"{heading}\n\nConference\n\n{readiness}\n\n"
+                    "Need internal approval for $299"
+                ),
                 "labels": ["pilot-lead", "pilot-qualified"],
             },
             {
@@ -164,7 +229,10 @@ class PilotFunnelTests(unittest.TestCase):
                 "title": "Duplicate source headings",
                 "state": "CLOSED",
                 "updatedAt": "2026-07-10T00:00:00Z",
-                "body": f"{heading}\n\nSearch\n\n{heading}\n\nDirect outreach",
+                "body": (
+                    f"{heading}\n\nSearch\n\n{heading}\n\nDirect outreach\n\n"
+                    f"{readiness}\n\nExploring before requesting budget"
+                ),
                 "labels": ["pilot-lead", "pilot-lost"],
             },
         ]
@@ -202,6 +270,87 @@ class PilotFunnelTests(unittest.TestCase):
         self.assertIn("Attribution: 1 attributed / 1 missing / 2 unknown", text_report)
         self.assertIn(
             "github: 1 deal, 1 qualified, 1 offered, 1 booked ($400)",
+            text_report,
+        )
+
+    def test_purchase_readiness_handles_missing_unknown_and_ambiguous_answers(
+        self,
+    ) -> None:
+        source = "### How did you hear about Repo Scout?\n\nRepo Scout website"
+        heading = "### Purchase readiness"
+        payload = [
+            {
+                "number": 1,
+                "title": "Ready buyer",
+                "state": "OPEN",
+                "updatedAt": "2026-07-10T00:00:00Z",
+                "body": f"{source}\n\n{heading}\n\nReady to purchase the $299 pilot",
+                "labels": ["pilot-lead"],
+            },
+            {
+                "number": 2,
+                "title": "Legacy request",
+                "state": "OPEN",
+                "updatedAt": "2026-07-10T00:00:00Z",
+                "body": source,
+                "labels": ["pilot-lead"],
+            },
+            {
+                "number": 3,
+                "title": "Edited answer",
+                "state": "OPEN",
+                "updatedAt": "2026-07-10T00:00:00Z",
+                "body": f"{source}\n\n{heading}\n\nBudget maybe",
+                "labels": ["pilot-lead"],
+            },
+            {
+                "number": 4,
+                "title": "Duplicate readiness headings",
+                "state": "OPEN",
+                "updatedAt": "2026-07-10T00:00:00Z",
+                "body": (
+                    f"{source}\n\n{heading}\n\nNeed internal approval for $299\n\n"
+                    f"{heading}\n\nExploring before requesting budget"
+                ),
+                "labels": ["pilot-lead"],
+            },
+            {
+                "number": 5,
+                "title": "Generated no-response answer",
+                "state": "OPEN",
+                "updatedAt": "2026-07-10T00:00:00Z",
+                "body": f"{source}\n\n{heading}\n\n_No response_",
+                "labels": ["pilot-lead"],
+            },
+        ]
+
+        report = build_funnel(payload, as_of=date(2026, 7, 10))
+
+        self.assertEqual(report["summary"]["ready_issues"], 1)
+        self.assertEqual(report["summary"]["missing_readiness_issues"], 2)
+        self.assertEqual(report["summary"]["unknown_readiness_issues"], 2)
+        self.assertEqual(
+            [warning["kind"] for warning in report["warnings"]],
+            [
+                "missing_purchase_readiness",
+                "unknown_purchase_readiness",
+                "ambiguous_purchase_readiness",
+                "missing_purchase_readiness",
+            ],
+        )
+        self.assertEqual(report["by_readiness"]["ready"]["deals"], 1)
+        self.assertEqual(report["by_readiness"]["unattributed"]["deals"], 2)
+        self.assertEqual(report["by_readiness"]["unknown"]["deals"], 2)
+        self.assertIsNone(report["deals"][1]["purchase_readiness_raw"])
+        self.assertEqual(report["deals"][2]["purchase_readiness_raw"], "Budget maybe")
+        self.assertEqual(
+            report["deals"][3]["purchase_readiness_raw"],
+            "Need internal approval for $299; Exploring before requesting budget",
+        )
+        text_report = format_funnel(report)
+        self.assertIn(
+            "Purchase readiness: 1 ready / 0 need approval / 0 exploring / "
+            "2 missing / 2 unknown",
             text_report,
         )
 
@@ -250,6 +399,7 @@ class PilotFunnelTests(unittest.TestCase):
         self.assertIn("Deals:\n  none", stdout.getvalue())
         self.assertIn("Stale deals:\n  none", stdout.getvalue())
         self.assertIn("Sources:\n  none", stdout.getvalue())
+        self.assertIn("Purchase readiness:\n  none", stdout.getvalue())
         self.assertIn("Warnings:\n  none", stdout.getvalue())
 
     def test_main_rejects_invalid_json(self) -> None:
@@ -333,7 +483,8 @@ class PilotFunnelTests(unittest.TestCase):
         ]
         for issue in payload:
             issue["body"] = (
-                "### How did you hear about Repo Scout?\n\nRepo Scout website"
+                "### How did you hear about Repo Scout?\n\nRepo Scout website\n\n"
+                "### Purchase readiness\n\nNeed internal approval for $299"
             )
 
         report = build_funnel(payload, as_of=date(2026, 7, 10), stale_days=7)
@@ -364,7 +515,7 @@ class PilotFunnelTests(unittest.TestCase):
             text_report,
         )
         self.assertIn(
-            "#13 [offered, 7 days] UTC boundary is stale "
+            "#13 [offered, needs_approval, 7 days] UTC boundary is stale "
             "(updated 2026-07-03T22:30:00Z)",
             text_report,
         )

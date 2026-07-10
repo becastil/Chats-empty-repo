@@ -82,5 +82,10 @@ test("ships a qualified founding-team pilot intake", async () => {
   assert.match(form, /GitHub repository or release/i);
   assert.match(form, /Teammate or referral/i);
   assert.match(form, /id: repository_standard/i);
+  assert.match(form, /id: purchase_readiness/i);
+  assert.match(form, /label: Purchase readiness/i);
+  assert.match(form, /Ready to purchase the \$299 pilot/i);
+  assert.match(form, /Need internal approval for \$299/i);
+  assert.match(form, /Exploring before requesting budget/i);
   assert.match(form, /required: true/i);
 });

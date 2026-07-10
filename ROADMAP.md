@@ -7,6 +7,7 @@
 
 ## Near Term
 
+- Collect the first three public pilot requests and compare purchase readiness by source.
 - Add a private pilot contact path after public intake validates demand.
 
 ## Revenue Validation

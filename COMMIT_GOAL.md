@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this CI-rollout-evidence commit: 27 / 1,000 (2.7%).
-- Remaining after this CI-rollout-evidence commit: 973 commits.
+- Progress after this purchase-readiness commit: 28 / 1,000 (2.8%).
+- Remaining after this purchase-readiness commit: 972 commits.
 
 ## Commit Standard
 

@@ -67,6 +67,18 @@ body:
     validations:
       required: true
 
+  - type: dropdown
+    id: purchase_readiness
+    attributes:
+      label: Purchase readiness
+      description: What is your team's current ability to approve the $299 pilot? This answer is public.
+      options:
+        - Ready to purchase the $299 pilot
+        - Need internal approval for $299
+        - Exploring before requesting budget
+    validations:
+      required: true
+
   - type: checkboxes
     id: pilot_terms
     attributes:
