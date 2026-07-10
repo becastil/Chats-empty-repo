@@ -160,7 +160,9 @@ examples/github-actions/repo-scout-policy.toml
 ```
 
 The workflow uses read-only permissions, immutable dependency pins, job-summary
-evidence, and a downloadable Markdown report. See
+evidence, and a downloadable Markdown report. It installs the `v0.2.8` wheel
+only after checking its pinned digest, release manifest, source commit, tag,
+signer workflow, and GitHub-hosted provenance. See
 [docs/github-actions.md](docs/github-actions.md) for setup and failure handling.
 
 ## Team Pilot

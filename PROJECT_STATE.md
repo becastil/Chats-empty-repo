@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 22 of 1,000, with 978 remaining. Quality, test coverage, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 23 of 1,000, with 977 remaining. Quality, test coverage, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -51,6 +51,9 @@ The delivery goal is 1,000 meaningful commits. This update is commit 22 of 1,000
 - Required self-reported discovery channels in founding-team pilot intake.
 - Schema-3 source attribution for qualification, offers, booked revenue, conversion, loss, and follow-up.
 - Explicit missing, unknown, and ambiguous source warnings for legacy or edited issues.
+- Copy-ready and dogfooded CI bootstrap from a versioned Repo Scout wheel instead of a source checkout.
+- Independent wheel digest, release manifest, source commit, tag, signer workflow, and hosted-runner verification.
+- Runner-temp virtual-environment installation that leaves the protected checkout unchanged.
 
 ## How To Run
 
@@ -61,4 +64,4 @@ python3 -m unittest discover -s tests
 
 ## Next Small Task
 
-Update the external CI example to install a verified Repo Scout release.
+Generate a pilot onboarding checklist and evidence bundle for first-repository rollout.

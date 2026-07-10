@@ -45,11 +45,30 @@ Markdown report appears in the job summary and in the
 `repo-scout-policy-report` artifact for 14 days. Configuration errors return
 exit code 2; scan-limit failures return exit code 3.
 
-The workflow grants only `contents: read`, disables persisted checkout
-credentials, and pins every external action and the Repo Scout source checkout
-to an immutable commit. Repo Scout runs directly from that isolated checkout,
-so policy enforcement does not install packages or mutate the repository being
-checked. Update pins deliberately after reviewing upstream release notes.
+The workflow grants only `contents: read` and `attestations: read`, disables
+persisted checkout credentials, and pins every external action by commit. It downloads the exact
+Repo Scout `v0.2.8` wheel and `SHA256SUMS` from the public GitHub Release using
+the runner-provided token. No team-managed secret or API key is required.
+
+Before installation, the gate verifies:
+
+- The wheel matches the independently pinned SHA-256 digest in the workflow.
+- The wheel matches the release's `SHA256SUMS` manifest.
+- GitHub's signed provenance names the pinned source commit and `v0.2.8` tag.
+- The signer is this repository's `.github/workflows/release.yml` workflow.
+- The attested build used a GitHub-hosted runner.
+
+Repo Scout is installed without dependencies into a virtual environment under
+`RUNNER_TEMP`. The target checkout is never used as an install location, and
+the policy report is also written outside it, so enforcement does not dirty the
+repository being checked. Any download, digest, manifest, provenance, or install
+failure stops the job before the policy scan.
+
+To upgrade Repo Scout, review the release notes and provenance, then update the
+workflow's `REPO_SCOUT_VERSION`, `REPO_SCOUT_SOURCE_SHA`, and
+`REPO_SCOUT_WHEEL_SHA256` values together. Open a pull request and require the
+gate to pass before merging. Never update only the version tag or replace the
+digest with a mutable URL.
 
 ## Pilot Rollout
 

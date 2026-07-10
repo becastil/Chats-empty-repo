@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this acquisition-attribution commit: 22 / 1,000 (2.2%).
-- Remaining after this acquisition-attribution commit: 978 commits.
+- Progress after this verified-CI-bootstrap commit: 23 / 1,000 (2.3%).
+- Remaining after this verified-CI-bootstrap commit: 977 commits.
 
 ## Commit Standard
 

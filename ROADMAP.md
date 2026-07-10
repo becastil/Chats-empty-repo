@@ -7,7 +7,7 @@
 
 ## Near Term
 
-- Update the external CI example to install a verified Repo Scout release.
+- Generate a pilot onboarding checklist and evidence bundle for first-repository rollout.
 - Add a private pilot contact path after public intake validates demand.
 
 ## Revenue Validation

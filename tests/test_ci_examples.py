@@ -21,7 +21,11 @@ ACTION_PINS = {
     "actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1",
     "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
 }
-REPO_SCOUT_PIN = "881c41871c457c0dbe4e87de3c40520d2f2c3c13"
+REPO_SCOUT_VERSION = "0.2.8"
+REPO_SCOUT_SOURCE_SHA = "3519a842b0b24662d40d395f81ff29bba9eddcff"
+REPO_SCOUT_WHEEL_SHA256 = (
+    "38efdc5d8b0a1e232037e3d9215ae72640af592df6f1e00d7bf03e6b0b13bd66"
+)
 
 
 class CiExampleTests(unittest.TestCase):
@@ -35,6 +39,7 @@ class CiExampleTests(unittest.TestCase):
 
         for workflow in (dogfood, external):
             self.assertIn("permissions:\n  contents: read", workflow)
+            self.assertIn("  attestations: read", workflow)
             self.assertIn("persist-credentials: false", workflow)
             self.assertIn("runs-on: ubuntu-24.04", workflow)
             self.assertIn("if: ${{ always() }}", workflow)
@@ -45,6 +50,46 @@ class CiExampleTests(unittest.TestCase):
             self.assertNotIn("continue-on-error", workflow)
             self.assertNotIn("|| true", workflow)
             self.assertNotRegex(workflow, r"permissions:[\s\S]{0,80}\bwrite\b")
+            self.assertIn(
+                f'REPO_SCOUT_VERSION: "{REPO_SCOUT_VERSION}"', workflow
+            )
+            self.assertIn(
+                f"REPO_SCOUT_WHEEL_SHA256: {REPO_SCOUT_WHEEL_SHA256}",
+                workflow,
+            )
+            self.assertIn(
+                f"REPO_SCOUT_SOURCE_SHA: {REPO_SCOUT_SOURCE_SHA}", workflow
+            )
+            self.assertIn(
+                'gh release download "v${REPO_SCOUT_VERSION}"', workflow
+            )
+            self.assertIn("sha256sum --check --strict -", workflow)
+            self.assertIn(
+                "sha256sum --check --ignore-missing --strict SHA256SUMS",
+                workflow,
+            )
+            self.assertIn(
+                'gh attestation verify "$wheel"',
+                workflow,
+            )
+            self.assertIn(
+                '--signer-workflow "$REPO_SCOUT_REPOSITORY/'
+                '.github/workflows/release.yml"',
+                workflow,
+            )
+            self.assertIn(
+                '--source-ref "refs/tags/v${REPO_SCOUT_VERSION}"', workflow
+            )
+            self.assertIn('--source-digest "$REPO_SCOUT_SOURCE_SHA"', workflow)
+            self.assertIn("--deny-self-hosted-runners", workflow)
+            self.assertIn(
+                'python -m venv "$RUNNER_TEMP/repo-scout-venv"', workflow
+            )
+            self.assertIn("-m pip install --no-deps", workflow)
+            self.assertIn(
+                '"$RUNNER_TEMP/repo-scout-venv/bin/repo-scout"', workflow
+            )
+            self.assertNotIn("PYTHONPATH", workflow)
 
             uses = re.findall(r"^\s*uses:\s*([^\s#]+)", workflow, re.MULTILINE)
             self.assertTrue(uses)
@@ -52,17 +97,12 @@ class CiExampleTests(unittest.TestCase):
                 self.assertRegex(action, r"^[\w.-]+/[\w.-]+@[0-9a-f]{40}$")
                 self.assertIn(action, ACTION_PINS)
 
-        self.assertIn("PYTHONPATH: ${{ github.workspace }}/src", dogfood)
-        self.assertIn("python -m repo_scout --format markdown", dogfood)
         self.assertIn("--policy examples/team-policy.toml", dogfood)
-        self.assertNotIn("pip install", dogfood)
 
-        self.assertIn(f"ref: {REPO_SCOUT_PIN}", external)
         self.assertIn("path: target", external)
-        self.assertIn("path: repo-scout", external)
-        self.assertIn("PYTHONPATH: ${{ github.workspace }}/repo-scout/src", external)
+        self.assertNotIn("path: repo-scout", external)
+        self.assertNotIn("repository: becastil/Chats-empty-repo", external)
         self.assertIn("$TARGET_ROOT/repo-scout-policy.toml", external)
-        self.assertNotIn("pip install", external)
 
     def test_example_policy_uses_the_supported_contract(self) -> None:
         policy_path = ROOT / "examples/github-actions/repo-scout-policy.toml"

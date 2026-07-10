@@ -33,6 +33,11 @@ Verified GitHub releases remove source-checkout trust and installation friction
 from pilot onboarding. PyPI distribution, billing, and license enforcement stay
 deferred until paid demand justifies their operational cost.
 
+The copy-ready CI gate consumes those releases with independent digest and
+provenance checks. This makes the free activation path closer to the paid pilot
+deployment model: teams can evaluate a repeatable, auditable install before
+buying cross-repository rollout support.
+
 ### Founding Team Pilot
 
 Price: $299 for 90 days, covering up to 10 repositories.

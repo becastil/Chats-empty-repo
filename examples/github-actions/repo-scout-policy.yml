@@ -8,6 +8,13 @@ on:
 
 permissions:
   contents: read
+  attestations: read
+
+env:
+  REPO_SCOUT_REPOSITORY: becastil/Chats-empty-repo
+  REPO_SCOUT_VERSION: "0.2.8"
+  REPO_SCOUT_SOURCE_SHA: 3519a842b0b24662d40d395f81ff29bba9eddcff
+  REPO_SCOUT_WHEEL_SHA256: 38efdc5d8b0a1e232037e3d9215ae72640af592df6f1e00d7bf03e6b0b13bd66
 
 concurrency:
   group: repo-scout-policy-${{ github.workflow }}-${{ github.ref }}
@@ -24,25 +31,51 @@ jobs:
           path: target
           persist-credentials: false
 
-      - name: Check out pinned Repo Scout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          repository: becastil/Chats-empty-repo
-          ref: 881c41871c457c0dbe4e87de3c40520d2f2c3c13
-          path: repo-scout
-          persist-credentials: false
-
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.11"
 
+      - name: Download pinned Repo Scout release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/repo-scout-release"
+          gh release download "v${REPO_SCOUT_VERSION}" \
+            --repo "$REPO_SCOUT_REPOSITORY" \
+            --dir "$RUNNER_TEMP/repo-scout-release" \
+            --pattern "repo_scout-${REPO_SCOUT_VERSION}-py3-none-any.whl" \
+            --pattern SHA256SUMS
+
+      - name: Verify release integrity and provenance
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          release_dir="$RUNNER_TEMP/repo-scout-release"
+          wheel="$release_dir/repo_scout-${REPO_SCOUT_VERSION}-py3-none-any.whl"
+          printf '%s  %s\n' "$REPO_SCOUT_WHEEL_SHA256" "$wheel" \
+            | sha256sum --check --strict -
+          pushd "$release_dir"
+          sha256sum --check --ignore-missing --strict SHA256SUMS
+          popd
+          gh attestation verify "$wheel" \
+            --repo "$REPO_SCOUT_REPOSITORY" \
+            --signer-workflow "$REPO_SCOUT_REPOSITORY/.github/workflows/release.yml" \
+            --source-ref "refs/tags/v${REPO_SCOUT_VERSION}" \
+            --source-digest "$REPO_SCOUT_SOURCE_SHA" \
+            --deny-self-hosted-runners
+
+      - name: Install verified Repo Scout release
+        run: |
+          wheel="$RUNNER_TEMP/repo-scout-release/repo_scout-${REPO_SCOUT_VERSION}-py3-none-any.whl"
+          python -m venv "$RUNNER_TEMP/repo-scout-venv"
+          "$RUNNER_TEMP/repo-scout-venv/bin/python" -m pip install --no-deps "$wheel"
+
       - name: Enforce repository policy
         env:
-          PYTHONPATH: ${{ github.workspace }}/repo-scout/src
           TARGET_ROOT: ${{ github.workspace }}/target
         run: >-
-          python -m repo_scout --format markdown
+          "$RUNNER_TEMP/repo-scout-venv/bin/repo-scout" --format markdown
           --policy "$TARGET_ROOT/repo-scout-policy.toml"
           --output "$RUNNER_TEMP/repo-scout-policy-report.md" --force
           "$TARGET_ROOT"
