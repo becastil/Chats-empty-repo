@@ -7,6 +7,7 @@ import sys
 from typing import Any, Sequence
 
 from .comparison import SnapshotReadError, compare_snapshot_files
+from .policy import PolicyError, evaluate_policy, load_policy
 from .scanner import (
     DEFAULT_LARGE_FILE_BYTES,
     SNAPSHOT_SCHEMA_VERSION,
@@ -17,6 +18,7 @@ from .scanner import (
 
 OUTPUT_ERROR_EXIT_CODE = 4
 ATTENTION_EXIT_CODE = 5
+POLICY_EXIT_CODE = 6
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -50,6 +52,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--fail-on-attention",
         action="store_true",
         help="Exit 5 after reporting when attention findings are present.",
+    )
+    parser.add_argument(
+        "--policy",
+        metavar="PATH",
+        help="Apply a version-controlled TOML team policy and exit 6 on violations.",
     )
     parser.add_argument(
         "--format",
@@ -105,6 +112,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         return 2
 
+    if args.compare and args.policy:
+        print("repo-scout: --policy cannot be used with --compare", file=sys.stderr)
+        return 2
+
     if args.compare:
         try:
             comparison = compare_snapshot_files(*args.compare)
@@ -119,6 +130,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         else:
             report = format_comparison(comparison)
         return _emit_report(report, args.output, args.force)
+
+    policy = None
+    if args.policy:
+        try:
+            policy = load_policy(args.policy)
+        except PolicyError as exc:
+            print(f"repo-scout: {exc}", file=sys.stderr)
+            return 2
 
     try:
         snapshot = scan_project(
@@ -135,6 +154,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"repo-scout: {exc}", file=sys.stderr)
         return 3
 
+    if policy is not None:
+        snapshot["policy"] = evaluate_policy(snapshot, policy)
+
     if args.format == "json":
         report = json.dumps(snapshot, indent=2, sort_keys=True)
     elif args.format == "markdown":
@@ -145,6 +167,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     output_exit_code = _emit_report(report, args.output, args.force)
     if output_exit_code != 0:
         return output_exit_code
+    if snapshot.get("policy", {}).get("status") == "fail":
+        return POLICY_EXIT_CODE
     if args.fail_on_attention and snapshot["attention"]["items"]:
         return ATTENTION_EXIT_CODE
     return 0
@@ -195,6 +219,7 @@ def format_snapshot(snapshot: dict[str, Any]) -> str:
     if max_files is not None:
         lines.append(f"Max files: {max_files}")
 
+    _append_text_policy(lines, snapshot.get("policy"))
     _append_text_attention(lines, snapshot["attention"])
 
     extensions = files["by_extension"]
@@ -220,6 +245,20 @@ def format_snapshot(snapshot: dict[str, Any]) -> str:
             lines.append(f"  {entry['path']} ({entry['bytes']} bytes)")
 
     return "\n".join(lines)
+
+
+def _append_text_policy(
+    lines: list[str], policy: dict[str, Any] | None
+) -> None:
+    if policy is None:
+        return
+
+    lines.append(
+        f"Policy: {policy['status']} ({policy['rules_checked']} rules) from {policy['source']}"
+    )
+    lines.extend(
+        f"  ! {violation['message']}" for violation in policy["violations"]
+    )
 
 
 def _append_text_attention(lines: list[str], attention: dict[str, Any]) -> None:
@@ -269,6 +308,26 @@ def format_markdown(snapshot: dict[str, Any]) -> str:
             lines.append(f"- Max files: {filters['max_files']}")
         if filters["large_file_bytes"] != DEFAULT_LARGE_FILE_BYTES:
             lines.append(f"- Large-file threshold: {filters['large_file_bytes']} bytes")
+
+    policy = snapshot.get("policy")
+    if policy is not None:
+        lines.extend(
+            [
+                "",
+                "## Team Policy",
+                "",
+                f"- Status: {_markdown_code(policy['status'])}",
+                f"- Source: {_markdown_code(policy['source'])}",
+                f"- Rules checked: {policy['rules_checked']}",
+            ]
+        )
+        if policy["violations"]:
+            lines.extend(
+                f"- Violation: {violation['message']}"
+                for violation in policy["violations"]
+            )
+        else:
+            lines.append("- Violations: none.")
 
     lines.extend(["", "## Attention Needed"])
     attention_items = snapshot["attention"]["items"]

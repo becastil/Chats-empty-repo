@@ -67,3 +67,7 @@ The local scanner, reports, comparisons, and basic CI gate remain free to maximi
 ## 2026-07-10: Count Meaningful Commits, Not Activity
 
 The project targets 1,000 commits, but only coherent improvements that pass tests and reach `origin/main` count. Empty commits and artificial change splitting are prohibited because the commit target is a persistence mechanism, not a substitute for product or revenue progress.
+
+## 2026-07-10: Make Team Policies Strict and Versioned
+
+Paid-team policy files use TOML with an explicit version and a closed set of supported keys. Invalid values, unsafe required-file paths, unknown keys, and unsupported versions fail before scanning so configuration mistakes cannot silently weaken enforcement. Policy violations are reported before the CLI returns exit code 6, distinct from the free attention gate's exit code 5. Using Python's standard-library TOML parser raises the minimum supported Python version to 3.11 while preserving the no-runtime-dependencies constraint.

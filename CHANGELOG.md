@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.1 - 2026-07-10
+
+- Added strict, versioned TOML team policies through `--policy PATH`.
+- Added policy rules for required files, file and byte limits, and clean Git state.
+- Included policy results and violations in text, JSON, and Markdown reports.
+- Added exit code 6 for completed scans that violate team policy.
+- Added a copy-ready example policy and raised the minimum Python version to 3.11 for standard-library TOML parsing.
+
 ## 0.2.0 - 2026-07-10
 
 - Added a responsive Repo Scout web companion with sample Text and JSON snapshot views.

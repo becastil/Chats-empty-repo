@@ -7,8 +7,8 @@
 
 ## Near Term
 
-- Add version-controlled TOML policy files for the paid Team pilot.
 - Add the founding-team pilot offer and conversion CTA to the hosted companion.
+- Add a copy-ready GitHub Actions example for team policy enforcement.
 
 ## Revenue Validation
 

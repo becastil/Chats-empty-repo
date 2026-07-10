@@ -40,11 +40,15 @@ The pilot includes:
 The paid value is consistency across repositories and teams, not access to the
 basic local scanner.
 
+The first shared-policy release supports required files, repository file and
+byte limits, and clean Git enforcement through a strict TOML file that can be
+committed once and reused in CI.
+
 ## Conversion Path
 
 1. A developer adopts the free CLI for handoffs or reviews.
 2. The team adds `--fail-on-attention` to CI.
-3. Different repositories need consistent thresholds and required documents.
+3. The team commits a shared policy and applies it with `--policy` across repositories.
 4. The engineering lead buys a pilot for shared policies and rollout support.
 
 ## Validation Milestones

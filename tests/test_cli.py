@@ -146,6 +146,62 @@ class CliTests(unittest.TestCase):
                 "needs-attention",
             )
 
+    def test_cli_applies_team_policy_and_exits_six_on_violations(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "README.md").write_text("# Example\n", encoding="utf-8")
+            policy_path = root / "team-policy.toml"
+            policy_path.write_text(
+                """version = 1
+[repository]
+required_files = ["README.md", "SECURITY.md"]
+""",
+                encoding="utf-8",
+            )
+
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                exit_code = main(
+                    ["--format", "json", "--policy", str(policy_path), str(root)]
+                )
+
+            snapshot = json.loads(stdout.getvalue())
+            self.assertEqual(exit_code, 6)
+            self.assertEqual(snapshot["policy"]["status"], "fail")
+            self.assertEqual(
+                snapshot["policy"]["violations"][0]["path"], "SECURITY.md"
+            )
+
+            (root / "SECURITY.md").write_text("# Security\n", encoding="utf-8")
+            passing_stdout = io.StringIO()
+            with redirect_stdout(passing_stdout):
+                passing_exit_code = main(
+                    ["--format", "markdown", "--policy", str(policy_path), str(root)]
+                )
+
+            self.assertEqual(passing_exit_code, 0)
+            self.assertIn("## Team Policy", passing_stdout.getvalue())
+            self.assertIn("- Status: `pass`", passing_stdout.getvalue())
+
+    def test_cli_rejects_invalid_team_policy(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            policy_path = root / "team-policy.toml"
+            policy_path.write_text(
+                """version = 2
+[repository]
+max_files = 10
+""",
+                encoding="utf-8",
+            )
+
+            stderr = io.StringIO()
+            with redirect_stderr(stderr):
+                exit_code = main(["--policy", str(policy_path), str(root)])
+
+            self.assertEqual(exit_code, 2)
+            self.assertIn("policy version must be 1", stderr.getvalue())
+
     def test_cli_writes_output_and_requires_force_to_replace(self) -> None:
         with TemporaryDirectory() as tmp:
             root = Path(tmp)

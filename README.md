@@ -10,6 +10,7 @@ It currently reports:
 - File counts by extension
 - Optional best-effort file counts by language name
 - Attention summary for dirty Git state, missing docs, and large files
+- Version-controlled TOML team policies with CI enforcement
 - Largest files in the scanned tree
 
 The tool has no cloud dependencies and does not require API keys.
@@ -108,6 +109,34 @@ PYTHONPATH=src python3 -m repo_scout --format markdown --fail-on-attention .
 
 Exit code 5 means the scan completed but attention findings were present.
 
+Apply a shared team policy and fail CI when the repository violates it:
+
+```bash
+PYTHONPATH=src python3 -m repo_scout --format markdown --policy examples/team-policy.toml .
+```
+
+Policy files use a strict, versioned TOML contract:
+
+```toml
+version = 1
+
+[repository]
+required_files = ["README.md", "SECURITY.md"]
+max_files = 5000
+max_total_bytes = 50000000
+require_clean_git = true
+```
+
+All rules are optional, but a policy must define at least one. Required-file
+paths must be normalized paths relative to the repository. Unknown keys,
+invalid values, and unsupported policy versions are rejected instead of being
+silently ignored.
+
+Policy results are included in text, JSON, and Markdown reports. Exit code 6
+means the scan completed and at least one team-policy rule failed. Policy
+failure takes precedence over exit code 5 when `--fail-on-attention` is also
+active.
+
 ## Team Pilot
 
 Repo Scout's free core stays local and dependency-free. The $299 founding-team
@@ -123,6 +152,8 @@ Install it locally in editable mode:
 python3 -m pip install -e .
 repo-scout .
 ```
+
+Repo Scout requires Python 3.11 or newer and has no runtime dependencies.
 
 Run the tests:
 
