@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "repo-scout"
-version = "0.2.3"
+version = "0.2.4"
 description = "A local CLI that summarizes repository health and handoff context."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -26,6 +26,7 @@ classifiers = [
 
 [project.scripts]
 repo-scout = "repo_scout.cli:main"
+repo-scout-pilot = "repo_scout.pilot_funnel:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

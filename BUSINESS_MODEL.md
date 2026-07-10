@@ -64,6 +64,15 @@ pilot demand validates the additional infrastructure.
 - At least one pilot policy is reused across three repositories.
 - At least one pilot converts to an annual team license.
 
+## Revenue Evidence
+
+Founding-team requests are tracked with cumulative `pilot-*` labels and the
+dependency-free `repo-scout-pilot` report. Only issues that reach `pilot-paid`
+or a later paid stage count toward the three-pilot and $897 initial-revenue
+targets. Qualified leads and written offers remain pipeline, not booked
+revenue. Label warnings must be resolved before totals are used in a roadmap or
+sales decision.
+
 ## Product Filter
 
 New work must improve acquisition, activation, conversion, or retention for the

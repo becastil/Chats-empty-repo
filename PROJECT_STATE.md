@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 17 of 1,000, with 983 remaining. Quality, test coverage, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 18 of 1,000, with 982 remaining. Quality, test coverage, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -35,6 +35,9 @@ The delivery goal is 1,000 meaningful commits. This update is commit 17 of 1,000
 - Responsive Repo Scout web companion with a server-rendered snapshot lab and accessible format toggle.
 - A hosted founding-team pilot offer with price, scope, implemented policy proof, and a direct conversion CTA.
 - A structured public pilot intake that qualifies team size, repository count, CI provider, and policy need.
+- A dependency-free pilot funnel reporter with stable text and JSON revenue summaries.
+- Cumulative GitHub labels for lead, qualification, offer, payment, activation, conversion, and loss.
+- Label-drift warnings and tested $299 pilot / $897 target accounting semantics.
 - Host-derived Open Graph and X metadata with a product-specific social preview.
 - Sites hosting metadata and a Cloudflare Workers-compatible production build.
 
@@ -47,4 +50,4 @@ python3 -m unittest discover -s tests
 
 ## Next Small Task
 
-Add pilot-request tracking guidance for revenue validation.
+Add repository-type starter policies for common pilot onboarding paths.

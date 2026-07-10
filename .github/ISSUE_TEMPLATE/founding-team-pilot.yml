@@ -1,6 +1,8 @@
 name: Founding-team pilot
 description: Apply for the $299 Repo Scout team-policy pilot.
 title: "[Pilot] "
+labels:
+  - pilot-lead
 body:
   - type: markdown
     attributes:

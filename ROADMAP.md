@@ -7,8 +7,8 @@
 
 ## Near Term
 
-- Add pilot-request tracking guidance for revenue validation.
 - Add repository-type starter policies for common pilot onboarding paths.
+- Add deterministic stale-lead follow-up reporting to the pilot funnel.
 
 ## Revenue Validation
 

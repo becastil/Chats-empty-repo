@@ -70,6 +70,7 @@ test("ships a qualified founding-team pilot intake", async () => {
   );
 
   assert.match(form, /name: Founding-team pilot/i);
+  assert.match(form, /pilot-lead/i);
   assert.match(form, /\$299 for 90 days/i);
   assert.match(form, /up to 10 repositories/i);
   assert.match(form, /public/i);

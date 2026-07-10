@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.4 - 2026-07-10
+
+- Added `repo-scout-pilot` for dependency-free pilot funnel reporting from GitHub issue JSON.
+- Added order-independent text and JSON totals for stages, paid pilots, booked revenue, target gaps, annual conversions, and losses.
+- Added warnings for skipped cumulative stages, unknown pilot labels, and conflicting terminal outcomes.
+- Added `pilot-lead` to the founding-team request form and configured seven lifecycle labels on GitHub.
+- Added deterministic fixtures and coverage for custom targets, stdin, invalid input, duplicate protection, revenue semantics, and module execution.
+- Documented weekly operating cadence, label transitions, booked-revenue definitions, refunds, and public-issue privacy boundaries.
+
 ## 0.2.3 - 2026-07-10
 
 - Added a GitHub Actions policy gate that dogfoods Repo Scout on pull requests and `main`.

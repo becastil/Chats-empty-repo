@@ -161,6 +161,17 @@ for the offer and validation milestones.
 Pilot requests are public GitHub issues. Do not include source code, credentials,
 customer data, or other sensitive details.
 
+Maintainers can turn the labeled requests into an auditable revenue funnel:
+
+```bash
+gh issue list --repo becastil/Chats-empty-repo --state all --label pilot-lead --limit 100 --json number,title,state,labels,createdAt,updatedAt,closedAt,url | repo-scout-pilot
+```
+
+The dependency-free reporter counts booked pilots, booked revenue, remaining
+distance to the three-pilot goal, annual conversions, losses, and label drift.
+See [docs/pilot-tracking.md](docs/pilot-tracking.md) for stage definitions and
+privacy rules.
+
 Install it locally in editable mode:
 
 ```bash
