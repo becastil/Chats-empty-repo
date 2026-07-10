@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Replaced the hosted single-repository policy mockup with cross-repository rollout proof for policy-fingerprint and scanned-commit coverage.
+- Showed both ready and remediation-required repository outcomes so the paid rollout workflow demonstrates operational value without implying every check passes.
+- Added the aggregate `repo-scout-rollout` command, bundle-reported freshness caveat, and an explicit $299 application CTA to the founding-team offer.
+- Expanded production-render coverage for the new rollout evidence and conversion copy.
+
 ## 0.3.2 - 2026-07-10
 
 - Upgraded copy-ready and dogfood policy workflows to the independently pinned and attested `v0.3.1` release.

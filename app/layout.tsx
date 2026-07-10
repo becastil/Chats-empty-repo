@@ -4,7 +4,7 @@ import "./globals.css";
 
 const title = "Repo Scout | Local repository policy for teams";
 const description =
-  "Free local repository snapshots plus shared policy and CI rollout support for software teams.";
+  "Free local repository snapshots plus verifiable cross-repository policy evidence and CI rollout support for software teams.";
 
 export async function generateMetadata(): Promise<Metadata> {
   const requestHeaders = await headers();

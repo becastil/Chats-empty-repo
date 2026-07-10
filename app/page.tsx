@@ -54,6 +54,7 @@ const pilotRequestUrl =
 
 const pilotBenefits = [
   "One shared TOML policy for up to 10 repositories",
+  "Cross-repository rollout evidence with shared-policy verification",
   "CI rollout guidance for your existing workflow",
   "One custom policy pack for your repository standards",
   "Direct feedback access and priority fixes",
@@ -194,25 +195,34 @@ export default function Home() {
         <section id="team-pilot" className="pilot-section" aria-labelledby="pilot-title">
           <div className="pilot-copy">
             <p className="section-number">04 / Founding team pilot</p>
-            <h2 id="pilot-title">One policy your repositories can prove.</h2>
+            <h2 id="pilot-title">Prove one policy across every repository.</h2>
             <p className="pilot-lede">
               For software teams using coding agents across multiple repositories,
-              Repo Scout turns local standards into the same explicit CI result
-              everywhere, without uploading source code.
+              Repo Scout turns local standards into comparable CI evidence, then
+              verifies whether every rollout bundle enforced the same policy,
+              without uploading source code.
             </p>
 
-            <div className="policy-proof" aria-label="Example passing team policy">
-              <div className="policy-proof-heading">
-                <code>team-policy.toml</code>
-                <span><i aria-hidden="true" /> policy / pass</span>
+            <div className="rollout-proof" aria-label="Example cross-repository policy rollout">
+              <div className="rollout-proof-heading">
+                <code>repo-scout-rollout</code>
+                <span><i aria-hidden="true" /> shared policy / verified</span>
               </div>
-              <dl>
-                <div><dt>Required files</dt><dd>present</dd></div>
-                <div><dt>Repository size</dt><dd>within limits</dd></div>
-                <div><dt>Git worktree</dt><dd>clean</dd></div>
-                <div><dt>CI result</dt><dd>exit 0</dd></div>
-              </dl>
-              <code className="policy-command">repo-scout --policy team-policy.toml .</code>
+              <div className="rollout-metrics" aria-label="Rollout evidence coverage">
+                <div><strong>3</strong><span>repositories</span></div>
+                <div><strong>3 / 3</strong><span>policy fingerprints</span></div>
+                <div><strong>3 / 3</strong><span>commits recorded</span></div>
+              </div>
+              <ul className="rollout-repositories">
+                <li><code>platform/api</code><span>ready for CI</span></li>
+                <li><code>platform/web</code><span>ready for CI</span></li>
+                <li className="needs-action"><code>platform/worker</code><span>remediation required</span></li>
+              </ul>
+              <p className="rollout-caveat">
+                Bundle-reported evidence identifies the scanned revisions; pilot
+                support adds the operating process for reviewing freshness and fixes.
+              </p>
+              <code className="rollout-command">repo-scout-rollout api.md web.md worker.md</code>
             </div>
           </div>
 
@@ -227,7 +237,7 @@ export default function Home() {
               {pilotBenefits.map((benefit) => <li key={benefit}>{benefit}</li>)}
             </ol>
             <a className="button button-pilot" href={pilotRequestUrl}>
-              Request a founding pilot <span aria-hidden="true">-&gt;</span>
+              Apply for the $299 pilot <span aria-hidden="true">-&gt;</span>
             </a>
             <a className="pilot-details" href="https://github.com/becastil/Chats-empty-repo/blob/main/BUSINESS_MODEL.md">
               Read the complete pilot terms

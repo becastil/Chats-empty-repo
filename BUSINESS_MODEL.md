@@ -66,6 +66,12 @@ completed scan, including policy failures. This turns weekly CI use and
 cross-repository policy reuse into evidence a pilot operator can review without
 a Repo Scout-hosted database.
 
+The hosted offer now leads with this cross-repository outcome: complete policy
+and commit identity coverage, shared-policy verification, and visible
+remediation work. Its example is labeled bundle-reported and the application
+CTA repeats the $299 price, so purchase-readiness responses follow a concrete,
+price-disclosed offer rather than a generic request for contact.
+
 The first shared-policy release supports required files, repository file and
 byte limits, and clean Git enforcement through a strict TOML file that can be
 committed once and reused in CI.

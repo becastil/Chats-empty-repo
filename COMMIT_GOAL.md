@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this purchase-readiness commit: 28 / 1,000 (2.8%).
-- Remaining after this purchase-readiness commit: 972 commits.
+- Progress after this rollout-offer commit: 29 / 1,000 (2.9%).
+- Remaining after this rollout-offer commit: 971 commits.
 
 ## Commit Standard
 

@@ -137,17 +137,23 @@ h1 { max-width: 690px; margin: 1.35rem 0 1.5rem; font-size: 5.2rem; line-height:
 .pilot-section { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(320px, .72fr); gap: clamp(3rem, 8vw, 7rem); align-items: start; border-top: 1px solid var(--line); padding: 5.5rem 0 8rem; }
 .pilot-copy > .section-number { margin-bottom: 1.1rem; }
 .pilot-lede { max-width: 650px; margin-bottom: 2.5rem; color: var(--muted); font-size: 1.05rem; line-height: 1.65; }
-.policy-proof { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 1.25rem 0; }
-.policy-proof-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: center; margin-bottom: 1.3rem; }
-.policy-proof-heading code, .policy-command { font-family: "SFMono-Regular", Consolas, monospace; }
-.policy-proof-heading code { color: var(--teal-dark); font-size: .78rem; font-weight: 700; }
-.policy-proof-heading span { display: inline-flex; align-items: center; gap: .4rem; color: var(--teal-dark); font-size: .68rem; font-weight: 700; }
-.policy-proof-heading i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--teal); }
-.policy-proof dl { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; margin: 0; background: var(--line); border: 1px solid var(--line); }
-.policy-proof dl div { display: flex; justify-content: space-between; gap: 1rem; padding: .85rem; background: var(--paper); font-size: .73rem; }
-.policy-proof dt { color: var(--muted); }
-.policy-proof dd { margin: 0; color: var(--ink); font-weight: 700; }
-.policy-command { display: block; margin-top: 1.25rem; overflow-wrap: anywhere; color: var(--ink); font-size: .76rem; }
+.rollout-proof { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 1.25rem 0; }
+.rollout-proof-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: center; margin-bottom: 1.3rem; }
+.rollout-proof-heading code, .rollout-repositories code, .rollout-command { font-family: "SFMono-Regular", Consolas, monospace; }
+.rollout-proof-heading code { color: var(--teal-dark); font-size: .78rem; font-weight: 700; }
+.rollout-proof-heading span { display: inline-flex; align-items: center; gap: .4rem; color: var(--teal-dark); font-size: .68rem; font-weight: 700; }
+.rollout-proof-heading i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--teal); }
+.rollout-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+.rollout-metrics div { display: flex; min-width: 0; flex-direction: column; gap: .35rem; padding: .85rem; background: var(--paper); }
+.rollout-metrics strong { color: var(--ink); font-size: 1.05rem; }
+.rollout-metrics span { color: var(--muted); font-size: .66rem; line-height: 1.35; }
+.rollout-repositories { margin: 1rem 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.rollout-repositories li { display: flex; justify-content: space-between; gap: 1rem; padding: .72rem 0; border-bottom: 1px solid var(--line); font-size: .72rem; }
+.rollout-repositories code { overflow-wrap: anywhere; color: var(--ink); }
+.rollout-repositories span { color: var(--teal-dark); font-weight: 700; text-align: right; }
+.rollout-repositories .needs-action span { color: var(--coral-dark); }
+.rollout-caveat { margin: 1rem 0 0; color: var(--muted); font-size: .7rem; line-height: 1.5; }
+.rollout-command { display: block; margin-top: 1rem; overflow-wrap: anywhere; color: var(--ink); font-size: .76rem; }
 .pilot-offer { padding: 2rem; background: var(--ink); color: var(--white); }
 .pilot-kicker { margin: 0 0 1.4rem; color: #79c8bd; font-size: .68rem; font-weight: 700; letter-spacing: 0; text-transform: uppercase; }
 .pilot-price { display: flex; gap: 1rem; align-items: center; padding-bottom: 1.5rem; border-bottom: 1px solid #36504a; }
@@ -209,8 +215,7 @@ h1 { max-width: 690px; margin: 1.35rem 0 1.5rem; font-size: 5.2rem; line-height:
   .metric-grid { gap: .5rem; padding: 1.25rem .5rem 1.5rem; }
   .metric-grid strong { font-size: 1.4rem; }
   .composition { padding: 0 .5rem .25rem; }
-  .policy-proof dl { grid-template-columns: 1fr; }
-  .policy-proof dl div { min-width: 0; }
+  .rollout-metrics { grid-template-columns: 1fr; }
   .pilot-offer { padding: 1.4rem; }
   .pilot-price strong { font-size: 3.6rem; }
 }
