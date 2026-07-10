@@ -2,8 +2,9 @@
 
 Repo Scout can enforce one committed repository policy on every pull request
 without uploading source code or requiring an API key. A completed scan writes
-a Markdown report before returning exit code 6 for policy violations, so a
-failed check still leaves useful evidence in the job summary and artifact.
+a schema-2 rollout bundle before returning exit code 6 for policy violations,
+so a failed check still leaves aggregatable evidence in the job summary and
+artifact.
 
 ## Add The Gate
 
@@ -38,35 +39,47 @@ commit the generated file first; see [Starter Policy Profiles](policy-starters.m
 Start with rules the team already follows. Add stricter limits after the first
 successful run so rollout work is separated from existing repository debt.
 
-Before enabling the required check, generate a
-[first-repository rollout bundle](pilot-rollout.md) to preserve the local
-baseline, remediation list, ownership handoff, and next-repository sequence.
+The workflow automatically uses GitHub's `owner/repository` value as the stable
+rollout repository ID. Review the first generated
+[rollout bundle](pilot-rollout.md) before enabling the required check; it
+preserves the baseline, remediation list, ownership handoff, policy
+fingerprint, scanned commit, and next-repository sequence.
 
 ## Read A Failure
 
 The `Repo Scout policy` check returns exit code 6 when a policy rule fails. Its
-Markdown report appears in the job summary and in the
-`repo-scout-policy-report` artifact for 14 days. Configuration errors return
-exit code 2; scan-limit failures return exit code 3.
+Markdown bundle appears in the job summary and in the
+`repo-scout-rollout-evidence` artifact for 14 days. The artifact is uploaded
+after passing and failing policy scans, allowing pilot operators to download
+bundles from multiple repositories and run `repo-scout-rollout` locally.
+Configuration errors return exit code 2; scan-limit failures return exit code
+3 and may not produce evidence because no scan completed.
 
 The workflow grants only `contents: read` and `attestations: read`, disables
 persisted checkout credentials, and pins every external action by commit. It downloads the exact
-Repo Scout `v0.2.8` wheel and `SHA256SUMS` from the public GitHub Release using
+Repo Scout `v0.3.1` wheel and `SHA256SUMS` from the public GitHub Release using
 the runner-provided token. No team-managed secret or API key is required.
 
 Before installation, the gate verifies:
 
 - The wheel matches the independently pinned SHA-256 digest in the workflow.
 - The wheel matches the release's `SHA256SUMS` manifest.
-- GitHub's signed provenance names the pinned source commit and `v0.2.8` tag.
+- GitHub's signed provenance names the pinned source commit and `v0.3.1` tag.
 - The signer is this repository's `.github/workflows/release.yml` workflow.
 - The attested build used a GitHub-hosted runner.
 
 Repo Scout is installed without dependencies into a virtual environment under
 `RUNNER_TEMP`. The target checkout is never used as an install location, and
-the policy report is also written outside it, so enforcement does not dirty the
-repository being checked. Any download, digest, manifest, provenance, or install
-failure stops the job before the policy scan.
+the rollout bundle is also written outside it, so enforcement does not dirty
+the repository being checked. Any download, digest, manifest, provenance, or
+install failure stops the job before the policy scan.
+
+The bundle contains repository filenames, policy findings, a policy
+fingerprint, and the checked-out commit. GitHub job summaries and artifacts
+follow the repository's access model; teams should not copy private-repository
+evidence into public issues or unrelated systems. On pull requests, the commit
+identity describes the exact checkout GitHub Actions scanned, which may be a
+temporary merge commit.
 
 To upgrade Repo Scout, review the release notes and provenance, then update the
 workflow's `REPO_SCOUT_VERSION`, `REPO_SCOUT_SOURCE_SHA`, and

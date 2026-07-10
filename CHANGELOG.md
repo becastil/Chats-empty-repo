@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Upgraded copy-ready and dogfood policy workflows to the independently pinned and attested `v0.3.1` release.
+- Generated schema-2 rollout evidence in CI with GitHub's stable `owner/repository` identity.
+- Preserved passing and remediation bundles in job summaries and 14-day `repo-scout-rollout-evidence` artifacts.
+- Added workflow contract and execution coverage for fingerprints, exact scanned commits, readiness, and policy-failure evidence.
+- Documented artifact access, pull-request merge commits, local aggregation, and the no-hosted-service pilot workflow.
+
 ## 0.3.1 - 2026-07-10
 
 - Added deterministic SHA-256 fingerprints for normalized team-policy semantics.

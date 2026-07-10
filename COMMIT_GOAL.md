@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this rollout-identity commit: 26 / 1,000 (2.6%).
-- Remaining after this rollout-identity commit: 974 commits.
+- Progress after this CI-rollout-evidence commit: 27 / 1,000 (2.7%).
+- Remaining after this CI-rollout-evidence commit: 973 commits.
 
 ## Commit Standard
 

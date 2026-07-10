@@ -12,9 +12,10 @@ permissions:
 
 env:
   REPO_SCOUT_REPOSITORY: becastil/Chats-empty-repo
-  REPO_SCOUT_VERSION: "0.2.8"
-  REPO_SCOUT_SOURCE_SHA: 3519a842b0b24662d40d395f81ff29bba9eddcff
-  REPO_SCOUT_WHEEL_SHA256: 38efdc5d8b0a1e232037e3d9215ae72640af592df6f1e00d7bf03e6b0b13bd66
+  REPO_SCOUT_REPOSITORY_ID: ${{ github.repository }}
+  REPO_SCOUT_VERSION: "0.3.1"
+  REPO_SCOUT_SOURCE_SHA: 1e465aa4466820c0ee8480b88a85dcfccfcda06a
+  REPO_SCOUT_WHEEL_SHA256: fbd1406cf37c487bc32155267e097f3a0fac21e1a228812085befec2ca7f58f7
 
 concurrency:
   group: repo-scout-policy-${{ github.workflow }}-${{ github.ref }}
@@ -71,27 +72,29 @@ jobs:
           python -m venv "$RUNNER_TEMP/repo-scout-venv"
           "$RUNNER_TEMP/repo-scout-venv/bin/python" -m pip install --no-deps "$wheel"
 
-      - name: Enforce repository policy
+      - name: Enforce policy and generate rollout evidence
         env:
           TARGET_ROOT: ${{ github.workspace }}/target
         run: >-
           "$RUNNER_TEMP/repo-scout-venv/bin/repo-scout" --format markdown
           --policy "$TARGET_ROOT/repo-scout-policy.toml"
-          --output "$RUNNER_TEMP/repo-scout-policy-report.md" --force
+          --rollout-checklist
+          --repository-id "$REPO_SCOUT_REPOSITORY_ID"
+          --output "$RUNNER_TEMP/repo-scout-rollout.md" --force
           "$TARGET_ROOT"
 
-      - name: Add report to job summary
+      - name: Add rollout evidence to job summary
         if: ${{ always() }}
         run: |
-          if [[ -f "$RUNNER_TEMP/repo-scout-policy-report.md" ]]; then
-            cat "$RUNNER_TEMP/repo-scout-policy-report.md" >> "$GITHUB_STEP_SUMMARY"
+          if [[ -f "$RUNNER_TEMP/repo-scout-rollout.md" ]]; then
+            cat "$RUNNER_TEMP/repo-scout-rollout.md" >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: Upload policy report
+      - name: Upload rollout evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: repo-scout-policy-report
-          path: ${{ runner.temp }}/repo-scout-policy-report.md
+          name: repo-scout-rollout-evidence
+          path: ${{ runner.temp }}/repo-scout-rollout.md
           if-no-files-found: warn
           retention-days: 14

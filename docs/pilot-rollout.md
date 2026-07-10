@@ -21,6 +21,12 @@ repo-scout --format markdown \
 Use `--force` only when intentionally refreshing an existing bundle. Without
 `--output`, the report is printed to standard output.
 
+The copy-ready GitHub Actions gate runs the same command with
+`${{ github.repository }}` as the logical ID and uploads
+`repo-scout-rollout-evidence` for 14 days after every completed policy scan.
+This makes passing and remediation bundles downloadable for local aggregation
+without adding a hosted Repo Scout service.
+
 `--rollout-checklist` requires both `--policy` and `--format markdown`. It
 cannot be used for snapshot comparisons because a before/after report does not
 establish a current rollout baseline.

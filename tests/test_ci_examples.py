@@ -13,6 +13,7 @@ import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from repo_scout.policy import load_policy
+from repo_scout.rollout import parse_rollout_metadata
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -21,10 +22,10 @@ ACTION_PINS = {
     "actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1",
     "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
 }
-REPO_SCOUT_VERSION = "0.2.8"
-REPO_SCOUT_SOURCE_SHA = "3519a842b0b24662d40d395f81ff29bba9eddcff"
+REPO_SCOUT_VERSION = "0.3.1"
+REPO_SCOUT_SOURCE_SHA = "1e465aa4466820c0ee8480b88a85dcfccfcda06a"
 REPO_SCOUT_WHEEL_SHA256 = (
-    "38efdc5d8b0a1e232037e3d9215ae72640af592df6f1e00d7bf03e6b0b13bd66"
+    "fbd1406cf37c487bc32155267e097f3a0fac21e1a228812085befec2ca7f58f7"
 )
 
 
@@ -42,10 +43,18 @@ class CiExampleTests(unittest.TestCase):
             self.assertIn("  attestations: read", workflow)
             self.assertIn("persist-credentials: false", workflow)
             self.assertIn("runs-on: ubuntu-24.04", workflow)
-            self.assertIn("if: ${{ always() }}", workflow)
-            self.assertIn("$RUNNER_TEMP/repo-scout-policy-report.md", workflow)
-            self.assertIn("${{ runner.temp }}/repo-scout-policy-report.md", workflow)
+            self.assertEqual(workflow.count("if: ${{ always() }}"), 2)
+            self.assertIn("$RUNNER_TEMP/repo-scout-rollout.md", workflow)
+            self.assertIn("${{ runner.temp }}/repo-scout-rollout.md", workflow)
+            self.assertIn("REPO_SCOUT_REPOSITORY_ID: ${{ github.repository }}", workflow)
+            self.assertIn("--rollout-checklist", workflow)
+            self.assertIn(
+                '--repository-id "$REPO_SCOUT_REPOSITORY_ID"', workflow
+            )
+            self.assertIn("name: repo-scout-rollout-evidence", workflow)
+            self.assertIn("retention-days: 14", workflow)
             self.assertIn("--force", workflow)
+            self.assertNotIn('--output "$TARGET_ROOT', workflow)
             self.assertNotIn("pull_request_target", workflow)
             self.assertNotIn("continue-on-error", workflow)
             self.assertNotIn("|| true", workflow)
@@ -132,7 +141,7 @@ class CiExampleTests(unittest.TestCase):
             (target / "README.md").write_text("# Example\n", encoding="utf-8")
             (target / "SECURITY.md").write_text("# Security\n", encoding="utf-8")
             self._commit_repository(target)
-            report_path = workspace / "repo-scout-policy-report.md"
+            report_path = workspace / "repo-scout-rollout.md"
 
             for _ in range(2):
                 completed = self._run_policy(
@@ -142,8 +151,26 @@ class CiExampleTests(unittest.TestCase):
 
             passing_report = report_path.read_text(encoding="utf-8")
             self.assertIn("## Team Policy", passing_report)
+            self.assertIn("## First-Repository Rollout", passing_report)
             self.assertIn("- Status: `pass`", passing_report)
             self.assertIn("- Violations: none.", passing_report)
+            passing_metadata = parse_rollout_metadata(passing_report)
+            self.assertEqual(passing_metadata["schema_version"], 2)
+            self.assertEqual(
+                passing_metadata["repository_id"], "example/service"
+            )
+            self.assertEqual(passing_metadata["readiness"], "ready-for-ci")
+            self.assertRegex(
+                passing_metadata["policy"]["fingerprint"],
+                r"^sha256:[0-9a-f]{64}$",
+            )
+            self.assertRegex(
+                passing_metadata["git"]["commit"],
+                r"^(?:[0-9a-f]{40}|[0-9a-f]{64})$",
+            )
+            self.assertEqual(
+                passing_metadata["git"]["commit"], self._git_commit(target)
+            )
 
             (target / "SECURITY.md").unlink()
             subprocess.run(
@@ -159,6 +186,14 @@ class CiExampleTests(unittest.TestCase):
             self.assertEqual(failed.returncode, 6, failed.stderr)
             self.assertIn("- Status: `fail`", failing_report)
             self.assertIn("Required file is missing: SECURITY.md.", failing_report)
+            failing_metadata = parse_rollout_metadata(failing_report)
+            self.assertEqual(
+                failing_metadata["readiness"], "remediation-required"
+            )
+            self.assertEqual(failing_metadata["policy"]["status"], "fail")
+            self.assertEqual(
+                failing_metadata["git"]["commit"], self._git_commit(target)
+            )
 
     def test_example_command_rejects_malformed_policy(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -168,7 +203,7 @@ class CiExampleTests(unittest.TestCase):
             shutil.copytree(ROOT / "src", workspace / "repo-scout" / "src")
             policy_path = target / "repo-scout-policy.toml"
             policy_path.write_text("version = [\n", encoding="utf-8")
-            report_path = workspace / "repo-scout-policy-report.md"
+            report_path = workspace / "repo-scout-rollout.md"
 
             completed = self._run_policy(
                 workspace, target, policy_path, report_path
@@ -196,6 +231,9 @@ class CiExampleTests(unittest.TestCase):
                 "markdown",
                 "--policy",
                 str(policy_path),
+                "--rollout-checklist",
+                "--repository-id",
+                "example/service",
                 "--output",
                 str(report_path),
                 "--force",
@@ -223,6 +261,15 @@ class CiExampleTests(unittest.TestCase):
                 capture_output=True,
                 text=True,
             )
+
+    @staticmethod
+    def _git_commit(root: Path) -> str:
+        return subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "HEAD"],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
 
 
 if __name__ == "__main__":

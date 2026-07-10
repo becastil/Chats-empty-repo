@@ -61,6 +61,10 @@ Normalized policy fingerprints let the operator verify that complete schema-2
 bundles used identical enforced rules, while Git commit IDs identify the exact
 revisions scanned. Neither field proves evidence age or authenticity, so paid
 rollout support still includes controlled evidence handling and CI operations.
+The copy-ready CI gate now produces one aggregatable rollout bundle on every
+completed scan, including policy failures. This turns weekly CI use and
+cross-repository policy reuse into evidence a pilot operator can review without
+a Repo Scout-hosted database.
 
 The first shared-policy release supports required files, repository file and
 byte limits, and clean Git enforcement through a strict TOML file that can be

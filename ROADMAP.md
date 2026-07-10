@@ -7,7 +7,6 @@
 
 ## Near Term
 
-- Publish rollout-ready evidence bundles from the customer CI workflow.
 - Add a private pilot contact path after public intake validates demand.
 
 ## Revenue Validation
