@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.1 - 2026-07-10
+
+- Added deterministic SHA-256 fingerprints for normalized team-policy semantics.
+- Recorded the exact checked-out Git commit in repository scans and schema-2 rollout evidence.
+- Kept schema-1 rollout bundles readable with explicit zero identity coverage for missing fields.
+- Verified shared policy only when at least two bundles have complete matching fingerprints.
+- Added counts-only policy-fingerprint and Git-commit coverage without exposing identity values by default.
+- Included fingerprints and commits in explicit `--details` output while preserving freshness and authenticity caveats.
+- Required an identifiable initial commit before schema-2 evidence can report CI readiness.
+- Revalidated evidence passed directly to the aggregate library API before counting it.
+- Added semantic-ordering, committed/unborn Git, schema compatibility, invalid identity, privacy, and aggregate verification tests.
+
 ## 0.3.0 - 2026-07-10
 
 - Added schema-1 rollout metadata to first-repository Markdown evidence bundles.

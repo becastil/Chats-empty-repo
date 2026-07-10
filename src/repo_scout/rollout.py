@@ -2,12 +2,16 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import re
 from typing import Any
 
 
-ROLLOUT_SCHEMA_VERSION = 1
+ROLLOUT_SCHEMA_VERSION = 2
+SUPPORTED_ROLLOUT_SCHEMA_VERSIONS = {1, ROLLOUT_SCHEMA_VERSION}
 ROLLOUT_METADATA_START = "## Rollout Metadata\n\n```json\n"
 ROLLOUT_METADATA_END = "\n```"
+_POLICY_FINGERPRINT_PATTERN = re.compile(r"sha256:[0-9a-f]{64}")
+_GIT_COMMIT_PATTERN = re.compile(r"(?:[0-9a-f]{40}|[0-9a-f]{64})")
 
 
 class RolloutEvidenceError(ValueError):
@@ -25,16 +29,18 @@ def build_rollout_metadata(
     git = snapshot["git"]
     policy_passes = policy["status"] == "pass"
     git_clean = bool(git["is_repo"] and git["dirty_files"] == 0)
+    has_commit = git["commit"] is not None
     return {
         "schema_version": ROLLOUT_SCHEMA_VERSION,
         "repository_id": repository_id,
         "readiness": (
             "ready-for-ci"
-            if policy_passes and git_clean
+            if policy_passes and git_clean and has_commit
             else "remediation-required"
         ),
         "policy": {
             "version": policy["version"],
+            "fingerprint": policy["fingerprint"],
             "status": policy["status"],
             "rules_checked": policy["rules_checked"],
             "violations": len(policy["violations"]),
@@ -42,6 +48,7 @@ def build_rollout_metadata(
         "git": {
             "is_repo": git["is_repo"],
             "branch": git["branch"],
+            "commit": git["commit"],
             "dirty_files": git["dirty_files"],
             "clean": git_clean,
         },
@@ -114,14 +121,13 @@ def validate_rollout_metadata(metadata: Any) -> dict[str, Any]:
         "metadata",
     )
 
+    schema_version = metadata["schema_version"]
     if (
-        not isinstance(metadata["schema_version"], int)
-        or isinstance(metadata["schema_version"], bool)
-        or metadata["schema_version"] != ROLLOUT_SCHEMA_VERSION
+        not isinstance(schema_version, int)
+        or isinstance(schema_version, bool)
+        or schema_version not in SUPPORTED_ROLLOUT_SCHEMA_VERSIONS
     ):
-        raise RolloutEvidenceError(
-            f"schema_version must be {ROLLOUT_SCHEMA_VERSION}"
-        )
+        raise RolloutEvidenceError("schema_version must be 1 or 2")
     repository_id = validate_repository_id(metadata["repository_id"])
     if metadata["readiness"] not in {"ready-for-ci", "remediation-required"}:
         raise RolloutEvidenceError("readiness is unsupported")
@@ -129,11 +135,10 @@ def validate_rollout_metadata(metadata: Any) -> dict[str, Any]:
     policy = metadata["policy"]
     if not isinstance(policy, dict):
         raise RolloutEvidenceError("policy must be an object")
-    _require_exact_keys(
-        policy,
-        {"version", "status", "rules_checked", "violations"},
-        "policy",
-    )
+    policy_keys = {"version", "status", "rules_checked", "violations"}
+    if schema_version >= 2:
+        policy_keys.add("fingerprint")
+    _require_exact_keys(policy, policy_keys, "policy")
     if not _is_non_negative_integer(policy["version"]) or policy["version"] < 1:
         raise RolloutEvidenceError("policy.version must be positive")
     if policy["status"] not in {"pass", "fail"}:
@@ -148,15 +153,21 @@ def validate_rollout_metadata(metadata: Any) -> dict[str, Any]:
         raise RolloutEvidenceError("passing policy cannot contain violations")
     if policy["status"] == "fail" and policy["violations"] < 1:
         raise RolloutEvidenceError("failing policy must contain violations")
+    if schema_version >= 2 and (
+        not isinstance(policy["fingerprint"], str)
+        or _POLICY_FINGERPRINT_PATTERN.fullmatch(policy["fingerprint"]) is None
+    ):
+        raise RolloutEvidenceError(
+            "policy.fingerprint must be a lowercase sha256 digest"
+        )
 
     git = metadata["git"]
     if not isinstance(git, dict):
         raise RolloutEvidenceError("git must be an object")
-    _require_exact_keys(
-        git,
-        {"is_repo", "branch", "dirty_files", "clean"},
-        "git",
-    )
+    git_keys = {"is_repo", "branch", "dirty_files", "clean"}
+    if schema_version >= 2:
+        git_keys.add("commit")
+    _require_exact_keys(git, git_keys, "git")
     if not isinstance(git["is_repo"], bool) or not isinstance(git["clean"], bool):
         raise RolloutEvidenceError("git repository and clean values must be booleans")
     if git["branch"] is not None and not isinstance(git["branch"], str):
@@ -167,6 +178,17 @@ def validate_rollout_metadata(metadata: Any) -> dict[str, Any]:
         raise RolloutEvidenceError("git.dirty_files must be non-negative")
     if not git["is_repo"] and git["dirty_files"] != 0:
         raise RolloutEvidenceError("non-Git evidence cannot declare changed files")
+    if schema_version >= 2:
+        commit = git["commit"]
+        if commit is not None and (
+            not isinstance(commit, str)
+            or _GIT_COMMIT_PATTERN.fullmatch(commit) is None
+        ):
+            raise RolloutEvidenceError(
+                "git.commit must be a lowercase 40- or 64-character object ID or null"
+            )
+        if not git["is_repo"] and commit is not None:
+            raise RolloutEvidenceError("non-Git evidence cannot declare a commit")
     expected_clean = git["is_repo"] and git["dirty_files"] == 0
     if git["clean"] != expected_clean:
         raise RolloutEvidenceError("git.clean contradicts repository state")
@@ -175,20 +197,26 @@ def validate_rollout_metadata(metadata: Any) -> dict[str, Any]:
     if not _is_non_negative_integer(attention_findings):
         raise RolloutEvidenceError("attention_findings must be non-negative")
 
+    has_required_commit = schema_version == 1 or git["commit"] is not None
     expected_readiness = (
         "ready-for-ci"
-        if policy["status"] == "pass" and git["clean"]
+        if policy["status"] == "pass" and git["clean"] and has_required_commit
         else "remediation-required"
     )
     if metadata["readiness"] != expected_readiness:
         raise RolloutEvidenceError("readiness contradicts policy or Git evidence")
 
     return {
-        "schema_version": ROLLOUT_SCHEMA_VERSION,
+        "schema_version": schema_version,
         "repository_id": repository_id,
         "readiness": metadata["readiness"],
         "policy": {
             "version": policy["version"],
+            **(
+                {"fingerprint": policy["fingerprint"]}
+                if schema_version >= 2
+                else {}
+            ),
             "status": policy["status"],
             "rules_checked": policy["rules_checked"],
             "violations": policy["violations"],
@@ -196,6 +224,7 @@ def validate_rollout_metadata(metadata: Any) -> dict[str, Any]:
         "git": {
             "is_repo": git["is_repo"],
             "branch": git["branch"],
+            **({"commit": git["commit"]} if schema_version >= 2 else {}),
             "dirty_files": git["dirty_files"],
             "clean": git["clean"],
         },

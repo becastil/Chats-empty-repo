@@ -158,11 +158,14 @@ repo-scout-rollout --details api-rollout.md web-rollout.md
 repo-scout-rollout --format json api-rollout.md web-rollout.md
 ```
 
-The counts-only default omits repository IDs, branches, and evidence paths;
-`--details` opts into repository-level output. Results are explicitly
-bundle-reported rather than freshness or shared-policy proof. The aggregator
-rejects duplicate IDs, duplicate JSON keys, and malformed or contradictory
-metadata. It performs no uploads and requires no API key.
+The counts-only default omits repository IDs, branches, commits, policy
+fingerprints, and evidence paths; `--details` opts into repository-level
+output. Schema-2 bundles identify normalized policy rules and the scanned Git
+commit, so the aggregate can verify complete matching policy fingerprints
+across two or more repositories. Results remain bundle-reported and do not
+prove freshness. The aggregator accepts legacy schema-1 bundles, rejects
+duplicate IDs, duplicate JSON keys, and malformed or contradictory metadata,
+performs no uploads, and requires no API key.
 
 Initialize an offline starter policy for a common repository type:
 

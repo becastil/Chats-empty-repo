@@ -307,15 +307,18 @@ def _git_summary(root: Path) -> dict[str, Any]:
             "is_repo": False,
             "root": None,
             "branch": None,
+            "commit": None,
             "dirty_files": 0,
         }
 
     branch = _git_output(root, "branch", "--show-current") or None
+    commit = _git_output(root, "rev-parse", "--verify", "HEAD") or None
     status = _git_lines(root, "status", "--porcelain") or []
     return {
         "is_repo": True,
         "root": str(git_root),
         "branch": branch,
+        "commit": commit,
         "dirty_files": len(status),
     }
 

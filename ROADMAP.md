@@ -7,7 +7,6 @@
 
 ## Near Term
 
-- Add policy fingerprints and Git commit identity to rollout evidence.
 - Publish rollout-ready evidence bundles from the customer CI workflow.
 - Add a private pilot contact path after public intake validates demand.
 

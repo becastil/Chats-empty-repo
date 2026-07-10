@@ -7,7 +7,13 @@ import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from repo_scout.policy import PolicyError, evaluate_policy, load_policy
+from repo_scout.policy import (
+    PolicyError,
+    evaluate_policy,
+    load_policy,
+    parse_policy,
+    policy_fingerprint,
+)
 from repo_scout.scanner import scan_project
 
 
@@ -30,6 +36,7 @@ max_total_bytes = 1000
             result = evaluate_policy(scan_project(root), load_policy(policy_path))
 
             self.assertEqual(result["status"], "pass")
+            self.assertRegex(result["fingerprint"], r"^sha256:[0-9a-f]{64}$")
             self.assertEqual(result["rules_checked"], 3)
             self.assertEqual(result["violations"], [])
 
@@ -89,6 +96,59 @@ required_files = ["../secret.txt"]
 
             with self.assertRaisesRegex(PolicyError, "normalized and relative"):
                 load_policy(policy_path)
+
+    def test_policy_fingerprint_tracks_normalized_rule_semantics(self) -> None:
+        first = parse_policy(
+            """version = 1
+[repository]
+required_files = ["README.md", "SECURITY.md"]
+max_files = 100
+""",
+            source="first.toml",
+        )
+        reordered = parse_policy(
+            """version = 1
+[repository]
+max_files = 100
+required_files = ["SECURITY.md", "README.md"]
+""",
+            source="reordered.toml",
+        )
+        changed = parse_policy(
+            """version = 1
+[repository]
+required_files = ["README.md", "SECURITY.md"]
+max_files = 101
+""",
+            source="changed.toml",
+        )
+        explicit_default = parse_policy(
+            """version = 1
+[repository]
+required_files = ["README.md", "SECURITY.md"]
+max_files = 100
+require_clean_git = false
+""",
+            source="explicit-default.toml",
+        )
+        clean_required = parse_policy(
+            """version = 1
+[repository]
+required_files = ["README.md", "SECURITY.md"]
+max_files = 100
+require_clean_git = true
+""",
+            source="clean-required.toml",
+        )
+
+        self.assertEqual(policy_fingerprint(first), policy_fingerprint(reordered))
+        self.assertEqual(
+            policy_fingerprint(first), policy_fingerprint(explicit_default)
+        )
+        self.assertNotEqual(policy_fingerprint(first), policy_fingerprint(changed))
+        self.assertNotEqual(
+            policy_fingerprint(first), policy_fingerprint(clean_required)
+        )
 
 
 if __name__ == "__main__":

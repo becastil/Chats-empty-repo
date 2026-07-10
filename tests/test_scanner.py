@@ -26,6 +26,7 @@ class ScanProjectTests(unittest.TestCase):
             snapshot = scan_project(root)
 
             self.assertFalse(snapshot["git"]["is_repo"])
+            self.assertIsNone(snapshot["git"]["commit"])
             self.assertEqual(snapshot["schema_version"], 1)
             self.assertEqual(snapshot["files"]["paths"], [
                 "LICENSE",
@@ -122,7 +123,47 @@ class ScanProjectTests(unittest.TestCase):
             snapshot = scan_project(root)
 
             self.assertEqual(snapshot["git"]["dirty_files"], 1)
+            self.assertIsNone(snapshot["git"]["commit"])
             self.assertEqual(snapshot["attention"]["items"][0]["kind"], "dirty_git")
+
+    def test_scan_project_records_exact_git_commit(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            subprocess.run(
+                ["git", "init", "-q", str(root)], check=True, capture_output=True
+            )
+            subprocess.run(
+                ["git", "-C", str(root), "config", "user.name", "Repo Scout Tests"],
+                check=True,
+                capture_output=True,
+            )
+            subprocess.run(
+                ["git", "-C", str(root), "config", "user.email", "tests@example.com"],
+                check=True,
+                capture_output=True,
+            )
+            (root / "README.md").write_text("# Example\n", encoding="utf-8")
+            subprocess.run(
+                ["git", "-C", str(root), "add", "README.md"],
+                check=True,
+                capture_output=True,
+            )
+            subprocess.run(
+                ["git", "-C", str(root), "commit", "-q", "-m", "Initial"],
+                check=True,
+                capture_output=True,
+            )
+            expected = subprocess.run(
+                ["git", "-C", str(root), "rev-parse", "HEAD"],
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+
+            snapshot = scan_project(root)
+
+            self.assertEqual(snapshot["git"]["commit"], expected)
+            self.assertEqual(snapshot["git"]["dirty_files"], 0)
 
 
 if __name__ == "__main__":

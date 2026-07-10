@@ -507,6 +507,13 @@ def _append_rollout_checklist(
     else:
         lines.append("- [ ] A clean Git worktree could not be verified.")
 
+    if git["commit"] is not None:
+        lines.append(
+            f"- [x] Git commit identity recorded as {_markdown_code(git['commit'])}."
+        )
+    elif git["is_repo"]:
+        lines.append("- [ ] Create an initial Git commit before the rollout handoff.")
+
     if attention_count:
         lines.append(
             f"- [ ] Review {attention_count} additional attention "

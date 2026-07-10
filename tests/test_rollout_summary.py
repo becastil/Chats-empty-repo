@@ -23,6 +23,9 @@ from repo_scout.rollout_summary import (
     main,
 )
 
+POLICY_FINGERPRINT = f"sha256:{'a' * 64}"
+GIT_COMMIT = "b" * 40
+
 
 class RolloutSummaryTests(unittest.TestCase):
     def test_summary_is_order_independent_and_tracks_readiness_totals(self) -> None:
@@ -44,13 +47,15 @@ class RolloutSummaryTests(unittest.TestCase):
                 list(reversed(reports)), include_details=True
             ),
         )
-        self.assertEqual(summary["schema_version"], 1)
+        self.assertEqual(summary["schema_version"], 2)
         self.assertEqual(
             summary["scope"],
             {
                 "readiness": "bundle-reported",
                 "freshness_verified": False,
-                "shared_policy_verified": False,
+                "shared_policy_verified": True,
+                "policy_fingerprint_coverage": 2,
+                "git_commit_coverage": 2,
                 "policy_versions": [1],
             },
         )
@@ -74,6 +79,9 @@ class RolloutSummaryTests(unittest.TestCase):
         )
         text = format_rollout_summary(summary)
         self.assertIn("Scope: bundle-reported", text)
+        self.assertIn("shared policy verified by fingerprints", text)
+        self.assertIn("Policy identity: 2/2 fingerprints", text)
+        self.assertIn("Git identity: 2/2 commits recorded", text)
         self.assertIn("Repositories: 2", text)
         self.assertIn("Bundle-reported ready for CI: 1", text)
         self.assertIn("Bundle-reported remediation required: 1", text)
@@ -90,6 +98,8 @@ class RolloutSummaryTests(unittest.TestCase):
         self.assertNotIn("platform/web", counts_text)
         self.assertNotIn("api.md", counts_text)
         self.assertNotIn("web.md", counts_text)
+        self.assertNotIn(POLICY_FINGERPRINT, counts_text)
+        self.assertNotIn(GIT_COMMIT, counts_text)
 
     def test_main_reads_markdown_bundles_and_emits_json(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -138,11 +148,29 @@ class RolloutSummaryTests(unittest.TestCase):
                 detailed["repositories"][1]["repository_id"], "web"
             )
             self.assertEqual(detailed["repositories"][0]["policy_version"], 1)
+            self.assertEqual(
+                detailed["repositories"][0]["policy_fingerprint"],
+                POLICY_FINGERPRINT,
+            )
+            self.assertEqual(detailed["repositories"][0]["git_commit"], GIT_COMMIT)
 
     def test_rejects_duplicate_repository_ids(self) -> None:
         metadata = self._metadata("api")
         with self.assertRaisesRegex(RolloutEvidenceError, "duplicate repository_id"):
             build_rollout_summary([("one.md", metadata), ("two.md", metadata)])
+
+    def test_direct_summary_call_validates_each_bundle(self) -> None:
+        legacy_with_new_field = self._metadata("legacy", schema_version=1)
+        legacy_with_new_field["policy"]["fingerprint"] = POLICY_FINGERPRINT
+        with self.assertRaisesRegex(RolloutEvidenceError, "legacy.md.*unknown key"):
+            build_rollout_summary([("legacy.md", legacy_with_new_field)])
+
+        malformed_current = self._metadata("current")
+        malformed_current["policy"]["fingerprint"] = "sha256:invalid"
+        with self.assertRaisesRegex(
+            RolloutEvidenceError, "current.md.*policy.fingerprint"
+        ):
+            build_rollout_summary([("current.md", malformed_current)])
 
     def test_rejects_missing_malformed_and_inconsistent_metadata(self) -> None:
         with self.assertRaisesRegex(RolloutEvidenceError, "exactly one"):
@@ -160,17 +188,17 @@ class RolloutSummaryTests(unittest.TestCase):
             parse_rollout_metadata(bundle, source="edited.md")
 
         unsupported = self._metadata("api")
-        unsupported["schema_version"] = 2
+        unsupported["schema_version"] = 3
         encoded = json.dumps(unsupported, indent=2, sort_keys=True)
         bundle = f"# Report\n\n{ROLLOUT_METADATA_START}{encoded}{ROLLOUT_METADATA_END}\n"
-        with self.assertRaisesRegex(RolloutEvidenceError, "schema_version must be 1"):
+        with self.assertRaisesRegex(RolloutEvidenceError, "schema_version must be 1 or 2"):
             parse_rollout_metadata(bundle, source="future.md")
 
         boolean_schema = self._metadata("api")
         boolean_schema["schema_version"] = True
         encoded = json.dumps(boolean_schema, indent=2, sort_keys=True)
         bundle = f"# Report\n\n{ROLLOUT_METADATA_START}{encoded}{ROLLOUT_METADATA_END}\n"
-        with self.assertRaisesRegex(RolloutEvidenceError, "schema_version must be 1"):
+        with self.assertRaisesRegex(RolloutEvidenceError, "schema_version must be 1 or 2"):
             parse_rollout_metadata(bundle, source="boolean.md")
 
         non_git_dirty = self._metadata(
@@ -198,6 +226,52 @@ class RolloutSummaryTests(unittest.TestCase):
         with self.assertRaisesRegex(RolloutEvidenceError, "duplicate key"):
             parse_rollout_metadata(bundle, source="duplicate-key.md")
 
+    def test_schema_one_bundles_remain_compatible_without_identity_claims(self) -> None:
+        legacy = self._metadata("api", schema_version=1)
+
+        parsed = parse_rollout_metadata(self._bundle(legacy), source="legacy.md")
+        summary = build_rollout_summary(
+            [("legacy.md", parsed), ("current.md", self._metadata("web"))]
+        )
+
+        self.assertEqual(parsed, legacy)
+        self.assertEqual(summary["scope"]["policy_fingerprint_coverage"], 1)
+        self.assertEqual(summary["scope"]["git_commit_coverage"], 1)
+        self.assertFalse(summary["scope"]["shared_policy_verified"])
+
+    def test_shared_policy_requires_complete_matching_fingerprints(self) -> None:
+        api = self._metadata("api")
+        web = self._metadata("web")
+        web["policy"]["fingerprint"] = f"sha256:{'c' * 64}"
+
+        summary = build_rollout_summary([("api.md", api), ("web.md", web)])
+
+        self.assertEqual(summary["scope"]["policy_fingerprint_coverage"], 2)
+        self.assertFalse(summary["scope"]["shared_policy_verified"])
+
+    def test_schema_two_rejects_invalid_policy_and_commit_identities(self) -> None:
+        invalid_policy = self._metadata("api")
+        invalid_policy["policy"]["fingerprint"] = "sha256:ABC"
+        with self.assertRaisesRegex(RolloutEvidenceError, "policy.fingerprint"):
+            parse_rollout_metadata(self._bundle_unvalidated(invalid_policy))
+
+        invalid_commit = self._metadata("api")
+        invalid_commit["git"]["commit"] = "abc123"
+        with self.assertRaisesRegex(RolloutEvidenceError, "git.commit"):
+            parse_rollout_metadata(self._bundle_unvalidated(invalid_commit))
+
+        non_git_commit = self._metadata(
+            "api", policy_status="fail", violations=1, is_repo=False, branch=None
+        )
+        non_git_commit["git"]["commit"] = GIT_COMMIT
+        with self.assertRaisesRegex(RolloutEvidenceError, "non-Git.*commit"):
+            parse_rollout_metadata(self._bundle_unvalidated(non_git_commit))
+
+        missing_commit = self._metadata("api")
+        missing_commit["git"]["commit"] = None
+        with self.assertRaisesRegex(RolloutEvidenceError, "readiness contradicts"):
+            parse_rollout_metadata(self._bundle_unvalidated(missing_commit))
+
     def test_main_reports_input_errors_without_stdout(self) -> None:
         stderr = io.StringIO()
         stdout = io.StringIO()
@@ -218,9 +292,18 @@ class RolloutSummaryTests(unittest.TestCase):
         )
 
     @staticmethod
+    def _bundle_unvalidated(metadata: dict[str, object]) -> str:
+        return (
+            f"# Report\n\n{ROLLOUT_METADATA_START}"
+            f"{json.dumps(metadata, sort_keys=True)}"
+            f"{ROLLOUT_METADATA_END}\n"
+        )
+
+    @staticmethod
     def _metadata(
         repository_id: str,
         *,
+        schema_version: int = 2,
         policy_status: str = "pass",
         violations: int = 0,
         is_repo: bool = True,
@@ -229,26 +312,31 @@ class RolloutSummaryTests(unittest.TestCase):
         attention_findings: int = 0,
     ) -> dict[str, object]:
         clean = is_repo and dirty_files == 0
+        policy = {
+            "version": 1,
+            "status": policy_status,
+            "rules_checked": 3,
+            "violations": violations,
+        }
+        git = {
+            "is_repo": is_repo,
+            "branch": branch,
+            "dirty_files": dirty_files,
+            "clean": clean,
+        }
+        if schema_version >= 2:
+            policy["fingerprint"] = POLICY_FINGERPRINT
+            git["commit"] = GIT_COMMIT if is_repo else None
         return {
-            "schema_version": 1,
+            "schema_version": schema_version,
             "repository_id": repository_id,
             "readiness": (
                 "ready-for-ci"
                 if policy_status == "pass" and clean
                 else "remediation-required"
             ),
-            "policy": {
-                "version": 1,
-                "status": policy_status,
-                "rules_checked": 3,
-                "violations": violations,
-            },
-            "git": {
-                "is_repo": is_repo,
-                "branch": branch,
-                "dirty_files": dirty_files,
-                "clean": clean,
-            },
+            "policy": policy,
+            "git": git,
             "attention_findings": attention_findings,
         }
 

@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this multi-repository-rollout commit: 25 / 1,000 (2.5%).
-- Remaining after this multi-repository-rollout commit: 975 commits.
+- Progress after this rollout-identity commit: 26 / 1,000 (2.6%).
+- Remaining after this rollout-identity commit: 974 commits.
 
 ## Commit Standard
 

@@ -17,11 +17,11 @@ artifact from this repository's tagged source.
 Download a specific version rather than relying on a moving latest-release URL:
 
 ```bash
-gh release download v0.3.0 \
+gh release download v0.3.1 \
   --repo becastil/Chats-empty-repo \
   --pattern "repo_scout-*" \
   --pattern SHA256SUMS
-python3 -m pip install ./repo_scout-0.3.0-py3-none-any.whl
+python3 -m pip install ./repo_scout-0.3.1-py3-none-any.whl
 ```
 
 Repo Scout requires Python 3.11 or newer and has no runtime dependencies.
@@ -33,9 +33,9 @@ files:
 
 ```bash
 shasum -a 256 -c SHA256SUMS
-gh attestation verify repo_scout-0.3.0-py3-none-any.whl \
+gh attestation verify repo_scout-0.3.1-py3-none-any.whl \
   --repo becastil/Chats-empty-repo
-gh attestation verify repo_scout-0.3.0.tar.gz \
+gh attestation verify repo_scout-0.3.1.tar.gz \
   --repo becastil/Chats-empty-repo
 ```
 
@@ -56,7 +56,7 @@ Before publication, the workflow:
 2. Installs hash-locked release-only build dependencies.
 3. Builds one wheel and one source distribution without build isolation.
 4. Rejects missing, extra, or incorrectly named artifacts.
-5. Installs the wheel in a fresh virtual environment and exercises all three commands.
+5. Installs the wheel in a fresh virtual environment and exercises all four commands.
 6. Generates deterministic SHA-256 checksums and GitHub provenance attestations.
 7. Creates the GitHub Release from the existing immutable tag.
 

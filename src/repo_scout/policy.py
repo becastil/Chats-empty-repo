@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 from pathlib import Path, PurePosixPath
 import tomllib
 from typing import Any
@@ -111,10 +113,27 @@ def evaluate_policy(
     return {
         "version": policy["version"],
         "source": policy["source"],
+        "fingerprint": policy_fingerprint(policy),
         "status": "fail" if violations else "pass",
         "rules_checked": len(rules),
         "violations": violations,
     }
+
+
+def policy_fingerprint(policy: dict[str, Any]) -> str:
+    """Return a stable identity for the policy's enforced semantics."""
+    repository = dict(policy["repository"])
+    if "required_files" in repository:
+        repository["required_files"] = sorted(repository["required_files"])
+    if repository.get("require_clean_git") is False:
+        del repository["require_clean_git"]
+    canonical = json.dumps(
+        {"version": policy["version"], "repository": repository},
+        ensure_ascii=True,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
+    return f"sha256:{hashlib.sha256(canonical).hexdigest()}"
 
 
 def _validate_policy(policy: Any, source: str | Path) -> dict[str, Any]:

@@ -36,24 +36,30 @@ surrounding whitespace.
 The automated section records only facts available at scan time:
 
 - Whether the policy loaded and how many configured rules were evaluated.
+- The SHA-256 identity of the normalized policy version and repository rules.
 - Whether every policy rule passed.
-- Whether the target is a Git repository and which branch was scanned.
+- Whether the target is a Git repository, which branch was scanned, and the
+  exact checked-out commit when one exists.
 - Whether the worktree was clean when scanned.
 - Whether the separate attention scan found additional review items.
 
-`ready-for-ci` requires a passing policy in a clean Git repository. Any policy
-violation, missing Git repository, or changed worktree produces
-`remediation-required`.
+`ready-for-ci` requires a passing policy in a clean Git repository with an
+identifiable initial commit. Any policy violation, missing or unborn Git
+repository, or changed worktree produces `remediation-required`.
 
 The team handoff section always starts unchecked. A local scan cannot prove
 that a pull request was reviewed, an owner was assigned, a required check was
 enabled, or a week of CI evidence exists. Those boxes are completed by the
 pilot team as rollout work happens.
 
-Each bundle ends with a visible `Rollout Metadata` JSON block. Schema version 1
-contains only the logical repository ID, readiness, policy counts, Git state,
-and attention count. It excludes absolute repository and policy paths even
-though those remain visible elsewhere in the human evidence report.
+Each bundle ends with a visible `Rollout Metadata` JSON block. Schema version 2
+contains the logical repository ID, readiness, policy counts and fingerprint,
+Git state and commit, and attention count. The fingerprint hashes normalized
+policy semantics, so TOML key order, source paths, required-file ordering, and
+an explicit no-op `require_clean_git = false` do not change it. It excludes
+absolute repository and policy paths even though those remain visible
+elsewhere in the human evidence report. Schema-1 bundles
+remain accepted but have no policy-fingerprint or Git-commit coverage.
 
 ## Summarize Pilot Repositories
 
@@ -65,21 +71,23 @@ repo-scout-rollout --details api-rollout.md web-rollout.md
 repo-scout-rollout --format json api-rollout.md web-rollout.md > rollout-summary.json
 ```
 
-The default summary reports counts only and omits repository IDs, branches,
-and evidence paths. `--details` explicitly includes those fields when an
-operator needs repository-level action. Results are labeled bundle-reported
-because the command does not verify evidence age or prove that every bundle
-used the same policy content. Detailed repository rows are sorted by logical
-ID, so input order does not change the result. Duplicate IDs, duplicate JSON
-keys, missing metadata, unknown fields, unsupported schemas, invalid types,
-and internally contradictory evidence fail with exit code 2 instead of being
-counted.
+The default summary reports counts and identity coverage only; it omits
+repository IDs, branches, commits, policy fingerprints, and evidence paths.
+`--details` explicitly includes those fields when an operator needs
+repository-level action. Shared policy is verified only when two or more input
+bundles all carry the same valid fingerprint. Mixed schema-1/schema-2 input,
+missing identities, or differing fingerprints keep that claim false. Detailed
+repository rows are sorted by logical ID, so input order does not change the
+result. Duplicate IDs, duplicate JSON keys, missing metadata, unknown fields,
+unsupported schemas, invalid types, and internally contradictory evidence
+fail with exit code 2 instead of being counted.
 
-Consistency validation is not a digital signature or freshness check. A person
-who can modify an evidence file can replace both its prose and metadata, and
-policy version alone does not prove two repositories used identical rules.
-Retain bundles in access-controlled artifacts or an approved internal system
-when decisions depend on their provenance.
+Fingerprint equality proves only that the normalized rules recorded in the
+bundles match. It is not a digital signature or freshness check. A person who
+can modify an evidence file can replace its prose, metadata, fingerprint, and
+commit; a recorded commit does not prove when the scan ran. Retain bundles in
+access-controlled artifacts or an approved internal system when decisions
+depend on their provenance.
 
 ## Failure Evidence
 

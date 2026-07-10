@@ -236,6 +236,7 @@ require_clean_git = true
                 report,
             )
             self.assertIn("- [x] Git worktree was clean at scan time.", report)
+            self.assertIn("- [x] Git commit identity recorded as", report)
             self.assertIn(
                 "- [x] No additional attention findings were detected.", report
             )
@@ -245,11 +246,52 @@ require_clean_git = true
                 report,
             )
             metadata = parse_rollout_metadata(report)
-            self.assertEqual(metadata["schema_version"], 1)
+            self.assertEqual(metadata["schema_version"], 2)
             self.assertEqual(metadata["repository_id"], "platform/api")
             self.assertEqual(metadata["readiness"], "ready-for-ci")
             self.assertEqual(metadata["policy"]["status"], "pass")
+            self.assertRegex(
+                metadata["policy"]["fingerprint"], r"^sha256:[0-9a-f]{64}$"
+            )
             self.assertTrue(metadata["git"]["clean"])
+            self.assertRegex(
+                metadata["git"]["commit"], r"^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+            )
+
+    def test_rollout_requires_an_initial_commit_for_ci_readiness(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp) / "repository"
+            root.mkdir()
+            subprocess.run(
+                ["git", "init", "-q", str(root)], check=True, capture_output=True
+            )
+            policy_path = Path(tmp) / "policy.toml"
+            policy_path.write_text(
+                "version = 1\n[repository]\nmax_files = 10\n",
+                encoding="utf-8",
+            )
+
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        "--format",
+                        "markdown",
+                        "--policy",
+                        str(policy_path),
+                        "--rollout-checklist",
+                        "--repository-id",
+                        "platform/new",
+                        str(root),
+                    ]
+                )
+
+            report = stdout.getvalue()
+            metadata = parse_rollout_metadata(report)
+            self.assertEqual(exit_code, 0)
+            self.assertIn("- **Readiness:** `remediation-required`", report)
+            self.assertIn("Create an initial Git commit", report)
+            self.assertIsNone(metadata["git"]["commit"])
 
     def test_rollout_evidence_is_written_before_policy_exit_six(self) -> None:
         with TemporaryDirectory() as tmp:

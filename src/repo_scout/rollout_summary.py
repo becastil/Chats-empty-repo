@@ -5,10 +5,14 @@ import json
 import sys
 from typing import Any, Sequence
 
-from .rollout import RolloutEvidenceError, load_rollout_metadata
+from .rollout import (
+    RolloutEvidenceError,
+    load_rollout_metadata,
+    validate_rollout_metadata,
+)
 
 
-SUMMARY_SCHEMA_VERSION = 1
+SUMMARY_SCHEMA_VERSION = 2
 
 
 def build_rollout_summary(
@@ -19,10 +23,21 @@ def build_rollout_summary(
     if not reports:
         raise RolloutEvidenceError("at least one rollout evidence file is required")
 
+    validated_reports: list[tuple[str, dict[str, Any]]] = []
+    for evidence_file, metadata in reports:
+        try:
+            validated_reports.append(
+                (evidence_file, validate_rollout_metadata(metadata))
+            )
+        except RolloutEvidenceError as exc:
+            raise RolloutEvidenceError(
+                f"invalid rollout metadata in {evidence_file}: {exc}"
+            ) from exc
+
     repositories: list[dict[str, Any]] = []
     seen_ids: set[str] = set()
     for evidence_file, metadata in sorted(
-        reports,
+        validated_reports,
         key=lambda item: (item[1]["repository_id"], item[0]),
     ):
         repository_id = metadata["repository_id"]
@@ -35,25 +50,46 @@ def build_rollout_summary(
             {
                 "repository_id": repository_id,
                 "evidence_file": evidence_file,
+                "evidence_schema_version": metadata["schema_version"],
                 "readiness": metadata["readiness"],
                 "policy_version": metadata["policy"]["version"],
+                "policy_fingerprint": metadata["policy"].get("fingerprint"),
                 "policy_status": metadata["policy"]["status"],
                 "rules_checked": metadata["policy"]["rules_checked"],
                 "policy_violations": metadata["policy"]["violations"],
                 "git_is_repo": metadata["git"]["is_repo"],
                 "git_branch": metadata["git"]["branch"],
+                "git_commit": metadata["git"].get("commit"),
                 "git_dirty_files": metadata["git"]["dirty_files"],
                 "git_clean": metadata["git"]["clean"],
                 "attention_findings": metadata["attention_findings"],
             }
         )
 
+    fingerprints = [
+        repository["policy_fingerprint"]
+        for repository in repositories
+        if repository["policy_fingerprint"] is not None
+    ]
+    commits = [
+        repository["git_commit"]
+        for repository in repositories
+        if repository["git_commit"] is not None
+    ]
+    shared_policy_verified = (
+        len(repositories) > 1
+        and len(fingerprints) == len(repositories)
+        and len(set(fingerprints)) == 1
+    )
+
     report: dict[str, Any] = {
         "schema_version": SUMMARY_SCHEMA_VERSION,
         "scope": {
             "readiness": "bundle-reported",
             "freshness_verified": False,
-            "shared_policy_verified": False,
+            "shared_policy_verified": shared_policy_verified,
+            "policy_fingerprint_coverage": len(fingerprints),
+            "git_commit_coverage": len(commits),
             "policy_versions": sorted(
                 {repository["policy_version"] for repository in repositories}
             ),
@@ -98,6 +134,7 @@ def build_rollout_summary(
 
 def format_rollout_summary(report: dict[str, Any]) -> str:
     summary = report["summary"]
+    scope = report["scope"]
     violation_label = (
         "violation"
         if summary["total_policy_violations"] == 1
@@ -111,9 +148,19 @@ def format_rollout_summary(report: dict[str, Any]) -> str:
     attention_finding_label = (
         "finding" if summary["total_attention_findings"] == 1 else "findings"
     )
+    if scope["shared_policy_verified"]:
+        scope_text = (
+            "Scope: bundle-reported; shared policy verified by fingerprints; "
+            "freshness is not verified"
+        )
+        policy_identity_status = "shared policy verified"
+    else:
+        scope_text = "Scope: bundle-reported; freshness and shared policy are not verified"
+        policy_identity_status = "shared policy not verified"
+
     lines = [
         "Repo Scout Pilot Rollout",
-        "Scope: bundle-reported; freshness and shared policy are not verified",
+        scope_text,
         f"Repositories: {summary['input_reports']}",
         f"Bundle-reported ready for CI: {summary['reported_ready_for_ci']}",
         (
@@ -126,8 +173,16 @@ def format_rollout_summary(report: dict[str, Any]) -> str:
             f"{summary['total_policy_violations']} {violation_label}"
         ),
         (
+            f"Policy identity: {scope['policy_fingerprint_coverage']}/"
+            f"{summary['input_reports']} fingerprints; {policy_identity_status}"
+        ),
+        (
             f"Git: {summary['clean_worktrees']} clean worktrees / "
             f"{summary['input_reports'] - summary['clean_worktrees']} not clean"
+        ),
+        (
+            f"Git identity: {scope['git_commit_coverage']}/"
+            f"{summary['input_reports']} commits recorded; freshness not verified"
         ),
         (
             f"Attention: {summary['repositories_with_attention']} "
@@ -155,6 +210,13 @@ def format_rollout_summary(report: dict[str, Any]) -> str:
             f"{git_status}; {repository['attention_findings']} attention "
             f"{repository_attention_label}"
         )
+        lines.append(
+            "    policy fingerprint: "
+            f"{repository['policy_fingerprint'] or 'unavailable'}"
+        )
+        lines.append(
+            f"    Git commit: {repository['git_commit'] or 'unavailable'}"
+        )
     return "\n".join(lines)
 
 
@@ -178,7 +240,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--details",
         action="store_true",
-        help="Include repository IDs, branches, and evidence paths in output.",
+        help=(
+            "Include repository IDs, branches, commits, policy fingerprints, "
+            "and evidence paths in output."
+        ),
     )
     return parser
 

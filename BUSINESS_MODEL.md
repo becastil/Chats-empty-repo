@@ -57,6 +57,10 @@ Rollout bundles carry a stable, non-sensitive metadata contract so a pilot lead
 can summarize bundle-reported readiness, policy failures, violations, worktree
 state, and attention across repositories without sending source code to Repo
 Scout. Counts are private by default; repository details require explicit opt-in.
+Normalized policy fingerprints let the operator verify that complete schema-2
+bundles used identical enforced rules, while Git commit IDs identify the exact
+revisions scanned. Neither field proves evidence age or authenticity, so paid
+rollout support still includes controlled evidence handling and CI operations.
 
 The first shared-policy release supports required files, repository file and
 byte limits, and clean Git enforcement through a strict TOML file that can be
