@@ -57,6 +57,9 @@ PYTHONPATH=src python3 -m repo_scout --format markdown --compare before.json aft
 Comparison JSON reports numeric deltas, added and removed document entries,
 Git changes, and attention-status changes.
 
+Current snapshots retain up to 500 sorted paths, and comparison reports show up
+to 50 added or removed paths with a truncation marker when needed.
+
 Snapshots include `schema_version: 1`. Older snapshots without that field are
 read as version 1 for comparison compatibility; unsupported future versions
 are rejected with a clear error.

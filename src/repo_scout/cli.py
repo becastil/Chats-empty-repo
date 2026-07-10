@@ -311,6 +311,7 @@ def format_comparison(comparison: dict[str, Any]) -> str:
     _append_text_counter_change(lines, "Extensions", files["by_extension"])
     if "by_language" in files:
         _append_text_counter_change(lines, "Languages", files["by_language"])
+    _append_text_path_change(lines, files.get("paths"))
 
     docs = comparison["docs"]
     doc_lines = []
@@ -391,6 +392,7 @@ def format_comparison_markdown(comparison: dict[str, Any]) -> str:
     )
     if "by_language" in files:
         _append_markdown_counter_change(lines, "Language Changes", files["by_language"])
+    _append_markdown_path_change(lines, files.get("paths"))
 
     docs = comparison["docs"]
     doc_rows = []
@@ -442,6 +444,22 @@ def _append_text_counter_change(
     )
 
 
+def _append_text_path_change(
+    lines: list[str], change: dict[str, Any] | None
+) -> None:
+    if not change or not (change["added"] or change["removed"]):
+        return
+    lines.append("Paths:")
+    if change["added"]:
+        lines.append(f"  Added ({change['added_count']}): {', '.join(change['added'])}")
+    if change["removed"]:
+        lines.append(
+            f"  Removed ({change['removed_count']}): {', '.join(change['removed'])}"
+        )
+    if change["truncated"]:
+        lines.append(f"  Details capped at {change['limit']} paths.")
+
+
 def _append_markdown_counter_change(
     lines: list[str], title: str, change: dict[str, Any]
 ) -> None:
@@ -462,6 +480,22 @@ def _append_markdown_counter_change(
         f"| {_markdown_code(name)} | {before} | {after} | {_signed(delta)} |"
         for name, before, after, delta in sorted(rows)
     )
+
+
+def _append_markdown_path_change(
+    lines: list[str], change: dict[str, Any] | None
+) -> None:
+    if not change or not (change["added"] or change["removed"]):
+        return
+    lines.extend(["", "## Changed Paths", ""])
+    if change["added"]:
+        paths = ", ".join(_markdown_code(path) for path in change["added"])
+        lines.append(f"- Added ({change['added_count']}): {paths}")
+    if change["removed"]:
+        paths = ", ".join(_markdown_code(path) for path in change["removed"])
+        lines.append(f"- Removed ({change['removed_count']}): {paths}")
+    if change["truncated"]:
+        lines.append(f"- Details capped at {change['limit']} paths.")
 
 
 def _format_numeric_change(change: dict[str, int]) -> str:

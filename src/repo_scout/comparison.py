@@ -7,6 +7,9 @@ from typing import Any, Mapping
 from .scanner import SNAPSHOT_SCHEMA_VERSION
 
 
+MAX_REPORTED_PATHS = 50
+
+
 class SnapshotReadError(ValueError):
     """Raised when a saved snapshot cannot be read or validated."""
 
@@ -92,6 +95,9 @@ def compare_snapshots(
             _counter(after_files.get("by_language", {})),
         )
 
+    if "paths" in before_files and "paths" in after_files:
+        result["files"]["paths"] = _path_change(before_files, after_files)
+
     result["status"] = "changed" if _has_changes(result) else "unchanged"
     return result
 
@@ -169,6 +175,32 @@ def _counter(value: Any) -> dict[str, int]:
     return result
 
 
+def _path_change(
+    before_files: Mapping[str, Any], after_files: Mapping[str, Any]
+) -> dict[str, Any]:
+    before_paths = _strings(before_files.get("paths", []))
+    after_paths = _strings(after_files.get("paths", []))
+    added_all = sorted(set(after_paths) - set(before_paths))
+    removed_all = sorted(set(before_paths) - set(after_paths))
+    source_truncated = bool(
+        before_files.get("paths_truncated", False)
+        or after_files.get("paths_truncated", False)
+    )
+    detail_truncated = (
+        len(added_all) > MAX_REPORTED_PATHS
+        or len(removed_all) > MAX_REPORTED_PATHS
+    )
+    return {
+        "added": added_all[:MAX_REPORTED_PATHS],
+        "removed": removed_all[:MAX_REPORTED_PATHS],
+        "added_count": len(added_all),
+        "removed_count": len(removed_all),
+        "limit": MAX_REPORTED_PATHS,
+        "truncated": source_truncated or detail_truncated,
+        "complete": not (source_truncated or detail_truncated),
+    }
+
+
 def _strings(value: Any) -> list[str]:
     if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
         raise SnapshotReadError("snapshot document sections must contain strings")
@@ -219,6 +251,8 @@ def _has_changes(comparison: Mapping[str, Any]) -> bool:
     if _counter_has_changes(files["by_extension"]):
         return True
     if "by_language" in files and _counter_has_changes(files["by_language"]):
+        return True
+    if files.get("paths", {}).get("added") or files.get("paths", {}).get("removed"):
         return True
 
     docs = comparison["docs"]

@@ -27,6 +27,13 @@ class ScanProjectTests(unittest.TestCase):
 
             self.assertFalse(snapshot["git"]["is_repo"])
             self.assertEqual(snapshot["schema_version"], 1)
+            self.assertEqual(snapshot["files"]["paths"], [
+                "LICENSE",
+                "README.md",
+                "pyproject.toml",
+                "src/app.py",
+            ])
+            self.assertFalse(snapshot["files"]["paths_truncated"])
             self.assertEqual(snapshot["files"]["total"], 4)
             self.assertEqual(snapshot["files"]["by_extension"][".md"], 1)
             self.assertEqual(snapshot["files"]["by_extension"][".py"], 1)

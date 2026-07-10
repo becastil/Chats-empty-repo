@@ -185,6 +185,58 @@ class ComparisonCliTests(unittest.TestCase):
                 "unchanged",
             )
 
+    def test_cli_reports_bounded_changed_paths(self) -> None:
+        with TemporaryDirectory() as tmp:
+            before_path = Path(tmp) / "before.json"
+            after_path = Path(tmp) / "after.json"
+            before_data = snapshot(
+                total=2,
+                total_bytes=20,
+                extensions={".md": 1, ".py": 1},
+                present=["README.md"],
+                missing=[],
+                branch="main",
+                dirty_files=0,
+                attention_status="clear",
+                attention_items=0,
+            )
+            after_data = dict(before_data)
+            before_data["files"] = {**before_data["files"], "paths": ["README.md", "old.py"]}
+            after_data["files"] = {**after_data["files"], "paths": ["README.md", "new.py"]}
+            before_path.write_text(json.dumps(before_data), encoding="utf-8")
+            after_path.write_text(json.dumps(after_data), encoding="utf-8")
+
+            from contextlib import redirect_stdout
+            import io
+
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                exit_code = main(
+                    ["--format", "json", "--compare", str(before_path), str(after_path)]
+                )
+
+            comparison = json.loads(stdout.getvalue())
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(comparison["files"]["paths"]["added"], ["new.py"])
+            self.assertEqual(comparison["files"]["paths"]["removed"], ["old.py"])
+            self.assertTrue(comparison["files"]["paths"]["complete"])
+
+            markdown_stdout = io.StringIO()
+            with redirect_stdout(markdown_stdout):
+                markdown_exit_code = main(
+                    [
+                        "--format",
+                        "markdown",
+                        "--compare",
+                        str(before_path),
+                        str(after_path),
+                    ]
+                )
+
+            self.assertEqual(markdown_exit_code, 0)
+            self.assertIn("## Changed Paths", markdown_stdout.getvalue())
+            self.assertIn("`new.py`", markdown_stdout.getvalue())
+
     def test_cli_rejects_unsupported_future_schema(self) -> None:
         with TemporaryDirectory() as tmp:
             before_path = Path(tmp) / "before.json"

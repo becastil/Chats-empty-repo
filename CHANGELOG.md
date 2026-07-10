@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.9 - 2026-07-10
+## 0.1.10 - 2026-07-10
 
 - Added a responsive Repo Scout web companion with sample Text and JSON snapshot views.
 - Added production build, lint, and rendered HTML coverage for the hosted surface.
@@ -14,6 +14,7 @@
 - Added `--output` for direct report files and `--force` overwrite protection.
 - Added `schema_version: 1` metadata to snapshots and schema drift reporting.
 - Added explicit rejection of unsupported future snapshot schema versions.
+- Added bounded added and removed path details to snapshot comparisons.
 
 ## 0.1.3 - 2026-07-09
 

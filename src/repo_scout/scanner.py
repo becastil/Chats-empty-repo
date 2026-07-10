@@ -17,6 +17,7 @@ EXPECTED_DOCS = (
 
 DEFAULT_LARGE_FILE_BYTES = 100_000
 SNAPSHOT_SCHEMA_VERSION = 1
+MAX_SNAPSHOT_PATHS = 500
 
 EXCLUDED_DIRS = {
     ".git",
@@ -118,6 +119,8 @@ def scan_project(
         "total": len(entries),
         "total_bytes": sum(entry["bytes"] for entry in entries),
         "by_extension": dict(sorted(by_extension.items())),
+        "paths": [entry["path"] for entry in entries[:MAX_SNAPSHOT_PATHS]],
+        "paths_truncated": len(entries) > MAX_SNAPSHOT_PATHS,
         "largest": sorted(
             entries, key=lambda entry: (-entry["bytes"], entry["path"])
         )[:5],

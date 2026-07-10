@@ -51,3 +51,7 @@ Every new snapshot declares schema version 1. Comparison treats missing schema m
 ## 2026-07-10: Reject Unsupported Snapshot Versions
 
 Comparison accepts the current schema and metadata-free legacy snapshots, but rejects any other explicit version before reading its fields. This prevents a future format from being misreported as a valid comparison.
+
+## 2026-07-10: Bound Path-Level Comparison Details
+
+Snapshots retain the first 500 sorted paths and reports show at most 50 added or removed paths. Counts and truncation metadata make the result honest for large repositories without turning a comparison report into a full file manifest.

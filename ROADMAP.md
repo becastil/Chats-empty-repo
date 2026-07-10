@@ -2,4 +2,4 @@
 
 ## Near Term
 
-- Add bounded changed-file details to snapshot comparisons.
+- Add a configurable comparison path-detail limit.
