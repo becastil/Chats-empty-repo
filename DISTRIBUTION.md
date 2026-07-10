@@ -10,7 +10,7 @@ product, not a release afterthought.
    release, or a referral.
 2. The developer downloads the versioned `.pyz` and gets a local snapshot
    without cloning the repository or modifying a Python environment.
-3. A team installs the provenance-attested wheel when it needs all five
+3. A team installs the provenance-attested wheel when it needs all six
    commands or adopts the verified GitHub Actions policy gate.
 4. Cross-repository rollout evidence exposes the need for shared policy
    operations and leads to the $299 founding-team pilot.
@@ -76,6 +76,30 @@ Scout's own verified CI bootstrap, and all channels may include maintainer
 checks or retries. Treat the report as directional distribution evidence, not
 an install, activation, or revenue count. Only `pilot-paid` and later paid
 stages count toward the initial $897 goal.
+
+## Weekly Growth Review
+
+Generate both machine-readable evidence streams, then review them together:
+
+```bash
+repo-scout-distribution --format json releases.json \
+  --baseline distribution-baseline.json > distribution-current.json
+repo-scout-pilot --format json --as-of "$(date -u +%F)" \
+  pilot-issues.json > pilot-current.json
+repo-scout-growth distribution-current.json pilot-current.json
+```
+
+`repo-scout-growth` accepts schema-2 distribution and schema-5 pilot reports.
+It shows signed primary, portable, and wheel movement beside attributed pilot
+requests, qualification, offers, booked revenue, and source totals. Its
+deterministic bottleneck names one next action for missing measurement,
+acquisition, qualification, offer, payment, pilot-target progress, retention,
+or validated commercial evidence.
+
+The review surfaces warnings from both inputs and source-attribution gaps. It
+does not divide pilot requests by artifact requests, join a download to a lead,
+or infer that reach caused revenue. Save the current distribution report as the
+next baseline only after reviewing any release-evidence warnings.
 
 ## Channel Constraints
 

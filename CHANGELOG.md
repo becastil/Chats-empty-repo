@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.7 - 2026-07-10
+
+- Added `repo-scout-growth` for dependency-free weekly review of distribution and paid-pilot evidence.
+- Joined schema-2 signed release-request movement to schema-5 source, qualification, offer, payment, revenue, and conversion totals.
+- Added deterministic bottlenecks and one commercial next action for measurement, acquisition, qualification, offer, payment, pilot-target, retention, and validated states.
+- Surfaced release-contract, funnel-quality, missing-source, and ambiguous-source warnings in the combined review.
+- Rejected unsupported schemas, inconsistent source totals, impossible cumulative stages, and mismatched revenue evidence.
+- Explicitly prohibited download-to-lead conversion rates and per-source assignment from non-unique GitHub artifact requests.
+- Added public-data dogfooding, seven focused growth-review tests, installed-command release smoke coverage, and a documented weekly operator workflow.
+
 ## 0.3.6 - 2026-07-10
 
 - Added `--baseline REPORT` for signed weekly release-request comparisons.

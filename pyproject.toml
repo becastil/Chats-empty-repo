@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "repo-scout"
-version = "0.3.6"
+version = "0.3.7"
 description = "Local repository snapshots and policy enforcement for developer teams."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -27,6 +27,7 @@ classifiers = [
 [project.scripts]
 repo-scout = "repo_scout.cli:main"
 repo-scout-distribution = "repo_scout.distribution:main"
+repo-scout-growth = "repo_scout.growth:main"
 repo-scout-pilot = "repo_scout.pilot_funnel:main"
 repo-scout-policy = "repo_scout.policy_templates:main"
 repo-scout-rollout = "repo_scout.rollout_summary:main"

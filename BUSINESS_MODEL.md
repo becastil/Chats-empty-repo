@@ -156,3 +156,12 @@ movement and flag evidence resets or removals. These deltas make distribution
 experiments comparable over time, but they retain the same CI and maintainer
 confounders and therefore remain directional until a buyer self-reports a source
 or enters the paid funnel.
+
+The dependency-free `repo-scout-growth` review places those signed deltas beside
+schema-5 pilot source, qualification, offer, payment, and revenue totals. It
+names one current commercial bottleneck and next action so weekly roadmap work
+responds to the paid funnel instead of optimizing raw download counts. Input
+warnings and missing or ambiguous source answers remain visible. Because release
+requests are neither unique people nor attributable sessions, the review never
+computes a download-to-lead conversion rate or assigns request movement to a
+discovery source.

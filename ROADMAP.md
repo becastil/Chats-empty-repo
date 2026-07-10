@@ -7,7 +7,7 @@
 
 ## Near Term
 
-- Review weekly signed release-request deltas alongside the pilot funnel, accounting for known CI and maintainer traffic.
+- Run one source-identifiable acquisition experiment from the growth review's current bottleneck.
 - Collect the first three public pilot requests, work the prioritized sales queue, and compare purchase readiness by source.
 - Add a private pilot contact path after public intake validates demand.
 

@@ -31,17 +31,17 @@ not require a checkout, package installation, administrator access, or an API
 key:
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.6/repo-scout-0.3.6.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.7/repo-scout-0.3.7.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 ```
 
 Repo Scout requires Python 3.11 or newer. The portable file contains the free
 primary CLI. Install the wheel when you also
-need the `repo-scout-distribution`, `repo-scout-policy`,
+need the `repo-scout-distribution`, `repo-scout-growth`, `repo-scout-policy`,
 `repo-scout-rollout`, or `repo-scout-pilot` commands:
 
 ```bash
-python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.6/repo_scout-0.3.6-py3-none-any.whl
+python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.7/repo_scout-0.3.7-py3-none-any.whl
 repo-scout --languages .
 ```
 
@@ -275,6 +275,23 @@ curl -fsSL 'https://api.github.com/repos/becastil/Chats-empty-repo/releases?per_
 repo-scout-distribution --format json releases.json > distribution-baseline.json
 repo-scout-distribution releases.json --baseline distribution-baseline.json
 ```
+
+Join a baseline-aware distribution report to the current pilot funnel for one
+honest weekly commercial review:
+
+```bash
+repo-scout-distribution --format json releases.json \
+  --baseline distribution-baseline.json > distribution-current.json
+repo-scout-pilot --format json --as-of "$(date -u +%F)" \
+  pilot-issues.json > pilot-current.json
+repo-scout-growth distribution-current.json pilot-current.json
+```
+
+The growth review reports signed reach movement, attributed pilot progress,
+booked revenue, evidence warnings, and one current bottleneck from acquisition
+through retention. It never calculates a download-to-lead conversion rate:
+GitHub artifact requests are not unique people and cannot be assigned to a
+self-reported discovery source.
 
 Run the tests:
 
