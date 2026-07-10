@@ -16,6 +16,7 @@ from .scanner import (
 
 
 OUTPUT_ERROR_EXIT_CODE = 4
+ATTENTION_EXIT_CODE = 5
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -44,6 +45,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--force",
         action="store_true",
         help="Allow --output to replace an existing file.",
+    )
+    parser.add_argument(
+        "--fail-on-attention",
+        action="store_true",
+        help="Exit 5 after reporting when attention findings are present.",
     )
     parser.add_argument(
         "--format",
@@ -92,6 +98,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         print("repo-scout: --force requires --output", file=sys.stderr)
         return 2
 
+    if args.compare and args.fail_on_attention:
+        print(
+            "repo-scout: --fail-on-attention cannot be used with --compare",
+            file=sys.stderr,
+        )
+        return 2
+
     if args.compare:
         try:
             comparison = compare_snapshot_files(*args.compare)
@@ -129,7 +142,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     else:
         report = format_snapshot(snapshot)
 
-    return _emit_report(report, args.output, args.force)
+    output_exit_code = _emit_report(report, args.output, args.force)
+    if output_exit_code != 0:
+        return output_exit_code
+    if args.fail_on_attention and snapshot["attention"]["items"]:
+        return ATTENTION_EXIT_CODE
+    return 0
 
 
 def _emit_report(report: str, output: str | None, force: bool) -> int:

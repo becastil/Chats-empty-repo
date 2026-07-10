@@ -55,3 +55,11 @@ Comparison accepts the current schema and metadata-free legacy snapshots, but re
 ## 2026-07-10: Bound Path-Level Comparison Details
 
 Snapshots retain the first 500 sorted paths and reports show at most 50 added or removed paths. Counts and truncation metadata make the result honest for large repositories without turning a comparison report into a full file manifest.
+
+## 2026-07-10: Free Core, Paid Team Policies
+
+The local scanner, reports, comparisons, and basic CI gate remain free to maximize adoption. Revenue will come from a $299 founding-team pilot centered on shared policies, CI rollout support, and one custom policy pack. Billing and license enforcement wait until three teams have paid for the pilot.
+
+## 2026-07-10: Emit Reports Before Failing CI
+
+`--fail-on-attention` always renders or writes the requested report before returning exit code 5. This preserves the evidence needed to fix a failed CI job while giving automation a stable failure signal.

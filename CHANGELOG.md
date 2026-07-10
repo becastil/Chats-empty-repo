@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.10 - 2026-07-10
+## 0.2.0 - 2026-07-10
 
 - Added a responsive Repo Scout web companion with sample Text and JSON snapshot views.
 - Added production build, lint, and rendered HTML coverage for the hosted surface.
@@ -15,6 +15,8 @@
 - Added `schema_version: 1` metadata to snapshots and schema drift reporting.
 - Added explicit rejection of unsupported future snapshot schema versions.
 - Added bounded added and removed path details to snapshot comparisons.
+- Added `--fail-on-attention` with exit code 5 for CI enforcement.
+- Added the founding-team pilot business model and revenue milestones.
 
 ## 0.1.3 - 2026-07-09
 

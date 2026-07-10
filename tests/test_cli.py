@@ -100,6 +100,52 @@ class CliTests(unittest.TestCase):
             self.assertIn("Attention:", stdout.getvalue())
             self.assertIn("README.md is", stdout.getvalue())
 
+    def test_cli_can_fail_on_attention_for_ci(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for document in (
+                "README.md",
+                "PROJECT_STATE.md",
+                "ROADMAP.md",
+                "CHANGELOG.md",
+                "DECISIONS.md",
+            ):
+                (root / document).write_text("ok\n", encoding="utf-8")
+
+            clear_stdout = io.StringIO()
+            with redirect_stdout(clear_stdout):
+                clear_exit_code = main(["--fail-on-attention", str(root)])
+
+            self.assertEqual(clear_exit_code, 0)
+            self.assertIn("Attention: none", clear_stdout.getvalue())
+
+            (root / "ROADMAP.md").unlink()
+            attention_stdout = io.StringIO()
+            with redirect_stdout(attention_stdout):
+                attention_exit_code = main(["--fail-on-attention", str(root)])
+
+            self.assertEqual(attention_exit_code, 5)
+            self.assertIn("Missing project documents: ROADMAP.md", attention_stdout.getvalue())
+
+            output = root / "ci-report.json"
+            with redirect_stderr(io.StringIO()):
+                output_exit_code = main(
+                    [
+                        "--format",
+                        "json",
+                        "--output",
+                        str(output),
+                        "--fail-on-attention",
+                        str(root),
+                    ]
+                )
+
+            self.assertEqual(output_exit_code, 5)
+            self.assertEqual(
+                json.loads(output.read_text(encoding="utf-8"))["attention"]["status"],
+                "needs-attention",
+            )
+
     def test_cli_writes_output_and_requires_force_to_replace(self) -> None:
         with TemporaryDirectory() as tmp:
             root = Path(tmp)

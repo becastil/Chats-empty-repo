@@ -6,6 +6,8 @@
 
 The repository also includes a small hosted web companion that explains the CLI and lets visitors switch between sample text and JSON snapshots.
 
+Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
+
 ## Implemented
 
 - Package skeleton with an installable `repo-scout` console command.
@@ -21,6 +23,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 - Versioned snapshot metadata with backward-compatible comparison defaults.
 - Explicit rejection of unsupported future snapshot schema versions.
 - Bounded changed-path details in snapshot comparisons.
+- CI gating with exit code 5 when attention findings are present.
+- A $299 founding-team pilot offer with explicit revenue validation milestones.
 - Unit tests covering scanner behavior and JSON CLI output.
 - Responsive Repo Scout web companion with a server-rendered snapshot lab and accessible format toggle.
 - Sites hosting metadata and a Cloudflare Workers-compatible production build.
@@ -34,4 +38,4 @@ python3 -m unittest discover -s tests
 
 ## Next Small Task
 
-Add a configurable comparison path-detail limit.
+Add version-controlled TOML policy files for the paid Team pilot.

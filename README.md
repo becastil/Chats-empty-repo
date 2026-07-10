@@ -100,6 +100,23 @@ PYTHONPATH=src python3 -m repo_scout --format markdown --large-file-bytes 250000
 
 The default threshold is 100,000 bytes.
 
+Fail CI after still emitting the report when attention is required:
+
+```bash
+PYTHONPATH=src python3 -m repo_scout --format markdown --fail-on-attention .
+```
+
+Exit code 5 means the scan completed but attention findings were present.
+
+## Team Pilot
+
+Repo Scout's free core stays local and dependency-free. The $299 founding-team
+pilot adds shared repository policies, CI rollout help, and one custom policy
+pack for up to 10 repositories over 90 days. See [BUSINESS_MODEL.md](BUSINESS_MODEL.md)
+for the offer and validation milestones.
+
+[Request a founding-team pilot](https://github.com/becastil/Chats-empty-repo/issues/new?title=Repo%20Scout%20founding-team%20pilot)
+
 Install it locally in editable mode:
 
 ```bash
