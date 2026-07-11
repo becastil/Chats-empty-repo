@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from "./site-config";
+import { serializeStructuredData } from "./structured-data";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -54,6 +55,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializeStructuredData() }}
+        />
+      </head>
       <body>{children}</body>
     </html>
   );

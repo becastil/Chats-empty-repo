@@ -7,7 +7,7 @@
 
 ## Near Term
 
-- Send the first source-preserving direct outreach route, share the referral action, and monitor search-attributed intake after three public requests or on 2026-07-24.
+- Send the first source-preserving direct outreach route and share the referral action; do not add more search metadata before acquisition evidence arrives.
 - Collect the first three public pilot requests, work the prioritized sales queue, and compare readiness and purchase criteria by source.
 - Add a private pilot contact path after public intake validates demand.
 

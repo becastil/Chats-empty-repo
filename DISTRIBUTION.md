@@ -94,6 +94,13 @@ indexing, search visits, activation, pilot demand, or revenue. Search becomes
 commercial evidence only when a buyer self-reports it in intake and advances
 through the labeled funnel.
 
+The canonical page also publishes one JSON-LD graph describing the free CLI as
+a `SoftwareApplication` with its exact versioned download and $0 offer, and the
+founding-team pilot as a separate `Service` with the visible $299, 90-day,
+up-to-10-project scope. The graph contains no reviews, ratings, hidden urgency,
+or campaign URLs. Machine-readable offers can help crawlers understand the
+page, but they do not guarantee a rich result or count as acquisition evidence.
+
 ## Release Contract
 
 Every tagged release must publish and attest exactly these artifacts:

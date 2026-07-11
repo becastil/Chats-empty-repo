@@ -82,6 +82,13 @@ behavior for people while pointing search engines at the same production page.
 This is acquisition infrastructure, not evidence of traffic or demand; only
 self-reported intake and paid-stage labels affect commercial validation.
 
+Machine-readable offer data keeps the free and paid layers distinct. The
+current zipapp is represented as a $0 `SoftwareApplication`; the founding-team
+pilot is a separate $299 `Service` with the same duration, repository limit,
+audience, and local-code boundary shown to visitors. No review or rating data
+is published because none has been earned. Search presentation remains outside
+the revenue ledger until a buyer submits intake and reaches a paid stage.
+
 Rollout bundles carry a stable, non-sensitive metadata contract so a pilot lead
 can summarize bundle-reported readiness, policy failures, violations, worktree
 state, and attention across repositories without sending source code to Repo

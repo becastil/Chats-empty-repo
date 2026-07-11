@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.15 - 2026-07-11
+
+- Added JSON-LD that represents the current free CLI as a `SoftwareApplication` with an exact $0 versioned download.
+- Represented the founding-team pilot separately as a $299 `Service` with its visible 90-day and up-to-10-project scope.
+- Centralized the public release version and portable URL across visible onboarding and machine-readable metadata.
+- Excluded unearned ratings, reviews, hidden urgency, and campaign URLs from structured offers.
+- Added parse-level contracts for schema types, versions, prices, currencies, availability, URLs, and pilot claims.
+- Clarified that structured data can aid search understanding but does not guarantee traffic, demand, rich results, or revenue.
+
 ## 0.3.14 - 2026-07-10
 
 - Added one production canonical URL for organic and campaign-query versions of the hosted offer.

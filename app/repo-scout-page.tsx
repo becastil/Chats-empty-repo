@@ -1,11 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { PORTABLE_RELEASE_URL, RELEASE_VERSION } from "./site-config";
 
-const releaseVersion = "0.3.14";
-const portableUrl =
-  `https://github.com/becastil/Chats-empty-repo/releases/download/v${releaseVersion}/repo-scout-${releaseVersion}.pyz`;
-const quickStart = `curl -fL ${portableUrl} -o /tmp/repo-scout.pyz
+const quickStart = `curl -fL ${PORTABLE_RELEASE_URL} -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .`;
 
 const snapshotText = `Repo Scout Snapshot
@@ -315,7 +313,7 @@ export default function RepoScoutPage({
             <code>{quickStart}</code>
             <div className="install-actions">
               <button type="button" onClick={copyCommand}>{copied ? "Copied" : "Copy setup"}</button>
-              <a href={portableUrl}>Download v{releaseVersion}</a>
+              <a href={PORTABLE_RELEASE_URL}>Download v{RELEASE_VERSION}</a>
             </div>
           </div>
         </section>

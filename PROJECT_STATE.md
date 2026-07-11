@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 41 of 1,000, with 959 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 42 of 1,000, with 958 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -102,15 +102,18 @@ The delivery goal is 1,000 meaningful commits. This update is commit 41 of 1,000
 - Canonical search metadata that collapses every campaign-query variant onto one production page.
 - Deterministic crawler policy and one-page sitemap routes with no campaign URLs.
 - A recorded zero-request acquisition baseline that keeps crawler access and release activity separate from demand.
+- Accurate JSON-LD separating the current free CLI download from the $299 founding-team service.
+- Shared release identity across visible onboarding and machine-readable download metadata.
+- Explicit omission of unearned reviews, ratings, hidden urgency, and campaign URLs from structured offers.
 
 ## How To Run
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.14/repo-scout-0.3.14.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.15/repo-scout-0.3.15.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 python3 -m unittest discover -s tests
 ```
 
 ## Next Small Task
 
-Send the source-preserving direct-outreach route and referral action to qualified engineering leads, then monitor source, readiness, criterion, and revenue evidence after three public requests or on 2026-07-24.
+Send the source-preserving direct-outreach route and referral action to qualified engineering leads. Do not add more search metadata before source, readiness, criterion, or revenue evidence arrives.

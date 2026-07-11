@@ -209,3 +209,14 @@ validation. This reduces duplicate search identities without removing the
 source-prefilled experience for visitors. Crawler access, indexing, and release
 requests remain acquisition signals at most; only self-reported intake and
 paid-stage labels count toward revenue validation.
+
+## 2026-07-11: Describe Free Software And Paid Service Separately
+
+The canonical page now publishes one JSON-LD graph with two truthful entities.
+The current portable CLI is a `SoftwareApplication` with its exact versioned
+download and a $0 offer; the founding-team pilot is a separate `Service` with
+the visible $299 price, 90-day duration, up-to-10-project scope, target team,
+and local-code boundary. The visible page and structured graph share one release
+constant. No reviews, ratings, campaign URLs, or urgency claims are included.
+This follows the user-visible offer instead of manufacturing rich-result data,
+and it creates no acquisition or revenue evidence on its own.

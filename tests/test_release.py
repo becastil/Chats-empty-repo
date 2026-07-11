@@ -33,12 +33,13 @@ ZIPAPP_SPEC.loader.exec_module(build_zipapp)
 
 class ReleaseManifestTests(unittest.TestCase):
     def test_current_project_versions_match(self) -> None:
-        self.assertEqual(prepare_release.load_project_version(ROOT), "0.3.14")
+        self.assertEqual(prepare_release.load_project_version(ROOT), "0.3.15")
 
     def test_public_distribution_metadata_and_quick_start_match_release(self) -> None:
         with (ROOT / "pyproject.toml").open("rb") as project_file:
             project = tomllib.load(project_file)["project"]
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        site_config = (ROOT / "app/site-config.ts").read_text(encoding="utf-8")
 
         self.assertEqual(
             project["description"],
@@ -53,6 +54,13 @@ class ReleaseManifestTests(unittest.TestCase):
             "https://github.com/becastil/Chats-empty-repo",
         )
         version = project["version"]
+        site_version = re.search(
+            r'RELEASE_VERSION\s*=\s*"([^"]+)"',
+            site_config,
+        )
+        self.assertIsNotNone(site_version)
+        assert site_version is not None
+        self.assertEqual(site_version.group(1), version)
         self.assertIn(f"repo-scout-{version}.pyz", readme)
         self.assertIn(f"repo_scout-{version}-py3-none-any.whl", readme)
         self.assertIn(
@@ -151,7 +159,7 @@ class ZipappDistributionTests(unittest.TestCase):
 
             artifact = build_zipapp.build_zipapp(ROOT, dist)
 
-            self.assertEqual(artifact.name, "repo-scout-0.3.14.pyz")
+            self.assertEqual(artifact.name, "repo-scout-0.3.15.pyz")
             self.assertTrue(artifact.is_file())
             self.assertTrue(artifact.stat().st_mode & 0o100)
             with zipfile.ZipFile(artifact) as archive:

@@ -52,12 +52,12 @@ test("server-renders the Repo Scout companion page", async () => {
   assert.match(html, /Copy no-install setup/i);
   assert.match(html, /One file\. Python 3\.11\+\. No API key\./i);
   assert.match(html, /curl -fL/i);
-  assert.match(html, /repo-scout-0\.3\.14\.pyz/i);
+  assert.match(html, /repo-scout-0\.3\.15\.pyz/i);
   assert.match(html, /python3 \/tmp\/repo-scout\.pyz --languages \./i);
   assert.match(html, /Download v/i);
   assert.match(
     html,
-    /releases\/download\/v0\.3\.14\/repo-scout-0\.3\.14\.pyz/i,
+    /releases\/download\/v0\.3\.15\/repo-scout-0\.3\.15\.pyz/i,
   );
   assert.doesNotMatch(html, /PYTHONPATH=src python3 -m repo_scout/i);
   assert.match(html, /Snapshot lab/i);
@@ -104,6 +104,57 @@ test("server-renders the Repo Scout companion page", async () => {
   );
   assert.equal((html.match(/<h1\b/gi) ?? []).length, 1);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
+});
+
+test("publishes accurate free CLI and paid pilot structured offers", async () => {
+  const response = await render();
+  const html = await response.text();
+  const matches = [
+    ...html.matchAll(
+      /<script type="application\/ld\+json">([^<]+)<\/script>/gi,
+    ),
+  ];
+  assert.equal(matches.length, 1);
+
+  const document = JSON.parse(matches[0][1]);
+  assert.equal(document["@context"], "https://schema.org");
+  assert.equal(document["@graph"].length, 2);
+
+  const software = document["@graph"].find(
+    (item) => item["@type"] === "SoftwareApplication",
+  );
+  assert.equal(software.name, "Repo Scout");
+  assert.equal(software.softwareVersion, "0.3.15");
+  assert.equal(
+    software.downloadUrl,
+    "https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.15/repo-scout-0.3.15.pyz",
+  );
+  assert.deepEqual(software.offers, {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+    availability: "https://schema.org/InStock",
+    url: software.downloadUrl,
+  });
+
+  const pilot = document["@graph"].find(
+    (item) => item["@type"] === "Service",
+  );
+  assert.equal(pilot.name, "Repo Scout Founding Team Pilot");
+  assert.equal(pilot.url, "https://repo-scout.becastil.chatgpt.site/#team-pilot");
+  assert.deepEqual(pilot.offers, {
+    "@type": "Offer",
+    price: "299",
+    priceCurrency: "USD",
+    availability: "https://schema.org/LimitedAvailability",
+    url: pilot.url,
+  });
+  assert.match(pilot.description, /90-day/i);
+  assert.match(pilot.description, /up to 10/i);
+  assert.match(pilot.description, /without uploading source code/i);
+
+  const serialized = JSON.stringify(document);
+  assert.doesNotMatch(serialized, /aggregateRating|review|\?source=/i);
 });
 
 test("publishes deterministic crawler routes for the canonical site", async () => {
