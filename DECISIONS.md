@@ -188,3 +188,13 @@ website, and repeated parameters use only their first value, preventing
 arbitrary query text from reaching intake. These routes preserve the original
 discovery context while every prospect sees the same objection handling and
 price; they remain self-report aids, not analytics or causal attribution.
+
+## 2026-07-10: Enable User-Initiated Referrals Without Tracking
+
+The team-value section now offers a prewritten email for sharing Repo Scout
+with an engineering lead. The message states the $299 pilot price, up-to-10-
+project scope, and local-code boundary, then points to the referral-preserving
+hosted route. A `mailto:` link keeps composition and sending in the visitor's
+email client, so Repo Scout receives no address and does not claim a send or
+click. Only a recipient's independent intake and labeled funnel progression
+become commercial evidence.

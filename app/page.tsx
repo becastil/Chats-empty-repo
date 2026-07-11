@@ -1,4 +1,7 @@
-import { buildPilotRequestUrl } from "./campaign-source";
+import {
+  buildPilotRequestUrl,
+  buildReferralEmailUrl,
+} from "./campaign-source";
 import RepoScoutPage from "./repo-scout-page";
 
 type HomeProps = {
@@ -10,6 +13,7 @@ export default async function Home({ searchParams }: HomeProps) {
   return (
     <RepoScoutPage
       pilotRequestUrl={buildPilotRequestUrl(params.source)}
+      referralEmailUrl={buildReferralEmailUrl()}
     />
   );
 }

@@ -43,12 +43,12 @@ test("server-renders the Repo Scout companion page", async () => {
   assert.match(html, /Copy no-install setup/i);
   assert.match(html, /One file\. Python 3\.11\+\. No API key\./i);
   assert.match(html, /curl -fL/i);
-  assert.match(html, /repo-scout-0\.3\.12\.pyz/i);
+  assert.match(html, /repo-scout-0\.3\.13\.pyz/i);
   assert.match(html, /python3 \/tmp\/repo-scout\.pyz --languages \./i);
   assert.match(html, /Download v/i);
   assert.match(
     html,
-    /releases\/download\/v0\.3\.12\/repo-scout-0\.3\.12\.pyz/i,
+    /releases\/download\/v0\.3\.13\/repo-scout-0\.3\.13\.pyz/i,
   );
   assert.doesNotMatch(html, /PYTHONPATH=src python3 -m repo_scout/i);
   assert.match(html, /Snapshot lab/i);
@@ -61,6 +61,12 @@ test("server-renders the Repo Scout companion page", async () => {
   assert.match(html, /Your code stays with you\. The scanner stays free and open source\./i);
   assert.match(html, /Apply for the \$299 pilot/i);
   assert.match(html, /See the rollout proof/i);
+  assert.match(html, /Share with your engineering lead/i);
+  assert.match(
+    html,
+    /href="mailto:\?subject=Repo\+Scout%3A\+one\+repository\+standard\+across\+10\+projects&amp;body=[^"]+source%3Dreferral%23why-teams-buy"/i,
+  );
+  assert.equal(countOccurrences(html, 'href="mailto:'), 1);
   assert.match(html, /id="team-pilot"/i);
   assert.ok(html.indexOf('id="why-teams-buy"') < html.indexOf('id="team-pilot"'));
   assert.match(html, /Prove one policy across every repository\./i);

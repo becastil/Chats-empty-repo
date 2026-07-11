@@ -70,6 +70,12 @@ context through the objection page. The server maps only the closed intake
 taxonomy and defaults unknown values to website, so campaign sharing cannot
 inject arbitrary source text into the form.
 
+Visitors can open a prewritten referral email to an engineering lead from the
+team-value section. The message discloses the $299 pilot, up-to-10-project
+scope, and local-code boundary before linking through the referral campaign.
+It uses the visitor's email client and creates no lead or revenue evidence
+until a recipient independently submits intake and advances through the funnel.
+
 Rollout bundles carry a stable, non-sensitive metadata contract so a pilot lead
 can summarize bundle-reported readiness, policy failures, violations, worktree
 state, and attention across repositories without sending source code to Repo

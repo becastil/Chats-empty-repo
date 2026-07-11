@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const releaseVersion = "0.3.12";
+const releaseVersion = "0.3.13";
 const portableUrl =
   `https://github.com/becastil/Chats-empty-repo/releases/download/v${releaseVersion}/repo-scout-${releaseVersion}.pyz`;
 const quickStart = `curl -fL ${portableUrl} -o /tmp/repo-scout.pyz
@@ -80,8 +80,10 @@ const pilotBenefits = [
 
 export default function RepoScoutPage({
   pilotRequestUrl,
+  referralEmailUrl,
 }: {
   pilotRequestUrl: string;
+  referralEmailUrl: string;
 }) {
   const [format, setFormat] = useState<"text" | "json">("text");
   const [copied, setCopied] = useState(false);
@@ -244,6 +246,7 @@ export default function RepoScoutPage({
                 Apply for the $299 pilot <span aria-hidden="true">-&gt;</span>
               </a>
               <a className="moat-proof-link" href="#team-pilot">See the rollout proof</a>
+              <a className="moat-proof-link" href={referralEmailUrl}>Share with your engineering lead</a>
             </div>
           </div>
         </section>

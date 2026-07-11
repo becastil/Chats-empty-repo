@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.13 - 2026-07-10
+
+- Added a "Share with your engineering lead" action beside the hosted $299 pilot offer.
+- Prefilled a concise referral email with the disclosed price, up-to-10-project scope, and local-code boundary.
+- Linked recipients through the source-preserving referral campaign route.
+- Kept sharing user-initiated through the visitor's email client with no account, automatic send, address collection, or click tracking.
+- Added rendered contracts for the visible referral action, encoded email content, and single mail link.
+- Clarified that a referral becomes demand or revenue evidence only after independent intake and funnel progression.
+
 ## 0.3.12 - 2026-07-10
 
 - Added server-rendered campaign routes for website, GitHub, direct outreach, referral, search, social/community, and other discovery sources.

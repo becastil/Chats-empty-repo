@@ -1,5 +1,7 @@
 const PILOT_REQUEST_URL =
   "https://github.com/becastil/Chats-empty-repo/issues/new";
+const REFERRAL_OFFER_URL =
+  "https://repo-scout.becastil.chatgpt.site/?source=referral#why-teams-buy";
 
 const DISCOVERY_SOURCES = {
   github: "GitHub repository or release",
@@ -32,4 +34,17 @@ export function buildPilotRequestUrl(
     DISCOVERY_SOURCES[normalizeCampaignSource(source)],
   );
   return url.toString();
+}
+
+export function buildReferralEmailUrl(): string {
+  const query = new URLSearchParams({
+    subject: "Repo Scout: one repository standard across 10 projects",
+    body: [
+      "I found Repo Scout, a local open-source repository scanner with a $299 team pilot for applying one policy across up to 10 projects without uploading source code.",
+      "",
+      "See the team workflow:",
+      REFERRAL_OFFER_URL,
+    ].join("\n"),
+  });
+  return `mailto:?${query.toString()}`;
 }

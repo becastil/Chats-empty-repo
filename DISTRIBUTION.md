@@ -72,6 +72,12 @@ The server accepts only `github`, `website`, `outreach`, `referral`, `search`,
 considered. An absent or unsupported first value uses the website default
 instead of reflecting arbitrary text into intake.
 
+The hosted offer also includes a user-initiated email action for sharing the
+team workflow with an engineering lead. Its prewritten message names the $299
+scope and local-code boundary, then links through the referral route above. It
+opens the visitor's email client and sends nothing automatically; Repo Scout
+does not receive an address, click event, or proof that the message was sent.
+
 ## Release Contract
 
 Every tagged release must publish and attest exactly these artifacts:
