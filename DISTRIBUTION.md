@@ -81,6 +81,21 @@ scope and local-code boundary, then links through the referral route above. It
 opens the visitor's email client and sends nothing automatically; Repo Scout
 does not receive an address, click event, or proof that the message was sent.
 
+## Direct Outreach Experiment
+
+The [direct outreach playbook](docs/direct-outreach.md) defines the first
+operator-led acquisition batch: 10 individually qualified prospects, one
+accurate public observation per message, the source-preserving outreach route,
+and at most one follow-up after seven days. An opt-out or not-interested reply
+ends contact immediately. Sales messages never belong in GitHub issues, pull
+requests, or security channels.
+
+The header-only `examples/outreach-ledger.csv` can be copied into the ignored
+`outreach-private/` directory. That ledger uses prospect aliases and records
+operator activity without committing names, addresses, message bodies, source
+code, or confidential company details. Replies remain outreach activity; only
+public intake and cumulative funnel labels become demand and revenue evidence.
+
 ## Search Discovery
 
 The hosted companion publishes a deterministic `robots.txt` and `sitemap.xml`

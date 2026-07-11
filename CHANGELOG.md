@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.16 - 2026-07-11
+
+- Added a copy-ready direct-outreach playbook for the first 10 qualified engineering-lead prospects.
+- Fixed the message contract at $299 for 90 days, up to 10 projects, local source handling, and the direct-outreach campaign route.
+- Limited contact to one personalized initial message and one seven-day follow-up, with immediate opt-out handling.
+- Prohibited scraped personal addresses and sales messages in GitHub issues, pull requests, or security channels.
+- Added a header-only outreach ledger template and ignored its private working directory to prevent prospect-data commits.
+- Added tests for offer accuracy, source preservation, cadence, anti-spam language, privacy boundaries, and an empty ledger baseline.
+- Kept replies and operator activity outside demand and booked-revenue totals until public intake and funnel labels exist.
+
 ## 0.3.15 - 2026-07-11
 
 - Added JSON-LD that represents the current free CLI as a `SoftwareApplication` with an exact $0 versioned download.

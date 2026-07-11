@@ -89,6 +89,13 @@ audience, and local-code boundary shown to visitors. No review or rating data
 is published because none has been earned. Search presentation remains outside
 the revenue ledger until a buyer submits intake and reaches a paid stage.
 
+The first direct-acquisition batch is deliberately small: 10 qualified
+engineering leads, personalized from relevant public evidence, with one initial
+message and at most one follow-up. Contact uses warm introductions or clearly
+published business addresses, never scraped personal data or sales pitches in
+GitHub collaboration channels. The private outreach ledger records attempts
+and replies, but only pilot intake and paid labels enter the revenue funnel.
+
 Rollout bundles carry a stable, non-sensitive metadata contract so a pilot lead
 can summarize bundle-reported readiness, policy failures, violations, worktree
 state, and attention across repositories without sending source code to Repo

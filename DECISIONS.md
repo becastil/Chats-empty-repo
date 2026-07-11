@@ -220,3 +220,15 @@ and local-code boundary. The visible page and structured graph share one release
 constant. No reviews, ratings, campaign URLs, or urgency claims are included.
 This follows the user-visible offer instead of manufacturing rich-result data,
 and it creates no acquisition or revenue evidence on its own.
+
+## 2026-07-11: Bound The First Direct-Outreach Batch
+
+The first operator-led acquisition test covers 10 prospects that each satisfy
+at least three public fit signals. Every message includes one specific public
+observation, the disclosed $299 and 90-day offer, the up-to-10-project scope,
+the local-code boundary, and the direct-outreach campaign route. Only one
+seven-day follow-up is allowed, and an opt-out or not-interested response ends
+contact. Scraped personal addresses and sales pitches in GitHub issues, pull
+requests, or security channels are prohibited. A private ignored ledger records
+operator activity with aliases; replies do not become leads or revenue until a
+prospect independently submits intake and advances through cumulative labels.

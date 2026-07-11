@@ -7,7 +7,7 @@
 
 ## Near Term
 
-- Send the first source-preserving direct outreach route and share the referral action; do not add more search metadata before acquisition evidence arrives.
+- Execute the first 10-prospect direct-outreach batch from `docs/direct-outreach.md`; do not add another acquisition asset before at least five qualified contacts are attempted.
 - Collect the first three public pilot requests, work the prioritized sales queue, and compare readiness and purchase criteria by source.
 - Add a private pilot contact path after public intake validates demand.
 
