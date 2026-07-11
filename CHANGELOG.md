@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.11 - 2026-07-10
+
+- Added an above-fold README path that explains the paid team outcome and disclosed $299 pilot before the long CLI reference.
+- Linked GitHub visitors into the live "Why teams buy" experiment and direct pilot intake.
+- Prefilled the visible website discovery source on both hosted application buttons.
+- Prefilled the visible GitHub repository or release source on README and repository-documentation application links.
+- Added release and rendered-page contracts for the channel-specific links and exact intake option.
+- Documented that prefills reduce form work but remain buyer-editable self-report rather than causal attribution.
+
 ## 0.3.10 - 2026-07-10
 
 - Added a plain-language "Why teams buy" section that directly addresses AI recreation of the free scanner.

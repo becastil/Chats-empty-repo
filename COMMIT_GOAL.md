@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this website-experiment commit: 37 / 1,000 (3.7%).
-- Remaining after this website-experiment commit: 963 commits.
+- Progress after this GitHub-acquisition commit: 38 / 1,000 (3.8%).
+- Remaining after this GitHub-acquisition commit: 962 commits.
 
 ## Commit Standard
 

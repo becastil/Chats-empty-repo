@@ -33,7 +33,7 @@ ZIPAPP_SPEC.loader.exec_module(build_zipapp)
 
 class ReleaseManifestTests(unittest.TestCase):
     def test_current_project_versions_match(self) -> None:
-        self.assertEqual(prepare_release.load_project_version(ROOT), "0.3.10")
+        self.assertEqual(prepare_release.load_project_version(ROOT), "0.3.11")
 
     def test_public_distribution_metadata_and_quick_start_match_release(self) -> None:
         with (ROOT / "pyproject.toml").open("rb") as project_file:
@@ -55,6 +55,11 @@ class ReleaseManifestTests(unittest.TestCase):
         version = project["version"]
         self.assertIn(f"repo-scout-{version}.pyz", readme)
         self.assertIn(f"repo_scout-{version}-py3-none-any.whl", readme)
+        self.assertIn("https://repo-scout.becastil.chatgpt.site/#why-teams-buy", readme)
+        self.assertIn(
+            "discovery_source=GitHub+repository+or+release",
+            readme,
+        )
         self.assertNotIn("PYTHONPATH=src python3 -m repo_scout", readme)
 
     def test_writes_deterministic_checksums_for_exact_artifacts(self) -> None:
@@ -143,7 +148,7 @@ class ZipappDistributionTests(unittest.TestCase):
 
             artifact = build_zipapp.build_zipapp(ROOT, dist)
 
-            self.assertEqual(artifact.name, "repo-scout-0.3.10.pyz")
+            self.assertEqual(artifact.name, "repo-scout-0.3.11.pyz")
             self.assertTrue(artifact.is_file())
             self.assertTrue(artifact.stat().st_mode & 0o100)
             with zipfile.ZipFile(artifact) as archive:

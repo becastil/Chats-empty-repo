@@ -36,12 +36,12 @@ test("server-renders the Repo Scout companion page", async () => {
   assert.match(html, /Copy no-install setup/i);
   assert.match(html, /One file\. Python 3\.11\+\. No API key\./i);
   assert.match(html, /curl -fL/i);
-  assert.match(html, /repo-scout-0\.3\.10\.pyz/i);
+  assert.match(html, /repo-scout-0\.3\.11\.pyz/i);
   assert.match(html, /python3 \/tmp\/repo-scout\.pyz --languages \./i);
   assert.match(html, /Download v/i);
   assert.match(
     html,
-    /releases\/download\/v0\.3\.10\/repo-scout-0\.3\.10\.pyz/i,
+    /releases\/download\/v0\.3\.11\/repo-scout-0\.3\.11\.pyz/i,
   );
   assert.doesNotMatch(html, /PYTHONPATH=src python3 -m repo_scout/i);
   assert.match(html, /Snapshot lab/i);
@@ -69,7 +69,14 @@ test("server-renders the Repo Scout companion page", async () => {
   assert.match(html, /bundle-reported evidence/i);
   assert.match(html, /repo-scout-rollout api\.md web\.md worker\.md/i);
   assert.match(html, /Apply for the \$299 pilot/i);
-  assert.match(html, /github\.com\/becastil\/Chats-empty-repo\/issues\/new\?template=founding-team-pilot\.yml/i);
+  assert.match(
+    html,
+    /github\.com\/becastil\/Chats-empty-repo\/issues\/new\?template=founding-team-pilot\.yml(?:&amp;|&)discovery_source=Repo\+Scout\+website/i,
+  );
+  assert.equal(
+    (html.match(/discovery_source=Repo\+Scout\+website/gi) ?? []).length,
+    2,
+  );
   assert.equal((html.match(/<h1\b/gi) ?? []).length, 1);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
 });
@@ -108,6 +115,7 @@ test("ships a qualified founding-team pilot intake", async () => {
   assert.match(form, /id: ci_provider/i);
   assert.match(form, /id: discovery_source/i);
   assert.match(form, /How did you hear about Repo Scout\?/i);
+  assert.match(form, /Repo Scout website/i);
   assert.match(form, /GitHub repository or release/i);
   assert.match(form, /Teammate or referral/i);
   assert.match(form, /id: repository_standard/i);

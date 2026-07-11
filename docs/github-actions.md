@@ -91,6 +91,6 @@ digest with a mutable URL.
 
 The $299 founding-team pilot includes policy design, rollout help, and one
 custom policy pack for up to 10 repositories over 90 days. Use the
-[public pilot request form](https://github.com/becastil/Chats-empty-repo/issues/new?template=founding-team-pilot.yml)
+[public pilot request form](https://github.com/becastil/Chats-empty-repo/issues/new?template=founding-team-pilot.yml&discovery_source=GitHub+repository+or+release)
 without including source code, credentials, customer data, or other sensitive
 details.

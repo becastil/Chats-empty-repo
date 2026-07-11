@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const releaseVersion = "0.3.10";
+const releaseVersion = "0.3.11";
 const portableUrl =
   `https://github.com/becastil/Chats-empty-repo/releases/download/v${releaseVersion}/repo-scout-${releaseVersion}.pyz`;
 const quickStart = `curl -fL ${portableUrl} -o /tmp/repo-scout.pyz
@@ -71,7 +71,7 @@ const teamAdvantages = [
 ];
 
 const pilotRequestUrl =
-  "https://github.com/becastil/Chats-empty-repo/issues/new?template=founding-team-pilot.yml";
+  "https://github.com/becastil/Chats-empty-repo/issues/new?template=founding-team-pilot.yml&discovery_source=Repo+Scout+website";
 
 const pilotBenefits = [
   "One shared TOML policy for up to 10 repositories",

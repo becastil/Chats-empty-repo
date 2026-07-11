@@ -61,6 +61,11 @@ and keeping reviewable evidence useful without uploading private code. The
 experiment succeeds only when the public intake records website-attributed
 pilot demand; copy alone is not evidence of a moat or willingness to pay.
 
+GitHub visitors now see the team outcome and disclosed price before the CLI
+reference. They can either inspect the website objection section or apply
+directly. Application links prefill the visible discovery-source answer for
+the channel they came from, reducing form work without replacing self-report.
+
 Rollout bundles carry a stable, non-sensitive metadata contract so a pilot lead
 can summarize bundle-reported readiness, policy failures, violations, worktree
 state, and attention across repositories without sending source code to Repo

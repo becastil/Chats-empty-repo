@@ -167,3 +167,13 @@ lead system. Success is the first request self-reporting the website as its
 source, reviewed with qualification, readiness, purchase criterion, offer, and
 payment stages. The experiment is reviewed after three requests or on
 2026-07-24; visits and artifact requests are not treated as prospects or sales.
+
+## 2026-07-10: Preserve Discovery Source In Public Application Links
+
+The GitHub README now presents the team outcome and disclosed price before its
+long CLI reference, then offers both a website-experiment path and direct pilot
+intake. GitHub issue-form field IDs are canonical URL-prefill keys, so website
+buttons prefill `Repo Scout website` and repository documentation prefills
+`GitHub repository or release` using the existing closed taxonomy. The answer
+remains visible, required, and buyer-editable. Prefilling removes a form choice;
+it does not silently label a lead, prove causal attribution, or count revenue.

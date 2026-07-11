@@ -31,6 +31,11 @@ None requires an API key or sends source code to Repo Scout.
 - **Change:** The public site now contrasts the copyable free scan with three
   paid operational outcomes: a repeatable rulebook, one rollout across up to
   10 projects, and evidence plus help when a project fails.
+- **Acquisition path:** The GitHub README now introduces the team outcome near
+  the top and links into this section before the longer CLI reference.
+- **Source handling:** Website application buttons prefill `Repo Scout website`;
+  direct README and repository-documentation applications prefill
+  `GitHub repository or release`. Both remain visible and editable in intake.
 - **Primary outcome:** The first public pilot request attributed to the website.
 - **Secondary evidence:** That request's qualification, purchase readiness,
   primary criterion, offer, and paid stages.
@@ -42,6 +47,10 @@ not unique prospects, and self-reported source does not prove causation. Only
 funnel labels and payment evidence count as conversion and revenue. If no
 request arrives, the result is inconclusive because qualified site traffic is
 not measured.
+
+The source-prefill keys use the issue form's canonical `discovery_source` field
+ID and exact option values. They reduce intake friction but do not silently set
+labels, prove attribution, or prevent a buyer from correcting the answer.
 
 ## Release Contract
 
