@@ -155,3 +155,15 @@ The public pilot form asks for one required primary purchase criterion from a cl
 ## 2026-07-10: Reconcile Moat Learning With Revenue Evidence
 
 Schema-2 growth reviews expose schema-6 purchase-criterion outcomes only after validating the exact intake taxonomy, cumulative stages, booked revenue, and equality with source aggregates. Schema-5 reports remain compatible but represent criterion evidence as unavailable rather than zero. Missing and ambiguous schema-6 criteria remain warnings. Bottleneck selection and sales priority do not use criterion choice because there is not yet paid evidence that one criterion signals urgency. Artifact requests are never assigned to criteria, and stated evaluation priorities are not treated as causal attribution, willingness to pay, or proof of a moat.
+
+## 2026-07-10: Launch A Source-Identifiable Website Objection Experiment
+
+The public site now answers the strongest commercial objection directly: an AI
+can recreate a scanner, while the paid pilot sells the operating work required
+to agree on one standard, deploy it across uneven repositories, and maintain
+reviewable evidence without uploading source code. The page points to the
+existing price-disclosed public intake rather than adding analytics or a new
+lead system. Success is the first request self-reporting the website as its
+source, reviewed with qualification, readiness, purchase criterion, offer, and
+payment stages. The experiment is reviewed after three requests or on
+2026-07-24; visits and artifact requests are not treated as prospects or sales.

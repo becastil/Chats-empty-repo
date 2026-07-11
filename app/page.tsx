@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const releaseVersion = "0.3.9";
+const releaseVersion = "0.3.10";
 const portableUrl =
   `https://github.com/becastil/Chats-empty-repo/releases/download/v${releaseVersion}/repo-scout-${releaseVersion}.pyz`;
 const quickStart = `curl -fL ${portableUrl} -o /tmp/repo-scout.pyz
@@ -52,6 +52,21 @@ const controls = [
     flag: "--languages",
     title: "See the shape quickly",
     copy: "Add best-effort language totals while keeping raw extension counts intact.",
+  },
+];
+
+const teamAdvantages = [
+  {
+    title: "Your rules, made repeatable",
+    copy: "We turn your repository requirements into one reviewed rulebook your team can reuse.",
+  },
+  {
+    title: "One rollout across 10 projects",
+    copy: "We install the same standard in your existing workflow and identify which projects need work.",
+  },
+  {
+    title: "Proof and support when something fails",
+    copy: "Your team gets clear evidence, a rollout checklist, and help resolving the projects that do not fit neatly.",
   },
 ];
 
@@ -198,9 +213,43 @@ export default function Home() {
           </div>
         </section>
 
+        <section id="why-teams-buy" className="moat-section" aria-labelledby="moat-title">
+          <div className="moat-heading">
+            <p className="section-number">04 / Why teams buy</p>
+            <div>
+              <h2 id="moat-title">An AI can build checks. We make them work across your team.</h2>
+              <p className="moat-lede">
+                The $299 pilot is not payment for another scanner. It pays for
+                turning your rules into one shared standard, rolling it out across
+                up to 10 software projects, and helping your team fix what fails.
+              </p>
+            </div>
+          </div>
+          <div className="moat-grid">
+            {teamAdvantages.map((advantage, index) => (
+              <article className="moat-item" key={advantage.title}>
+                <span className="moat-index">0{index + 1}</span>
+                <h3>{advantage.title}</h3>
+                <p>{advantage.copy}</p>
+              </article>
+            ))}
+          </div>
+          <div className="moat-conclusion">
+            <p>
+              Your code stays with you. The scanner stays free and open source.
+            </p>
+            <div className="moat-actions">
+              <a className="button button-moat" href={pilotRequestUrl}>
+                Apply for the $299 pilot <span aria-hidden="true">-&gt;</span>
+              </a>
+              <a className="moat-proof-link" href="#team-pilot">See the rollout proof</a>
+            </div>
+          </div>
+        </section>
+
         <section id="team-pilot" className="pilot-section" aria-labelledby="pilot-title">
           <div className="pilot-copy">
-            <p className="section-number">04 / Founding team pilot</p>
+            <p className="section-number">05 / Founding team pilot</p>
             <h2 id="pilot-title">Prove one policy across every repository.</h2>
             <p className="pilot-lede">
               For software teams using coding agents across multiple repositories,

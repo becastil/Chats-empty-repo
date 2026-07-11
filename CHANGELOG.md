@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.10 - 2026-07-10
+
+- Added a plain-language "Why teams buy" section that directly addresses AI recreation of the free scanner.
+- Separated three paid operational outcomes from the free scan: a repeatable rulebook, one rollout across 10 projects, and evidence plus support when a project fails.
+- Added a direct application path from that objection to the disclosed $299 founding-team pilot.
+- Defined a source-identifiable website experiment with a hypothesis, funnel-based outcomes, guardrails, and a 2026-07-24 review point.
+- Added rendered-page coverage for the objection, differentiators, and price-specific pilot path.
+
 ## 0.3.9 - 2026-07-10
 
 - Upgraded weekly growth reviews to schema 2 with purchase-criterion outcome reporting.

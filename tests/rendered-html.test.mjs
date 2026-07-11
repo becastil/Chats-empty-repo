@@ -36,16 +36,26 @@ test("server-renders the Repo Scout companion page", async () => {
   assert.match(html, /Copy no-install setup/i);
   assert.match(html, /One file\. Python 3\.11\+\. No API key\./i);
   assert.match(html, /curl -fL/i);
-  assert.match(html, /repo-scout-0\.3\.9\.pyz/i);
+  assert.match(html, /repo-scout-0\.3\.10\.pyz/i);
   assert.match(html, /python3 \/tmp\/repo-scout\.pyz --languages \./i);
   assert.match(html, /Download v/i);
   assert.match(
     html,
-    /releases\/download\/v0\.3\.9\/repo-scout-0\.3\.9\.pyz/i,
+    /releases\/download\/v0\.3\.10\/repo-scout-0\.3\.10\.pyz/i,
   );
   assert.doesNotMatch(html, /PYTHONPATH=src python3 -m repo_scout/i);
   assert.match(html, /Snapshot lab/i);
+  assert.match(html, /id="why-teams-buy"/i);
+  assert.match(html, /An AI can build checks\. We make them work across your team\./i);
+  assert.match(html, /not payment for another scanner/i);
+  assert.match(html, /Your rules, made repeatable/i);
+  assert.match(html, /One rollout across 10 projects/i);
+  assert.match(html, /Proof and support when something fails/i);
+  assert.match(html, /Your code stays with you\. The scanner stays free and open source\./i);
+  assert.match(html, /Apply for the \$299 pilot/i);
+  assert.match(html, /See the rollout proof/i);
   assert.match(html, /id="team-pilot"/i);
+  assert.ok(html.indexOf('id="why-teams-buy"') < html.indexOf('id="team-pilot"'));
   assert.match(html, /Prove one policy across every repository\./i);
   assert.match(html, /\$299/i);
   assert.match(html, /90 days/i);

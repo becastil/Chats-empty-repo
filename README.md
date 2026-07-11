@@ -31,7 +31,7 @@ not require a checkout, package installation, administrator access, or an API
 key:
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.9/repo-scout-0.3.9.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.10/repo-scout-0.3.10.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 ```
 
@@ -41,7 +41,7 @@ need the `repo-scout-distribution`, `repo-scout-growth`, `repo-scout-policy`,
 `repo-scout-rollout`, or `repo-scout-pilot` commands:
 
 ```bash
-python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.9/repo_scout-0.3.9-py3-none-any.whl
+python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.10/repo_scout-0.3.10-py3-none-any.whl
 repo-scout --languages .
 ```
 

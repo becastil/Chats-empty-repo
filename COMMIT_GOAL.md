@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this criterion-growth commit: 36 / 1,000 (3.6%).
-- Remaining after this criterion-growth commit: 964 commits.
+- Progress after this website-experiment commit: 37 / 1,000 (3.7%).
+- Remaining after this website-experiment commit: 963 commits.
 
 ## Commit Standard
 

@@ -54,6 +54,13 @@ The pilot includes:
 The paid value is consistency across repositories and teams, not access to the
 basic local scanner.
 
+An AI can recreate a scanner, but that is not the commercial claim being
+tested. The active website experiment presents the paid outcome in plain
+language: help agreeing on one rulebook, installing it across uneven projects,
+and keeping reviewable evidence useful without uploading private code. The
+experiment succeeds only when the public intake records website-attributed
+pilot demand; copy alone is not evidence of a moat or willingness to pay.
+
 Rollout bundles carry a stable, non-sensitive metadata contract so a pilot lead
 can summarize bundle-reported readiness, policy failures, violations, worktree
 state, and attention across repositories without sending source code to Repo

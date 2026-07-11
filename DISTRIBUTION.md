@@ -19,6 +19,30 @@ The portable artifact is the lowest-friction adoption path. The wheel is the
 complete command distribution. The CI example is the team activation path.
 None requires an API key or sends source code to Repo Scout.
 
+## Active Website Experiment
+
+- **Started:** 2026-07-10
+- **Channel:** `website`
+- **Audience:** Engineering leads at 5-50 person software teams using coding
+  agents across multiple repositories.
+- **Hypothesis:** A plain-language answer to "why pay when an AI can recreate
+  the scanner?" placed before the disclosed $299 offer will produce the first
+  pilot request self-reporting `Repo Scout website` as its discovery source.
+- **Change:** The public site now contrasts the copyable free scan with three
+  paid operational outcomes: a repeatable rulebook, one rollout across up to
+  10 projects, and evidence plus help when a project fails.
+- **Primary outcome:** The first public pilot request attributed to the website.
+- **Secondary evidence:** That request's qualification, purchase readiness,
+  primary criterion, offer, and paid stages.
+- **Review point:** 2026-07-24 or after three public pilot requests, whichever
+  comes first.
+
+This experiment has no browser analytics. Release requests and site visits are
+not unique prospects, and self-reported source does not prove causation. Only
+funnel labels and payment evidence count as conversion and revenue. If no
+request arrives, the result is inconclusive because qualified site traffic is
+not measured.
+
 ## Release Contract
 
 Every tagged release must publish and attest exactly these artifacts:

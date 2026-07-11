@@ -7,7 +7,7 @@
 
 ## Near Term
 
-- Run one source-identifiable acquisition experiment and compare request outcomes by purchase criterion.
+- Drive qualified traffic to the active website experiment and review it after three public requests or on 2026-07-24.
 - Collect the first three public pilot requests, work the prioritized sales queue, and compare readiness and purchase criteria by source.
 - Add a private pilot contact path after public intake validates demand.
 
