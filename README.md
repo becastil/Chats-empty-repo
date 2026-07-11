@@ -31,7 +31,7 @@ not require a checkout, package installation, administrator access, or an API
 key:
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.8/repo-scout-0.3.8.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.9/repo-scout-0.3.9.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 ```
 
@@ -41,7 +41,7 @@ need the `repo-scout-distribution`, `repo-scout-growth`, `repo-scout-policy`,
 `repo-scout-rollout`, or `repo-scout-pilot` commands:
 
 ```bash
-python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.8/repo_scout-0.3.8-py3-none-any.whl
+python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.9/repo_scout-0.3.9-py3-none-any.whl
 repo-scout --languages .
 ```
 
@@ -291,10 +291,13 @@ repo-scout-growth distribution-current.json pilot-current.json
 ```
 
 The growth review reports signed reach movement, attributed pilot progress,
-booked revenue, evidence warnings, and one current bottleneck from acquisition
-through retention. It never calculates a download-to-lead conversion rate:
-GitHub artifact requests are not unique people and cannot be assigned to a
-self-reported discovery source.
+booked revenue, purchase-criterion outcomes, evidence warnings, and one current
+bottleneck from acquisition through retention. Schema-5 pilot reports remain
+readable with criterion evidence marked unavailable; schema-6 reports reconcile
+every criterion total to the same deals and revenue as source reporting. The
+review never calculates a download-to-lead conversion rate: GitHub artifact
+requests are not unique people and cannot be assigned to a discovery source or
+purchase criterion.
 
 Run the tests:
 

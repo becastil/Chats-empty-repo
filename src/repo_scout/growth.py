@@ -6,8 +6,10 @@ from pathlib import Path
 import sys
 from typing import Any, Sequence
 
+from .pilot_funnel import DECISION_CRITERION_KEYS
 
-SCHEMA_VERSION = 1
+
+SCHEMA_VERSION = 2
 SUPPORTED_DISTRIBUTION_SCHEMAS = {2}
 SUPPORTED_PILOT_SCHEMAS = {5, 6}
 DELTA_FIELDS = (
@@ -42,6 +44,7 @@ def build_growth_report(
     pilot_summary = pilot["summary"]
     pricing = pilot["pricing"]
     source_rows = pilot["sources"]
+    criterion_rows = pilot["decision_criteria"]
     qualified_pilots = sum(row["qualified_pilots"] for row in source_rows)
     offered_pilots = sum(row["offered_pilots"] for row in source_rows)
 
@@ -105,6 +108,38 @@ def build_growth_report(
                 ),
             }
         )
+    if not pilot["decision_criterion_reporting_available"]:
+        warnings.append(
+            {
+                "kind": "decision_criterion_evidence_unavailable",
+                "message": (
+                    "The schema-5 pilot report predates purchase-criterion "
+                    "evidence."
+                ),
+            }
+        )
+    else:
+        if pilot_summary["missing_decision_criterion_issues"]:
+            warnings.append(
+                {
+                    "kind": "missing_decision_criteria",
+                    "message": (
+                        f"{pilot_summary['missing_decision_criterion_issues']} "
+                        "pilot request(s) have no primary purchase criterion."
+                    ),
+                }
+            )
+        if pilot_summary["unknown_decision_criterion_issues"]:
+            warnings.append(
+                {
+                    "kind": "unknown_decision_criteria",
+                    "message": (
+                        f"{pilot_summary['unknown_decision_criterion_issues']} "
+                        "pilot request(s) have ambiguous or unrecognized purchase "
+                        "criterion evidence."
+                    ),
+                }
+            )
 
     return {
         "schema_version": SCHEMA_VERSION,
@@ -121,23 +156,49 @@ def build_growth_report(
             "annual_conversions": pilot_summary["annual_conversions"],
             "lost_pilots": pilot_summary["lost_pilots"],
             "open_sales_actions": pilot_summary["sales_actions"],
+            "decision_criterion_reporting_available": pilot[
+                "decision_criterion_reporting_available"
+            ],
+            "declared_decision_criterion_requests": pilot_summary.get(
+                "declared_decision_criterion_issues"
+            ),
+            "missing_decision_criterion_requests": pilot_summary.get(
+                "missing_decision_criterion_issues"
+            ),
+            "unknown_decision_criterion_requests": pilot_summary.get(
+                "unknown_decision_criterion_issues"
+            ),
         },
         "distribution_change": distribution["change"],
         "sources": source_rows,
+        "decision_criteria": criterion_rows,
         "bottleneck": bottleneck,
         "evidence_quality": {
             "distribution_warnings": distribution["warning_count"],
             "pilot_warnings": pilot["warning_count"],
+            "pilot_schema_version": pilot["schema_version"],
+            "decision_criterion_reporting_available": pilot[
+                "decision_criterion_reporting_available"
+            ],
             "unattributed_pilot_requests": pilot_summary["unattributed_issues"],
             "unknown_source_pilot_requests": pilot_summary[
                 "unknown_source_issues"
             ],
+            "missing_decision_criterion_requests": pilot_summary.get(
+                "missing_decision_criterion_issues"
+            ),
+            "unknown_decision_criterion_requests": pilot_summary.get(
+                "unknown_decision_criterion_issues"
+            ),
         },
         "warnings": warnings,
         "measurement_note": (
             "Artifact request deltas can include CI, maintainer checks, and retries. "
-            "They cannot be assigned to self-reported lead sources and are not a "
-            "conversion-rate denominator. Only paid pilot stages count as revenue."
+            "They are not unique-user or conversion-rate denominators and cannot "
+            "be assigned to self-reported lead sources or purchase criteria. "
+            "Purchase criteria are self-reported evaluation priorities, not causal "
+            "attribution, willingness to pay, or proof of a moat. Only paid pilot "
+            "stages count as revenue."
         ),
     }
 
@@ -145,6 +206,7 @@ def build_growth_report(
 def format_growth_report(report: dict[str, Any]) -> str:
     summary = report["summary"]
     change = report["distribution_change"]
+    quality = report["evidence_quality"]
     if change is None:
         reach = "not available (baseline required)"
     else:
@@ -185,7 +247,21 @@ def format_growth_report(report: dict[str, Any]) -> str:
     else:
         lines.append("  none")
 
-    quality = report["evidence_quality"]
+    lines.append("Purchase criteria:")
+    if not quality["decision_criterion_reporting_available"]:
+        lines.append("  schema-6 pilot report required")
+    elif report["decision_criteria"]:
+        for criterion in report["decision_criteria"]:
+            lines.append(
+                f"  {criterion['criterion']}: {criterion['deals']} requests, "
+                f"{criterion['qualified_pilots']} qualified, "
+                f"{criterion['offered_pilots']} offered, "
+                f"{criterion['booked_pilots']} booked "
+                f"(${criterion['booked_revenue_usd']})"
+            )
+    else:
+        lines.append("  none")
+
     lines.extend(
         [
             (
@@ -193,7 +269,8 @@ def format_growth_report(report: dict[str, Any]) -> str:
                 f"{quality['distribution_warnings']} distribution warnings / "
                 f"{quality['pilot_warnings']} pilot warnings / "
                 f"{quality['unattributed_pilot_requests']} unattributed requests / "
-                f"{quality['unknown_source_pilot_requests']} unknown sources"
+                f"{quality['unknown_source_pilot_requests']} unknown sources / "
+                f"schema {quality['pilot_schema_version']} pilot evidence"
             ),
             "Warnings:",
         ]
@@ -321,6 +398,15 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
         )
         for field in summary_fields
     }
+    if schema == 6:
+        for field in (
+            "declared_decision_criterion_issues",
+            "missing_decision_criterion_issues",
+            "unknown_decision_criterion_issues",
+        ):
+            summary[field] = _require_non_negative_int(
+                summary_object.get(field), f"pilot report.summary.{field}"
+            )
     pricing = {
         field: _require_positive_int(
             pricing_object.get(field), f"pilot report.pricing.{field}"
@@ -347,11 +433,62 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
             )
             for field in SOURCE_TOTAL_FIELDS
         }
-        _validate_source_totals(source, totals, pricing["pilot_price_usd"])
+        _validate_segment_totals(
+            f"pilot report.by_source.{source}",
+            totals,
+            pricing["pilot_price_usd"],
+        )
         if totals["deals"]:
             sources.append({"source": source, **totals})
 
     _validate_pilot_totals(summary, pricing, sources)
+    decision_criteria: list[dict[str, Any]] | None = None
+    if schema == 6:
+        raw_criteria = _require_object(
+            root.get("by_decision_criterion"),
+            "pilot report.by_decision_criterion",
+        )
+        if any(
+            not isinstance(criterion, str) or not criterion
+            for criterion in raw_criteria
+        ):
+            raise GrowthInputError(
+                "pilot report.by_decision_criterion keys must be non-empty strings"
+            )
+        expected_criteria = set(DECISION_CRITERION_KEYS)
+        actual_criteria = set(raw_criteria)
+        if actual_criteria != expected_criteria:
+            missing = sorted(expected_criteria - actual_criteria)
+            unexpected = sorted(actual_criteria - expected_criteria)
+            details: list[str] = []
+            if missing:
+                details.append(f"missing: {', '.join(missing)}")
+            if unexpected:
+                details.append(f"unexpected: {', '.join(unexpected)}")
+            raise GrowthInputError(
+                "pilot report.by_decision_criterion keys do not match schema 6 "
+                f"({'; '.join(details)})"
+            )
+        decision_criteria = []
+        for criterion in DECISION_CRITERION_KEYS:
+            raw_totals = raw_criteria[criterion]
+            location = f"pilot report.by_decision_criterion.{criterion}"
+            totals_object = _require_object(raw_totals, location)
+            totals = {
+                field: _require_non_negative_int(
+                    totals_object.get(field), f"{location}.{field}"
+                )
+                for field in SOURCE_TOTAL_FIELDS
+            }
+            _validate_segment_totals(
+                location,
+                totals,
+                pricing["pilot_price_usd"],
+            )
+            if totals["deals"]:
+                decision_criteria.append({"criterion": criterion, **totals})
+        _validate_criterion_totals(summary, decision_criteria, sources)
+
     raw_warnings = root.get("warnings")
     if not isinstance(raw_warnings, list):
         raise GrowthInputError("pilot report.warnings must be an array")
@@ -361,8 +498,12 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
         "summary": summary,
         "pricing": pricing,
         "sources": sources,
+        "decision_criterion_reporting_available": schema == 6,
+        "decision_criteria": decision_criteria,
         "warning_count": len(raw_warnings),
     }
+
+
 def _validate_pilot_totals(
     summary: dict[str, int],
     pricing: dict[str, int],
@@ -412,8 +553,45 @@ def _validate_pilot_totals(
         )
 
 
-def _validate_source_totals(
-    source: str, totals: dict[str, int], pilot_price_usd: int
+def _validate_criterion_totals(
+    summary: dict[str, int],
+    criteria: list[dict[str, Any]],
+    sources: list[dict[str, Any]],
+) -> None:
+    for field in SOURCE_TOTAL_FIELDS:
+        criterion_total = sum(row[field] for row in criteria)
+        source_total = sum(row[field] for row in sources)
+        if criterion_total != source_total:
+            raise GrowthInputError(
+                f"pilot report by_decision_criterion {field} does not match "
+                "by_source totals"
+            )
+
+    criteria_by_name = {row["criterion"]: row for row in criteria}
+    declared = sum(
+        row["deals"]
+        for row in criteria
+        if row["criterion"] not in {"unattributed", "unknown"}
+    )
+    if summary["declared_decision_criterion_issues"] != declared:
+        raise GrowthInputError(
+            "pilot report declared_decision_criterion_issues does not match "
+            "by_decision_criterion totals"
+        )
+    for field, criterion in (
+        ("missing_decision_criterion_issues", "unattributed"),
+        ("unknown_decision_criterion_issues", "unknown"),
+    ):
+        criterion_total = criteria_by_name.get(criterion, {}).get("deals", 0)
+        if summary[field] != criterion_total:
+            raise GrowthInputError(
+                f"pilot report {field} does not match "
+                "by_decision_criterion totals"
+            )
+
+
+def _validate_segment_totals(
+    location: str, totals: dict[str, int], pilot_price_usd: int
 ) -> None:
     deals = totals["deals"]
     progression = (
@@ -423,24 +601,24 @@ def _validate_source_totals(
     )
     if any(count > deals for count in progression):
         raise GrowthInputError(
-            f"pilot report.by_source.{source} stage totals exceed deals"
+            f"{location} stage totals exceed deals"
         )
     if not progression[0] >= progression[1] >= progression[2]:
         raise GrowthInputError(
-            f"pilot report.by_source.{source} stage totals are not cumulative"
+            f"{location} stage totals are not cumulative"
         )
     if totals["annual_conversions"] > totals["booked_pilots"]:
         raise GrowthInputError(
-            f"pilot report.by_source.{source} conversions exceed booked pilots"
+            f"{location} conversions exceed booked pilots"
         )
     if totals["lost_pilots"] > deals:
         raise GrowthInputError(
-            f"pilot report.by_source.{source} losses exceed deals"
+            f"{location} losses exceed deals"
         )
     expected_revenue = totals["booked_pilots"] * pilot_price_usd
     if totals["booked_revenue_usd"] != expected_revenue:
         raise GrowthInputError(
-            f"pilot report.by_source.{source} booked revenue does not match pilots"
+            f"{location} booked revenue does not match pilots"
         )
 
 

@@ -89,17 +89,21 @@ repo-scout-pilot --format json --as-of "$(date -u +%F)" \
 repo-scout-growth distribution-current.json pilot-current.json
 ```
 
-`repo-scout-growth` accepts schema-2 distribution and schema-5 or schema-6 pilot reports.
-It shows signed primary, portable, and wheel movement beside attributed pilot
-requests, qualification, offers, booked revenue, and source totals. Its
+`repo-scout-growth` emits schema 2 from schema-2 distribution and schema-5 or
+schema-6 pilot reports. It shows signed primary, portable, and wheel movement
+beside attributed pilot requests, qualification, offers, booked revenue, source
+totals, and schema-6 purchase-criterion outcomes. Schema-5 criterion evidence is
+explicitly unavailable rather than reported as zero. Its
 deterministic bottleneck names one next action for missing measurement,
 acquisition, qualification, offer, payment, pilot-target progress, retention,
 or validated commercial evidence.
 
-The review surfaces warnings from both inputs and source-attribution gaps. It
+The review strictly reconciles schema-6 criterion keys and outcomes to source
+totals, then surfaces warnings from both inputs and attribution gaps. It
 does not divide pilot requests by artifact requests, join a download to a lead,
-or infer that reach caused revenue. Save the current distribution report as the
-next baseline only after reviewing any release-evidence warnings.
+assign artifact movement to a criterion, or infer that stated criteria caused
+revenue. Save the current distribution report as the next baseline only after
+reviewing any release-evidence warnings.
 
 ## Channel Constraints
 

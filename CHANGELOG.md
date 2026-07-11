@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.9 - 2026-07-10
+
+- Upgraded weekly growth reviews to schema 2 with purchase-criterion outcome reporting.
+- Added ordered schema-6 criterion rows for requests, qualification, offers, booked pilots, booked revenue, conversions, and losses.
+- Kept schema-5 pilot reports readable with criterion evidence explicitly unavailable instead of zero.
+- Required the exact schema-6 criterion taxonomy and reconciled every criterion aggregate to source totals.
+- Added missing and unknown criterion evidence warnings without changing bottleneck or sales-priority semantics.
+- Clarified that self-reported criteria are not attribution, willingness to pay, or proof of a moat.
+- Added schema compatibility, ordering, malformed taxonomy, stage, revenue, summary, warning, and text-output coverage.
+
 ## 0.3.8 - 2026-07-10
 
 - Added a required primary purchase criterion to the public founding-team pilot intake.

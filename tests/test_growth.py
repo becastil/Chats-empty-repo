@@ -18,6 +18,7 @@ from repo_scout.growth import (  # noqa: E402
     format_growth_report,
     main,
 )
+from repo_scout.pilot_funnel import DECISION_CRITERION_KEYS  # noqa: E402
 
 
 class GrowthReportTests(unittest.TestCase):
@@ -29,21 +30,26 @@ class GrowthReportTests(unittest.TestCase):
             self._pilot(),
         )
 
-        self.assertEqual(report["schema_version"], 1)
+        self.assertEqual(report["schema_version"], 2)
         self.assertTrue(report["summary"]["distribution_baseline_present"])
         self.assertEqual(report["summary"]["tracked_pilot_requests"], 0)
         self.assertEqual(report["distribution_change"]["primary_artifact_downloads_delta"], 4)
         self.assertEqual(report["bottleneck"]["stage"], "acquisition")
         self.assertIn("increased", report["bottleneck"]["reason"])
         self.assertEqual(report["sources"], [])
-        self.assertEqual(report["warnings"], [])
-        self.assertIn("not a conversion-rate denominator", report["measurement_note"])
+        self.assertIsNone(report["decision_criteria"])
+        self.assertEqual(
+            [warning["kind"] for warning in report["warnings"]],
+            ["decision_criterion_evidence_unavailable"],
+        )
+        self.assertIn("not unique-user or conversion-rate", report["measurement_note"])
 
         text = format_growth_report(report)
         self.assertIn("Reach movement: +4 primary / +3 portable / +1 wheel", text)
         self.assertIn("Pilot funnel: 0 requests", text)
         self.assertIn("Bottleneck: acquisition", text)
         self.assertIn("Sources:\n  none", text)
+        self.assertIn("Purchase criteria:\n  schema-6 pilot report required", text)
 
     def test_joins_source_progress_and_selects_payment_bottleneck(self) -> None:
         pilot = self._pilot(
@@ -66,6 +72,124 @@ class GrowthReportTests(unittest.TestCase):
         self.assertEqual(report["bottleneck"]["stage"], "payment")
         self.assertEqual(report["sources"][0]["source"], "website")
         self.assertIn("website: 1 requests", format_growth_report(report))
+
+    def test_joins_ordered_schema_six_purchase_criterion_outcomes(self) -> None:
+        pilot = self._pilot(
+            schema_version=6,
+            sources={
+                "website": self._source(
+                    deals=2, qualified=2, offered=1, booked=1
+                )
+            },
+            criteria={
+                "privacy_security": self._source(deals=1, qualified=1),
+                "policy_fit": self._source(
+                    deals=1, qualified=1, offered=1, booked=1
+                ),
+            },
+            booked=1,
+        )
+
+        report = build_growth_report(self._distribution(), pilot)
+
+        self.assertEqual(report["schema_version"], 2)
+        self.assertTrue(
+            report["summary"]["decision_criterion_reporting_available"]
+        )
+        self.assertEqual(
+            report["summary"]["declared_decision_criterion_requests"], 2
+        )
+        self.assertEqual(
+            [row["criterion"] for row in report["decision_criteria"]],
+            ["policy_fit", "privacy_security"],
+        )
+        self.assertEqual(
+            report["decision_criteria"][0]["booked_revenue_usd"], 299
+        )
+        self.assertEqual(report["warnings"], [])
+        text = format_growth_report(report)
+        self.assertIn("Purchase criteria:", text)
+        self.assertIn(
+            "policy_fit: 1 requests, 1 qualified, 1 offered, 1 booked ($299)",
+            text,
+        )
+
+    def test_surfaces_missing_and_unknown_purchase_criteria(self) -> None:
+        pilot = self._pilot(
+            schema_version=6,
+            sources={"website": self._source(deals=2)},
+            criteria={
+                "unattributed": self._source(deals=1),
+                "unknown": self._source(deals=1),
+            },
+            pilot_warnings=[
+                {"kind": "missing_decision_criterion"},
+                {"kind": "unknown_decision_criterion"},
+            ],
+        )
+
+        report = build_growth_report(self._distribution(), pilot)
+
+        self.assertEqual(
+            report["summary"]["missing_decision_criterion_requests"], 1
+        )
+        self.assertEqual(
+            report["summary"]["unknown_decision_criterion_requests"], 1
+        )
+        self.assertEqual(
+            [warning["kind"] for warning in report["warnings"]],
+            [
+                "pilot_evidence_warnings",
+                "missing_decision_criteria",
+                "unknown_decision_criteria",
+            ],
+        )
+        self.assertEqual(
+            report["evidence_quality"][
+                "missing_decision_criterion_requests"
+            ],
+            1,
+        )
+
+    def test_rejects_inconsistent_schema_six_criterion_evidence(self) -> None:
+        valid = self._pilot(
+            schema_version=6,
+            sources={"website": self._source(deals=1, qualified=1)},
+            criteria={"policy_fit": self._source(deals=1, qualified=1)},
+        )
+        missing_key = json.loads(json.dumps(valid))
+        missing_key["by_decision_criterion"].pop("other")
+        extra_key = json.loads(json.dumps(valid))
+        extra_key["by_decision_criterion"]["future"] = self._source(deals=0)
+        non_string_key = json.loads(json.dumps(valid))
+        non_string_key["by_decision_criterion"].pop("other")
+        non_string_key["by_decision_criterion"][1] = self._source(deals=0)
+        boolean_count = json.loads(json.dumps(valid))
+        boolean_count["by_decision_criterion"]["policy_fit"]["deals"] = True
+        stage_mismatch = json.loads(json.dumps(valid))
+        stage_mismatch["by_decision_criterion"]["policy_fit"][
+            "qualified_pilots"
+        ] = 0
+        summary_mismatch = json.loads(json.dumps(valid))
+        summary_mismatch["summary"]["declared_decision_criterion_issues"] = 0
+        revenue_mismatch = json.loads(json.dumps(valid))
+        revenue_mismatch["by_decision_criterion"]["policy_fit"][
+            "booked_revenue_usd"
+        ] = 1
+        cases = [
+            (missing_key, "keys do not match schema 6"),
+            (extra_key, "keys do not match schema 6"),
+            (non_string_key, "keys must be non-empty strings"),
+            (boolean_count, "must be an integer"),
+            (stage_mismatch, "qualified_pilots does not match by_source"),
+            (summary_mismatch, "declared_decision_criterion_issues"),
+            (revenue_mismatch, "booked revenue does not match pilots"),
+        ]
+        for pilot, message in cases:
+            with self.subTest(message=message), self.assertRaisesRegex(
+                GrowthInputError, message
+            ):
+                build_growth_report(self._distribution(), pilot)
 
     def test_selects_revenue_bottlenecks_from_observed_funnel_stages(self) -> None:
         cases = [
@@ -135,7 +259,10 @@ class GrowthReportTests(unittest.TestCase):
         self.assertEqual(report["bottleneck"]["stage"], "measurement")
         self.assertEqual(
             [warning["kind"] for warning in report["warnings"]],
-            ["missing_distribution_baseline"],
+            [
+                "missing_distribution_baseline",
+                "decision_criterion_evidence_unavailable",
+            ],
         )
         self.assertIn("baseline required", format_growth_report(report))
 
@@ -158,6 +285,7 @@ class GrowthReportTests(unittest.TestCase):
                 "pilot_evidence_warnings",
                 "unattributed_pilot_requests",
                 "unknown_pilot_sources",
+                "decision_criterion_evidence_unavailable",
             ],
         )
         self.assertEqual(report["evidence_quality"]["distribution_warnings"], 1)
@@ -166,7 +294,7 @@ class GrowthReportTests(unittest.TestCase):
     def test_rejects_unsupported_or_inconsistent_reports(self) -> None:
         valid_distribution = self._distribution()
         valid_pilot = self._pilot()
-        schema_six_pilot = {**valid_pilot, "schema_version": 6}
+        schema_six_pilot = self._pilot(schema_version=6)
         self.assertEqual(
             build_growth_report(valid_distribution, schema_six_pilot)[
                 "bottleneck"
@@ -283,7 +411,9 @@ class GrowthReportTests(unittest.TestCase):
     def _pilot(
         cls,
         *,
+        schema_version: int = 5,
         sources: dict[str, dict[str, int]] | None = None,
+        criteria: dict[str, dict[str, int]] | None = None,
         booked: int = 0,
         converted: int = 0,
         pilot_warnings: list[dict[str, str]] | None = None,
@@ -297,8 +427,8 @@ class GrowthReportTests(unittest.TestCase):
         )
         unattributed = source_totals.get("unattributed", {}).get("deals", 0)
         unknown = source_totals.get("unknown", {}).get("deals", 0)
-        return {
-            "schema_version": 5,
+        report = {
+            "schema_version": schema_version,
             "pricing": {
                 "pilot_price_usd": 299,
                 "target_pilots": 3,
@@ -318,6 +448,37 @@ class GrowthReportTests(unittest.TestCase):
             "by_source": source_totals,
             "warnings": pilot_warnings or [],
         }
+        if schema_version == 6:
+            empty = cls._source(deals=0)
+            criterion_totals = {
+                criterion: dict(empty) for criterion in DECISION_CRITERION_KEYS
+            }
+            if criteria is None:
+                criterion_totals["policy_fit"] = {
+                    field: sum(source[field] for source in source_totals.values())
+                    for field in empty
+                }
+            else:
+                for criterion, totals in criteria.items():
+                    criterion_totals[criterion] = totals
+            declared = sum(
+                totals["deals"]
+                for criterion, totals in criterion_totals.items()
+                if criterion not in {"unattributed", "unknown"}
+            )
+            report["summary"].update(
+                {
+                    "declared_decision_criterion_issues": declared,
+                    "missing_decision_criterion_issues": criterion_totals[
+                        "unattributed"
+                    ]["deals"],
+                    "unknown_decision_criterion_issues": criterion_totals[
+                        "unknown"
+                    ]["deals"],
+                }
+            )
+            report["by_decision_criterion"] = criterion_totals
+        return report
 
     @staticmethod
     def _source(

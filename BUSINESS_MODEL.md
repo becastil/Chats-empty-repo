@@ -166,10 +166,17 @@ confounders and therefore remain directional until a buyer self-reports a source
 or enters the paid funnel.
 
 The dependency-free `repo-scout-growth` review places those signed deltas beside
-schema-5 or schema-6 pilot source, qualification, offer, payment, and revenue totals. It
-names one current commercial bottleneck and next action so weekly roadmap work
-responds to the paid funnel instead of optimizing raw download counts. Input
-warnings and missing or ambiguous source answers remain visible. Because release
-requests are neither unique people nor attributable sessions, the review never
-computes a download-to-lead conversion rate or assigns request movement to a
-discovery source.
+schema-5 or schema-6 pilot source, qualification, offer, payment, and revenue
+totals. It names one current commercial bottleneck and next action so weekly
+roadmap work responds to the paid funnel instead of optimizing raw download
+counts. Input warnings and missing or ambiguous source answers remain visible.
+Because release requests are neither unique people nor attributable sessions,
+the review never computes a download-to-lead conversion rate or assigns request
+movement to a discovery source.
+
+Schema-2 growth reviews also expose ordered schema-6 purchase-criterion outcomes
+and reconcile every criterion aggregate to the same source-reported deals and
+revenue. Schema-5 reports mark criterion evidence unavailable instead of zero.
+Missing and ambiguous criteria remain warnings. Criteria are self-reported
+evaluation priorities, not attribution, willingness to pay, or proof of a moat;
+only repeated paid outcomes can show which operational knowledge is defensible.

@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 35 of 1,000, with 965 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 36 of 1,000, with 964 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -88,11 +88,14 @@ The delivery goal is 1,000 meaningful commits. This update is commit 35 of 1,000
 - Schema-6 criterion totals for qualification, offers, booked revenue, conversion, and loss.
 - Normalized criterion evidence across deals, stale follow-up, and sales queues with explicit missing, edited, and duplicate-answer warnings.
 - Backward-compatible schema-5 and schema-6 pilot support in weekly growth reviews.
+- Schema-2 growth reviews with ordered purchase-criterion qualification, offer, payment, conversion, and loss outcomes.
+- Exact criterion-taxonomy and cross-segment reconciliation against source totals.
+- Explicit schema-5 criterion unavailability and schema-6 missing or ambiguous criterion evidence warnings.
 
 ## How To Run
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.8/repo-scout-0.3.8.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.9/repo-scout-0.3.9.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 python3 -m unittest discover -s tests
 ```

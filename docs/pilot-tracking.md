@@ -113,6 +113,12 @@ match the taxonomy, or duplicate criterion headings, use `unknown`. Both remain
 visible in summary totals and warnings. Sales priority remains based on purchase
 readiness, not on the criterion selected.
 
+`repo-scout-growth` consumes these schema-6 criterion totals in its weekly
+commercial review. It requires the exact taxonomy, validates each cumulative
+stage and revenue value, and reconciles aggregate criterion outcomes to source
+outcomes. Schema-5 pilot reports remain readable with criterion reporting marked
+unavailable rather than zero.
+
 Source attribution is self-reported discovery data. It does not prove which
 touchpoint caused a purchase, and it should be used directionally when deciding
 where to focus outreach. Repo Scout does not add cookies, tracking pixels, or a
@@ -137,8 +143,9 @@ The readiness summary is willingness-to-pay evidence, not accounting. A
 ## Operating Cadence
 
 Run the report weekly and before each roadmap review. Resolve label, source,
-readiness, and decision-criterion warnings before sharing totals. Work the sales queue from lowest
-priority number to highest, recording the actual outcome separately. The
+readiness, and decision-criterion warnings before sharing totals. Work the sales
+queue from lowest priority number to highest, recording the actual outcome
+separately. The
 follow-up list includes only
 open `pilot-lead`, `pilot-qualified`, and `pilot-offered` issues whose UTC
 `updatedAt` date is at least the threshold age. The boundary is inclusive.
