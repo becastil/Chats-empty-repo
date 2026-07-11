@@ -5,7 +5,7 @@
     "url": "https://example.invalid/issues/1",
     "state": "OPEN",
     "updatedAt": "2026-07-01T12:00:00Z",
-    "body": "### How did you hear about Repo Scout?\n\nRepo Scout website\n\n### Purchase readiness\n\nReady to purchase the $299 pilot",
+    "body": "### How did you hear about Repo Scout?\n\nRepo Scout website\n\n### Purchase readiness\n\nReady to purchase the $299 pilot\n\n### Primary purchase criterion\n\nThe $299 scope and price fit",
     "labels": [{"name": "pilot-lead"}]
   },
   {
@@ -14,7 +14,7 @@
     "url": "https://example.invalid/issues/2",
     "state": "OPEN",
     "updatedAt": "2026-07-03T12:00:00Z",
-    "body": "### How did you hear about Repo Scout?\n\nDirect outreach\n\n### Purchase readiness\n\nNeed internal approval for $299",
+    "body": "### How did you hear about Repo Scout?\n\nDirect outreach\n\n### Purchase readiness\n\nNeed internal approval for $299\n\n### Primary purchase criterion\n\nFits our implementation capacity and timing",
     "labels": [{"name": "pilot-lead"}, {"name": "pilot-qualified"}]
   },
   {
@@ -23,7 +23,7 @@
     "url": "https://example.invalid/issues/3",
     "state": "OPEN",
     "updatedAt": "2026-06-20T12:00:00Z",
-    "body": "### How did you hear about Repo Scout?\n\nGitHub repository or release\n\n### Purchase readiness\n\nReady to purchase the $299 pilot",
+    "body": "### How did you hear about Repo Scout?\n\nGitHub repository or release\n\n### Purchase readiness\n\nReady to purchase the $299 pilot\n\n### Primary purchase criterion\n\nSupports our required repository standards",
     "labels": [
       {"name": "pilot-lead"},
       {"name": "pilot-qualified"},
@@ -37,7 +37,7 @@
     "url": "https://example.invalid/issues/4",
     "state": "OPEN",
     "updatedAt": "2026-06-20T12:00:00Z",
-    "body": "### How did you hear about Repo Scout?\n\nTeammate or referral\n\n### Purchase readiness\n\nNeed internal approval for $299",
+    "body": "### How did you hear about Repo Scout?\n\nTeammate or referral\n\n### Purchase readiness\n\nNeed internal approval for $299\n\n### Primary purchase criterion\n\nWorks across our repositories and CI",
     "labels": [
       {"name": "pilot-lead"},
       {"name": "pilot-offered"},
@@ -50,7 +50,7 @@
     "url": "https://example.invalid/issues/5",
     "state": "CLOSED",
     "updatedAt": "2026-06-20T12:00:00Z",
-    "body": "### How did you hear about Repo Scout?\n\nSocial media or community\n\n### Purchase readiness\n\nExploring before requesting budget",
+    "body": "### How did you hear about Repo Scout?\n\nSocial media or community\n\n### Purchase readiness\n\nExploring before requesting budget\n\n### Primary purchase criterion\n\nProduces evidence our leaders or auditors need",
     "labels": [{"name": "pilot-lead"}, {"name": "pilot-lost"}]
   },
   {
@@ -59,7 +59,7 @@
     "url": "https://example.invalid/issues/6",
     "state": "CLOSED",
     "updatedAt": "2026-06-20T12:00:00Z",
-    "body": "### How did you hear about Repo Scout?\n\nGitHub repository or release\n\n### Purchase readiness\n\nReady to purchase the $299 pilot",
+    "body": "### How did you hear about Repo Scout?\n\nGitHub repository or release\n\n### Purchase readiness\n\nReady to purchase the $299 pilot\n\n### Primary purchase criterion\n\nMeets our privacy and security requirements",
     "labels": [
       {"name": "pilot-lead"},
       {"name": "pilot-qualified"},
@@ -75,7 +75,7 @@
     "url": "https://example.invalid/issues/7",
     "state": "CLOSED",
     "updatedAt": "2026-06-20T12:00:00Z",
-    "body": "### How did you hear about Repo Scout?\n\nDirect outreach\n\n### Purchase readiness\n\nNeed internal approval for $299",
+    "body": "### How did you hear about Repo Scout?\n\nDirect outreach\n\n### Purchase readiness\n\nNeed internal approval for $299\n\n### Primary purchase criterion\n\nThe $299 scope and price fit",
     "labels": [
       {"name": "pilot-lead"},
       {"name": "pilot-qualified"},
@@ -92,7 +92,7 @@
     "url": "https://example.invalid/issues/8",
     "state": "OPEN",
     "updatedAt": "2026-07-10T12:00:00Z",
-    "body": "### How did you hear about Repo Scout?\n\nOther\n\n### Purchase readiness\n\nExploring before requesting budget",
+    "body": "### How did you hear about Repo Scout?\n\nOther\n\n### Purchase readiness\n\nExploring before requesting budget\n\n### Primary purchase criterion\n\nOther",
     "labels": [{"name": "pilot-mystery"}]
   },
   {

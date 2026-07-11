@@ -7,7 +7,7 @@
 
 ## Near Term
 
-- Run one source-identifiable acquisition experiment from the growth review's current bottleneck.
+- Run one source-identifiable acquisition experiment and compare request outcomes by purchase criterion.
 - Collect the first three public pilot requests, work the prioritized sales queue, and compare purchase readiness by source.
 - Add a private pilot contact path after public intake validates demand.
 

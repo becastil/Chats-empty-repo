@@ -10,6 +10,10 @@ purchase the $299 pilot, needs internal approval, or exploring before requesting
 budget. Do not infer a stronger state from free text or move a deal forward
 based on readiness alone.
 
+Every new request also declares one primary purchase criterion. This is the
+result the buyer says matters most when evaluating the pilot, not a claim that
+Repo Scout has already satisfied it.
+
 ## Funnel Labels
 
 Keep each earlier milestone label when a request advances:
@@ -48,7 +52,7 @@ Use `--format json` for a machine-readable report. `--pilot-price` and
 `--target-pilots` change the commercial assumptions without changing issue
 data.
 
-Funnel JSON declares `schema_version: 5`. Its `follow_up` object records the
+Funnel JSON declares `schema_version: 6`. Its `follow_up` object records the
 UTC `as_of` date, the inactivity threshold, and a deterministic deal list.
 Omit `--as-of` to use the current UTC date. `--stale-days` changes the default
 seven-day threshold.
@@ -89,6 +93,26 @@ records include normalized `purchase_readiness` and the original
 state for prioritization. Missing, unrecognized, and duplicate answers produce
 warnings rather than a guessed readiness state.
 
+The `by_decision_criterion` object reports the same funnel and revenue totals
+for the buyer's selected primary criterion:
+
+| Criterion key | Intake answer |
+| --- | --- |
+| `policy_fit` | Supports our required repository standards |
+| `rollout_fit` | Works across our repositories and CI |
+| `evidence_fit` | Produces evidence our leaders or auditors need |
+| `privacy_security` | Meets our privacy and security requirements |
+| `effort_timing` | Fits our implementation capacity and timing |
+| `commercial_fit` | The $299 scope and price fit |
+| `other` | Other |
+
+Deal, stale-follow-up, and sales-queue records include the normalized
+`decision_criterion`; deal records also preserve `decision_criterion_raw`.
+Legacy issues without the answer use `unattributed`. Edited answers that do not
+match the taxonomy, or duplicate criterion headings, use `unknown`. Both remain
+visible in summary totals and warnings. Sales priority remains based on purchase
+readiness, not on the criterion selected.
+
 Source attribution is self-reported discovery data. It does not prove which
 touchpoint caused a purchase, and it should be used directionally when deciding
 where to focus outreach. Repo Scout does not add cookies, tracking pixels, or a
@@ -113,7 +137,7 @@ The readiness summary is willingness-to-pay evidence, not accounting. A
 ## Operating Cadence
 
 Run the report weekly and before each roadmap review. Resolve label, source,
-and readiness warnings before sharing totals. Work the sales queue from lowest
+readiness, and decision-criterion warnings before sharing totals. Work the sales queue from lowest
 priority number to highest, recording the actual outcome separately. The
 follow-up list includes only
 open `pilot-lead`, `pilot-qualified`, and `pilot-offered` issues whose UTC
@@ -131,3 +155,8 @@ private contact information outside GitHub.
 
 The pipeline is evidence, not the sale: `pilot-offered` measures conversion
 work, while only `pilot-paid` moves booked revenue toward $897.
+
+Compare purchase criteria only after outcomes exist. Repeated paid or converted
+results can show which proof, policy pack, or rollout playbook deserves more
+investment; unqualified requests and stated preferences alone do not establish
+a moat or willingness to pay.

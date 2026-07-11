@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.8 - 2026-07-10
+
+- Added a required primary purchase criterion to the public founding-team pilot intake.
+- Added a closed taxonomy for policy, rollout, evidence, privacy, implementation, commercial, and other purchase criteria.
+- Upgraded pilot reporting to schema 6 with per-criterion qualification, offer, payment, conversion, and loss totals.
+- Added normalized criteria to deal, stale-follow-up, and sales-queue records while preserving original answers on deals.
+- Added explicit missing, unknown, and ambiguous criterion warnings without changing readiness-based sales priority or booked-revenue semantics.
+- Kept `repo-scout-growth` compatible with both schema-5 and schema-6 pilot reports.
+- Added form-contract, taxonomy, compatibility, malformed-answer, aggregate, and text-output coverage.
+
 ## 0.3.7 - 2026-07-10
 
 - Added `repo-scout-growth` for dependency-free weekly review of distribution and paid-pilot evidence.

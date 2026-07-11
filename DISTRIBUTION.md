@@ -89,7 +89,7 @@ repo-scout-pilot --format json --as-of "$(date -u +%F)" \
 repo-scout-growth distribution-current.json pilot-current.json
 ```
 
-`repo-scout-growth` accepts schema-2 distribution and schema-5 pilot reports.
+`repo-scout-growth` accepts schema-2 distribution and schema-5 or schema-6 pilot reports.
 It shows signed primary, portable, and wheel movement beside attributed pilot
 requests, qualification, offers, booked revenue, and source totals. Its
 deterministic bottleneck names one next action for missing measurement,

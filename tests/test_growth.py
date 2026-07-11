@@ -166,9 +166,16 @@ class GrowthReportTests(unittest.TestCase):
     def test_rejects_unsupported_or_inconsistent_reports(self) -> None:
         valid_distribution = self._distribution()
         valid_pilot = self._pilot()
+        schema_six_pilot = {**valid_pilot, "schema_version": 6}
+        self.assertEqual(
+            build_growth_report(valid_distribution, schema_six_pilot)[
+                "bottleneck"
+            ]["stage"],
+            "acquisition",
+        )
         cases = [
             ({**valid_distribution, "schema_version": 3}, valid_pilot, "schema_version"),
-            (valid_distribution, {**valid_pilot, "schema_version": 6}, "schema_version"),
+            (valid_distribution, {**valid_pilot, "schema_version": 7}, "schema_version"),
             (
                 {**valid_distribution, "change": {"portable_downloads_delta": 1}},
                 valid_pilot,

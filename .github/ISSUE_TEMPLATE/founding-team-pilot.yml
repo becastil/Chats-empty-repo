@@ -68,6 +68,22 @@ body:
       required: true
 
   - type: dropdown
+    id: decision_criterion
+    attributes:
+      label: Primary purchase criterion
+      description: Which result matters most when your team decides whether to purchase the pilot? This answer is public.
+      options:
+        - Supports our required repository standards
+        - Works across our repositories and CI
+        - Produces evidence our leaders or auditors need
+        - Meets our privacy and security requirements
+        - Fits our implementation capacity and timing
+        - The $299 scope and price fit
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
     id: purchase_readiness
     attributes:
       label: Purchase readiness

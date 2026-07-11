@@ -31,7 +31,7 @@ not require a checkout, package installation, administrator access, or an API
 key:
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.7/repo-scout-0.3.7.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.8/repo-scout-0.3.8.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 ```
 
@@ -41,7 +41,7 @@ need the `repo-scout-distribution`, `repo-scout-growth`, `repo-scout-policy`,
 `repo-scout-rollout`, or `repo-scout-pilot` commands:
 
 ```bash
-python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.7/repo_scout-0.3.7-py3-none-any.whl
+python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.8/repo_scout-0.3.8-py3-none-any.whl
 repo-scout --languages .
 ```
 
@@ -233,7 +233,10 @@ distance to the three-pilot goal, annual conversions, losses, label drift, and
 open pre-payment issues inactive for at least seven UTC calendar days. It also
 attributes qualification and booked revenue to the request form's self-reported
 discovery channel and groups ready, approval-dependent, and exploratory intent
-without treating intent as cash. A deterministic sales queue ranks every open
+without treating intent as cash. It also groups the primary purchase criterion
+behind each request, including policy fit, rollout fit, evidence, privacy,
+implementation capacity, and commercial fit, so repeated paid outcomes can
+shape stronger policy packs and rollout playbooks. A deterministic sales queue ranks every open
 pre-payment deal by declared readiness and funnel stage, then names the next
 conversion action without advancing labels automatically.
 See [docs/pilot-tracking.md](docs/pilot-tracking.md) for stage definitions and

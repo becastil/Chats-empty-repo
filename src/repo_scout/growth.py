@@ -9,7 +9,7 @@ from typing import Any, Sequence
 
 SCHEMA_VERSION = 1
 SUPPORTED_DISTRIBUTION_SCHEMAS = {2}
-SUPPORTED_PILOT_SCHEMAS = {5}
+SUPPORTED_PILOT_SCHEMAS = {5, 6}
 DELTA_FIELDS = (
     "primary_artifact_downloads_delta",
     "portable_downloads_delta",
@@ -224,7 +224,7 @@ def build_parser() -> argparse.ArgumentParser:
         "pilot_report",
         type=Path,
         metavar="PILOT_REPORT",
-        help="Schema-5 repo-scout-pilot JSON report.",
+        help="Schema-5 or schema-6 repo-scout-pilot JSON report.",
     )
     parser.add_argument(
         "--format",

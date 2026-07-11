@@ -10,7 +10,7 @@ import sys
 from typing import Any, Sequence, TextIO
 
 
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 DEFAULT_PILOT_PRICE_USD = 299
 DEFAULT_TARGET_PILOTS = 3
 DEFAULT_STALE_DAYS = 7
@@ -61,6 +61,27 @@ READINESS_BY_ANSWER = {
 }
 DECLARED_READINESS = tuple(readiness for readiness, _ in READINESS_OPTIONS)
 READINESS_KEYS = (*DECLARED_READINESS, "unattributed", "unknown")
+DECISION_CRITERION_FIELD_HEADING = "Primary purchase criterion"
+DECISION_CRITERION_OPTIONS = (
+    ("policy_fit", "Supports our required repository standards"),
+    ("rollout_fit", "Works across our repositories and CI"),
+    ("evidence_fit", "Produces evidence our leaders or auditors need"),
+    ("privacy_security", "Meets our privacy and security requirements"),
+    ("effort_timing", "Fits our implementation capacity and timing"),
+    ("commercial_fit", "The $299 scope and price fit"),
+    ("other", "Other"),
+)
+DECISION_CRITERION_BY_ANSWER = {
+    answer: criterion for criterion, answer in DECISION_CRITERION_OPTIONS
+}
+DECLARED_DECISION_CRITERIA = tuple(
+    criterion for criterion, _ in DECISION_CRITERION_OPTIONS
+)
+DECISION_CRITERION_KEYS = (
+    *DECLARED_DECISION_CRITERIA,
+    "unattributed",
+    "unknown",
+)
 SALES_PRIORITY_BY_READINESS = {
     "ready": 1,
     "needs_approval": 2,
@@ -127,7 +148,14 @@ def build_funnel(
     by_readiness = {
         readiness: _empty_segment_totals() for readiness in READINESS_KEYS
     }
+    by_decision_criterion = {
+        criterion: _empty_segment_totals()
+        for criterion in DECISION_CRITERION_KEYS
+    }
     readiness_counts = {readiness: 0 for readiness in READINESS_KEYS}
+    decision_criterion_counts = {
+        criterion: 0 for criterion in DECISION_CRITERION_KEYS
+    }
     deals: list[dict[str, Any]] = []
     warnings: list[dict[str, Any]] = []
     stale_deals: list[dict[str, Any]] = []
@@ -186,6 +214,15 @@ def build_funnel(
         if readiness_warning is not None:
             warnings.append(readiness_warning)
         readiness_counts[readiness] += 1
+
+        (
+            decision_criterion,
+            decision_criterion_raw,
+            decision_criterion_warning,
+        ) = _classify_decision_criterion(issue)
+        if decision_criterion_warning is not None:
+            warnings.append(decision_criterion_warning)
+        decision_criterion_counts[decision_criterion] += 1
 
         present_stages = [
             position
@@ -262,6 +299,7 @@ def build_funnel(
                     "stage": stage,
                     "source": source,
                     "purchase_readiness": readiness,
+                    "decision_criterion": decision_criterion,
                     "priority": sales_priority,
                     "next_action": next_action,
                     "age_days": age_days,
@@ -297,6 +335,7 @@ def build_funnel(
                         "stage": stage,
                         "source": source,
                         "purchase_readiness": readiness,
+                        "decision_criterion": decision_criterion,
                         "priority": sales_priority,
                         "next_action": next_action,
                         "age_days": age_days,
@@ -311,7 +350,11 @@ def build_funnel(
         lost_pilots += int(has_lost)
         is_qualified = furthest_stage >= STAGE_LABELS.index("pilot-qualified")
         is_offered = furthest_stage >= STAGE_LABELS.index("pilot-offered")
-        for totals in (by_source[source], by_readiness[readiness]):
+        for totals in (
+            by_source[source],
+            by_readiness[readiness],
+            by_decision_criterion[decision_criterion],
+        ):
             _record_segment_totals(
                 totals,
                 is_qualified=is_qualified,
@@ -331,6 +374,8 @@ def build_funnel(
                 "source_raw": source_raw,
                 "purchase_readiness": readiness,
                 "purchase_readiness_raw": readiness_raw,
+                "decision_criterion": decision_criterion,
+                "decision_criterion_raw": decision_criterion_raw,
                 "booked": is_booked,
                 "state": issue.state,
                 "updated_at": _format_timestamp(issue.updated_at),
@@ -374,6 +419,16 @@ def build_funnel(
             "exploring_issues": readiness_counts["exploring"],
             "missing_readiness_issues": readiness_counts["unattributed"],
             "unknown_readiness_issues": readiness_counts["unknown"],
+            "declared_decision_criterion_issues": sum(
+                decision_criterion_counts[criterion]
+                for criterion in DECLARED_DECISION_CRITERIA
+            ),
+            "missing_decision_criterion_issues": decision_criterion_counts[
+                "unattributed"
+            ],
+            "unknown_decision_criterion_issues": decision_criterion_counts[
+                "unknown"
+            ],
         },
         "follow_up": {
             "as_of": report_date.isoformat(),
@@ -389,6 +444,7 @@ def build_funnel(
         "by_stage": by_stage,
         "by_source": by_source,
         "by_readiness": by_readiness,
+        "by_decision_criterion": by_decision_criterion,
         "deals": sorted(deals, key=lambda deal: deal["number"]),
         "warnings": warnings,
     }
@@ -426,6 +482,12 @@ def format_funnel(report: dict[str, Any]) -> str:
             f"{summary['exploring_issues']} exploring / "
             f"{summary['missing_readiness_issues']} missing / "
             f"{summary['unknown_readiness_issues']} unknown"
+        ),
+        (
+            "Purchase criteria: "
+            f"{summary['declared_decision_criterion_issues']} declared / "
+            f"{summary['missing_decision_criterion_issues']} missing / "
+            f"{summary['unknown_decision_criterion_issues']} unknown"
         ),
         (
             f"Follow-up: {summary['stale_deals']} stale open pre-payment "
@@ -484,13 +546,35 @@ def format_funnel(report: dict[str, Any]) -> str:
     else:
         lines.append("  none")
 
+    lines.append("Purchase criteria:")
+    populated_criteria = [
+        criterion
+        for criterion in DECISION_CRITERION_KEYS
+        if report["by_decision_criterion"][criterion]["deals"]
+    ]
+    if populated_criteria:
+        for criterion in populated_criteria:
+            totals = report["by_decision_criterion"][criterion]
+            deal_label = "deal" if totals["deals"] == 1 else "deals"
+            lines.append(
+                f"  {criterion}: {totals['deals']} {deal_label}, "
+                f"{totals['qualified_pilots']} qualified, "
+                f"{totals['offered_pilots']} offered, "
+                f"{totals['booked_pilots']} booked "
+                f"(${totals['booked_revenue_usd']}), "
+                f"{totals['annual_conversions']} converted, "
+                f"{totals['lost_pilots']} lost"
+            )
+    else:
+        lines.append("  none")
+
     lines.append("Deals:")
     if report["deals"]:
         for deal in report["deals"]:
             suffix = f" {deal['url']}" if deal["url"] else ""
             lines.append(
                 f"  #{deal['number']} [{deal['stage']}, {deal['source']}, "
-                f"{deal['purchase_readiness']}] "
+                f"{deal['purchase_readiness']}, {deal['decision_criterion']}] "
                 f"{deal['title']}{suffix}"
             )
     else:
@@ -514,7 +598,8 @@ def format_funnel(report: dict[str, Any]) -> str:
             suffix = f" {deal['url']}" if deal["url"] else ""
             lines.append(
                 f"  #{deal['number']} [P{deal['priority']}, {deal['stage']}, "
-                f"{deal['purchase_readiness']}] {deal['next_action']} "
+                f"{deal['purchase_readiness']}, {deal['decision_criterion']}] "
+                f"{deal['next_action']} "
                 f"{deal['title']}{suffix}"
             )
     else:
@@ -817,6 +902,46 @@ def _classify_purchase_readiness(
             ),
         )
     return readiness, raw_answer, None
+
+
+def _classify_decision_criterion(
+    issue: PilotIssue,
+) -> tuple[str, str | None, dict[str, Any] | None]:
+    answers = _issue_form_answers(issue.body, DECISION_CRITERION_FIELD_HEADING)
+    if not answers or answers == ["_No response_"]:
+        return (
+            "unattributed",
+            None,
+            _warning(
+                issue,
+                "missing_decision_criterion",
+                "Pilot issue has no primary purchase criterion answer.",
+            ),
+        )
+    if len(answers) != 1:
+        return (
+            "unknown",
+            "; ".join(answers),
+            _warning(
+                issue,
+                "ambiguous_decision_criterion",
+                "Pilot issue contains multiple purchase criterion answers.",
+            ),
+        )
+
+    raw_answer = answers[0]
+    criterion = DECISION_CRITERION_BY_ANSWER.get(raw_answer)
+    if criterion is None:
+        return (
+            "unknown",
+            raw_answer,
+            _warning(
+                issue,
+                "unknown_decision_criterion",
+                f"Unknown purchase criterion answer: {raw_answer}.",
+            ),
+        )
+    return criterion, raw_answer, None
 
 
 def _issue_form_answers(body: str, heading: str) -> list[str]:

@@ -14,6 +14,8 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from repo_scout.pilot_funnel import (
+    DECISION_CRITERION_FIELD_HEADING,
+    DECISION_CRITERION_OPTIONS,
     FunnelInputError,
     READINESS_FIELD_HEADING,
     READINESS_OPTIONS,
@@ -58,12 +60,24 @@ class PilotFunnelTests(unittest.TestCase):
         self.assertEqual(readiness_positions, sorted(readiness_positions))
         self.assertIn("required: true", readiness_section)
 
+        self.assertIn("id: decision_criterion", form)
+        self.assertIn(f"label: {DECISION_CRITERION_FIELD_HEADING}", form)
+        criterion_section = form[form.index("id: decision_criterion") :]
+        next_field = criterion_section.find("\n  - type:")
+        criterion_section = criterion_section[:next_field]
+        criterion_positions = [
+            criterion_section.index(f"        - {answer}")
+            for _, answer in DECISION_CRITERION_OPTIONS
+        ]
+        self.assertEqual(criterion_positions, sorted(criterion_positions))
+        self.assertIn("required: true", criterion_section)
+
     def test_build_funnel_tracks_revenue_stages_and_label_drift(self) -> None:
         payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
 
         report = build_funnel(payload, as_of=date(2026, 7, 10))
 
-        self.assertEqual(report["schema_version"], 5)
+        self.assertEqual(report["schema_version"], 6)
         self.assertEqual(report["summary"]["tracked_issues"], 8)
         self.assertEqual(report["summary"]["ignored_issues"], 1)
         self.assertEqual(report["summary"]["booked_pilots"], 4)
@@ -82,6 +96,15 @@ class PilotFunnelTests(unittest.TestCase):
         self.assertEqual(report["summary"]["exploring_issues"], 2)
         self.assertEqual(report["summary"]["missing_readiness_issues"], 0)
         self.assertEqual(report["summary"]["unknown_readiness_issues"], 0)
+        self.assertEqual(
+            report["summary"]["declared_decision_criterion_issues"], 8
+        )
+        self.assertEqual(
+            report["summary"]["missing_decision_criterion_issues"], 0
+        )
+        self.assertEqual(
+            report["summary"]["unknown_decision_criterion_issues"], 0
+        )
         self.assertEqual(
             report["by_stage"],
             {
@@ -132,6 +155,10 @@ class PilotFunnelTests(unittest.TestCase):
             "Qualify the team and send the $299 pilot terms.",
         )
         self.assertEqual(report["sales_queue"]["deals"][0]["priority"], 1)
+        self.assertEqual(
+            report["sales_queue"]["deals"][0]["decision_criterion"],
+            "commercial_fit",
+        )
         self.assertEqual(report["sales_queue"]["deals"][1]["priority"], 2)
         self.assertEqual(
             report["by_source"]["github"],
@@ -185,6 +212,23 @@ class PilotFunnelTests(unittest.TestCase):
         self.assertEqual(report["by_readiness"]["exploring"]["deals"], 2)
         self.assertEqual(report["by_readiness"]["exploring"]["lost_pilots"], 1)
         self.assertEqual(
+            report["by_decision_criterion"]["policy_fit"]["booked_pilots"],
+            1,
+        )
+        self.assertEqual(
+            report["by_decision_criterion"]["privacy_security"][
+                "annual_conversions"
+            ],
+            1,
+        )
+        self.assertEqual(
+            sum(
+                totals["deals"]
+                for totals in report["by_decision_criterion"].values()
+            ),
+            report["summary"]["tracked_issues"],
+        )
+        self.assertEqual(
             sum(totals["deals"] for totals in report["by_readiness"].values()),
             report["summary"]["tracked_issues"],
         )
@@ -199,6 +243,10 @@ class PilotFunnelTests(unittest.TestCase):
     ) -> None:
         heading = "### How did you hear about Repo Scout?"
         readiness = "### Purchase readiness"
+        criterion = (
+            "### Primary purchase criterion\n\n"
+            "Supports our required repository standards"
+        )
         payload = [
             {
                 "number": 1,
@@ -207,7 +255,8 @@ class PilotFunnelTests(unittest.TestCase):
                 "updatedAt": "2026-07-10T00:00:00Z",
                 "body": (
                     f"{heading}\n\nGitHub repository or release\n\n"
-                    f"{readiness}\n\nReady to purchase the $299 pilot"
+                    f"{readiness}\n\nReady to purchase the $299 pilot\n\n"
+                    f"{criterion}"
                 ),
                 "labels": [
                     "pilot-lead",
@@ -221,7 +270,10 @@ class PilotFunnelTests(unittest.TestCase):
                 "title": "Legacy lead without source",
                 "state": "OPEN",
                 "updatedAt": "2026-07-10T00:00:00Z",
-                "body": f"{readiness}\n\nExploring before requesting budget",
+                "body": (
+                    f"{readiness}\n\nExploring before requesting budget\n\n"
+                    f"{criterion}"
+                ),
                 "labels": ["pilot-lead"],
             },
             {
@@ -231,7 +283,7 @@ class PilotFunnelTests(unittest.TestCase):
                 "updatedAt": "2026-07-10T00:00:00Z",
                 "body": (
                     f"{heading}\n\nConference\n\n{readiness}\n\n"
-                    "Need internal approval for $299"
+                    f"Need internal approval for $299\n\n{criterion}"
                 ),
                 "labels": ["pilot-lead", "pilot-qualified"],
             },
@@ -242,7 +294,8 @@ class PilotFunnelTests(unittest.TestCase):
                 "updatedAt": "2026-07-10T00:00:00Z",
                 "body": (
                     f"{heading}\n\nSearch\n\n{heading}\n\nDirect outreach\n\n"
-                    f"{readiness}\n\nExploring before requesting budget"
+                    f"{readiness}\n\nExploring before requesting budget\n\n"
+                    f"{criterion}"
                 ),
                 "labels": ["pilot-lead", "pilot-lost"],
             },
@@ -289,13 +342,20 @@ class PilotFunnelTests(unittest.TestCase):
     ) -> None:
         source = "### How did you hear about Repo Scout?\n\nRepo Scout website"
         heading = "### Purchase readiness"
+        criterion = (
+            "### Primary purchase criterion\n\n"
+            "Supports our required repository standards"
+        )
         payload = [
             {
                 "number": 1,
                 "title": "Ready buyer",
                 "state": "OPEN",
                 "updatedAt": "2026-07-10T00:00:00Z",
-                "body": f"{source}\n\n{heading}\n\nReady to purchase the $299 pilot",
+                "body": (
+                    f"{source}\n\n{heading}\n\nReady to purchase the $299 pilot"
+                    f"\n\n{criterion}"
+                ),
                 "labels": ["pilot-lead"],
             },
             {
@@ -303,7 +363,7 @@ class PilotFunnelTests(unittest.TestCase):
                 "title": "Legacy request",
                 "state": "OPEN",
                 "updatedAt": "2026-07-10T00:00:00Z",
-                "body": source,
+                "body": f"{source}\n\n{criterion}",
                 "labels": ["pilot-lead"],
             },
             {
@@ -311,7 +371,7 @@ class PilotFunnelTests(unittest.TestCase):
                 "title": "Edited answer",
                 "state": "OPEN",
                 "updatedAt": "2026-07-10T00:00:00Z",
-                "body": f"{source}\n\n{heading}\n\nBudget maybe",
+                "body": f"{source}\n\n{heading}\n\nBudget maybe\n\n{criterion}",
                 "labels": ["pilot-lead"],
             },
             {
@@ -321,7 +381,8 @@ class PilotFunnelTests(unittest.TestCase):
                 "updatedAt": "2026-07-10T00:00:00Z",
                 "body": (
                     f"{source}\n\n{heading}\n\nNeed internal approval for $299\n\n"
-                    f"{heading}\n\nExploring before requesting budget"
+                    f"{heading}\n\nExploring before requesting budget\n\n"
+                    f"{criterion}"
                 ),
                 "labels": ["pilot-lead"],
             },
@@ -330,7 +391,9 @@ class PilotFunnelTests(unittest.TestCase):
                 "title": "Generated no-response answer",
                 "state": "OPEN",
                 "updatedAt": "2026-07-10T00:00:00Z",
-                "body": f"{source}\n\n{heading}\n\n_No response_",
+                "body": (
+                    f"{source}\n\n{heading}\n\n_No response_\n\n{criterion}"
+                ),
                 "labels": ["pilot-lead"],
             },
         ]
@@ -363,6 +426,111 @@ class PilotFunnelTests(unittest.TestCase):
             "Purchase readiness: 1 ready / 0 need approval / 0 exploring / "
             "2 missing / 2 unknown",
             text_report,
+        )
+
+    def test_decision_criterion_handles_missing_unknown_and_ambiguous_answers(
+        self,
+    ) -> None:
+        common = (
+            "### How did you hear about Repo Scout?\n\nRepo Scout website\n\n"
+            "### Purchase readiness\n\nExploring before requesting budget"
+        )
+        heading = "### Primary purchase criterion"
+        payload = [
+            {
+                "number": 1,
+                "title": "Policy-fit buyer",
+                "state": "OPEN",
+                "updatedAt": "2026-07-10T00:00:00Z",
+                "body": (
+                    f"{common}\n\n{heading}\n\n"
+                    "Supports our required repository standards"
+                ),
+                "labels": ["pilot-lead", "pilot-qualified"],
+            },
+            {
+                "number": 2,
+                "title": "Legacy request",
+                "state": "OPEN",
+                "updatedAt": "2026-07-10T00:00:00Z",
+                "body": common,
+                "labels": ["pilot-lead"],
+            },
+            {
+                "number": 3,
+                "title": "Edited criterion",
+                "state": "OPEN",
+                "updatedAt": "2026-07-10T00:00:00Z",
+                "body": f"{common}\n\n{heading}\n\nNeeds magic",
+                "labels": ["pilot-lead"],
+            },
+            {
+                "number": 4,
+                "title": "Duplicate criterion headings",
+                "state": "OPEN",
+                "updatedAt": "2026-07-10T00:00:00Z",
+                "body": (
+                    f"{common}\n\n{heading}\n\n"
+                    "Works across our repositories and CI\n\n"
+                    f"{heading}\n\nThe $299 scope and price fit"
+                ),
+                "labels": ["pilot-lead"],
+            },
+            {
+                "number": 5,
+                "title": "Generated no-response criterion",
+                "state": "OPEN",
+                "updatedAt": "2026-07-10T00:00:00Z",
+                "body": f"{common}\n\n{heading}\n\n_No response_",
+                "labels": ["pilot-lead"],
+            },
+        ]
+
+        report = build_funnel(payload, as_of=date(2026, 7, 10))
+
+        self.assertEqual(
+            report["summary"]["declared_decision_criterion_issues"], 1
+        )
+        self.assertEqual(
+            report["summary"]["missing_decision_criterion_issues"], 2
+        )
+        self.assertEqual(
+            report["summary"]["unknown_decision_criterion_issues"], 2
+        )
+        self.assertEqual(
+            [warning["kind"] for warning in report["warnings"]],
+            [
+                "missing_decision_criterion",
+                "unknown_decision_criterion",
+                "ambiguous_decision_criterion",
+                "missing_decision_criterion",
+            ],
+        )
+        self.assertEqual(
+            report["by_decision_criterion"]["policy_fit"][
+                "qualified_pilots"
+            ],
+            1,
+        )
+        self.assertEqual(
+            report["by_decision_criterion"]["unattributed"]["deals"], 2
+        )
+        self.assertEqual(
+            report["by_decision_criterion"]["unknown"]["deals"], 2
+        )
+        self.assertEqual(report["deals"][0]["decision_criterion"], "policy_fit")
+        self.assertEqual(
+            report["deals"][0]["decision_criterion_raw"],
+            "Supports our required repository standards",
+        )
+        self.assertIsNone(report["deals"][1]["decision_criterion_raw"])
+        self.assertEqual(
+            report["deals"][3]["decision_criterion_raw"],
+            "Works across our repositories and CI; The $299 scope and price fit",
+        )
+        self.assertIn(
+            "Purchase criteria: 1 declared / 2 missing / 2 unknown",
+            format_funnel(report),
         )
 
     def test_main_emits_stable_json_with_custom_commercial_targets(self) -> None:
@@ -415,12 +583,17 @@ class PilotFunnelTests(unittest.TestCase):
         self.assertIn("Stale deals:\n  none", stdout.getvalue())
         self.assertIn("Sources:\n  none", stdout.getvalue())
         self.assertIn("Purchase readiness:\n  none", stdout.getvalue())
+        self.assertIn("Purchase criteria:\n  none", stdout.getvalue())
         self.assertIn("Sales actions: 0 open pre-payment deals", stdout.getvalue())
         self.assertIn("Sales queue:\n  none", stdout.getvalue())
         self.assertIn("Warnings:\n  none", stdout.getvalue())
 
     def test_sales_queue_prioritizes_readiness_stage_and_age(self) -> None:
         source = "### How did you hear about Repo Scout?\n\nRepo Scout website"
+        criterion = (
+            "### Primary purchase criterion\n\n"
+            "Works across our repositories and CI"
+        )
 
         def issue(
             number: int,
@@ -435,7 +608,10 @@ class PilotFunnelTests(unittest.TestCase):
                 "title": f"Pilot {number}",
                 "state": state,
                 "updatedAt": updated_at,
-                "body": f"{source}\n\n### Purchase readiness\n\n{readiness}",
+                "body": (
+                    f"{source}\n\n### Purchase readiness\n\n{readiness}\n\n"
+                    f"{criterion}"
+                ),
                 "labels": stage_labels,
             }
 
@@ -519,7 +695,8 @@ class PilotFunnelTests(unittest.TestCase):
         text_report = format_funnel(report)
         self.assertIn("Sales actions: 6 open pre-payment deals", text_report)
         self.assertIn(
-            "#2 [P1, offered, ready] Confirm the purchase and payment path.",
+            "#2 [P1, offered, ready, rollout_fit] "
+            "Confirm the purchase and payment path.",
             text_report,
         )
 
@@ -605,7 +782,9 @@ class PilotFunnelTests(unittest.TestCase):
         for issue in payload:
             issue["body"] = (
                 "### How did you hear about Repo Scout?\n\nRepo Scout website\n\n"
-                "### Purchase readiness\n\nNeed internal approval for $299"
+                "### Purchase readiness\n\nNeed internal approval for $299\n\n"
+                "### Primary purchase criterion\n\n"
+                "Fits our implementation capacity and timing"
             )
 
         report = build_funnel(payload, as_of=date(2026, 7, 10), stale_days=7)

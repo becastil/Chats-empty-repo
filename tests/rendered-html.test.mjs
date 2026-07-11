@@ -36,12 +36,12 @@ test("server-renders the Repo Scout companion page", async () => {
   assert.match(html, /Copy no-install setup/i);
   assert.match(html, /One file\. Python 3\.11\+\. No API key\./i);
   assert.match(html, /curl -fL/i);
-  assert.match(html, /repo-scout-0\.3\.7\.pyz/i);
+  assert.match(html, /repo-scout-0\.3\.8\.pyz/i);
   assert.match(html, /python3 \/tmp\/repo-scout\.pyz --languages \./i);
   assert.match(html, /Download v/i);
   assert.match(
     html,
-    /releases\/download\/v0\.3\.7\/repo-scout-0\.3\.7\.pyz/i,
+    /releases\/download\/v0\.3\.8\/repo-scout-0\.3\.8\.pyz/i,
   );
   assert.doesNotMatch(html, /PYTHONPATH=src python3 -m repo_scout/i);
   assert.match(html, /Snapshot lab/i);
@@ -101,6 +101,11 @@ test("ships a qualified founding-team pilot intake", async () => {
   assert.match(form, /GitHub repository or release/i);
   assert.match(form, /Teammate or referral/i);
   assert.match(form, /id: repository_standard/i);
+  assert.match(form, /id: decision_criterion/i);
+  assert.match(form, /label: Primary purchase criterion/i);
+  assert.match(form, /Works across our repositories and CI/i);
+  assert.match(form, /Meets our privacy and security requirements/i);
+  assert.match(form, /The \$299 scope and price fit/i);
   assert.match(form, /id: purchase_readiness/i);
   assert.match(form, /label: Purchase readiness/i);
   assert.match(form, /Ready to purchase the \$299 pilot/i);

@@ -122,7 +122,15 @@ Funnel totals connect each readiness state to qualification, offers,
 booked revenue, conversion, and loss. Readiness is self-reported intent, not
 cash; only `pilot-paid` or a later paid stage counts as booked revenue.
 
-Schema-5 reporting also turns every open pre-payment request into a prioritized
+The intake requires one primary purchase criterion covering policy fit,
+cross-repository rollout, leadership or audit evidence, privacy and security,
+implementation capacity, commercial fit, or other. Schema-6 funnel totals
+connect that criterion to qualification, offers, payment, conversion, and loss.
+This creates structured customer learning before outreach scales, but a stated
+criterion is not a moat or proof of demand. Repeated paid outcomes must show
+which policy packs, evidence patterns, and rollout playbooks are defensible.
+
+Schema-6 reporting also turns every open pre-payment request into a prioritized
 sales action. Ready buyers surface first, approval-dependent buyers receive an
 approval-oriented action, exploratory buyers receive a proof or decision-criteria
 action, and unclear answers require clarification. Funnel stage and issue age
@@ -158,7 +166,7 @@ confounders and therefore remain directional until a buyer self-reports a source
 or enters the paid funnel.
 
 The dependency-free `repo-scout-growth` review places those signed deltas beside
-schema-5 pilot source, qualification, offer, payment, and revenue totals. It
+schema-5 or schema-6 pilot source, qualification, offer, payment, and revenue totals. It
 names one current commercial bottleneck and next action so weekly roadmap work
 responds to the paid funnel instead of optimizing raw download counts. Input
 warnings and missing or ambiguous source answers remain visible. Because release

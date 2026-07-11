@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 34 of 1,000, with 966 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 35 of 1,000, with 965 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -84,15 +84,19 @@ The delivery goal is 1,000 meaningful commits. This update is commit 34 of 1,000
 - Dependency-free weekly growth reviews that join signed distribution movement to attributed pilot, offer, and booked-revenue evidence.
 - Deterministic commercial bottlenecks from missing measurement through acquisition, qualification, offer, payment, pilot target, retention, and validation.
 - Explicit refusal to calculate download-to-lead conversion rates from non-unique artifact requests.
+- Required self-reported primary purchase criteria in public pilot intake.
+- Schema-6 criterion totals for qualification, offers, booked revenue, conversion, and loss.
+- Normalized criterion evidence across deals, stale follow-up, and sales queues with explicit missing, edited, and duplicate-answer warnings.
+- Backward-compatible schema-5 and schema-6 pilot support in weekly growth reviews.
 
 ## How To Run
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.7/repo-scout-0.3.7.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.8/repo-scout-0.3.8.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 python3 -m unittest discover -s tests
 ```
 
 ## Next Small Task
 
-Run one source-identifiable acquisition experiment and connect the first public pilot request to its self-reported discovery source.
+Run one source-identifiable acquisition experiment and compare the first public pilot requests by discovery source, readiness, and primary purchase criterion.
