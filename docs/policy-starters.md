@@ -78,3 +78,6 @@ already agreed to rather than creating new process by surprise. That includes
 the team's own forbidden credential, generated-secret, or local-configuration
 paths rather than a generic list imposed without review. Forbidden-file rules
 use policy version 2; version 1 policies remain readable for existing teams.
+Policy version 3 adds bounded `forbidden_file_patterns` for nested monorepo
+paths. The staged `examples/team-policy-v3.toml` demonstrates nested `.env`
+and filename-wide `.pem` protection without changing the verified v2 CI pin.

@@ -8,8 +8,9 @@ import tomllib
 from typing import Any
 
 
-POLICY_VERSION = 2
-SUPPORTED_POLICY_VERSIONS = (1, POLICY_VERSION)
+POLICY_VERSION = 3
+SUPPORTED_POLICY_VERSIONS = (1, 2, POLICY_VERSION)
+MAX_FORBIDDEN_PATTERN_PATHS = 20
 
 _ROOT_KEYS = {"version", "repository"}
 _REPOSITORY_KEYS_V1 = {
@@ -19,6 +20,7 @@ _REPOSITORY_KEYS_V1 = {
     "require_clean_git",
 }
 _REPOSITORY_KEYS_V2 = _REPOSITORY_KEYS_V1 | {"forbidden_files"}
+_REPOSITORY_KEYS_V3 = _REPOSITORY_KEYS_V2 | {"forbidden_file_patterns"}
 
 
 class PolicyError(ValueError):
@@ -72,6 +74,36 @@ def evaluate_policy(
                     "rule": "repository.forbidden_files",
                     "path": forbidden_file,
                     "message": f"Forbidden file is present: {forbidden_file}.",
+                }
+            )
+
+    forbidden_patterns = rules.get("forbidden_file_patterns", [])
+    if forbidden_patterns:
+        visible_paths = _policy_visible_paths(snapshot, root)
+        for pattern in forbidden_patterns:
+            matched_paths = [
+                path
+                for path in visible_paths
+                if _matches_file_pattern(path, pattern)
+            ]
+            if not matched_paths:
+                continue
+            shown_paths = matched_paths[:MAX_FORBIDDEN_PATTERN_PATHS]
+            truncated = len(matched_paths) > len(shown_paths)
+            detail = ", ".join(shown_paths)
+            if truncated:
+                detail += f", and {len(matched_paths) - len(shown_paths)} more"
+            violations.append(
+                {
+                    "rule": "repository.forbidden_file_patterns",
+                    "pattern": pattern,
+                    "paths": shown_paths,
+                    "match_count": len(matched_paths),
+                    "paths_truncated": truncated,
+                    "message": (
+                        f"Forbidden file pattern {pattern} matched "
+                        f"{len(matched_paths)} file(s): {detail}."
+                    ),
                 }
             )
 
@@ -136,7 +168,11 @@ def evaluate_policy(
 def policy_fingerprint(policy: dict[str, Any]) -> str:
     """Return a stable identity for the policy's enforced semantics."""
     repository = dict(policy["repository"])
-    for key in ("required_files", "forbidden_files"):
+    for key in (
+        "required_files",
+        "forbidden_files",
+        "forbidden_file_patterns",
+    ):
         if key in repository:
             repository[key] = sorted(repository[key])
     if repository.get("require_clean_git") is False:
@@ -158,7 +194,7 @@ def _validate_policy(policy: Any, source: str | Path) -> dict[str, Any]:
     version = policy.get("version")
     if not _is_integer(version) or version not in SUPPORTED_POLICY_VERSIONS:
         raise PolicyError(
-            "policy version must be 1 or 2: "
+            "policy version must be 1, 2, or 3: "
             f"{source}"
         )
 
@@ -168,9 +204,11 @@ def _validate_policy(policy: Any, source: str | Path) -> dict[str, Any]:
     if not repository:
         raise PolicyError(f"[repository] must define at least one rule: {source}")
 
-    repository_keys = (
-        _REPOSITORY_KEYS_V1 if version == 1 else _REPOSITORY_KEYS_V2
-    )
+    repository_keys = {
+        1: _REPOSITORY_KEYS_V1,
+        2: _REPOSITORY_KEYS_V2,
+        3: _REPOSITORY_KEYS_V3,
+    }[version]
     _reject_unknown_keys(repository, repository_keys, "repository")
     normalized: dict[str, Any] = {}
 
@@ -178,12 +216,47 @@ def _validate_policy(policy: Any, source: str | Path) -> dict[str, Any]:
         if key in repository:
             normalized[key] = _validate_file_paths(repository[key], source, key)
 
+    if "forbidden_file_patterns" in repository:
+        normalized["forbidden_file_patterns"] = _validate_file_patterns(
+            repository["forbidden_file_patterns"], source
+        )
+
     overlap = set(normalized.get("required_files", [])) & set(
         normalized.get("forbidden_files", [])
     )
     if overlap:
         path = sorted(overlap)[0]
         raise PolicyError(f"repository path is both required and forbidden: {path}")
+
+    patterns = normalized.get("forbidden_file_patterns", [])
+    for required_path in normalized.get("required_files", []):
+        matching_pattern = next(
+            (
+                pattern
+                for pattern in patterns
+                if _matches_file_pattern(required_path, pattern)
+            ),
+            None,
+        )
+        if matching_pattern is not None:
+            raise PolicyError(
+                f"required path {required_path} matches forbidden pattern: "
+                f"{matching_pattern}"
+            )
+    for forbidden_path in normalized.get("forbidden_files", []):
+        matching_pattern = next(
+            (
+                pattern
+                for pattern in patterns
+                if _matches_file_pattern(forbidden_path, pattern)
+            ),
+            None,
+        )
+        if matching_pattern is not None:
+            raise PolicyError(
+                f"forbidden path {forbidden_path} duplicates pattern: "
+                f"{matching_pattern}"
+            )
 
     for key in ("max_files", "max_total_bytes"):
         if key not in repository:
@@ -246,6 +319,47 @@ def _validate_file_paths(
     return paths
 
 
+def _validate_file_patterns(value: Any, source: str | Path) -> list[str]:
+    rule_name = "forbidden_file_patterns"
+    if not isinstance(value, list) or not value:
+        raise PolicyError(
+            f"repository.{rule_name} must be a non-empty array: {source}"
+        )
+
+    patterns: list[str] = []
+    for entry in value:
+        if not isinstance(entry, str) or not entry:
+            raise PolicyError(
+                f"repository.{rule_name} entries must be non-empty strings: {source}"
+            )
+        if "\\" in entry:
+            raise PolicyError(
+                f"repository.{rule_name} patterns must use forward slashes: {entry}"
+            )
+        path = PurePosixPath(entry)
+        if (
+            not path.parts
+            or path.is_absolute()
+            or path.as_posix() != entry
+            or ".." in path.parts
+        ):
+            raise PolicyError(
+                f"repository.{rule_name} patterns must be normalized and relative: "
+                f"{entry}"
+            )
+        if not any(token in entry for token in ("*", "?", "[")):
+            raise PolicyError(
+                f"repository.{rule_name} entry must contain a wildcard: {entry}"
+            )
+        if entry in patterns:
+            raise PolicyError(
+                f"repository.{rule_name} contains a duplicate: {entry}"
+            )
+        patterns.append(entry)
+
+    return patterns
+
+
 def _forbidden_file_exists(
     snapshot: dict[str, Any], root: Path, relative_path: str
 ) -> bool:
@@ -278,6 +392,46 @@ def _forbidden_file_exists(
         return True
 
     return relative_path in completed.stdout.splitlines()
+
+
+def _policy_visible_paths(snapshot: dict[str, Any], root: Path) -> list[str]:
+    if snapshot["git"]["is_repo"]:
+        try:
+            completed = subprocess.run(
+                [
+                    "git",
+                    "-C",
+                    str(root),
+                    "ls-files",
+                    "--cached",
+                    "--others",
+                    "--exclude-standard",
+                    "-z",
+                    "--",
+                    ".",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+        except OSError:
+            completed = None
+        if completed is not None and completed.returncode == 0:
+            return sorted(
+                path
+                for path in completed.stdout.split("\0")
+                if path and (root / path).is_file()
+            )
+
+    return sorted(
+        path.relative_to(root).as_posix()
+        for path in root.rglob("*")
+        if path.is_file() and ".git" not in path.relative_to(root).parts
+    )
+
+
+def _matches_file_pattern(path: str, pattern: str) -> bool:
+    return PurePosixPath(path).match(pattern)
 
 
 def _reject_unknown_keys(

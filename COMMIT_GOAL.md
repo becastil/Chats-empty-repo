@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this verified-policy-v2-rollout commit: 46 / 1,000 (4.6%).
-- Remaining after this verified-policy-v2-rollout commit: 954 commits.
+- Progress after this forbidden-pattern-policy commit: 47 / 1,000 (4.7%).
+- Remaining after this forbidden-pattern-policy commit: 953 commits.
 
 ## Commit Standard
 

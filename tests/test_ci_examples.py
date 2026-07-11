@@ -131,6 +131,15 @@ class CiExampleTests(unittest.TestCase):
         )
         self.assertTrue(policy["repository"]["require_clean_git"])
 
+    def test_manual_v3_policy_example_adds_nested_forbidden_patterns(self) -> None:
+        policy = load_policy(ROOT / "examples/team-policy-v3.toml")
+
+        self.assertEqual(policy["version"], 3)
+        self.assertEqual(
+            policy["repository"]["forbidden_file_patterns"],
+            ["**/.env", "**/.env.local", "*.pem"],
+        )
+
     def test_example_command_is_repeatable_and_preserves_failure_evidence(self) -> None:
         with TemporaryDirectory() as tmp:
             workspace = Path(tmp)

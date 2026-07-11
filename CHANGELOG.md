@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.20 - 2026-07-11
+
+- Added backward-compatible policy schema v3 with `repository.forbidden_file_patterns` while retaining v1 and v2 reads.
+- Matched basename patterns such as `*.pem` at any repository depth and path patterns such as `**/.env` across nested services.
+- Applied patterns to all tracked or unignored Git files, or all non-Git files, independently of the snapshot path-detail cap.
+- Bounded each pattern violation to 20 sorted path details while retaining the full match count and explicit truncation state.
+- Rejected missing wildcards, malformed or duplicate patterns, required-file conflicts, and redundant exact-forbidden overlaps before scanning.
+- Included normalized pattern ordering in stable cross-repository policy fingerprints.
+- Added a staged v3 monorepo policy example and focused matching, ignore, force-track, scale, bound, validation, compatibility, and fingerprint tests.
+- Kept verified policy gates and packaged starters on v2 until a v3-capable release can be independently pinned.
+- Kept acquisition and revenue totals unchanged; no prospect outreach was attempted.
+
 ## 0.3.19 - 2026-07-11
 
 - Upgraded dogfood and copy-ready policy gates from the verified `v0.3.1` wheel to the independently verified `v0.3.18` wheel.

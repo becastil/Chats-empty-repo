@@ -65,6 +65,13 @@ The dogfood and copy-ready gates now install the independently verified
 `v0.3.18` wheel, so the same v2 forbidden-file policy can run locally and in CI
 without source checkout, mutable package resolution, or a team-managed secret.
 
+Policy version 3 extends custom packs beyond exact root paths. A reviewed
+pattern can protect nested service `.env` files or certificate-like filenames
+across a monorepo, while ignored local files remain outside Git enforcement.
+Pattern evidence is bounded to 20 sorted paths with a full match count so one
+broad rule cannot flood CI summaries. Existing v1 and v2 policies remain
+readable, and verified gates stay on v2 until a v3-capable release is pinned.
+
 An AI can recreate a scanner, but that is not the commercial claim being
 tested. The active website experiment presents the paid outcome in plain
 language: help agreeing on one rulebook, installing it across uneven projects,

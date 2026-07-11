@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 46 of 1,000, with 954 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 47 of 1,000, with 953 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -117,15 +117,19 @@ The delivery goal is 1,000 meaningful commits. This update is commit 46 of 1,000
 - Independently pinned `v0.3.18` wheel digest, source commit, manifest, provenance, signer workflow, and hosted-runner checks in both policy gates.
 - Policy v2 `.env` and `.env.local` protection in all packaged starters, dogfood policy, and copy-ready CI policy.
 - End-to-end copy-ready evidence proving forbidden-file failures still emit remediation-ready rollout bundles.
+- Backward-compatible policy v3 `forbidden_file_patterns` for nested monorepo and filename-wide protection.
+- Git-aware pattern matching across all tracked or unignored paths, independent of the snapshot's 500-path detail cap.
+- Bounded pattern evidence with full match counts, 20 sorted paths per pattern, and explicit truncation state.
+- Strict wildcard, path, duplicate, required-file conflict, exact-rule overlap, and fingerprint validation for pattern rules.
 
 ## How To Run
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.19/repo-scout-0.3.19.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.20/repo-scout-0.3.20.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 python3 -m unittest discover -s tests
 ```
 
 ## Next Small Task
 
-Obtain authoritative company and contact evidence, then research, contact, and audit the first five qualified prospects. No outreach was attempted and no private ledger exists; do not add another acquisition asset before five real attempts.
+After releasing v0.3.20, pin its verified wheel in the policy gates and decide which nested patterns belong in general starters. Acquisition still requires authoritative company and contact evidence; no outreach was attempted and no private ledger exists.

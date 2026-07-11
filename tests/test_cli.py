@@ -430,7 +430,7 @@ required_files = ["README.md", "SECURITY.md"]
             root = Path(tmp)
             policy_path = root / "team-policy.toml"
             policy_path.write_text(
-                """version = 3
+                """version = 4
 [repository]
 max_files = 10
 """,
@@ -442,7 +442,7 @@ max_files = 10
                 exit_code = main(["--policy", str(policy_path), str(root)])
 
             self.assertEqual(exit_code, 2)
-            self.assertIn("policy version must be 1 or 2", stderr.getvalue())
+            self.assertIn("policy version must be 1, 2, or 3", stderr.getvalue())
 
     def test_cli_writes_output_and_requires_force_to_replace(self) -> None:
         with TemporaryDirectory() as tmp:

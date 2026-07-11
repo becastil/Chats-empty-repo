@@ -266,3 +266,15 @@ policies can therefore move to schema v2 and forbid `.env` and `.env.local`
 without relying on source checkout or mutable package resolution. A copy-ready
 integration test confirms a tracked forbidden file returns policy exit code 6
 while retaining remediation-required rollout evidence.
+
+## 2026-07-11: Bound Monorepo Forbidden-Pattern Evidence
+
+Policy version 3 adds `forbidden_file_patterns` while versions 1 and 2 remain
+readable. Filename patterns match at any depth, path patterns can target nested
+services, and evaluation uses every tracked or unignored Git file rather than
+the snapshot's bounded path display. Each matching pattern creates one policy
+violation with the full count, at most 20 sorted paths, and an explicit
+truncation flag. Invalid or duplicate patterns, patterns without wildcards,
+required-file conflicts, and overlap with exact forbidden paths fail during
+policy parsing. The verified gates and packaged starters remain on v2 until a
+v3-capable release has an independently checked digest and provenance.

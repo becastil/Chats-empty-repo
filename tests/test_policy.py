@@ -141,6 +141,184 @@ forbidden_files = [".env"]
 """
             )
 
+    def test_forbidden_patterns_match_nested_policy_visible_files(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "services/api").mkdir(parents=True)
+            (root / "certs").mkdir()
+            (root / ".env").write_text("ROOT=unsafe\n", encoding="utf-8")
+            (root / "services/api/.env").write_text(
+                "NESTED=unsafe\n", encoding="utf-8"
+            )
+            (root / "certs/prod.pem").write_text(
+                "not-a-real-key\n", encoding="utf-8"
+            )
+            policy = parse_policy(
+                """version = 3
+[repository]
+forbidden_files = [".env"]
+forbidden_file_patterns = ["**/.env", "*.pem"]
+"""
+            )
+
+            result = evaluate_policy(scan_project(root), policy)
+
+            self.assertEqual(result["status"], "fail")
+            self.assertEqual(
+                [violation["rule"] for violation in result["violations"]],
+                [
+                    "repository.forbidden_files",
+                    "repository.forbidden_file_patterns",
+                    "repository.forbidden_file_patterns",
+                ],
+            )
+            self.assertEqual(
+                result["violations"][1],
+                {
+                    "rule": "repository.forbidden_file_patterns",
+                    "pattern": "**/.env",
+                    "paths": ["services/api/.env"],
+                    "match_count": 1,
+                    "paths_truncated": False,
+                    "message": (
+                        "Forbidden file pattern **/.env matched 1 file(s): "
+                        "services/api/.env."
+                    ),
+                },
+            )
+            self.assertEqual(
+                result["violations"][2]["paths"], ["certs/prod.pem"]
+            )
+
+    def test_forbidden_patterns_ignore_then_catch_force_tracked_files(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            nested = root / "services/api"
+            nested.mkdir(parents=True)
+            (root / ".gitignore").write_text("**/.env\n", encoding="utf-8")
+            (nested / ".env").write_text("SECRET=local\n", encoding="utf-8")
+            subprocess.run(
+                ["git", "init", "--quiet", str(root)],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            policy = parse_policy(
+                """version = 3
+[repository]
+forbidden_file_patterns = ["**/.env"]
+"""
+            )
+
+            self.assertEqual(
+                evaluate_policy(scan_project(root), policy)["status"], "pass"
+            )
+
+            subprocess.run(
+                ["git", "-C", str(root), "add", "--force", "services/api/.env"],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            tracked = evaluate_policy(scan_project(root), policy)
+
+            self.assertEqual(tracked["status"], "fail")
+            self.assertEqual(
+                tracked["violations"][0]["paths"], ["services/api/.env"]
+            )
+
+    def test_forbidden_pattern_details_are_bounded(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for index in range(25):
+                path = root / "certs" / f"service-{index:02d}.pem"
+                path.parent.mkdir(exist_ok=True)
+                path.write_text("not-a-real-key\n", encoding="utf-8")
+            policy = parse_policy(
+                """version = 3
+[repository]
+forbidden_file_patterns = ["*.pem"]
+"""
+            )
+
+            result = evaluate_policy(scan_project(root), policy)
+            violation = result["violations"][0]
+
+            self.assertEqual(violation["match_count"], 25)
+            self.assertEqual(len(violation["paths"]), 20)
+            self.assertTrue(violation["paths_truncated"])
+            self.assertIn("and 5 more", violation["message"])
+
+    def test_forbidden_patterns_scan_beyond_snapshot_path_details(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for index in range(510):
+                path = root / "generated" / f"file-{index:03d}.txt"
+                path.parent.mkdir(exist_ok=True)
+                path.write_text("ok\n", encoding="utf-8")
+            secret = root / "services/api/prod.pem"
+            secret.parent.mkdir(parents=True)
+            secret.write_text("not-a-real-key\n", encoding="utf-8")
+            policy = parse_policy(
+                """version = 3
+[repository]
+forbidden_file_patterns = ["*.pem"]
+"""
+            )
+
+            snapshot = scan_project(root)
+            result = evaluate_policy(snapshot, policy)
+
+            self.assertTrue(snapshot["files"]["paths_truncated"])
+            self.assertEqual(
+                result["violations"][0]["paths"], ["services/api/prod.pem"]
+            )
+
+    def test_policy_versions_before_three_reject_forbidden_patterns(self) -> None:
+        for version in (1, 2):
+            with self.subTest(version=version), self.assertRaisesRegex(
+                PolicyError, "unknown repository key: forbidden_file_patterns"
+            ):
+                parse_policy(
+                    f"""version = {version}
+[repository]
+forbidden_file_patterns = ["*.pem"]
+"""
+                )
+
+    def test_policy_rejects_invalid_or_contradictory_patterns(self) -> None:
+        invalid_policies = (
+            (
+                """version = 3
+[repository]
+forbidden_file_patterns = ["secrets.pem"]
+""",
+                "must contain a wildcard",
+            ),
+            (
+                """version = 3
+[repository]
+required_files = ["certs/prod.pem"]
+forbidden_file_patterns = ["*.pem"]
+""",
+                "required path certs/prod.pem matches forbidden pattern",
+            ),
+            (
+                """version = 3
+[repository]
+forbidden_files = ["certs/prod.pem"]
+forbidden_file_patterns = ["*.pem"]
+""",
+                "forbidden path certs/prod.pem duplicates pattern",
+            ),
+        )
+
+        for policy, message in invalid_policies:
+            with self.subTest(message=message), self.assertRaisesRegex(
+                PolicyError, message
+            ):
+                parse_policy(policy)
+
     def test_policy_rejects_unknown_keys(self) -> None:
         with TemporaryDirectory() as tmp:
             policy_path = Path(tmp) / "policy.toml"
@@ -238,6 +416,29 @@ max_files = 100
         self.assertNotEqual(
             policy_fingerprint(first), policy_fingerprint(forbidden_changed)
         )
+
+    def test_policy_fingerprint_normalizes_forbidden_pattern_order(self) -> None:
+        first = parse_policy(
+            """version = 3
+[repository]
+forbidden_file_patterns = ["**/.env", "*.pem"]
+"""
+        )
+        reordered = parse_policy(
+            """version = 3
+[repository]
+forbidden_file_patterns = ["*.pem", "**/.env"]
+"""
+        )
+        changed = parse_policy(
+            """version = 3
+[repository]
+forbidden_file_patterns = ["**/.env", "*.key"]
+"""
+        )
+
+        self.assertEqual(policy_fingerprint(first), policy_fingerprint(reordered))
+        self.assertNotEqual(policy_fingerprint(first), policy_fingerprint(changed))
 
 
 if __name__ == "__main__":
