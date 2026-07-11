@@ -39,8 +39,8 @@ class DirectOutreachContractTests(unittest.TestCase):
                     "contacted_on",
                     "channel",
                     "status",
+                    "followed_up_on",
                     "next_action_on",
-                    "notes",
                 ]
             ],
         )

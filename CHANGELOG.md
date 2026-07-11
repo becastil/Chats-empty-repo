@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.17 - 2026-07-11
+
+- Added `repo-scout-outreach` for dependency-free validation and aggregate reporting of the private direct-outreach ledger.
+- Required alias-only `prospect-NNN` records, at least three closed fit signals, and warm-introduction or published-business channels.
+- Enforced the 10-prospect experiment cap, a follow-up scheduled exactly seven days after initial contact, no early recorded follow-up, and no next action after follow-up, reply, pilot request, rejection, or opt-out.
+- Added deterministic due-follow-up aliases and aggregate status totals without exposing recipient details.
+- Kept outreach replies and ledger pilot requests explicitly outside public lead, payment, and revenue evidence.
+- Added release smoke coverage and focused tests for valid activity, empty-ledger startup, qualification, privacy, cadence, stop states, batch limits, CLI JSON, and malformed headers.
+
 ## 0.3.16 - 2026-07-11
 
 - Added a copy-ready direct-outreach playbook for the first 10 qualified engineering-lead prospects.

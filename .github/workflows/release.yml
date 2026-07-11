@@ -59,6 +59,7 @@ jobs:
           "$RUNNER_TEMP/repo-scout-release/bin/repo-scout" --help
           "$RUNNER_TEMP/repo-scout-release/bin/repo-scout-distribution" --help
           "$RUNNER_TEMP/repo-scout-release/bin/repo-scout-growth" --help
+          "$RUNNER_TEMP/repo-scout-release/bin/repo-scout-outreach" --help
           "$RUNNER_TEMP/repo-scout-release/bin/repo-scout-policy" list --format json
           "$RUNNER_TEMP/repo-scout-release/bin/repo-scout-pilot" --help
           "$RUNNER_TEMP/repo-scout-release/bin/repo-scout-rollout" --help

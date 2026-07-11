@@ -38,17 +38,18 @@ not require a checkout, package installation, administrator access, or an API
 key:
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.16/repo-scout-0.3.16.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.17/repo-scout-0.3.17.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 ```
 
 Repo Scout requires Python 3.11 or newer. The portable file contains the free
 primary CLI. Install the wheel when you also
 need the `repo-scout-distribution`, `repo-scout-growth`, `repo-scout-policy`,
-`repo-scout-rollout`, or `repo-scout-pilot` commands:
+`repo-scout-rollout`, `repo-scout-pilot`, or maintainer-only
+`repo-scout-outreach` commands:
 
 ```bash
-python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.16/repo_scout-0.3.16-py3-none-any.whl
+python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.17/repo_scout-0.3.17-py3-none-any.whl
 repo-scout --languages .
 ```
 
@@ -248,6 +249,19 @@ pre-payment deal by declared readiness and funnel stage, then names the next
 conversion action without advancing labels automatically.
 See [docs/pilot-tracking.md](docs/pilot-tracking.md) for stage definitions and
 privacy rules.
+
+Maintainers can audit the private, alias-only direct-outreach ledger before a
+contact session without sending messages or exposing recipients:
+
+```bash
+repo-scout-outreach outreach-private/outreach-ledger.csv \
+  --as-of "$(date +%F)"
+```
+
+The reporter enforces the 10-prospect experiment, three-signal qualification,
+permitted contact channels, one seven-day follow-up, and opt-out stop states.
+Its activity totals are not lead or revenue evidence. See
+[docs/direct-outreach.md](docs/direct-outreach.md) for the operating contract.
 
 Install it locally in editable mode:
 

@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 43 of 1,000, with 957 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 44 of 1,000, with 956 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -108,15 +108,18 @@ The delivery goal is 1,000 meaningful commits. This update is commit 43 of 1,000
 - A copy-ready direct-outreach playbook with an exact $299 offer, source route, qualification filter, and bounded follow-up cadence.
 - A header-only private outreach ledger template with an ignored working directory and no committed prospect data.
 - Tested anti-spam, opt-out, false-urgency, and revenue-evidence boundaries for the first 10-prospect batch.
+- A dependency-free `repo-scout-outreach` auditor for private, alias-only campaign ledgers.
+- Strict three-signal qualification, permitted-channel, 10-prospect, seven-day follow-up, and terminal-stop validation.
+- Aggregate outreach activity and due-alias reporting that remains explicitly separate from lead and revenue evidence.
 
 ## How To Run
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.16/repo-scout-0.3.16.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.17/repo-scout-0.3.17.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 python3 -m unittest discover -s tests
 ```
 
 ## Next Small Task
 
-Execute the first 10-prospect direct-outreach batch. Do not add another acquisition asset before at least five qualified contacts are attempted and privately recorded.
+Research, contact, and audit the first five qualified prospects with the private ledger. Do not add another acquisition asset before those five attempts are privately recorded.

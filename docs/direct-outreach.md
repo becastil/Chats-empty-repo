@@ -8,12 +8,13 @@ It is for relevant, individual business outreach, not bulk email.
 Contact a prospect only when public evidence supports at least three of these
 signals:
 
-- A software team with roughly 5 to 50 developers.
-- Multiple actively maintained repositories or services.
-- Visible use of coding agents or AI-assisted development.
+- `team_5_50`: a software team with roughly 5 to 50 developers.
+- `multi_repo`: multiple actively maintained repositories or services.
+- `agent_use`: visible use of coding agents or AI-assisted development.
 - An engineering lead who owns CI, repository standards, review quality, or
-  developer productivity.
-- A stated preference for local or privacy-conscious developer tooling.
+  developer productivity (`engineering_owner`).
+- `local_privacy`: a stated preference for local or privacy-conscious developer
+  tooling.
 
 Use warm introductions or a clearly published business contact address. Do not
 scrape personal addresses, buy contact lists, or place sales messages in GitHub
@@ -75,7 +76,24 @@ Git. Use an alias such as `prospect-001`; do not store names, email addresses,
 message bodies, source code, or confidential company details in this public
 repository.
 
-Allowed statuses are `researched`, `contacted`, `replied`, `pilot-requested`,
-`not-a-fit`, and `do-not-contact`. A private ledger records operator activity;
-only the public pilot intake and cumulative funnel labels become demand and
-revenue evidence.
+Separate fit-signal keys with semicolons. Use `warm-intro` or
+`published-business` as the channel. Allowed statuses are `researched`,
+`contacted`, `followed-up`, `replied`, `pilot-requested`, `not-a-fit`, and
+`do-not-contact`.
+
+Audit the ledger before each contact session:
+
+```bash
+repo-scout-outreach outreach-private/outreach-ledger.csv \
+  --as-of "$(date +%F)"
+```
+
+The command requires at least three recognized fit signals, accepts only
+`prospect-NNN` aliases, caps the batch at 10, schedules a contacted prospect's
+single follow-up exactly seven days later, and rejects next actions after a
+follow-up, reply, pilot request, rejection, or opt-out. A separate
+`followed_up_on` field rejects a second message sent before that date. It
+reports aliases and aggregate operator activity only. The command never sends
+outreach, and its
+reply or pilot-requested counts do not become public demand or revenue evidence;
+only public pilot intake and cumulative funnel labels do.

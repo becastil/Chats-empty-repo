@@ -7,7 +7,7 @@
 
 ## Near Term
 
-- Execute the first 10-prospect direct-outreach batch from `docs/direct-outreach.md`; do not add another acquisition asset before at least five qualified contacts are attempted.
+- Execute and audit the first five qualified contacts with `repo-scout-outreach`, then complete the 10-prospect batch; do not add another acquisition asset before those first five attempts.
 - Collect the first three public pilot requests, work the prioritized sales queue, and compare readiness and purchase criteria by source.
 - Add a private pilot contact path after public intake validates demand.
 

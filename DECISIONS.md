@@ -232,3 +232,15 @@ contact. Scraped personal addresses and sales pitches in GitHub issues, pull
 requests, or security channels are prohibited. A private ignored ledger records
 operator activity with aliases; replies do not become leads or revenue until a
 prospect independently submits intake and advances through cumulative labels.
+
+## 2026-07-11: Audit Outreach Locally Without Storing Recipients
+
+The first campaign's private CSV is validated by an installed, dependency-free
+operator command. Records use `prospect-NNN` aliases, a closed five-signal fit
+taxonomy, and only warm-introduction or published-business channels. The
+auditor caps the batch at 10, requires one next action exactly seven days after
+initial contact, records the actual follow-up date, rejects an early second
+message, and rejects another action after follow-up, reply, pilot request,
+rejection, or opt-out. Its output contains aggregate activity and due
+aliases, never addresses or message content. It sends nothing, and its replies
+or pilot-requested rows do not enter the public revenue funnel.

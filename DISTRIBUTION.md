@@ -93,8 +93,11 @@ requests, or security channels.
 The header-only `examples/outreach-ledger.csv` can be copied into the ignored
 `outreach-private/` directory. That ledger uses prospect aliases and records
 operator activity without committing names, addresses, message bodies, source
-code, or confidential company details. Replies remain outreach activity; only
-public intake and cumulative funnel labels become demand and revenue evidence.
+code, or confidential company details. `repo-scout-outreach` validates the
+10-prospect cap, qualification keys, permitted channels, alias format, and the
+single seven-day follow-up before reporting due aliases. It sends nothing.
+Replies remain outreach activity; only public intake and cumulative funnel
+labels become demand and revenue evidence.
 
 ## Search Discovery
 
