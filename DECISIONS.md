@@ -177,3 +177,14 @@ buttons prefill `Repo Scout website` and repository documentation prefills
 `GitHub repository or release` using the existing closed taxonomy. The answer
 remains visible, required, and buyer-editable. Prefilling removes a form choice;
 it does not silently label a lead, prove causal attribution, or count revenue.
+
+## 2026-07-10: Carry Campaign Source Through The Hosted Offer
+
+The hosted offer accepts one closed `source` query key matching the existing
+funnel taxonomy. GitHub, outreach, referral, search, social, website, and other
+routes server-render both pilot application links with the corresponding
+buyer-editable issue-form prefill. Missing or unsupported values default to
+website, and repeated parameters use only their first value, preventing
+arbitrary query text from reaching intake. These routes preserve the original
+discovery context while every prospect sees the same objection handling and
+price; they remain self-report aids, not analytics or causal attribution.

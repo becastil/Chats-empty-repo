@@ -7,7 +7,7 @@
 
 ## Near Term
 
-- Share the source-prefilled README and website paths with qualified engineering leads, then review after three public requests or on 2026-07-24.
+- Send the first source-preserving direct outreach route to qualified engineering leads, then review after three public requests or on 2026-07-24.
 - Collect the first three public pilot requests, work the prioritized sales queue, and compare readiness and purchase criteria by source.
 - Add a private pilot contact path after public intake validates demand.
 

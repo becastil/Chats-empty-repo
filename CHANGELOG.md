@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.12 - 2026-07-10
+
+- Added server-rendered campaign routes for website, GitHub, direct outreach, referral, search, social/community, and other discovery sources.
+- Preserved each supported campaign source through both hosted $299 pilot application buttons.
+- Defaulted missing and unsupported campaign values to the website source instead of reflecting arbitrary query text into intake.
+- Routed the README's hosted offer link through the GitHub campaign while retaining its direct GitHub-prefilled application path.
+- Documented copy-ready hosted URLs for each acquisition context and required operators to share only the matching route.
+- Added rendered coverage for every accepted campaign, both CTA destinations, and unknown-source fallback.
+
 ## 0.3.11 - 2026-07-10
 
 - Added an above-fold README path that explains the paid team outcome and disclosed $299 pilot before the long CLI reference.

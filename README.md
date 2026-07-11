@@ -7,7 +7,7 @@ the starting point. The $299 founding-team pilot turns the team's rules into one
 reviewed standard, rolls it out across up to 10 projects, and helps fix the
 repositories that do not fit neatly without uploading source code.
 
-[See why teams buy](https://repo-scout.becastil.chatgpt.site/#why-teams-buy) | [Apply for the $299 pilot](https://github.com/becastil/Chats-empty-repo/issues/new?template=founding-team-pilot.yml&discovery_source=GitHub+repository+or+release)
+[See why teams buy](https://repo-scout.becastil.chatgpt.site/?source=github#why-teams-buy) | [Apply for the $299 pilot](https://github.com/becastil/Chats-empty-repo/issues/new?template=founding-team-pilot.yml&discovery_source=GitHub+repository+or+release)
 
 It currently reports:
 
@@ -38,7 +38,7 @@ not require a checkout, package installation, administrator access, or an API
 key:
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.11/repo-scout-0.3.11.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.12/repo-scout-0.3.12.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 ```
 
@@ -48,7 +48,7 @@ need the `repo-scout-distribution`, `repo-scout-growth`, `repo-scout-policy`,
 `repo-scout-rollout`, or `repo-scout-pilot` commands:
 
 ```bash
-python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.11/repo_scout-0.3.11-py3-none-any.whl
+python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.12/repo_scout-0.3.12-py3-none-any.whl
 repo-scout --languages .
 ```
 

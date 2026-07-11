@@ -65,6 +65,10 @@ GitHub visitors now see the team outcome and disclosed price before the CLI
 reference. They can either inspect the website objection section or apply
 directly. Application links prefill the visible discovery-source answer for
 the channel they came from, reducing form work without replacing self-report.
+Hosted campaign routes preserve GitHub, outreach, referral, search, and social
+context through the objection page. The server maps only the closed intake
+taxonomy and defaults unknown values to website, so campaign sharing cannot
+inject arbitrary source text into the form.
 
 Rollout bundles carry a stable, non-sensitive metadata contract so a pilot lead
 can summarize bundle-reported readiness, policy failures, violations, worktree

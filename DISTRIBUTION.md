@@ -22,21 +22,23 @@ None requires an API key or sends source code to Repo Scout.
 ## Active Website Experiment
 
 - **Started:** 2026-07-10
-- **Channel:** `website`
+- **Channels:** Website, GitHub, direct outreach, referral, search, and
+  social/community paths through one hosted offer.
 - **Audience:** Engineering leads at 5-50 person software teams using coding
   agents across multiple repositories.
 - **Hypothesis:** A plain-language answer to "why pay when an AI can recreate
   the scanner?" placed before the disclosed $299 offer will produce the first
-  pilot request self-reporting `Repo Scout website` as its discovery source.
+  pilot request with a recognized, source-matched discovery answer.
 - **Change:** The public site now contrasts the copyable free scan with three
   paid operational outcomes: a repeatable rulebook, one rollout across up to
   10 projects, and evidence plus help when a project fails.
 - **Acquisition path:** The GitHub README now introduces the team outcome near
   the top and links into this section before the longer CLI reference.
-- **Source handling:** Website application buttons prefill `Repo Scout website`;
-  direct README and repository-documentation applications prefill
-  `GitHub repository or release`. Both remain visible and editable in intake.
-- **Primary outcome:** The first public pilot request attributed to the website.
+- **Source handling:** A closed `source` query maps hosted application buttons
+  to the existing intake taxonomy. Missing and unknown values safely default to
+  `Repo Scout website`; all answers remain visible and editable in intake.
+- **Primary outcome:** The first public pilot request with a recognized source
+  matching the distributed campaign route.
 - **Secondary evidence:** That request's qualification, purchase readiness,
   primary criterion, offer, and paid stages.
 - **Review point:** 2026-07-24 or after three public pilot requests, whichever
@@ -51,6 +53,24 @@ not measured.
 The source-prefill keys use the issue form's canonical `discovery_source` field
 ID and exact option values. They reduce intake friction but do not silently set
 labels, prove attribution, or prevent a buyer from correcting the answer.
+
+## Campaign Routes
+
+Share only the route matching the actual discovery context:
+
+| Context | Hosted offer route | Intake prefill |
+| --- | --- | --- |
+| Organic website | `https://repo-scout.becastil.chatgpt.site/#why-teams-buy` | Repo Scout website |
+| GitHub | `https://repo-scout.becastil.chatgpt.site/?source=github#why-teams-buy` | GitHub repository or release |
+| Direct outreach | `https://repo-scout.becastil.chatgpt.site/?source=outreach#why-teams-buy` | Direct outreach |
+| Teammate or referral | `https://repo-scout.becastil.chatgpt.site/?source=referral#why-teams-buy` | Teammate or referral |
+| Search | `https://repo-scout.becastil.chatgpt.site/?source=search#why-teams-buy` | Search |
+| Social or community | `https://repo-scout.becastil.chatgpt.site/?source=social#why-teams-buy` | Social media or community |
+
+The server accepts only `github`, `website`, `outreach`, `referral`, `search`,
+`social`, and `other`. For repeated parameters, only the first value is
+considered. An absent or unsupported first value uses the website default
+instead of reflecting arbitrary text into intake.
 
 ## Release Contract
 

@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 38 of 1,000, with 962 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 39 of 1,000, with 961 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -95,15 +95,17 @@ The delivery goal is 1,000 meaningful commits. This update is commit 38 of 1,000
 - A source-identifiable website acquisition experiment with a dated review point and funnel-based success evidence.
 - An above-fold GitHub README path from the team problem and disclosed $299 offer into the website experiment or pilot intake.
 - Source-prefilled, buyer-editable pilot application links for website and GitHub repository discovery paths.
+- Server-rendered campaign routes that preserve GitHub, outreach, referral, search, social, and website source context through the hosted offer.
+- Closed campaign-source mapping with safe website fallback for missing or unsupported values.
 
 ## How To Run
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.11/repo-scout-0.3.11.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.12/repo-scout-0.3.12.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 python3 -m unittest discover -s tests
 ```
 
 ## Next Small Task
 
-Share the source-prefilled README and website paths with qualified engineering leads, then review source, readiness, criterion, and revenue evidence after three public requests or on 2026-07-24.
+Send the source-preserving direct-outreach route to qualified engineering leads, then review source, readiness, criterion, and revenue evidence after three public requests or on 2026-07-24.

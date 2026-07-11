@@ -1,13 +1,20 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-async function render(headers = {}) {
+let renderCount = 0;
+
+function countOccurrences(text, value) {
+  return text.split(value).length - 1;
+}
+
+async function render(headers = {}, path = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
-  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
+  renderCount += 1;
+  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}-${renderCount}`);
   const { default: worker } = await import(workerUrl.href);
 
   return worker.fetch(
-    new Request("http://localhost/", {
+    new Request(new URL(path, "http://localhost"), {
       headers: { accept: "text/html", ...headers },
     }),
     {
@@ -36,12 +43,12 @@ test("server-renders the Repo Scout companion page", async () => {
   assert.match(html, /Copy no-install setup/i);
   assert.match(html, /One file\. Python 3\.11\+\. No API key\./i);
   assert.match(html, /curl -fL/i);
-  assert.match(html, /repo-scout-0\.3\.11\.pyz/i);
+  assert.match(html, /repo-scout-0\.3\.12\.pyz/i);
   assert.match(html, /python3 \/tmp\/repo-scout\.pyz --languages \./i);
   assert.match(html, /Download v/i);
   assert.match(
     html,
-    /releases\/download\/v0\.3\.11\/repo-scout-0\.3\.11\.pyz/i,
+    /releases\/download\/v0\.3\.12\/repo-scout-0\.3\.12\.pyz/i,
   );
   assert.doesNotMatch(html, /PYTHONPATH=src python3 -m repo_scout/i);
   assert.match(html, /Snapshot lab/i);
@@ -74,11 +81,74 @@ test("server-renders the Repo Scout companion page", async () => {
     /github\.com\/becastil\/Chats-empty-repo\/issues\/new\?template=founding-team-pilot\.yml(?:&amp;|&)discovery_source=Repo\+Scout\+website/i,
   );
   assert.equal(
-    (html.match(/discovery_source=Repo\+Scout\+website/gi) ?? []).length,
+    countOccurrences(
+      html,
+      'href="https://github.com/becastil/Chats-empty-repo/issues/new?template=founding-team-pilot.yml&amp;discovery_source=Repo+Scout+website"',
+    ),
     2,
   );
   assert.equal((html.match(/<h1\b/gi) ?? []).length, 1);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
+});
+
+test("preserves supported campaign sources in pilot application links", async () => {
+  const campaigns = new Map([
+    ["github", "GitHub+repository+or+release"],
+    ["website", "Repo+Scout+website"],
+    ["outreach", "Direct+outreach"],
+    ["referral", "Teammate+or+referral"],
+    ["search", "Search"],
+    ["social", "Social+media+or+community"],
+    ["other", "Other"],
+  ]);
+
+  for (const [campaign, expectedSource] of campaigns) {
+    const response = await render({}, `/?source=${campaign}`);
+    const html = await response.text();
+    assert.equal(
+      countOccurrences(
+        html,
+        `href="https://github.com/becastil/Chats-empty-repo/issues/new?template=founding-team-pilot.yml&amp;discovery_source=${expectedSource}"`,
+      ),
+      2,
+      campaign,
+    );
+  }
+
+  const fallback = await render({}, "/?source=unrecognized");
+  const fallbackHtml = await fallback.text();
+  assert.equal(
+    countOccurrences(
+      fallbackHtml,
+      'href="https://github.com/becastil/Chats-empty-repo/issues/new?template=founding-team-pilot.yml&amp;discovery_source=Repo+Scout+website"',
+    ),
+    2,
+  );
+  assert.doesNotMatch(fallbackHtml, /discovery_source=unrecognized/i);
+
+  const inheritedName = await render({}, "/?source=toString");
+  const inheritedNameHtml = await inheritedName.text();
+  assert.equal(
+    countOccurrences(
+      inheritedNameHtml,
+      'href="https://github.com/becastil/Chats-empty-repo/issues/new?template=founding-team-pilot.yml&amp;discovery_source=Repo+Scout+website"',
+    ),
+    2,
+  );
+
+  const repeated = await render({}, "/?source=outreach&source=github");
+  const repeatedHtml = await repeated.text();
+  assert.equal(
+    countOccurrences(
+      repeatedHtml,
+      'href="https://github.com/becastil/Chats-empty-repo/issues/new?template=founding-team-pilot.yml&amp;discovery_source=Direct+outreach"',
+    ),
+    2,
+  );
+  assert.doesNotMatch(
+    repeatedHtml,
+    /href="[^"]+discovery_source=GitHub\+repository\+or\+release"/i,
+  );
 });
 
 test("builds social metadata from the incoming public host", async () => {

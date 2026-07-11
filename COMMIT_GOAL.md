@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this GitHub-acquisition commit: 38 / 1,000 (3.8%).
-- Remaining after this GitHub-acquisition commit: 962 commits.
+- Progress after this campaign-routing commit: 39 / 1,000 (3.9%).
+- Remaining after this campaign-routing commit: 961 commits.
 
 ## Commit Standard
 
