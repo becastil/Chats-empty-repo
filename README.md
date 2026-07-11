@@ -38,7 +38,7 @@ not require a checkout, package installation, administrator access, or an API
 key:
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.18/repo-scout-0.3.18.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.19/repo-scout-0.3.19.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 ```
 
@@ -49,7 +49,7 @@ need the `repo-scout-distribution`, `repo-scout-growth`, `repo-scout-policy`,
 `repo-scout-outreach` commands:
 
 ```bash
-python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.18/repo_scout-0.3.18-py3-none-any.whl
+python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.19/repo_scout-0.3.19-py3-none-any.whl
 repo-scout --languages .
 ```
 
@@ -133,7 +133,7 @@ Exit code 5 means the scan completed but attention findings were present.
 Apply a shared team policy and fail CI when the repository violates it:
 
 ```bash
-python3 /tmp/repo-scout.pyz --format markdown --policy examples/team-policy-v2.toml .
+python3 /tmp/repo-scout.pyz --format markdown --policy examples/team-policy.toml .
 ```
 
 Policy files use a strict, versioned TOML contract:
@@ -216,7 +216,7 @@ examples/github-actions/repo-scout-policy.toml
 ```
 
 The workflow uses read-only permissions, immutable dependency pins, job-summary
-evidence, and a downloadable schema-2 rollout bundle. It installs the `v0.3.1`
+evidence, and a downloadable schema-2 rollout bundle. It installs the `v0.3.18`
 wheel only after checking its pinned digest, release manifest, source commit,
 tag, signer workflow, and GitHub-hosted provenance. The bundle uses GitHub's
 stable `owner/repository` identity and is preserved even when policy enforcement

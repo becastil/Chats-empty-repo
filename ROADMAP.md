@@ -18,6 +18,5 @@
 
 ## Later
 
-- Upgrade the copy-ready CI pin and starter profiles to policy v2 after the verified `v0.3.18` release digest and provenance are available.
 - Publish to PyPI under a distinct distribution name after trusted-publisher ownership is configured.
 - Add a configurable comparison path-detail limit.

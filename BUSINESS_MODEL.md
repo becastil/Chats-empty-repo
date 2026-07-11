@@ -61,6 +61,9 @@ the team's agreed credential, generated-secret, and local-configuration paths.
 This is useful free CI enforcement; the paid work remains agreeing on the
 right rules and rolling the same reviewed policy across uneven repositories.
 Version 1 remains readable so verified CI upgrades can be staged safely.
+The dogfood and copy-ready gates now install the independently verified
+`v0.3.18` wheel, so the same v2 forbidden-file policy can run locally and in CI
+without source checkout, mutable package resolution, or a team-managed secret.
 
 An AI can recreate a scanner, but that is not the commercial claim being
 tested. The active website experiment presents the paid outcome in plain

@@ -6,16 +6,17 @@ profiles are packaged with the CLI and require no network access.
 
 ## Choose A Profile
 
-| Profile | Required files | File limit | Byte limit |
-| --- | --- | ---: | ---: |
-| `service-baseline` | `README.md` | 25,000 | 250,000,000 |
-| `python-service` | `README.md`, `pyproject.toml` | 15,000 | 100,000,000 |
-| `node-npm-service` | `README.md`, `package.json`, `package-lock.json` | 20,000 | 150,000,000 |
-| `agent-ready-service` | `README.md`, `AGENTS.md` | 15,000 | 100,000,000 |
+| Profile | Required files | Forbidden files | File limit | Byte limit |
+| --- | --- | --- | ---: | ---: |
+| `service-baseline` | `README.md` | `.env`, `.env.local` | 25,000 | 250,000,000 |
+| `python-service` | `README.md`, `pyproject.toml` | `.env`, `.env.local` | 15,000 | 100,000,000 |
+| `node-npm-service` | `README.md`, `package.json`, `package-lock.json` | `.env`, `.env.local` | 20,000 | 150,000,000 |
+| `agent-ready-service` | `README.md`, `AGENTS.md` | `.env`, `.env.local` | 15,000 | 100,000,000 |
 
-Every profile also requires a clean Git worktree. `node-npm-service` is
-specifically for npm repositories; teams using pnpm or Yarn should start with
-`service-baseline` and add their actual lockfile.
+Every profile also requires a clean Git worktree. Forbidden files fail when
+tracked or unignored; a local file covered by Git ignore rules remains allowed.
+`node-npm-service` is specifically for npm repositories; teams using pnpm or
+Yarn should start with `service-baseline` and add their actual lockfile.
 
 ## Discover And Inspect
 
@@ -76,4 +77,4 @@ repositories over 90 days. A custom pack should encode standards the team has
 already agreed to rather than creating new process by surprise. That includes
 the team's own forbidden credential, generated-secret, or local-configuration
 paths rather than a generic list imposed without review. Forbidden-file rules
-use policy version 2; version 1 profiles remain readable for staged CI upgrades.
+use policy version 2; version 1 policies remain readable for existing teams.

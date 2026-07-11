@@ -1,4 +1,4 @@
-version = 1
+version = 2
 
 [repository]
 required_files = [
@@ -8,6 +8,7 @@ required_files = [
   "CHANGELOG.md",
   "DECISIONS.md",
 ]
+forbidden_files = [".env", ".env.local"]
 max_files = 5000
 max_total_bytes = 50000000
 require_clean_git = true

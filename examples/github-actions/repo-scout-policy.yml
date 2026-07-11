@@ -13,9 +13,9 @@ permissions:
 env:
   REPO_SCOUT_REPOSITORY: becastil/Chats-empty-repo
   REPO_SCOUT_REPOSITORY_ID: ${{ github.repository }}
-  REPO_SCOUT_VERSION: "0.3.1"
-  REPO_SCOUT_SOURCE_SHA: 1e465aa4466820c0ee8480b88a85dcfccfcda06a
-  REPO_SCOUT_WHEEL_SHA256: fbd1406cf37c487bc32155267e097f3a0fac21e1a228812085befec2ca7f58f7
+  REPO_SCOUT_VERSION: "0.3.18"
+  REPO_SCOUT_SOURCE_SHA: ae1b746e1fab81bf6536368666017f7a3dfbdde3
+  REPO_SCOUT_WHEEL_SHA256: 6518ac0f1829b81cbae061764c053796e7646a3482bfd76d5cbb6737cab2a63f
 
 concurrency:
   group: repo-scout-policy-${{ github.workflow }}-${{ github.ref }}

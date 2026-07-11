@@ -54,6 +54,9 @@ class PolicyTemplateTests(unittest.TestCase):
         )
         for template in catalog["templates"]:
             self.assertIn("required_files", template["rules"])
+            self.assertEqual(
+                template["rules"]["forbidden_files"], [".env", ".env.local"]
+            )
             self.assertTrue(template["rules"]["require_clean_git"])
         self.assertIn("Repo Scout Policy Templates", text_stdout.getvalue())
         self.assertLess(
@@ -82,7 +85,7 @@ class PolicyTemplateTests(unittest.TestCase):
                 self.assertEqual(init_exit_code, 0)
                 self.assertEqual(stdout.getvalue(), content)
                 self.assertEqual(output_path.read_text(encoding="utf-8"), content)
-                self.assertEqual(load_policy(output_path)["version"], 1)
+                self.assertEqual(load_policy(output_path)["version"], 2)
 
     def test_init_defaults_to_current_directory_and_protects_overwrites(self) -> None:
         with TemporaryDirectory() as tmp:

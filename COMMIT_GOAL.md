@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this forbidden-file-policy commit: 45 / 1,000 (4.5%).
-- Remaining after this forbidden-file-policy commit: 955 commits.
+- Progress after this verified-policy-v2-rollout commit: 46 / 1,000 (4.6%).
+- Remaining after this verified-policy-v2-rollout commit: 954 commits.
 
 ## Commit Standard
 

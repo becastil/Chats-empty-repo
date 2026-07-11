@@ -23,10 +23,11 @@ pushes to `main`, and manual dispatches.
 Edit `repo-scout-policy.toml` to match the repository's actual standards:
 
 ```toml
-version = 1
+version = 2
 
 [repository]
 required_files = ["README.md", "SECURITY.md"]
+forbidden_files = [".env", ".env.local"]
 max_files = 10000
 max_total_bytes = 100000000
 require_clean_git = true
@@ -38,6 +39,8 @@ commit the generated file first; see [Starter Policy Profiles](policy-starters.m
 
 Start with rules the team already follows. Add stricter limits after the first
 successful run so rollout work is separated from existing repository debt.
+The starter rejects tracked or unignored `.env` and `.env.local` files while
+leaving properly ignored local environment files alone.
 
 The workflow automatically uses GitHub's `owner/repository` value as the stable
 rollout repository ID. Review the first generated
@@ -57,14 +60,14 @@ Configuration errors return exit code 2; scan-limit failures return exit code
 
 The workflow grants only `contents: read` and `attestations: read`, disables
 persisted checkout credentials, and pins every external action by commit. It downloads the exact
-Repo Scout `v0.3.1` wheel and `SHA256SUMS` from the public GitHub Release using
+Repo Scout `v0.3.18` wheel and `SHA256SUMS` from the public GitHub Release using
 the runner-provided token. No team-managed secret or API key is required.
 
 Before installation, the gate verifies:
 
 - The wheel matches the independently pinned SHA-256 digest in the workflow.
 - The wheel matches the release's `SHA256SUMS` manifest.
-- GitHub's signed provenance names the pinned source commit and `v0.3.1` tag.
+- GitHub's signed provenance names the pinned source commit and `v0.3.18` tag.
 - The signer is this repository's `.github/workflows/release.yml` workflow.
 - The attested build used a GitHub-hosted runner.
 

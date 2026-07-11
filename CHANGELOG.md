@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.19 - 2026-07-11
+
+- Upgraded dogfood and copy-ready policy gates from the verified `v0.3.1` wheel to the independently verified `v0.3.18` wheel.
+- Pinned source commit `ae1b746e1fab81bf6536368666017f7a3dfbdde3` and wheel SHA-256 `6518ac0f1829b81cbae061764c053796e7646a3482bfd76d5cbb6737cab2a63f` in both workflows.
+- Moved all four packaged starter profiles, the dogfood team policy, and the copy-ready CI policy to schema v2.
+- Added tracked-or-unignored `.env` and `.env.local` protection to every v2 starter and example.
+- Added an end-to-end copy-ready policy test that preserves rollout evidence when a tracked forbidden file fails CI.
+- Removed the temporary separate v2 example now that the verified CI gates consume v2 directly.
+- Kept acquisition and revenue totals unchanged; no prospect outreach was attempted.
+
 ## 0.3.18 - 2026-07-11
 
 - Added backward-compatible policy schema v2 with strict `repository.forbidden_files` rules for exact normalized repository-relative paths while retaining v1 reads.

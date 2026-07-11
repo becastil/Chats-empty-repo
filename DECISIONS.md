@@ -256,3 +256,13 @@ both lists reject malformed or duplicate entries, and sorted forbidden paths
 participate in the policy fingerprint. The manual team-policy example uses v2;
 starter and copy-ready CI files remain on v1 until a v2-capable release has a
 verified immutable wheel digest and provenance.
+
+## 2026-07-11: Upgrade Policy Gates Only From Verified V2 Artifacts
+
+Both policy gates now install the `v0.3.18` wheel after independently checking
+its pinned SHA-256 digest, release manifest, source commit, tag, signer workflow,
+and GitHub-hosted provenance. The dogfood, copy-ready, and packaged starter
+policies can therefore move to schema v2 and forbid `.env` and `.env.local`
+without relying on source checkout or mutable package resolution. A copy-ready
+integration test confirms a tracked forbidden file returns policy exit code 6
+while retaining remediation-required rollout evidence.

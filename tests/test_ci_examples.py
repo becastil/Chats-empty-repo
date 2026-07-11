@@ -22,10 +22,10 @@ ACTION_PINS = {
     "actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1",
     "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
 }
-REPO_SCOUT_VERSION = "0.3.1"
-REPO_SCOUT_SOURCE_SHA = "1e465aa4466820c0ee8480b88a85dcfccfcda06a"
+REPO_SCOUT_VERSION = "0.3.18"
+REPO_SCOUT_SOURCE_SHA = "ae1b746e1fab81bf6536368666017f7a3dfbdde3"
 REPO_SCOUT_WHEEL_SHA256 = (
-    "fbd1406cf37c487bc32155267e097f3a0fac21e1a228812085befec2ca7f58f7"
+    "6518ac0f1829b81cbae061764c053796e7646a3482bfd76d5cbb6737cab2a63f"
 )
 
 
@@ -120,21 +120,16 @@ class CiExampleTests(unittest.TestCase):
 
         policy = load_policy(policy_path)
 
-        self.assertEqual(raw_policy["version"], 1)
+        self.assertEqual(raw_policy["version"], 2)
         self.assertEqual(
             policy["repository"]["required_files"],
             ["README.md", "SECURITY.md"],
         )
-        self.assertTrue(policy["repository"]["require_clean_git"])
-
-    def test_manual_v2_policy_example_adds_forbidden_files(self) -> None:
-        policy = load_policy(ROOT / "examples/team-policy-v2.toml")
-
-        self.assertEqual(policy["version"], 2)
         self.assertEqual(
             policy["repository"]["forbidden_files"],
             [".env", ".env.local"],
         )
+        self.assertTrue(policy["repository"]["require_clean_git"])
 
     def test_example_command_is_repeatable_and_preserves_failure_evidence(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -179,6 +174,52 @@ class CiExampleTests(unittest.TestCase):
             )
             self.assertEqual(
                 passing_metadata["git"]["commit"], self._git_commit(target)
+            )
+
+            (target / ".env").write_text("SECRET=unsafe\n", encoding="utf-8")
+            subprocess.run(
+                ["git", "-C", str(target), "add", "--force", ".env"],
+                check=True,
+            )
+            subprocess.run(
+                [
+                    "git",
+                    "-C",
+                    str(target),
+                    "commit",
+                    "--quiet",
+                    "-m",
+                    "Add forbidden environment file",
+                ],
+                check=True,
+            )
+            forbidden = self._run_policy(
+                workspace, target, policy_path, report_path
+            )
+
+            forbidden_report = report_path.read_text(encoding="utf-8")
+            self.assertEqual(forbidden.returncode, 6, forbidden.stderr)
+            self.assertIn("Forbidden file is present: .env.", forbidden_report)
+            forbidden_metadata = parse_rollout_metadata(forbidden_report)
+            self.assertEqual(
+                forbidden_metadata["readiness"], "remediation-required"
+            )
+
+            (target / ".env").unlink()
+            subprocess.run(
+                ["git", "-C", str(target), "add", "--all"], check=True
+            )
+            subprocess.run(
+                [
+                    "git",
+                    "-C",
+                    str(target),
+                    "commit",
+                    "--quiet",
+                    "-m",
+                    "Remove forbidden environment file",
+                ],
+                check=True,
             )
 
             (target / "SECURITY.md").unlink()
