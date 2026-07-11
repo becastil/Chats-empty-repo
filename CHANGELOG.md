@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.18 - 2026-07-11
+
+- Added backward-compatible policy schema v2 with strict `repository.forbidden_files` rules for exact normalized repository-relative paths while retaining v1 reads.
+- Reported one stable policy violation per tracked or unignored forbidden file while leaving properly ignored local files alone in Git repositories.
+- Rejected duplicate, escaping, absolute, backslash, empty, and required-plus-forbidden path contradictions before scanning.
+- Included sorted forbidden-file semantics in stable cross-repository policy fingerprints.
+- Added `.env` and `.env.local` protection to the manual team-policy example; pinned v1 starter and CI files remain unchanged until v0.3.18 can be verified immutably.
+- Added focused policy, fingerprint, compatibility, CLI, and example tests for violations, ignored-local behavior, force-tracked files, invalid paths, and contradictory rules.
+- Preserved the acquisition freeze and recorded that no prospect outreach or revenue evidence exists yet.
+
 ## 0.3.17 - 2026-07-11
 
 - Added `repo-scout-outreach` for dependency-free validation and aggregate reporting of the private direct-outreach ledger.

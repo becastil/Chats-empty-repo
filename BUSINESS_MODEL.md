@@ -25,6 +25,7 @@ initial revenue before licensing or billing infrastructure is built.
 - Saved snapshot comparison and bounded changed-path details.
 - A copy-ready, read-only GitHub Actions policy gate with failure evidence.
 - Offline starter policies for baseline, Python, npm, and agent-ready services.
+- Exact required and forbidden file rules with stable policy fingerprints.
 - A no-install, single-file zipapp for the primary CLI.
 - Versioned GitHub release artifacts with checksums and verifiable build provenance.
 
@@ -53,6 +54,13 @@ The pilot includes:
 
 The paid value is consistency across repositories and teams, not access to the
 basic local scanner.
+
+Policy version 2 can reject tracked or unignored sensitive paths without
+failing on properly ignored local copies. A founding-team custom pack can use
+the team's agreed credential, generated-secret, and local-configuration paths.
+This is useful free CI enforcement; the paid work remains agreeing on the
+right rules and rolling the same reviewed policy across uneven repositories.
+Version 1 remains readable so verified CI upgrades can be staged safely.
 
 An AI can recreate a scanner, but that is not the commercial claim being
 tested. The active website experiment presents the paid outcome in plain

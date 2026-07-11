@@ -244,3 +244,15 @@ message, and rejects another action after follow-up, reply, pilot request,
 rejection, or opt-out. Its output contains aggregate activity and due
 aliases, never addresses or message content. It sends nothing, and its replies
 or pilot-requested rows do not enter the public revenue funnel.
+
+## 2026-07-11: Forbid Policy-Visible Files Without Blocking Local Secrets
+
+Policy version 2 adds exact normalized `forbidden_files` paths while the parser
+continues to accept version 1. In a Git repository, a matching file violates
+policy when it is tracked or unignored; properly ignored local files remain
+outside enforcement. In a non-Git folder, an existing matching file violates
+policy directly. Required and forbidden lists cannot contain the same path,
+both lists reject malformed or duplicate entries, and sorted forbidden paths
+participate in the policy fingerprint. The manual team-policy example uses v2;
+starter and copy-ready CI files remain on v1 until a v2-capable release has a
+verified immutable wheel digest and provenance.

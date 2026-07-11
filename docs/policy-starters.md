@@ -73,4 +73,7 @@ return exit code 4.
 The free profiles cover common repository shapes. The $299 founding-team pilot
 adds one custom policy pack, rollout help, and shared enforcement for up to 10
 repositories over 90 days. A custom pack should encode standards the team has
-already agreed to rather than creating new process by surprise.
+already agreed to rather than creating new process by surprise. That includes
+the team's own forbidden credential, generated-secret, or local-configuration
+paths rather than a generic list imposed without review. Forbidden-file rules
+use policy version 2; version 1 profiles remain readable for staged CI upgrades.

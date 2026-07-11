@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 44 of 1,000, with 956 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 45 of 1,000, with 955 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -111,15 +111,18 @@ The delivery goal is 1,000 meaningful commits. This update is commit 44 of 1,000
 - A dependency-free `repo-scout-outreach` auditor for private, alias-only campaign ledgers.
 - Strict three-signal qualification, permitted-channel, 10-prospect, seven-day follow-up, and terminal-stop validation.
 - Aggregate outreach activity and due-alias reporting that remains explicitly separate from lead and revenue evidence.
+- Backward-compatible policy v2 `forbidden_files` rules with normalized exact paths and contradictory-rule rejection.
+- Git-aware forbidden-file enforcement that catches tracked or unignored files without failing properly ignored local environment files.
+- Manual team-policy, CLI, fingerprint, and compatibility coverage for `.env` and `.env.local` protection.
 
 ## How To Run
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.17/repo-scout-0.3.17.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.18/repo-scout-0.3.18.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 python3 -m unittest discover -s tests
 ```
 
 ## Next Small Task
 
-Research, contact, and audit the first five qualified prospects with the private ledger. Do not add another acquisition asset before those five attempts are privately recorded.
+After releasing v0.3.18, pin its verified wheel in the copy-ready CI gate and move starter profiles to policy v2. Acquisition still requires authoritative company and contact evidence; no outreach was attempted and no private ledger exists.

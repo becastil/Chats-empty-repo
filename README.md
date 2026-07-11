@@ -38,7 +38,7 @@ not require a checkout, package installation, administrator access, or an API
 key:
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.17/repo-scout-0.3.17.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.18/repo-scout-0.3.18.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 ```
 
@@ -49,7 +49,7 @@ need the `repo-scout-distribution`, `repo-scout-growth`, `repo-scout-policy`,
 `repo-scout-outreach` commands:
 
 ```bash
-python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.17/repo_scout-0.3.17-py3-none-any.whl
+python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.18/repo_scout-0.3.18-py3-none-any.whl
 repo-scout --languages .
 ```
 
@@ -133,25 +133,30 @@ Exit code 5 means the scan completed but attention findings were present.
 Apply a shared team policy and fail CI when the repository violates it:
 
 ```bash
-python3 /tmp/repo-scout.pyz --format markdown --policy examples/team-policy.toml .
+python3 /tmp/repo-scout.pyz --format markdown --policy examples/team-policy-v2.toml .
 ```
 
 Policy files use a strict, versioned TOML contract:
 
 ```toml
-version = 1
+version = 2
 
 [repository]
 required_files = ["README.md", "SECURITY.md"]
+forbidden_files = [".env", ".env.local"]
 max_files = 5000
 max_total_bytes = 50000000
 require_clean_git = true
 ```
 
-All rules are optional, but a policy must define at least one. Required-file
-paths must be normalized paths relative to the repository. Unknown keys,
+All rules are optional, but a policy must define at least one. Required and
+forbidden file paths must be normalized paths relative to the repository, and
+the same path cannot appear in both lists. In Git repositories, forbidden files
+fail when tracked or unignored; ignored local files remain outside enforcement.
+Non-Git scans enforce forbidden files directly from the folder. Unknown keys,
 invalid values, and unsupported policy versions are rejected instead of being
-silently ignored.
+silently ignored. Repo Scout continues to read policy version 1; version 2 adds
+`forbidden_files`.
 
 Policy results are included in text, JSON, and Markdown reports. Exit code 6
 means the scan completed and at least one team-policy rule failed. Policy

@@ -127,6 +127,15 @@ class CiExampleTests(unittest.TestCase):
         )
         self.assertTrue(policy["repository"]["require_clean_git"])
 
+    def test_manual_v2_policy_example_adds_forbidden_files(self) -> None:
+        policy = load_policy(ROOT / "examples/team-policy-v2.toml")
+
+        self.assertEqual(policy["version"], 2)
+        self.assertEqual(
+            policy["repository"]["forbidden_files"],
+            [".env", ".env.local"],
+        )
+
     def test_example_command_is_repeatable_and_preserves_failure_evidence(self) -> None:
         with TemporaryDirectory() as tmp:
             workspace = Path(tmp)

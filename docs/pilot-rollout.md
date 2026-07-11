@@ -62,7 +62,8 @@ Each bundle ends with a visible `Rollout Metadata` JSON block. Schema version 2
 contains the logical repository ID, readiness, policy counts and fingerprint,
 Git state and commit, and attention count. The fingerprint hashes normalized
 policy semantics, so TOML key order, source paths, required-file ordering, and
-an explicit no-op `require_clean_git = false` do not change it. It excludes
+forbidden-file ordering, and an explicit no-op `require_clean_git = false` do
+not change it. It excludes
 absolute repository and policy paths even though those remain visible
 elsewhere in the human evidence report. Schema-1 bundles
 remain accepted but have no policy-fingerprint or Git-commit coverage.

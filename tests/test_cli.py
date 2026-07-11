@@ -152,11 +152,13 @@ class CliTests(unittest.TestCase):
         with TemporaryDirectory() as tmp:
             root = Path(tmp)
             (root / "README.md").write_text("# Example\n", encoding="utf-8")
+            (root / ".env").write_text("SECRET=unsafe\n", encoding="utf-8")
             policy_path = root / "team-policy.toml"
             policy_path.write_text(
-                """version = 1
+                """version = 2
 [repository]
 required_files = ["README.md", "SECURITY.md"]
+forbidden_files = [".env"]
 """,
                 encoding="utf-8",
             )
@@ -173,8 +175,12 @@ required_files = ["README.md", "SECURITY.md"]
             self.assertEqual(
                 snapshot["policy"]["violations"][0]["path"], "SECURITY.md"
             )
+            self.assertEqual(
+                snapshot["policy"]["violations"][1]["path"], ".env"
+            )
 
             (root / "SECURITY.md").write_text("# Security\n", encoding="utf-8")
+            (root / ".env").unlink()
             passing_stdout = io.StringIO()
             with redirect_stdout(passing_stdout):
                 passing_exit_code = main(
@@ -424,7 +430,7 @@ required_files = ["README.md", "SECURITY.md"]
             root = Path(tmp)
             policy_path = root / "team-policy.toml"
             policy_path.write_text(
-                """version = 2
+                """version = 3
 [repository]
 max_files = 10
 """,
@@ -436,7 +442,7 @@ max_files = 10
                 exit_code = main(["--policy", str(policy_path), str(root)])
 
             self.assertEqual(exit_code, 2)
-            self.assertIn("policy version must be 1", stderr.getvalue())
+            self.assertIn("policy version must be 1 or 2", stderr.getvalue())
 
     def test_cli_writes_output_and_requires_force_to_replace(self) -> None:
         with TemporaryDirectory() as tmp:
