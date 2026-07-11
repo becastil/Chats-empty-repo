@@ -35,6 +35,15 @@ test("server-renders the Repo Scout companion page", async () => {
   assert.match(html, /<title>Repo Scout \| Local repository policy for teams<\/title>/i);
   assert.match(html, /One-file local repository snapshots/i);
   assert.match(html, /property="og:image" content="http:\/\/localhost\/og\.png"/i);
+  assert.match(
+    html,
+    /<link rel="canonical" href="https:\/\/repo-scout\.becastil\.chatgpt\.site\/"/i,
+  );
+  assert.match(
+    html,
+    /property="og:url" content="https:\/\/repo-scout\.becastil\.chatgpt\.site\/"/i,
+  );
+  assert.match(html, /name="robots" content="index, follow"/i);
   assert.match(html, /name="twitter:card" content="summary_large_image"/i);
   assert.match(html, /Repo Scout for every handoff\./i);
   assert.match(html, /Repo Scout Snapshot/i);
@@ -43,12 +52,12 @@ test("server-renders the Repo Scout companion page", async () => {
   assert.match(html, /Copy no-install setup/i);
   assert.match(html, /One file\. Python 3\.11\+\. No API key\./i);
   assert.match(html, /curl -fL/i);
-  assert.match(html, /repo-scout-0\.3\.13\.pyz/i);
+  assert.match(html, /repo-scout-0\.3\.14\.pyz/i);
   assert.match(html, /python3 \/tmp\/repo-scout\.pyz --languages \./i);
   assert.match(html, /Download v/i);
   assert.match(
     html,
-    /releases\/download\/v0\.3\.13\/repo-scout-0\.3\.13\.pyz/i,
+    /releases\/download\/v0\.3\.14\/repo-scout-0\.3\.14\.pyz/i,
   );
   assert.doesNotMatch(html, /PYTHONPATH=src python3 -m repo_scout/i);
   assert.match(html, /Snapshot lab/i);
@@ -97,6 +106,41 @@ test("server-renders the Repo Scout companion page", async () => {
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
 });
 
+test("publishes deterministic crawler routes for the canonical site", async () => {
+  const robotsResponse = await render({}, "/robots.txt");
+  assert.equal(robotsResponse.status, 200);
+  assert.match(
+    robotsResponse.headers.get("content-type") ?? "",
+    /^text\/plain\b/i,
+  );
+  const robots = await robotsResponse.text();
+  assert.match(robots, /^User-Agent: \*$/m);
+  assert.match(robots, /^Allow: \/$/m);
+  assert.match(
+    robots,
+    /^Sitemap: https:\/\/repo-scout\.becastil\.chatgpt\.site\/sitemap\.xml$/m,
+  );
+  assert.match(
+    robots,
+    /^Host: https:\/\/repo-scout\.becastil\.chatgpt\.site$/m,
+  );
+
+  const sitemapResponse = await render({}, "/sitemap.xml");
+  assert.equal(sitemapResponse.status, 200);
+  assert.match(
+    sitemapResponse.headers.get("content-type") ?? "",
+    /^(?:application|text)\/xml\b/i,
+  );
+  const sitemap = await sitemapResponse.text();
+  assert.match(
+    sitemap,
+    /<loc>https:\/\/repo-scout\.becastil\.chatgpt\.site\/<\/loc>/i,
+  );
+  assert.match(sitemap, /<changefreq>weekly<\/changefreq>/i);
+  assert.match(sitemap, /<priority>1<\/priority>/i);
+  assert.doesNotMatch(sitemap, /\?source=|why-teams-buy/i);
+});
+
 test("preserves supported campaign sources in pilot application links", async () => {
   const campaigns = new Map([
     ["github", "GitHub+repository+or+release"],
@@ -119,6 +163,15 @@ test("preserves supported campaign sources in pilot application links", async ()
       2,
       campaign,
     );
+    assert.equal(
+      countOccurrences(
+        html,
+        '<link rel="canonical" href="https://repo-scout.becastil.chatgpt.site/"',
+      ),
+      1,
+      campaign,
+    );
+    assert.doesNotMatch(html, /rel="canonical"[^>]+\?source=/i);
   }
 
   const fallback = await render({}, "/?source=unrecognized");
@@ -172,6 +225,11 @@ test("builds social metadata from the incoming public host", async () => {
     html,
     /name="twitter:image" content="https:\/\/repo-scout\.example\/og\.png"/i,
   );
+  assert.match(
+    html,
+    /<link rel="canonical" href="https:\/\/repo-scout\.becastil\.chatgpt\.site\/"/i,
+  );
+  assert.doesNotMatch(html, /rel="canonical"[^>]+repo-scout\.example/i);
 });
 
 test("ships a qualified founding-team pilot intake", async () => {

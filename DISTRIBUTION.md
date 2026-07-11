@@ -43,6 +43,9 @@ None requires an API key or sends source code to Repo Scout.
   primary criterion, offer, and paid stages.
 - **Review point:** 2026-07-24 or after three public pilot requests, whichever
   comes first.
+- **Observed baseline:** On 2026-07-10 the public pilot queue had zero requests.
+  The five newest releases had zero requests except one `v0.3.9` wheel request,
+  which may be Repo Scout's own verified CI and is not a prospect.
 
 This experiment has no browser analytics. Release requests and site visits are
 not unique prospects, and self-reported source does not prove causation. Only
@@ -77,6 +80,19 @@ team workflow with an engineering lead. Its prewritten message names the $299
 scope and local-code boundary, then links through the referral route above. It
 opens the visitor's email client and sends nothing automatically; Repo Scout
 does not receive an address, click event, or proof that the message was sent.
+
+## Search Discovery
+
+The hosted companion publishes a deterministic `robots.txt` and `sitemap.xml`
+for its one production page. Every campaign-query variant declares the same
+production canonical URL, so GitHub, outreach, referral, search, and social
+links retain their buyer-facing source behavior without asking crawlers to
+index duplicate pages. Open Graph metadata also names that canonical page.
+
+Crawler access and a sitemap improve discoverability hygiene; they do not prove
+indexing, search visits, activation, pilot demand, or revenue. Search becomes
+commercial evidence only when a buyer self-reports it in intake and advances
+through the labeled funnel.
 
 ## Release Contract
 

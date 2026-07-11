@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.14 - 2026-07-10
+
+- Added one production canonical URL for organic and campaign-query versions of the hosted offer.
+- Added deterministic `robots.txt` and `sitemap.xml` routes that expose only the canonical page.
+- Added canonical Open Graph URL and explicit index/follow metadata while retaining host-derived social images.
+- Recorded the zero-pilot-request baseline and separated the lone recent wheel request from prospect evidence.
+- Added production-render contracts for canonical metadata, crawler directives, sitemap content, and campaign-query exclusion.
+- Clarified that crawler access and release requests are not search visits, demand, or revenue.
+
 ## 0.3.13 - 2026-07-10
 
 - Added a "Share with your engineering lead" action beside the hosted $299 pilot offer.

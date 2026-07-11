@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from "./site-config";
 import "./globals.css";
-
-const title = "Repo Scout | Local repository policy for teams";
-const description =
-  "One-file local repository snapshots plus verifiable cross-repository policy evidence and CI rollout support for software teams.";
 
 export async function generateMetadata(): Promise<Metadata> {
   const requestHeaders = await headers();
@@ -30,18 +27,21 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const imageUrl = `${origin}/og.png`;
   return {
-    title,
-    description,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    alternates: { canonical: `${SITE_URL}/` },
+    robots: { index: true, follow: true },
     openGraph: {
-      title,
-      description,
+      title: SITE_TITLE,
+      description: SITE_DESCRIPTION,
       type: "website",
-      images: [{ url: imageUrl, width: 1200, height: 630, alt: description }],
+      url: `${SITE_URL}/`,
+      images: [{ url: imageUrl, width: 1200, height: 630, alt: SITE_DESCRIPTION }],
     },
     twitter: {
       card: "summary_large_image",
-      title,
-      description,
+      title: SITE_TITLE,
+      description: SITE_DESCRIPTION,
       images: [imageUrl],
     },
   };

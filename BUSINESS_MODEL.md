@@ -76,6 +76,12 @@ scope, and local-code boundary before linking through the referral campaign.
 It uses the visitor's email client and creates no lead or revenue evidence
 until a recipient independently submits intake and advances through the funnel.
 
+The hosted offer now has one canonical search identity, a crawler policy, and a
+one-page sitemap. Campaign query variants keep their source-specific intake
+behavior for people while pointing search engines at the same production page.
+This is acquisition infrastructure, not evidence of traffic or demand; only
+self-reported intake and paid-stage labels affect commercial validation.
+
 Rollout bundles carry a stable, non-sensitive metadata contract so a pilot lead
 can summarize bundle-reported readiness, policy failures, violations, worktree
 state, and attention across repositories without sending source code to Repo

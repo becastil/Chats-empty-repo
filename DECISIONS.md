@@ -198,3 +198,14 @@ hosted route. A `mailto:` link keeps composition and sending in the visitor's
 email client, so Repo Scout receives no address and does not claim a send or
 click. Only a recipient's independent intake and labeled funnel progression
 become commercial evidence.
+
+## 2026-07-10: Give Campaign Pages One Search Identity
+
+All hosted campaign-query variants now declare the same production canonical
+URL. A deterministic crawler policy allows the public page and names a one-page
+sitemap that excludes campaign URLs; Open Graph metadata also identifies the
+canonical page while social images remain request-host aware for deployment
+validation. This reduces duplicate search identities without removing the
+source-prefilled experience for visitors. Crawler access, indexing, and release
+requests remain acquisition signals at most; only self-reported intake and
+paid-stage labels count toward revenue validation.
