@@ -1,0 +1,50 @@
+{
+  "bottleneck": {
+    "next_action": "Run one source-identifiable outreach or launch experiment and ask qualified teams to submit the price-disclosed pilot form.",
+    "reason": "No pilot request has entered the attributed funnel.",
+    "stage": "acquisition"
+  },
+  "decision_criteria": [],
+  "distribution_change": {
+    "manifest_downloads_delta": 0,
+    "new_releases": [],
+    "portable_downloads_delta": 0,
+    "primary_artifact_downloads_delta": 0,
+    "removed_releases": [],
+    "source_downloads_delta": 0,
+    "unknown_downloads_delta": 0,
+    "wheel_downloads_delta": 0
+  },
+  "evidence_quality": {
+    "decision_criterion_reporting_available": true,
+    "distribution_warnings": 0,
+    "missing_decision_criterion_requests": 0,
+    "pilot_schema_version": 6,
+    "pilot_warnings": 0,
+    "unattributed_pilot_requests": 0,
+    "unknown_decision_criterion_requests": 0,
+    "unknown_source_pilot_requests": 0
+  },
+  "measurement_note": "Artifact request deltas can include CI, maintainer checks, and retries. They are not unique-user or conversion-rate denominators and cannot be assigned to self-reported lead sources or purchase criteria. Purchase criteria are self-reported evaluation priorities, not causal attribution, willingness to pay, or proof of a moat. Only paid pilot stages count as revenue.",
+  "schema_version": 2,
+  "sources": [],
+  "summary": {
+    "annual_conversions": 0,
+    "attributed_pilot_requests": 0,
+    "booked_pilots": 0,
+    "booked_revenue_usd": 0,
+    "decision_criterion_reporting_available": true,
+    "declared_decision_criterion_requests": 0,
+    "distribution_baseline_present": true,
+    "lost_pilots": 0,
+    "missing_decision_criterion_requests": 0,
+    "offered_pilots": 0,
+    "open_sales_actions": 0,
+    "qualified_pilots": 0,
+    "target_pilots": 3,
+    "target_revenue_usd": 897,
+    "tracked_pilot_requests": 0,
+    "unknown_decision_criterion_requests": 0
+  },
+  "warnings": []
+}

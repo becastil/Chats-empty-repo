@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this verified-pin-updater commit: 58 / 1,000 (5.8%).
-- Remaining after this verified-pin-updater commit: 942 commits.
+- Progress after this commercial-baseline commit: 59 / 1,000 (5.9%).
+- Remaining after this commercial-baseline commit: 941 commits.
 
 ## Commit Standard
 

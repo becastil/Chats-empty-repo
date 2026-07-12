@@ -1,0 +1,267 @@
+{
+  "by_decision_criterion": {
+    "commercial_fit": {
+      "annual_conversions": 0,
+      "booked_pilots": 0,
+      "booked_revenue_usd": 0,
+      "deals": 0,
+      "lost_pilots": 0,
+      "offered_pilots": 0,
+      "qualified_pilots": 0
+    },
+    "effort_timing": {
+      "annual_conversions": 0,
+      "booked_pilots": 0,
+      "booked_revenue_usd": 0,
+      "deals": 0,
+      "lost_pilots": 0,
+      "offered_pilots": 0,
+      "qualified_pilots": 0
+    },
+    "evidence_fit": {
+      "annual_conversions": 0,
+      "booked_pilots": 0,
+      "booked_revenue_usd": 0,
+      "deals": 0,
+      "lost_pilots": 0,
+      "offered_pilots": 0,
+      "qualified_pilots": 0
+    },
+    "other": {
+      "annual_conversions": 0,
+      "booked_pilots": 0,
+      "booked_revenue_usd": 0,
+      "deals": 0,
+      "lost_pilots": 0,
+      "offered_pilots": 0,
+      "qualified_pilots": 0
+    },
+    "policy_fit": {
+      "annual_conversions": 0,
+      "booked_pilots": 0,
+      "booked_revenue_usd": 0,
+      "deals": 0,
+      "lost_pilots": 0,
+      "offered_pilots": 0,
+      "qualified_pilots": 0
+    },
+    "privacy_security": {
+      "annual_conversions": 0,
+      "booked_pilots": 0,
+      "booked_revenue_usd": 0,
+      "deals": 0,
+      "lost_pilots": 0,
+      "offered_pilots": 0,
+      "qualified_pilots": 0
+    },
+    "rollout_fit": {
+      "annual_conversions": 0,
+      "booked_pilots": 0,
+      "booked_revenue_usd": 0,
+      "deals": 0,
+      "lost_pilots": 0,
+      "offered_pilots": 0,
+      "qualified_pilots": 0
+    },
+    "unattributed": {
+      "annual_conversions": 0,
+      "booked_pilots": 0,
+      "booked_revenue_usd": 0,
+      "deals": 0,
+      "lost_pilots": 0,
+      "offered_pilots": 0,
+      "qualified_pilots": 0
+    },
+    "unknown": {
+      "annual_conversions": 0,
+      "booked_pilots": 0,
+      "booked_revenue_usd": 0,
+      "deals": 0,
+      "lost_pilots": 0,
+      "offered_pilots": 0,
+      "qualified_pilots": 0
+    }
+  },
+  "by_readiness": {
+    "exploring": {
+      "annual_conversions": 0,
+      "booked_pilots": 0,
+      "booked_revenue_usd": 0,
+      "deals": 0,
+      "lost_pilots": 0,
+      "offered_pilots": 0,
+      "qualified_pilots": 0
+    },
+    "needs_approval": {
+      "annual_conversions": 0,
+      "booked_pilots": 0,
+      "booked_revenue_usd": 0,
+      "deals": 0,
+      "lost_pilots": 0,
+      "offered_pilots": 0,
+      "qualified_pilots": 0
+    },
+    "ready": {
+      "annual_conversions": 0,
+      "booked_pilots": 0,
+      "booked_revenue_usd": 0,
+      "deals": 0,
+      "lost_pilots": 0,
+      "offered_pilots": 0,
+      "qualified_pilots": 0
+    },
+    "unattributed": {
+      "annual_conversions": 0,
+      "booked_pilots": 0,
+      "booked_revenue_usd": 0,
+      "deals": 0,
+      "lost_pilots": 0,
+      "offered_pilots": 0,
+      "qualified_pilots": 0
+    },
+    "unknown": {
+      "annual_conversions": 0,
+      "booked_pilots": 0,
+      "booked_revenue_usd": 0,
+      "deals": 0,
+      "lost_pilots": 0,
+      "offered_pilots": 0,
+      "qualified_pilots": 0
+    }
+  },
+  "by_source": {
+    "github": {
+      "annual_conversions": 0,
+      "booked_pilots": 0,
+      "booked_revenue_usd": 0,
+      "deals": 0,
+      "lost_pilots": 0,
+      "offered_pilots": 0,
+      "qualified_pilots": 0
+    },
+    "other": {
+      "annual_conversions": 0,
+      "booked_pilots": 0,
+      "booked_revenue_usd": 0,
+      "deals": 0,
+      "lost_pilots": 0,
+      "offered_pilots": 0,
+      "qualified_pilots": 0
+    },
+    "outreach": {
+      "annual_conversions": 0,
+      "booked_pilots": 0,
+      "booked_revenue_usd": 0,
+      "deals": 0,
+      "lost_pilots": 0,
+      "offered_pilots": 0,
+      "qualified_pilots": 0
+    },
+    "referral": {
+      "annual_conversions": 0,
+      "booked_pilots": 0,
+      "booked_revenue_usd": 0,
+      "deals": 0,
+      "lost_pilots": 0,
+      "offered_pilots": 0,
+      "qualified_pilots": 0
+    },
+    "search": {
+      "annual_conversions": 0,
+      "booked_pilots": 0,
+      "booked_revenue_usd": 0,
+      "deals": 0,
+      "lost_pilots": 0,
+      "offered_pilots": 0,
+      "qualified_pilots": 0
+    },
+    "social": {
+      "annual_conversions": 0,
+      "booked_pilots": 0,
+      "booked_revenue_usd": 0,
+      "deals": 0,
+      "lost_pilots": 0,
+      "offered_pilots": 0,
+      "qualified_pilots": 0
+    },
+    "unattributed": {
+      "annual_conversions": 0,
+      "booked_pilots": 0,
+      "booked_revenue_usd": 0,
+      "deals": 0,
+      "lost_pilots": 0,
+      "offered_pilots": 0,
+      "qualified_pilots": 0
+    },
+    "unknown": {
+      "annual_conversions": 0,
+      "booked_pilots": 0,
+      "booked_revenue_usd": 0,
+      "deals": 0,
+      "lost_pilots": 0,
+      "offered_pilots": 0,
+      "qualified_pilots": 0
+    },
+    "website": {
+      "annual_conversions": 0,
+      "booked_pilots": 0,
+      "booked_revenue_usd": 0,
+      "deals": 0,
+      "lost_pilots": 0,
+      "offered_pilots": 0,
+      "qualified_pilots": 0
+    }
+  },
+  "by_stage": {
+    "active": 0,
+    "conflict": 0,
+    "converted": 0,
+    "lead": 0,
+    "lost": 0,
+    "offered": 0,
+    "paid": 0,
+    "qualified": 0,
+    "untracked": 0
+  },
+  "deals": [],
+  "follow_up": {
+    "as_of": "2026-07-12",
+    "deals": [],
+    "stale_days": 7
+  },
+  "pricing": {
+    "pilot_price_usd": 299,
+    "target_pilots": 3,
+    "target_revenue_usd": 897
+  },
+  "sales_queue": {
+    "deals": []
+  },
+  "schema_version": 6,
+  "summary": {
+    "annual_conversions": 0,
+    "attributed_issues": 0,
+    "booked_pilots": 0,
+    "booked_revenue_usd": 0,
+    "declared_decision_criterion_issues": 0,
+    "exploring_issues": 0,
+    "ignored_issues": 0,
+    "input_issues": 0,
+    "lost_pilots": 0,
+    "missing_decision_criterion_issues": 0,
+    "missing_readiness_issues": 0,
+    "needs_approval_issues": 0,
+    "ready_issues": 0,
+    "remaining_pilots": 3,
+    "remaining_revenue_usd": 897,
+    "sales_actions": 0,
+    "stale_deals": 0,
+    "target_attainment_percent": 0.0,
+    "tracked_issues": 0,
+    "unattributed_issues": 0,
+    "unknown_decision_criterion_issues": 0,
+    "unknown_readiness_issues": 0,
+    "unknown_source_issues": 0
+  },
+  "warnings": []
+}

@@ -278,6 +278,13 @@ experiments comparable over time, but they retain the same CI and maintainer
 confounders and therefore remain directional until a buyer self-reports a source
 or enters the paid funnel.
 
+The 2026-07-12 public baseline records 61 cumulative primary artifact requests
+across 34 contract-complete releases, but only one request was for the portable
+artifact and the 60 wheel requests are materially confounded by Repo Scout's
+own verified CI. The same checkpoint records zero pilot requests and $0 booked
+revenue. These committed reports establish future movement without relabeling
+automation traffic as adoption.
+
 The dependency-free `repo-scout-growth` review places those signed deltas beside
 schema-5 or schema-6 pilot source, qualification, offer, payment, and revenue
 totals. It names one current commercial bottleneck and next action so weekly

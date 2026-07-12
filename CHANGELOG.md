@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added generated schema-2 distribution, schema-6 pilot, and joined growth baselines from public evidence captured on 2026-07-12.
+- Recorded 34 contract-complete releases, 61 cumulative primary artifact requests, zero pilot requests, and $0 booked revenue without treating CI-confounded requests as users.
+- Added baseline contract tests that reconcile per-release channels and preserve the acquisition bottleneck and zero-revenue state.
+- Documented baseline provenance, privacy review, refresh cadence, and interpretation boundaries under `metrics/`.
 - Added a preflighted maintainer command that updates both policy workflows and their CI contract to one verified release identity.
 - Rejected invalid version, source-commit, and wheel-digest shapes before reading or writing pin targets.
 - Refused missing or duplicate pin locations before changing any target, preventing layout drift from producing a knowingly mixed upgrade.

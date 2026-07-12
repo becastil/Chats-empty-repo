@@ -426,3 +426,16 @@ the dogfood workflow, customer example, and CI contract, and prepares every
 updated file before replacement. Layout drift fails before any target is
 changed. Package version `0.3.30` remains unchanged because this maintainer and
 configuration improvement does not alter the published CLI behavior.
+
+## 2026-07-12: Commit A Deliberate Public Commercial Baseline
+
+The repository now retains generated distribution schema 2, pilot schema 6,
+and joined growth schema 2 reports captured from public GitHub evidence. The
+checkpoint contains 34 contract-complete releases and 61 cumulative primary
+artifact requests: 1 portable and 60 wheel. It also contains zero pilot
+requests and $0 booked revenue. Wheel and manifest counts are materially
+confounded by Repo Scout's own CI and maintainer verification, so the reports
+remain directional distribution evidence rather than users or adoption.
+Baseline tests reconcile every release channel and preserve the zero-revenue
+truth. Refresh occurs only at a deliberate review point or meaningful public
+funnel change, not on each automated commit.

@@ -46,6 +46,11 @@ None requires an API key or sends source code to Repo Scout.
 - **Observed baseline:** On 2026-07-10 the public pilot queue had zero requests.
   The five newest releases had zero requests except one `v0.3.9` wheel request,
   which may be Repo Scout's own verified CI and is not a prospect.
+- **Measured checkpoint:** On 2026-07-12 the generated public baseline contained
+  34 contract-complete releases, 61 cumulative primary artifact requests
+  (1 portable and 60 wheel), and zero pilot requests or booked revenue. Repo
+  Scout's CI and maintainer verification materially confound the wheel total.
+  The machine-readable reports and capture contract live in `metrics/`.
 
 This experiment has no browser analytics. Release requests and site visits are
 not unique prospects, and self-reported source does not prove causation. Only
@@ -204,6 +209,10 @@ does not divide pilot requests by artifact requests, join a download to a lead,
 assign artifact movement to a criterion, or infer that stated criteria caused
 revenue. Save the current distribution report as the next baseline only after
 reviewing any release-evidence warnings.
+
+The repository's current reviewed baseline is committed under `metrics/` with
+tests that reconcile release totals and preserve zero pilot and revenue truth.
+It is a deliberate comparison point, not a counter to refresh on every commit.
 
 ## Channel Constraints
 
