@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.30 - 2026-07-12
+
+- Added a `drafted` private-ledger status for personalized outreach messages awaiting human review.
+- Required every drafted prospect to use a permitted warm-introduction or published-business channel while forbidding contact and follow-up dates.
+- Released schema-2 outreach reports with a separate draft count that remains excluded from attempted-prospect totals.
+- Updated the playbook and contract tests to prevent draft preparation from being reported as sent outreach.
+- Independently verified and pinned the `v0.3.29` wheel, source commit `ac710bb9833d6d1f2d46c7e65d0a16545ad43017`, and SHA-256 `0da9f82d85b41d6c1419c8f8ad190f1b3b040c5dd173a7fa5a66b23f6c855c82` in both CI gates.
+- Recorded that no authoritative prospect source was available, so no private ledger, drafts, contact attempts, leads, or revenue were claimed.
+
 ## 0.3.29 - 2026-07-12
 
 - Added `repo-scout-policy verify-receipt` to compare archived bootstrap evidence with the current policy.

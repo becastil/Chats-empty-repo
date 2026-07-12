@@ -20,6 +20,8 @@ class DirectOutreachContractTests(unittest.TestCase):
         self.assertIn("?source=outreach#why-teams-buy", playbook)
         self.assertIn("Contact 10 qualified prospects", playbook)
         self.assertIn("at most one follow-up after seven days", playbook)
+        self.assertIn("Drafts have no", playbook)
+        self.assertIn("do not count as attempted outreach", playbook)
         self.assertIn("Stop immediately after an opt-out", playbook)
         self.assertIn("reply, page visit, or release request", playbook)
         self.assertIn("do not count", playbook.lower())

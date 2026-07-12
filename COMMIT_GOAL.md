@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this receipt-verification commit: 56 / 1,000 (5.6%).
-- Remaining after this receipt-verification commit: 944 commits.
+- Progress after this draft-accounting commit: 57 / 1,000 (5.7%).
+- Remaining after this draft-accounting commit: 943 commits.
 
 ## Commit Standard
 

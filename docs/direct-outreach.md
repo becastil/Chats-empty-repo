@@ -78,8 +78,10 @@ repository.
 
 Separate fit-signal keys with semicolons. Use `warm-intro` or
 `published-business` as the channel. Allowed statuses are `researched`,
-`contacted`, `followed-up`, `replied`, `pilot-requested`, `not-a-fit`, and
-`do-not-contact`.
+`drafted`, `contacted`, `followed-up`, `replied`, `pilot-requested`,
+`not-a-fit`, and `do-not-contact`. Use `drafted` only after a personalized
+message has been saved for review through a permitted channel. Drafts have no
+contact or follow-up dates and do not count as attempted outreach.
 
 Audit the ledger before each contact session:
 
@@ -93,7 +95,8 @@ The command requires at least three recognized fit signals, accepts only
 single follow-up exactly seven days later, and rejects next actions after a
 follow-up, reply, pilot request, rejection, or opt-out. A separate
 `followed_up_on` field rejects a second message sent before that date. It
-reports aliases and aggregate operator activity only. The command never sends
+reports reviewed drafts separately from sent attempts, aliases, and aggregate
+operator activity only. The command never sends
 outreach, and its
 reply or pilot-requested counts do not become public demand or revenue evidence;
 only public pilot intake and cumulative funnel labels do.

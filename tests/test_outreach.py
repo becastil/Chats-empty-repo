@@ -17,6 +17,7 @@ from repo_scout.outreach import (  # noqa: E402
     LEDGER_FIELDS,
     OutreachInputError,
     build_outreach_report,
+    format_outreach_report,
     load_outreach_report,
     main,
 )
@@ -82,13 +83,24 @@ class OutreachReportTests(unittest.TestCase):
                 followed_up_on="",
                 next_action_on="",
             ),
+            _row(
+                prospect_id="prospect-007",
+                status="drafted",
+                contacted_on="",
+                followed_up_on="",
+                next_action_on="",
+            ),
         ]
 
         report = build_outreach_report(rows, as_of=date(2026, 7, 10))
 
-        self.assertEqual(report["schema_version"], 1)
-        self.assertEqual(report["summary"]["prospects"], 6)
+        self.assertEqual(report["schema_version"], 2)
+        self.assertEqual(report["summary"]["prospects"], 7)
         self.assertEqual(report["summary"]["attempted_prospects"], 5)
+        self.assertEqual(report["summary"]["drafted"], 1)
+        self.assertIn(
+            "Drafts awaiting review: 1", format_outreach_report(report)
+        )
         self.assertEqual(report["summary"]["due_followups"], 1)
         self.assertEqual(report["summary"]["pilot_requested"], 1)
         self.assertEqual(
@@ -158,6 +170,23 @@ class OutreachReportTests(unittest.TestCase):
             (
                 _row(status="researched", channel="", next_action_on=""),
                 "cannot have contact dates",
+            ),
+            (
+                _row(
+                    status="drafted",
+                    contacted_on="",
+                    channel="",
+                    next_action_on="",
+                ),
+                "require a permitted channel",
+            ),
+            (
+                _row(
+                    status="drafted",
+                    contacted_on="2026-07-01",
+                    next_action_on="",
+                ),
+                "drafted prospects cannot have contact dates",
             ),
         )
 

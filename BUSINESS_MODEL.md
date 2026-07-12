@@ -62,7 +62,7 @@ This is useful free CI enforcement; the paid work remains agreeing on the
 right rules and rolling the same reviewed policy across uneven repositories.
 Versions 1 and 2 remain readable so verified CI upgrades can be staged safely.
 The dogfood and copy-ready gates now install the independently verified
-`v0.3.28` wheel, so v4 policies can run locally and in CI
+`v0.3.29` wheel, so v4 policies can run locally and in CI
 without source checkout, mutable package resolution, or a team-managed secret.
 
 Policy version 3 extends custom packs beyond exact root paths. A reviewed
@@ -157,6 +157,11 @@ The local outreach auditor enforces the 10-prospect boundary, three-signal
 qualification, alias-only records, permitted channels, one seven-day follow-up,
 and terminal stop states. It sends nothing and exposes no recipient details;
 its totals remain operator activity rather than commercial evidence.
+Schema-2 outreach reports also separate reviewed drafts from sent attempts.
+Drafted rows require a permitted channel but forbid contact and follow-up dates,
+preventing message preparation or approval queues from inflating acquisition
+activity. Authoritative prospect evidence remains required before a row is
+treated as qualified.
 
 Rollout bundles carry a stable, non-sensitive metadata contract so a pilot lead
 can summarize bundle-reported readiness, policy failures, violations, worktree

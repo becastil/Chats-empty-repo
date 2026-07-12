@@ -401,3 +401,16 @@ stable expected-versus-actual evidence and exit code 6; malformed receipt
 evidence remains a command error with exit code 2. This makes archived handoff
 evidence independently checkable in local or CI workflows without creating a
 hosted trust dependency.
+
+## 2026-07-12: Separate Draft Review From Outreach Attempts
+
+The independently verified `v0.3.29` wheel, source commit
+`ac710bb9833d6d1f2d46c7e65d0a16545ad43017`, and wheel SHA-256
+`0da9f82d85b41d6c1419c8f8ad190f1b3b040c5dd173a7fa5a66b23f6c855c82`
+are pinned together in both policy gates. Outreach schema 2 adds `drafted` for
+personalized messages awaiting human review. A draft requires a permitted
+channel and cannot have contact, follow-up, or next-action dates. Drafts receive
+their own aggregate count and remain excluded from attempted prospects. No
+prospect list was created from broad web guesses because the current connector
+set lacks authoritative sales-intelligence or CRM evidence; qualification and
+outreach totals remain zero.
