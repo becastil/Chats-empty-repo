@@ -219,6 +219,13 @@ targets. Qualified leads and written offers remain pipeline, not booked
 revenue. Label warnings must be resolved before totals are used in a roadmap or
 sales decision.
 
+The repository also audits the seven live GitHub lifecycle labels against one
+tested maintainer contract. Its repair mode may create missing labels or restore
+their color and description, but it never deletes an unexpected `pilot-*`
+label. A dedicated read-only GitHub check catches drift before the public issue
+form and revenue reporter silently disagree. Passing this check proves intake
+configuration readiness only; it does not create a lead or establish demand.
+
 Open lead, qualified, and offered issues inactive for seven UTC calendar days
 appear in the funnel's follow-up list. This is an operating prompt based on
 GitHub issue activity, not evidence that a buyer was or was not contacted.

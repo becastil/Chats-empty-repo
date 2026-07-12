@@ -449,3 +449,15 @@ evidence with reconciliation tests. The extreme clone-to-view gap is consistent
 with ephemeral CI runners and other maintainer automation, so unique cloners
 are not labeled users, installs, activations, or prospects. With zero public
 pilot requests, acquisition remains the commercial bottleneck.
+
+## 2026-07-12: Continuously Verify The Public Revenue Labels
+
+The seven cumulative `pilot-*` labels now have one dependency-free maintainer
+contract for names, colors, and descriptions. A dedicated read-only GitHub
+check compares that contract with the live repository whenever the form,
+funnel, audit, or workflow changes, and it can also be dispatched manually.
+The optional repair mode creates missing labels and restores edited metadata,
+but never deletes unexpected labels because those may contain evidence that
+requires operator review. Tests tie the contract to the funnel's known stages
+and the issue form's automatic `pilot-lead` entry label. A passing audit means
+the conversion path is configured; it does not mean anyone applied or paid.

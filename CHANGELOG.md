@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added a dependency-free maintainer audit for the seven live GitHub labels that connect public pilot intake to revenue reporting.
+- Added an explicit repair mode for missing labels and changed colors or descriptions while leaving unexpected labels untouched for review.
+- Added a dedicated, read-only GitHub check and contract tests tying live label definitions to the issue form and funnel reporter.
+- Verified the current public intake contract at 7 of 7 matching labels with zero pilot requests; no lead or revenue was inferred.
 - Added a 14-day owner-visible GitHub traffic baseline with aggregate views, clones, daily series, top referrers, and popular paths.
 - Reconciled 1 unique viewer, 119 unique cloners, and 310 clone events while explicitly refusing to treat the automation-heavy clone signal as users.
 - Added traffic baseline tests for capture timestamps, window boundaries, daily totals, uniqueness bounds, and top-traffic reconciliation.
