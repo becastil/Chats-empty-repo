@@ -247,18 +247,82 @@ class PolicyTemplateTests(unittest.TestCase):
             self.assertEqual(force_exit_code, 0)
             self.assertEqual(load_policy(output)["version"], 3)
 
+    def test_bootstrap_json_receipt_proves_created_and_replaced_policy(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "package.json").write_text("{}\n", encoding="utf-8")
+            (root / "pnpm-lock.yaml").write_text(
+                "lockfileVersion: 9\n", encoding="utf-8"
+            )
+
+            created_stdout = io.StringIO()
+            created_stderr = io.StringIO()
+            with redirect_stdout(created_stdout), redirect_stderr(created_stderr):
+                created_exit_code = main(
+                    ["bootstrap", str(root), "--format", "json"]
+                )
+            created = json.loads(created_stdout.getvalue())
+
+            self.assertEqual(created_exit_code, 0)
+            self.assertEqual(created_stderr.getvalue(), "")
+            self.assertEqual(created["schema_version"], 1)
+            self.assertEqual(created["status"], "created")
+            self.assertEqual(
+                created["output"],
+                str((root / "repo-scout-policy.toml").resolve()),
+            )
+            self.assertEqual(created["starter"]["name"], "node-service")
+            self.assertIn("supported flexible Node", created["starter"]["reason"])
+            self.assertEqual(created["policy"]["version"], 4)
+            self.assertRegex(
+                created["policy"]["fingerprint"], r"^sha256:[0-9a-f]{64}$"
+            )
+
+            protected_stdout = io.StringIO()
+            with redirect_stdout(protected_stdout), redirect_stderr(
+                io.StringIO()
+            ):
+                protected_exit_code = main(
+                    ["bootstrap", str(root), "--format", "json"]
+                )
+            self.assertEqual(protected_exit_code, 4)
+            self.assertEqual(protected_stdout.getvalue(), "")
+
+            replaced_stdout = io.StringIO()
+            replaced_stderr = io.StringIO()
+            with redirect_stdout(replaced_stdout), redirect_stderr(replaced_stderr):
+                replaced_exit_code = main(
+                    [
+                        "bootstrap",
+                        str(root),
+                        "--force",
+                        "--format",
+                        "json",
+                    ]
+                )
+            replaced = json.loads(replaced_stdout.getvalue())
+
+            self.assertEqual(replaced_exit_code, 0)
+            self.assertEqual(replaced_stderr.getvalue(), "")
+            self.assertEqual(replaced["status"], "replaced")
+            self.assertEqual(replaced["policy"], created["policy"])
+
     def test_bootstrap_refuses_polyglot_policy_without_writing(self) -> None:
         with TemporaryDirectory() as tmp:
             root = Path(tmp)
             (root / "package.json").write_text("{}\n", encoding="utf-8")
             (root / "pnpm-lock.yaml").write_text("lockfileVersion: 9\n")
             (root / "pyproject.toml").write_text("[project]\n", encoding="utf-8")
+            stdout = io.StringIO()
             stderr = io.StringIO()
 
-            with redirect_stderr(stderr):
-                exit_code = main(["bootstrap", str(root)])
+            with redirect_stdout(stdout), redirect_stderr(stderr):
+                exit_code = main(
+                    ["bootstrap", str(root), "--format", "json"]
+                )
 
             self.assertEqual(exit_code, 2)
+            self.assertEqual(stdout.getvalue(), "")
             self.assertIn("requires policy review", stderr.getvalue())
             self.assertFalse((root / "repo-scout-policy.toml").exists())
 

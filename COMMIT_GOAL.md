@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this guarded-policy-bootstrap commit: 54 / 1,000 (5.4%).
-- Remaining after this guarded-policy-bootstrap commit: 946 commits.
+- Progress after this bootstrap-receipt commit: 55 / 1,000 (5.5%).
+- Remaining after this bootstrap-receipt commit: 945 commits.
 
 ## Commit Standard
 

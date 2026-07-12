@@ -50,7 +50,7 @@ def verify_policy_activation(
                     f"expected {expected_starter}"
                 )
             recommended_policy = root / "recommended-policy.toml"
-            _run(
+            bootstrap = _run(
                 [
                     python_command,
                     "-m",
@@ -59,12 +59,17 @@ def verify_policy_activation(
                     str(root),
                     "--output",
                     recommended_policy.name,
+                    "--format",
+                    "json",
                 ],
                 cwd=root,
                 environment=environment,
             )
             if not recommended_policy.is_file():
                 raise SmokeTestError(f"{lockfile} bootstrap did not write policy")
+            _assert_bootstrap_receipt(
+                bootstrap, recommended_policy, expected_starter
+            )
 
             _run(
                 [
@@ -171,6 +176,8 @@ def verify_policy_activation(
                     "repo_scout.policy_templates",
                     "bootstrap",
                     str(root),
+                    "--format",
+                    "json",
                 ],
                 cwd=root,
                 environment=environment,
@@ -183,6 +190,10 @@ def verify_policy_activation(
                     raise SmokeTestError(f"{label} bootstrap omitted review reason")
             elif not bootstrap_policy.is_file():
                 raise SmokeTestError(f"{label} bootstrap did not write policy")
+            else:
+                _assert_bootstrap_receipt(
+                    bootstrap, bootstrap_policy, expected_starter
+                )
             checked.append(label)
 
     return tuple(checked)
@@ -239,6 +250,31 @@ def _recommend(
     if not isinstance(result, dict):
         raise SmokeTestError("policy recommendation JSON must be an object")
     return result
+
+
+def _assert_bootstrap_receipt(
+    completed: subprocess.CompletedProcess[str],
+    policy_path: Path,
+    expected_starter: str,
+) -> None:
+    try:
+        receipt = json.loads(completed.stdout)
+    except json.JSONDecodeError as exc:
+        raise SmokeTestError("policy bootstrap did not emit valid JSON") from exc
+    if receipt.get("schema_version") != 1:
+        raise SmokeTestError("policy bootstrap receipt schema changed")
+    if receipt.get("status") != "created":
+        raise SmokeTestError("policy bootstrap did not report a created policy")
+    if receipt.get("output") != str(policy_path.resolve()):
+        raise SmokeTestError("policy bootstrap receipt output path changed")
+    if receipt.get("starter", {}).get("name") != expected_starter:
+        raise SmokeTestError("policy bootstrap receipt starter changed")
+    policy = receipt.get("policy", {})
+    fingerprint = policy.get("fingerprint")
+    if not isinstance(policy.get("version"), int):
+        raise SmokeTestError("policy bootstrap receipt omitted policy version")
+    if not isinstance(fingerprint, str) or not fingerprint.startswith("sha256:"):
+        raise SmokeTestError("policy bootstrap receipt omitted policy fingerprint")
 
 
 def _scan(

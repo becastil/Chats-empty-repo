@@ -373,3 +373,17 @@ Mixed Node/Python repositories return a controlled
 error without writing because combining project rules is a team policy decision,
 not a safe heuristic. The installed-wheel release smoke verifies successful
 bootstrap for every clear route and refusal for the polyglot route.
+
+## 2026-07-12: Emit Bootstrap Receipts Only After Successful Writes
+
+The independently verified `v0.3.27` wheel, source commit
+`53dc08b01141373b92e92b4b019c73800e961a4f`, and wheel SHA-256
+`8789202cae67ca91b9f410075f65f7a8c937f3fdecf1636700b3b1b48488c820`
+are pinned together in both policy gates. `repo-scout-policy bootstrap
+--format json` emits a versioned receipt only after the policy file has been
+written successfully. The receipt distinguishes `created` from `replaced`,
+records the resolved output, preserves the selected starter and reason, and
+identifies the normalized policy by version and fingerprint. Review refusals,
+overwrite conflicts, and write failures emit no success receipt. The
+release-blocking installed-wheel smoke validates this contract across every
+clear recommendation route.

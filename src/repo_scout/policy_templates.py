@@ -10,11 +10,12 @@ import sys
 from tempfile import NamedTemporaryFile
 from typing import Any, Sequence
 
-from .policy import PolicyError, parse_policy
+from .policy import PolicyError, parse_policy, policy_fingerprint
 
 
 TEMPLATE_SCHEMA_VERSION = 1
 RECOMMENDATION_SCHEMA_VERSION = 1
+BOOTSTRAP_SCHEMA_VERSION = 1
 OUTPUT_ERROR_EXIT_CODE = 4
 
 
@@ -237,6 +238,39 @@ def prepare_bootstrap(
     return recommendation, target, get_template(name)
 
 
+def bootstrap_receipt(
+    recommendation: dict[str, Any],
+    target: Path,
+    content: str,
+    *,
+    replaced: bool,
+) -> dict[str, Any]:
+    selected = recommendation["recommendation"]
+    try:
+        policy = parse_policy(
+            content,
+            source=f"packaged policy template {selected['name']}",
+        )
+    except PolicyError as exc:
+        raise TemplateError(
+            f"packaged policy template {selected['name']} is invalid: {exc}"
+        ) from exc
+    return {
+        "schema_version": BOOTSTRAP_SCHEMA_VERSION,
+        "status": "replaced" if replaced else "created",
+        "output": str(target.expanduser().resolve()),
+        "starter": {
+            "name": selected["name"],
+            "title": selected["title"],
+            "reason": selected["reason"],
+        },
+        "policy": {
+            "version": policy["version"],
+            "fingerprint": policy_fingerprint(policy),
+        },
+    }
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="repo-scout-policy",
@@ -292,6 +326,12 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Replace an existing destination file.",
     )
+    bootstrap_parser.add_argument(
+        "--format",
+        choices=("text", "json"),
+        default="text",
+        help="Success output format. Defaults to text.",
+    )
 
     show_parser = subparsers.add_parser(
         "show", help="Print one starter policy as TOML."
@@ -341,13 +381,28 @@ def main(argv: Sequence[str] | None = None) -> int:
             recommendation, target, content = prepare_bootstrap(
                 args.path, args.output
             )
+            replaced = target.exists()
             selected = recommendation["recommendation"]
-            print(
-                f"repo-scout-policy: selected {selected['name']}: "
-                f"{selected['reason']}",
-                file=sys.stderr,
+            receipt = bootstrap_receipt(
+                recommendation, target, content, replaced=replaced
             )
-            return _write_template(content, str(target), args.force)
+            if args.format == "text":
+                print(
+                    f"repo-scout-policy: selected {selected['name']}: "
+                    f"{selected['reason']}",
+                    file=sys.stderr,
+                )
+            exit_code = _write_template(
+                content,
+                str(target),
+                args.force,
+                announce=args.format == "text",
+            )
+            if exit_code != 0:
+                return exit_code
+            if args.format == "json":
+                print(json.dumps(receipt, indent=2, sort_keys=True))
+            return 0
 
         content = get_template(args.template)
     except TemplateError as exc:
@@ -368,7 +423,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     return _write_template(content, args.output, args.force)
 
 
-def _write_template(content: str, output: str, force: bool) -> int:
+def _write_template(
+    content: str, output: str, force: bool, *, announce: bool = True
+) -> int:
     target = Path(output).expanduser()
     if target.exists() and not force:
         print(
@@ -417,7 +474,8 @@ def _write_template(content: str, output: str, force: bool) -> int:
             )
             return OUTPUT_ERROR_EXIT_CODE
 
-    print(f"repo-scout-policy: wrote {target}", file=sys.stderr)
+    if announce:
+        print(f"repo-scout-policy: wrote {target}", file=sys.stderr)
     return 0
 
 

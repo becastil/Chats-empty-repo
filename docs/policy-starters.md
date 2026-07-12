@@ -38,6 +38,7 @@ step:
 
 ```bash
 repo-scout-policy bootstrap .
+repo-scout-policy bootstrap . --format json
 ```
 
 Bootstrap writes `repo-scout-policy.toml` inside the inspected repository,
@@ -46,6 +47,12 @@ repository-relative `--output`. It does not create missing parent directories.
 Relative outputs cannot escape the inspected repository. When both Node and
 Python manifests are present, bootstrap refuses to write;
 use `recommend`, review both profiles, and combine the agreed team rules.
+
+Successful `--format json` bootstrap runs emit a schema-1 receipt with
+`created` or `replaced` status, the resolved output path, the selected starter
+and reason, and the normalized policy version and SHA-256 fingerprint. Teams
+can archive that receipt as CI handoff evidence. Write conflicts, review
+requirements, and other failures emit no JSON receipt.
 
 Recommendation is deterministic and local. A sole npm lockfile selects the
 npm-only profile; pnpm, Yarn, no lockfile yet, or multiple Node lockfiles select

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.28 - 2026-07-12
+
+- Added stable schema-1 JSON receipts for successful `repo-scout-policy bootstrap` runs.
+- Recorded create or replace status, resolved output path, selected starter and reason, policy version, and normalized policy fingerprint.
+- Kept JSON stdout clean for automation and emitted no success receipt for review, overwrite, or write failures.
+- Extended release-blocking installed-wheel smoke coverage to verify bootstrap receipts across every clear recommendation route.
+- Independently verified and pinned the `v0.3.27` wheel, source commit `53dc08b01141373b92e92b4b019c73800e961a4f`, and SHA-256 `8789202cae67ca91b9f410075f65f7a8c937f3fdecf1636700b3b1b48488c820` in both CI gates.
+- Kept acquisition and revenue totals unchanged; no prospect outreach was attempted.
+
 ## 0.3.27 - 2026-07-11
 
 - Added `repo-scout-policy bootstrap` to recommend and write a starter policy in one command for clear repositories.
