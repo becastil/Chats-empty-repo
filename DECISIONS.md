@@ -344,3 +344,16 @@ policy. The command emits stable text or JSON but does not write a policy,
 inspect source content, upload data, or claim that a recommendation replaces
 paid policy design. Installed-wheel release smoke tests verify all three Node
 recommendation routes before publication.
+
+## 2026-07-11: Test Every Recommendation Route From The Wheel
+
+The independently verified `v0.3.25` wheel, source commit
+`e16b68f9ddf6a4ef81ab0e4b136c00e5819f5b82`, and wheel SHA-256
+`bd939082cf63bdd9b3f78537e78b1f2a1e018e619a17842f9187aff4cba08a9a`
+are pinned together in both policy gates. The release-blocking smoke harness is
+generalized from a Node-only name and scope to the complete policy activation
+contract. It verifies npm-only, pnpm, Yarn, Python, agent-ready, baseline, and
+mixed Node/Python review recommendations from the installed wheel, while
+retaining Node starter initialization and pass/fail enforcement. This keeps
+distribution proof aligned with every recommendation path exposed to a new
+team rather than testing only the most recently added profile.

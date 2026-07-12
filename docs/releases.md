@@ -19,7 +19,7 @@ The shortest path downloads one executable Python file and does not modify the
 Python environment:
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.25/repo-scout-0.3.25.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.26/repo-scout-0.3.26.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 ```
 
@@ -28,12 +28,12 @@ wheel when the distribution, policy-template, rollout-summary, pilot-funnel, or
 maintainer outreach-audit commands are also needed:
 
 ```bash
-gh release download v0.3.25 \
+gh release download v0.3.26 \
   --repo becastil/Chats-empty-repo \
   --pattern "repo_scout-*" \
   --pattern "repo-scout-*.pyz" \
   --pattern SHA256SUMS
-python3 -m pip install ./repo_scout-0.3.25-py3-none-any.whl
+python3 -m pip install ./repo_scout-0.3.26-py3-none-any.whl
 ```
 
 Repo Scout requires Python 3.11 or newer and has no runtime dependencies.
@@ -45,11 +45,11 @@ files:
 
 ```bash
 shasum -a 256 -c SHA256SUMS
-gh attestation verify repo-scout-0.3.25.pyz \
+gh attestation verify repo-scout-0.3.26.pyz \
   --repo becastil/Chats-empty-repo
-gh attestation verify repo_scout-0.3.25-py3-none-any.whl \
+gh attestation verify repo_scout-0.3.26-py3-none-any.whl \
   --repo becastil/Chats-empty-repo
-gh attestation verify repo_scout-0.3.25.tar.gz \
+gh attestation verify repo_scout-0.3.26.tar.gz \
   --repo becastil/Chats-empty-repo
 ```
 
@@ -70,7 +70,7 @@ Before publication, the workflow:
 2. Installs hash-locked release-only build dependencies.
 3. Builds one portable zipapp, one wheel, and one source distribution.
 4. Rejects missing, extra, or incorrectly named artifacts.
-5. Runs the zipapp directly, then installs the wheel in a fresh virtual environment, exercises all seven commands, and verifies the Node starter with npm, pnpm, and Yarn lockfiles.
+5. Runs the zipapp directly, then installs the wheel in a fresh virtual environment, exercises all seven commands, and verifies every starter-recommendation route plus Node policy enforcement.
 6. Generates deterministic SHA-256 checksums and GitHub provenance attestations.
 7. Creates the GitHub Release from the existing immutable tag.
 

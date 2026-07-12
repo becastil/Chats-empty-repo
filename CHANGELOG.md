@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.26 - 2026-07-11
+
+- Independently verified the `v0.3.25` wheel against its manifest, source commit, tag, signer workflow, provenance, and GitHub-hosted runner.
+- Installed that wheel without dependencies and proved all seven policy activation routes from the published package.
+- Expanded release smoke coverage to Python, agent-ready, baseline, and mixed Node/Python recommendation behavior.
+- Retained full npm, pnpm, and Yarn recommendation plus Node policy pass/fail enforcement in the generalized activation smoke.
+- Renamed the smoke harness to reflect its complete policy-activation scope.
+- Pinned `v0.3.25`, source commit `e16b68f9ddf6a4ef81ab0e4b136c00e5819f5b82`, and wheel SHA-256 `bd939082cf63bdd9b3f78537e78b1f2a1e018e619a17842f9187aff4cba08a9a` in both CI gates.
+- Kept acquisition and revenue totals unchanged; no prospect outreach was attempted.
+
 ## 0.3.25 - 2026-07-11
 
 - Added `repo-scout-policy recommend` to select the closest packaged starter from local repository signals.

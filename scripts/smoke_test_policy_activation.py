@@ -15,10 +15,10 @@ LOCKFILES = ("package-lock.json", "pnpm-lock.yaml", "yarn.lock")
 
 
 class SmokeTestError(RuntimeError):
-    """Raised when an installed Node starter does not enforce its contract."""
+    """Raised when installed policy activation does not satisfy its contract."""
 
 
-def verify_node_starter(
+def verify_policy_activation(
     python: str | Path,
     *,
     environment: Mapping[str, str] | None = None,
@@ -35,25 +35,9 @@ def verify_node_starter(
             (root / "package.json").write_text("{}\n", encoding="utf-8")
             (root / lockfile).write_text("# lockfile\n", encoding="utf-8")
 
-            recommended = _run(
-                [
-                    python_command,
-                    "-m",
-                    "repo_scout.policy_templates",
-                    "recommend",
-                    str(root),
-                    "--format",
-                    "json",
-                ],
-                cwd=root,
-                environment=environment,
+            recommendation = _recommend(
+                python_command, root, environment=environment
             )
-            try:
-                recommendation = json.loads(recommended.stdout)
-            except json.JSONDecodeError as exc:
-                raise SmokeTestError(
-                    "policy recommendation did not emit valid JSON"
-                ) from exc
             expected_starter = (
                 "node-npm-service"
                 if lockfile == "package-lock.json"
@@ -116,12 +100,61 @@ def verify_node_starter(
                 raise SmokeTestError("missing-lockfile evidence changed alternatives")
             checked.append(lockfile)
 
+    recommendation_cases = (
+        (
+            "python-service",
+            {"pyproject.toml": "[project]\n"},
+            "python-service",
+            False,
+        ),
+        (
+            "agent-ready-service",
+            {"AGENTS.md": "# Agent instructions\n"},
+            "agent-ready-service",
+            False,
+        ),
+        ("service-baseline", {}, "service-baseline", False),
+        (
+            "polyglot-review",
+            {
+                "package.json": "{}\n",
+                "pnpm-lock.yaml": "lockfileVersion: 9\n",
+                "pyproject.toml": "[project]\n",
+            },
+            "node-service",
+            True,
+        ),
+    )
+    for label, files, expected_starter, expected_review in recommendation_cases:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp) / "service"
+            root.mkdir()
+            for filename, content in files.items():
+                (root / filename).write_text(content, encoding="utf-8")
+
+            recommendation = _recommend(
+                python_command, root, environment=environment
+            )
+            actual_starter = recommendation.get("recommendation", {}).get("name")
+            if actual_starter != expected_starter:
+                raise SmokeTestError(
+                    f"{label} recommended {actual_starter}; "
+                    f"expected {expected_starter}"
+                )
+            if recommendation.get("review_required") is not expected_review:
+                raise SmokeTestError(
+                    f"{label} review flag did not match {expected_review}"
+                )
+            if expected_review and not recommendation.get("review_note"):
+                raise SmokeTestError(f"{label} omitted its required review note")
+            checked.append(label)
+
     return tuple(checked)
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Smoke test the installed Repo Scout Node starter."
+        description="Smoke test installed Repo Scout policy activation."
     )
     parser.add_argument(
         "--python",
@@ -134,12 +167,42 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
-        checked = verify_node_starter(args.python, environment=os.environ)
+        checked = verify_policy_activation(args.python, environment=os.environ)
     except SmokeTestError as exc:
-        print(f"node starter smoke test: {exc}", file=sys.stderr)
+        print(f"policy activation smoke test: {exc}", file=sys.stderr)
         return 1
-    print(f"node starter smoke test: passed {', '.join(checked)}")
+    print(f"policy activation smoke test: passed {', '.join(checked)}")
     return 0
+
+
+def _recommend(
+    python: str,
+    root: Path,
+    *,
+    environment: Mapping[str, str] | None,
+) -> dict[str, object]:
+    completed = _run(
+        [
+            python,
+            "-m",
+            "repo_scout.policy_templates",
+            "recommend",
+            str(root),
+            "--format",
+            "json",
+        ],
+        cwd=root,
+        environment=environment,
+    )
+    try:
+        result = json.loads(completed.stdout)
+    except json.JSONDecodeError as exc:
+        raise SmokeTestError(
+            "policy recommendation did not emit valid JSON"
+        ) from exc
+    if not isinstance(result, dict):
+        raise SmokeTestError("policy recommendation JSON must be an object")
+    return result
 
 
 def _scan(

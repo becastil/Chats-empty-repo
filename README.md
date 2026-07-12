@@ -38,7 +38,7 @@ not require a checkout, package installation, administrator access, or an API
 key:
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.25/repo-scout-0.3.25.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.26/repo-scout-0.3.26.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 ```
 
@@ -49,7 +49,7 @@ need the `repo-scout-distribution`, `repo-scout-growth`, `repo-scout-policy`,
 `repo-scout-outreach` commands:
 
 ```bash
-python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.25/repo_scout-0.3.25-py3-none-any.whl
+python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.26/repo_scout-0.3.26-py3-none-any.whl
 repo-scout --languages .
 ```
 
@@ -233,7 +233,7 @@ examples/github-actions/repo-scout-policy.toml
 ```
 
 The workflow uses read-only permissions, immutable dependency pins, job-summary
-evidence, and a downloadable schema-2 rollout bundle. It installs the `v0.3.24`
+evidence, and a downloadable schema-2 rollout bundle. It installs the `v0.3.25`
 wheel only after checking its pinned digest, release manifest, source commit,
 tag, signer workflow, and GitHub-hosted provenance. The bundle uses GitHub's
 stable `owner/repository` identity and is preserved even when policy enforcement

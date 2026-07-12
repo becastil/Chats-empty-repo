@@ -62,7 +62,7 @@ This is useful free CI enforcement; the paid work remains agreeing on the
 right rules and rolling the same reviewed policy across uneven repositories.
 Versions 1 and 2 remain readable so verified CI upgrades can be staged safely.
 The dogfood and copy-ready gates now install the independently verified
-`v0.3.24` wheel, so v4 policies can run locally and in CI
+`v0.3.25` wheel, so v4 policies can run locally and in CI
 without source checkout, mutable package resolution, or a team-managed secret.
 
 Policy version 3 extends custom packs beyond exact root paths. A reviewed
@@ -83,11 +83,12 @@ readable. The packaged `node-service` profile now uses this capability for
 npm, pnpm, and Yarn, while the existing npm-only profile remains available for
 teams that standardize on npm.
 
-The published `v0.3.23` wheel has been exercised in clean npm, pnpm, and Yarn
-repositories, and every future release now repeats that installed-wheel smoke
-test before publication. This protects the activation path customers actually
-use: discover a starter, initialize it from the wheel, and receive stable pass
-or remediation evidence without depending on a source checkout.
+The published `v0.3.25` wheel has been exercised across every recommendation
+route plus clean npm, pnpm, and Yarn policy enforcement. Every future release
+repeats that installed-wheel smoke test before publication. This protects the
+activation path customers actually use: discover a starter, initialize it from
+the wheel, and receive stable pass or remediation evidence without depending
+on a source checkout.
 
 Starter recommendation shortens free-to-team activation without pretending a
 local heuristic can design a paid policy. It maps clear manifests and lockfiles
