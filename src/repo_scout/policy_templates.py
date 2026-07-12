@@ -210,6 +210,33 @@ def format_recommendation(recommendation: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def prepare_bootstrap(
+    path: str | Path, output: str | Path | None = None
+) -> tuple[dict[str, Any], Path, str]:
+    root = Path(path).expanduser().resolve()
+    recommendation = recommend_template(root)
+    if recommendation["review_required"]:
+        raise TemplateError(
+            "bootstrap requires policy review: "
+            f"{recommendation['review_note']}"
+        )
+
+    if output is None:
+        target = root / "repo-scout-policy.toml"
+    else:
+        requested = Path(output).expanduser()
+        if requested.is_absolute():
+            target = requested
+        else:
+            target = (root / requested).resolve()
+            if root not in target.parents:
+                raise TemplateError(
+                    f"relative bootstrap output escapes repository: {output}"
+                )
+    name = recommendation["recommendation"]["name"]
+    return recommendation, target, get_template(name)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="repo-scout-policy",
@@ -241,6 +268,29 @@ def build_parser() -> argparse.ArgumentParser:
         choices=("text", "json"),
         default="text",
         help="Output format. Defaults to text.",
+    )
+
+    bootstrap_parser = subparsers.add_parser(
+        "bootstrap",
+        help="Recommend and write a starter when review is not required.",
+    )
+    bootstrap_parser.add_argument(
+        "path",
+        nargs="?",
+        default=".",
+        help="Repository path to inspect. Defaults to the current directory.",
+    )
+    bootstrap_parser.add_argument(
+        "--output",
+        help=(
+            "Destination path. Relative paths resolve inside the inspected "
+            "repository; defaults to repo-scout-policy.toml."
+        ),
+    )
+    bootstrap_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Replace an existing destination file.",
     )
 
     show_parser = subparsers.add_parser(
@@ -286,6 +336,18 @@ def main(argv: Sequence[str] | None = None) -> int:
             else:
                 print(format_recommendation(recommendation))
             return 0
+
+        if args.command == "bootstrap":
+            recommendation, target, content = prepare_bootstrap(
+                args.path, args.output
+            )
+            selected = recommendation["recommendation"]
+            print(
+                f"repo-scout-policy: selected {selected['name']}: "
+                f"{selected['reason']}",
+                file=sys.stderr,
+            )
+            return _write_template(content, str(target), args.force)
 
         content = get_template(args.template)
     except TemplateError as exc:

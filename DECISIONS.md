@@ -357,3 +357,19 @@ mixed Node/Python review recommendations from the installed wheel, while
 retaining Node starter initialization and pass/fail enforcement. This keeps
 distribution proof aligned with every recommendation path exposed to a new
 team rather than testing only the most recently added profile.
+
+## 2026-07-11: Bootstrap Only When Recommendation Needs No Review
+
+The independently verified `v0.3.26` wheel, source commit
+`592348a8f9a75a4ea2f3dee8c231afc407a106d6`, and wheel SHA-256
+`c1774978ae1f03303e36674c87ff70a4b455f7962218b48c6f1cb227517d2f4d`
+are pinned together in both policy gates. `repo-scout-policy bootstrap` combines
+recommendation and initialization only when the recommendation does not require
+review. Its default output is `repo-scout-policy.toml` in the inspected
+repository; relative custom outputs also resolve there. It inherits the
+existing no-overwrite default, explicit atomic `--force`, and refusal to create
+missing parent directories or follow a relative output outside the repository.
+Mixed Node/Python repositories return a controlled
+error without writing because combining project rules is a team policy decision,
+not a safe heuristic. The installed-wheel release smoke verifies successful
+bootstrap for every clear route and refusal for the polyglot route.

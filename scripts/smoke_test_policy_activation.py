@@ -49,6 +49,22 @@ def verify_policy_activation(
                     f"{lockfile} recommended {actual_starter}; "
                     f"expected {expected_starter}"
                 )
+            recommended_policy = root / "recommended-policy.toml"
+            _run(
+                [
+                    python_command,
+                    "-m",
+                    "repo_scout.policy_templates",
+                    "bootstrap",
+                    str(root),
+                    "--output",
+                    recommended_policy.name,
+                ],
+                cwd=root,
+                environment=environment,
+            )
+            if not recommended_policy.is_file():
+                raise SmokeTestError(f"{lockfile} bootstrap did not write policy")
 
             _run(
                 [
@@ -147,6 +163,26 @@ def verify_policy_activation(
                 )
             if expected_review and not recommendation.get("review_note"):
                 raise SmokeTestError(f"{label} omitted its required review note")
+            bootstrap_policy = root / "repo-scout-policy.toml"
+            bootstrap = _run(
+                [
+                    python_command,
+                    "-m",
+                    "repo_scout.policy_templates",
+                    "bootstrap",
+                    str(root),
+                ],
+                cwd=root,
+                environment=environment,
+                expected_exit_code=2 if expected_review else 0,
+            )
+            if expected_review:
+                if bootstrap_policy.exists():
+                    raise SmokeTestError(f"{label} bootstrap wrote unsafe policy")
+                if "requires policy review" not in bootstrap.stderr:
+                    raise SmokeTestError(f"{label} bootstrap omitted review reason")
+            elif not bootstrap_policy.is_file():
+                raise SmokeTestError(f"{label} bootstrap did not write policy")
             checked.append(label)
 
     return tuple(checked)

@@ -33,6 +33,20 @@ repo-scout-policy recommend .
 repo-scout-policy recommend . --format json
 ```
 
+For a clear single-project repository, recommend and write the starter in one
+step:
+
+```bash
+repo-scout-policy bootstrap .
+```
+
+Bootstrap writes `repo-scout-policy.toml` inside the inspected repository,
+keeps the same overwrite protection as `init`, and supports `--force` plus a
+repository-relative `--output`. It does not create missing parent directories.
+Relative outputs cannot escape the inspected repository. When both Node and
+Python manifests are present, bootstrap refuses to write;
+use `recommend`, review both profiles, and combine the agreed team rules.
+
 Recommendation is deterministic and local. A sole npm lockfile selects the
 npm-only profile; pnpm, Yarn, no lockfile yet, or multiple Node lockfiles select
 the flexible Node profile. Python and agent instructions are detected when no

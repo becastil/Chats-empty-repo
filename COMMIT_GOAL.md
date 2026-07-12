@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this activation-smoke-expansion commit: 53 / 1,000 (5.3%).
-- Remaining after this activation-smoke-expansion commit: 947 commits.
+- Progress after this guarded-policy-bootstrap commit: 54 / 1,000 (5.4%).
+- Remaining after this guarded-policy-bootstrap commit: 946 commits.
 
 ## Commit Standard
 

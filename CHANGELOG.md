@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.27 - 2026-07-11
+
+- Added `repo-scout-policy bootstrap` to recommend and write a starter policy in one command for clear repositories.
+- Kept bootstrap outputs inside the inspected repository by default and rejected relative custom paths that escape it.
+- Reused existing overwrite protection, explicit `--force`, atomic replacement, and no-parent-creation behavior.
+- Refused to write an automatic policy for mixed Node/Python repositories that require combined rule review.
+- Extended installed-wheel release smoke coverage to prove bootstrap writes every clear recommendation and refuses the polyglot route.
+- Independently verified and pinned the `v0.3.26` wheel, source commit `592348a8f9a75a4ea2f3dee8c231afc407a106d6`, and SHA-256 `c1774978ae1f03303e36674c87ff70a4b455f7962218b48c6f1cb227517d2f4d` in both CI gates.
+- Kept acquisition and revenue totals unchanged; no prospect outreach was attempted.
+
 ## 0.3.26 - 2026-07-11
 
 - Independently verified the `v0.3.25` wheel against its manifest, source commit, tag, signer workflow, provenance, and GitHub-hosted runner.

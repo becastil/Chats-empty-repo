@@ -20,6 +20,7 @@ from repo_scout.policy_templates import (
     get_template,
     list_templates,
     main,
+    prepare_bootstrap,
     recommend_template,
 )
 from repo_scout.scanner import scan_project
@@ -192,6 +193,115 @@ class PolicyTemplateTests(unittest.TestCase):
 
             self.assertEqual(exit_code, 2)
             self.assertIn("is not a directory", stderr.getvalue())
+
+    def test_bootstrap_writes_the_recommended_policy_inside_repository(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp) / "service"
+            root.mkdir()
+            (root / "package.json").write_text("{}\n", encoding="utf-8")
+            (root / "pnpm-lock.yaml").write_text(
+                "lockfileVersion: 9\n", encoding="utf-8"
+            )
+            stderr = io.StringIO()
+
+            with redirect_stderr(stderr):
+                exit_code = main(["bootstrap", str(root)])
+
+            policy_path = root / "repo-scout-policy.toml"
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(load_policy(policy_path)["version"], 4)
+            self.assertIn("selected node-service", stderr.getvalue())
+            self.assertIn(f"wrote {policy_path.resolve()}", stderr.getvalue())
+
+    def test_bootstrap_keeps_overwrite_and_relative_output_safety(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "pyproject.toml").write_text("[project]\n", encoding="utf-8")
+            config = root / "config"
+            config.mkdir()
+            output = config / "team-policy.toml"
+
+            with redirect_stderr(io.StringIO()):
+                first_exit_code = main(
+                    ["bootstrap", str(root), "--output", "config/team-policy.toml"]
+                )
+            output.write_text("keep me\n", encoding="utf-8")
+            with redirect_stderr(io.StringIO()):
+                protected_exit_code = main(
+                    ["bootstrap", str(root), "--output", "config/team-policy.toml"]
+                )
+            self.assertEqual(output.read_text(encoding="utf-8"), "keep me\n")
+            with redirect_stderr(io.StringIO()):
+                force_exit_code = main(
+                    [
+                        "bootstrap",
+                        str(root),
+                        "--output",
+                        "config/team-policy.toml",
+                        "--force",
+                    ]
+                )
+
+            self.assertEqual(first_exit_code, 0)
+            self.assertEqual(protected_exit_code, 4)
+            self.assertEqual(force_exit_code, 0)
+            self.assertEqual(load_policy(output)["version"], 3)
+
+    def test_bootstrap_refuses_polyglot_policy_without_writing(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "package.json").write_text("{}\n", encoding="utf-8")
+            (root / "pnpm-lock.yaml").write_text("lockfileVersion: 9\n")
+            (root / "pyproject.toml").write_text("[project]\n", encoding="utf-8")
+            stderr = io.StringIO()
+
+            with redirect_stderr(stderr):
+                exit_code = main(["bootstrap", str(root)])
+
+            self.assertEqual(exit_code, 2)
+            self.assertIn("requires policy review", stderr.getvalue())
+            self.assertFalse((root / "repo-scout-policy.toml").exists())
+
+    def test_prepare_bootstrap_does_not_create_missing_parent_directories(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            recommendation, target, content = prepare_bootstrap(
+                root, "missing/team-policy.toml"
+            )
+
+            self.assertEqual(
+                recommendation["recommendation"]["name"], "service-baseline"
+            )
+            self.assertEqual(
+                target, root.resolve() / "missing/team-policy.toml"
+            )
+            self.assertIn("required_files", content)
+            with redirect_stderr(io.StringIO()):
+                exit_code = main(
+                    [
+                        "bootstrap",
+                        str(root),
+                        "--output",
+                        "missing/team-policy.toml",
+                    ]
+                )
+            self.assertEqual(exit_code, 4)
+            self.assertFalse((root / "missing").exists())
+
+    def test_bootstrap_rejects_relative_output_that_escapes_repository(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp) / "service"
+            root.mkdir()
+            stderr = io.StringIO()
+
+            with redirect_stderr(stderr):
+                exit_code = main(
+                    ["bootstrap", str(root), "--output", "../outside.toml"]
+                )
+
+            self.assertEqual(exit_code, 2)
+            self.assertIn("escapes repository", stderr.getvalue())
+            self.assertFalse((root.parent / "outside.toml").exists())
 
     def test_init_defaults_to_current_directory_and_protects_overwrites(self) -> None:
         with TemporaryDirectory() as tmp:
