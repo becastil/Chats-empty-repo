@@ -414,3 +414,15 @@ their own aggregate count and remain excluded from attempted prospects. No
 prospect list was created from broad web guesses because the current connector
 set lacks authoritative sales-intelligence or CRM evidence; qualification and
 outreach totals remain zero.
+
+## 2026-07-12: Preflight Every Verified Release Pin Target
+
+The independently verified `v0.3.30` wheel, source commit
+`65e1063e5a9c0e85a0f8f30523335eb0c0ce847e`, and wheel SHA-256
+`b7001e9fd38359a33f9be1a38961765ba5c37f22d56374b89ec9a9a62f934891`
+are pinned together in both policy gates. A maintainer updater now validates
+the release identity, requires exactly one version, source, and wheel pin in
+the dogfood workflow, customer example, and CI contract, and prepares every
+updated file before replacement. Layout drift fails before any target is
+changed. Package version `0.3.30` remains unchanged because this maintainer and
+configuration improvement does not alter the published CLI behavior.

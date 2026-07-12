@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 57 of 1,000, with 943 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 58 of 1,000, with 942 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -65,7 +65,7 @@ The delivery goal is 1,000 meaningful commits. This update is commit 57 of 1,000
 - Schema-2 rollout evidence with normalized policy fingerprints and exact Git commit IDs.
 - Backward-compatible schema-1 aggregation with explicit policy and commit identity coverage.
 - Shared-policy verification only for complete matching fingerprints across multiple repositories.
-- Copy-ready and dogfooded CI generation of schema-2 rollout bundles from the verified `v0.3.29` release.
+- Copy-ready and dogfooded CI generation of schema-2 rollout bundles from the verified `v0.3.30` release.
 - Stable GitHub `owner/repository` evidence identity with 14-day passing and remediation artifacts.
 - Required self-reported $299 purchase readiness in public pilot intake.
 - Schema-4 funnel reporting for readiness-stage, revenue, conversion, and loss outcomes.
@@ -121,7 +121,8 @@ The delivery goal is 1,000 meaningful commits. This update is commit 57 of 1,000
 - Git-aware pattern matching across all tracked or unignored paths, independent of the snapshot's 500-path detail cap.
 - Bounded pattern evidence with full match counts, 20 sorted paths per pattern, and explicit truncation state.
 - Strict wildcard, path, duplicate, required-file conflict, exact-rule overlap, and fingerprint validation for pattern rules.
-- Independently pinned `v0.3.29` wheel digest, source commit, manifest, provenance, signer workflow, and hosted-runner checks in both policy gates.
+- Independently pinned `v0.3.30` wheel digest, source commit, manifest, provenance, signer workflow, and hosted-runner checks in both policy gates.
+- A preflighted maintainer updater that changes the dogfood workflow, customer example, and CI pin contract together or refuses layout drift before writing.
 - Policy v3 nested `.env` and `.env.local` patterns in every starter, dogfood policy, and copy-ready CI policy.
 - Released-wheel proof that a force-tracked nested environment file fails while preserving remediation rollout evidence.
 - Explicit exclusion of broad `*.pem` matching from defaults to avoid blocking legitimate public certificates.
@@ -159,4 +160,4 @@ python3 -m unittest discover -s tests
 
 ## Next Small Task
 
-Connect an authoritative sales-intelligence source or supply a reviewed prospect list, then research and prepare the first five qualified drafts for human review before sending. No private ledger or drafts were created and no outreach was attempted; broad web guesses are not qualification evidence. Do not add another acquisition asset before five real attempts. If authoritative prospect evidence remains unavailable, independently verify and pin `v0.3.30` before making another paid-policy change.
+Connect an authoritative sales-intelligence source or supply a reviewed prospect list, then research and prepare the first five qualified drafts for human review before sending. No private ledger or drafts were created and no outreach was attempted; broad web guesses are not qualification evidence. Do not add another acquisition asset or paid-policy feature before five real attempts. If authoritative prospect evidence remains unavailable, collect the next honest distribution or public-intake baseline rather than manufacturing prospect activity.

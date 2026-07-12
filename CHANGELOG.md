@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Added a preflighted maintainer command that updates both policy workflows and their CI contract to one verified release identity.
+- Rejected invalid version, source-commit, and wheel-digest shapes before reading or writing pin targets.
+- Refused missing or duplicate pin locations before changing any target, preventing layout drift from producing a knowingly mixed upgrade.
+- Independently verified and pinned the `v0.3.30` wheel, source commit `65e1063e5a9c0e85a0f8f30523335eb0c0ce847e`, and SHA-256 `b7001e9fd38359a33f9be1a38961765ba5c37f22d56374b89ec9a9a62f934891` in both CI gates.
+- Kept version `0.3.30`, acquisition, and revenue evidence unchanged; no redundant release or prospect activity was claimed.
+
 ## 0.3.30 - 2026-07-12
 
 - Added a `drafted` private-ledger status for personalized outreach messages awaiting human review.

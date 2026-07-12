@@ -92,6 +92,21 @@ workflow's `REPO_SCOUT_VERSION`, `REPO_SCOUT_SOURCE_SHA`, and
 gate to pass before merging. Never update only the version tag or replace the
 digest with a mutable URL.
 
+Repo Scout maintainers can update the dogfood workflow, copy-ready example,
+and contract-test identity together after independently verifying the release:
+
+```bash
+python3 scripts/update_release_pin.py \
+  --version X.Y.Z \
+  --source-sha VERIFIED_40_CHARACTER_COMMIT \
+  --wheel-sha256 INDEPENDENTLY_MEASURED_64_CHARACTER_DIGEST
+```
+
+The updater validates all identity shapes and preflights exactly one version,
+source, and wheel pin in every target before writing. Any layout drift stops
+the command without changing the other files; the normal test suite remains
+the final contract check before commit.
+
 ## Pilot Rollout
 
 The $299 founding-team pilot includes policy design, rollout help, and one
