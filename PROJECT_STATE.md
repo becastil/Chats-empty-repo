@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 59 of 1,000, with 941 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 60 of 1,000, with 940 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -86,6 +86,7 @@ The delivery goal is 1,000 meaningful commits. This update is commit 59 of 1,000
 - Explicit refusal to calculate download-to-lead conversion rates from non-unique artifact requests.
 - A committed schema-2 distribution, schema-6 pilot, and joined growth baseline generated from public evidence on 2026-07-12.
 - Baseline contract tests reconciling every release channel while preserving zero pilot and revenue truth.
+- A 14-day owner-visible GitHub traffic baseline with reconciled daily views and clones, top referrers, popular paths, and explicit automation caveats.
 - Required self-reported primary purchase criteria in public pilot intake.
 - Schema-6 criterion totals for qualification, offers, booked revenue, conversion, and loss.
 - Normalized criterion evidence across deals, stale follow-up, and sales queues with explicit missing, edited, and duplicate-answer warnings.
@@ -162,4 +163,4 @@ python3 -m unittest discover -s tests
 
 ## Next Small Task
 
-Connect an authoritative sales-intelligence source or supply a reviewed prospect list, then research and prepare the first five qualified drafts for human review before sending. No private ledger or drafts were created and no outreach was attempted; broad web guesses are not qualification evidence. Do not add another acquisition asset or paid-policy feature before five real attempts. The public commercial baseline is now recorded; refresh it only at a deliberate review point or when public intake changes, not on each builder run.
+Connect an authoritative sales-intelligence source or supply a reviewed prospect list, then research and prepare the first five qualified drafts for human review before sending. No private ledger or drafts were created and no outreach was attempted; broad web guesses are not qualification evidence. Do not add another acquisition asset or paid-policy feature before five real attempts. Release, pilot, and repository-traffic baselines are now recorded; refresh them only at a deliberate review point or meaningful funnel change.

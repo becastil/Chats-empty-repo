@@ -439,3 +439,13 @@ remain directional distribution evidence rather than users or adoption.
 Baseline tests reconcile every release channel and preserve the zero-revenue
 truth. Refresh occurs only at a deliberate review point or meaningful public
 funnel change, not on each automated commit.
+
+## 2026-07-12: Treat Clone-Heavy Traffic As Automation-Confounded
+
+The owner-visible GitHub traffic window ending 2026-07-11 contains one unique
+repository viewer, 119 unique cloners, and 310 clone events. The daily totals,
+window boundaries, top referrer, and popular path are committed as aggregate
+evidence with reconciliation tests. The extreme clone-to-view gap is consistent
+with ephemeral CI runners and other maintainer automation, so unique cloners
+are not labeled users, installs, activations, or prospects. With zero public
+pilot requests, acquisition remains the commercial bottleneck.

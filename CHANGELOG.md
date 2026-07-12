@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added a 14-day owner-visible GitHub traffic baseline with aggregate views, clones, daily series, top referrers, and popular paths.
+- Reconciled 1 unique viewer, 119 unique cloners, and 310 clone events while explicitly refusing to treat the automation-heavy clone signal as users.
+- Added traffic baseline tests for capture timestamps, window boundaries, daily totals, uniqueness bounds, and top-traffic reconciliation.
 - Added generated schema-2 distribution, schema-6 pilot, and joined growth baselines from public evidence captured on 2026-07-12.
 - Recorded 34 contract-complete releases, 61 cumulative primary artifact requests, zero pilot requests, and $0 booked revenue without treating CI-confounded requests as users.
 - Added baseline contract tests that reconcile per-release channels and preserve the acquisition bottleneck and zero-revenue state.

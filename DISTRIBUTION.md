@@ -51,6 +51,10 @@ None requires an API key or sends source code to Repo Scout.
   (1 portable and 60 wheel), and zero pilot requests or booked revenue. Repo
   Scout's CI and maintainer verification materially confound the wheel total.
   The machine-readable reports and capture contract live in `metrics/`.
+- **Traffic checkpoint:** The owner-visible 14-day window ending 2026-07-11
+  contained 1 unique viewer, 119 unique cloners, and 310 clone events. The
+  clone-heavy mismatch is consistent with CI, hosting, and maintainer
+  automation and is not evidence of 119 users.
 
 This experiment has no browser analytics. Release requests and site visits are
 not unique prospects, and self-reported source does not prove causation. Only
@@ -213,6 +217,8 @@ reviewing any release-evidence warnings.
 The repository's current reviewed baseline is committed under `metrics/` with
 tests that reconcile release totals and preserve zero pilot and revenue truth.
 It is a deliberate comparison point, not a counter to refresh on every commit.
+The same directory retains the owner-visible rolling traffic aggregate and
+daily series; GitHub does not expose visitor identities in this report.
 
 ## Channel Constraints
 

@@ -285,6 +285,12 @@ own verified CI. The same checkpoint records zero pilot requests and $0 booked
 revenue. These committed reports establish future movement without relabeling
 automation traffic as adoption.
 
+The owner-visible 14-day GitHub traffic checkpoint adds one unique repository
+viewer, 119 unique cloners, and 310 clone events. That extreme clone-to-view
+gap is consistent with CI, hosting, and maintainer automation and cannot be
+presented as 119 users, installs, or qualified prospects. Together with zero
+pilot requests, it confirms that acquisition remains the honest bottleneck.
+
 The dependency-free `repo-scout-growth` review places those signed deltas beside
 schema-5 or schema-6 pilot source, qualification, offer, payment, and revenue
 totals. It names one current commercial bottleneck and next action so weekly

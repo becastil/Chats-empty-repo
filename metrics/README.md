@@ -15,11 +15,16 @@ distribution and pilot-funnel comparisons. They were captured on
 - 55 manifest requests, 6 source requests, and 0 unknown requests.
 - 0 tracked pilot requests, 0 booked pilots, and $0 booked revenue.
 - 0 evidence warnings in the distribution, pilot, and joined growth reports.
+- A 14-day GitHub traffic window with 1 unique viewer, 119 unique cloners, and
+  310 clone events.
 
 GitHub reports cumulative asset requests, not unique people or installations.
 The wheel and manifest totals include Repo Scout's own CI and maintainer
 verification, so they are directional reach evidence only. The joined report
 correctly identifies acquisition as the commercial bottleneck.
+The gap between one viewer and 119 unique cloners is consistent with CI,
+hosting, and maintainer automation. It cannot support a claim of 119 users or
+organic visitors.
 
 ## Files
 
@@ -29,6 +34,8 @@ correctly identifies acquisition as the commercial bottleneck.
   queue.
 - `growth-baseline.json` joins a zero-delta comparison against the distribution
   baseline with the pilot baseline.
+- `github-traffic-baseline.json` preserves the owner-visible 14-day aggregate,
+  daily series, top referrers, and popular paths without visitor identities.
 
 ## Refresh Contract
 
@@ -46,9 +53,15 @@ repo-scout-distribution --format json releases.json \
   > distribution-current.json
 repo-scout-pilot --format json --as-of "$(date -u +%F)" \
   pilot-issues.json > pilot-current.json
+gh api repos/becastil/Chats-empty-repo/traffic/views > traffic-views.json
+gh api repos/becastil/Chats-empty-repo/traffic/clones > traffic-clones.json
+gh api repos/becastil/Chats-empty-repo/traffic/popular/referrers \
+  > traffic-referrers.json
+gh api repos/becastil/Chats-empty-repo/traffic/popular/paths \
+  > traffic-paths.json
 ```
 
 Compare the current distribution report to `distribution-baseline.json` before
 replacing the baseline. Public pilot issues still require a privacy review
 before any non-empty report is committed. Never interpret artifact requests,
-drafts, replies, or page activity as leads, payment, or revenue.
+clone events, drafts, replies, or page activity as leads, payment, or revenue.

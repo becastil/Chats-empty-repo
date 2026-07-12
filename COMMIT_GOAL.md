@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this commercial-baseline commit: 59 / 1,000 (5.9%).
-- Remaining after this commercial-baseline commit: 941 commits.
+- Progress after this traffic-baseline commit: 60 / 1,000 (6.0%).
+- Remaining after this traffic-baseline commit: 940 commits.
 
 ## Commit Standard
 
