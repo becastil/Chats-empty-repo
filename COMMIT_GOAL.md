@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this verified-policy-v3-rollout commit: 48 / 1,000 (4.8%).
-- Remaining after this verified-policy-v3-rollout commit: 952 commits.
+- Progress after this required-file-groups commit: 49 / 1,000 (4.9%).
+- Remaining after this required-file-groups commit: 951 commits.
 
 ## Commit Standard
 

@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 48 of 1,000, with 952 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 49 of 1,000, with 951 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -124,15 +124,19 @@ The delivery goal is 1,000 meaningful commits. This update is commit 48 of 1,000
 - Policy v3 nested `.env` and `.env.local` patterns in every starter, dogfood policy, and copy-ready CI policy.
 - Released-wheel proof that a force-tracked nested environment file fails while preserving remediation rollout evidence.
 - Explicit exclusion of broad `*.pem` matching from defaults to avoid blocking legitimate public certificates.
+- Backward-compatible policy v4 `required_file_groups` for standards with valid file alternatives.
+- Stable one-violation-per-group evidence and order-independent group fingerprints.
+- Strict empty, duplicate, exact-rule, and forbidden-pattern contradiction checks for required groups.
+- A staged mixed npm, pnpm, and Yarn lockfile policy while verified gates remain on v3.
 
 ## How To Run
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.21/repo-scout-0.3.21.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.22/repo-scout-0.3.22.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 python3 -m unittest discover -s tests
 ```
 
 ## Next Small Task
 
-Obtain authoritative company and contact evidence, then research, contact, and audit the first five qualified prospects. No outreach was attempted and no private ledger exists; do not add another acquisition asset before five real attempts.
+Obtain authoritative company and contact evidence, then research, contact, and audit the first five qualified prospects. No outreach was attempted and no private ledger exists; do not add another acquisition asset before five real attempts. If authoritative prospect evidence remains unavailable, independently verify `v0.3.22` and decide whether the mixed-package-manager group belongs in a packaged starter.

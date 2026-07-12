@@ -191,6 +191,43 @@ forbidden_files = [".env"]
             self.assertIn("## Team Policy", passing_stdout.getvalue())
             self.assertIn("- Status: `pass`", passing_stdout.getvalue())
 
+    def test_cli_enforces_required_file_group_alternatives(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            policy_path = root / "team-policy.toml"
+            policy_path.write_text(
+                """version = 4
+[repository]
+required_file_groups = [["package-lock.json", "pnpm-lock.yaml", "yarn.lock"]]
+""",
+                encoding="utf-8",
+            )
+
+            failing_stdout = io.StringIO()
+            with redirect_stdout(failing_stdout):
+                failing_exit_code = main(
+                    ["--format", "json", "--policy", str(policy_path), str(root)]
+                )
+
+            failing = json.loads(failing_stdout.getvalue())
+            self.assertEqual(failing_exit_code, 6)
+            self.assertEqual(
+                failing["policy"]["violations"][0]["paths"],
+                ["package-lock.json", "pnpm-lock.yaml", "yarn.lock"],
+            )
+
+            (root / "yarn.lock").write_text("# yarn lockfile v1\n", encoding="utf-8")
+            passing_stdout = io.StringIO()
+            with redirect_stdout(passing_stdout):
+                passing_exit_code = main(
+                    ["--format", "json", "--policy", str(policy_path), str(root)]
+                )
+
+            self.assertEqual(passing_exit_code, 0)
+            self.assertEqual(
+                json.loads(passing_stdout.getvalue())["policy"]["status"], "pass"
+            )
+
     def test_cli_appends_ready_first_repository_rollout_evidence(self) -> None:
         with TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -430,7 +467,7 @@ required_files = ["README.md", "SECURITY.md"]
             root = Path(tmp)
             policy_path = root / "team-policy.toml"
             policy_path.write_text(
-                """version = 4
+                """version = 5
 [repository]
 max_files = 10
 """,
@@ -442,7 +479,9 @@ max_files = 10
                 exit_code = main(["--policy", str(policy_path), str(root)])
 
             self.assertEqual(exit_code, 2)
-            self.assertIn("policy version must be 1, 2, or 3", stderr.getvalue())
+            self.assertIn(
+                "policy version must be 1, 2, 3, or 4", stderr.getvalue()
+            )
 
     def test_cli_writes_output_and_requires_force_to_replace(self) -> None:
         with TemporaryDirectory() as tmp:

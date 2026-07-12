@@ -74,6 +74,14 @@ readable. General profiles protect nested `.env` files but omit broad `*.pem`
 matching because public certificates may be legitimate; that decision belongs
 in a reviewed paid custom pack.
 
+Policy version 4 lets a reviewed custom pack express standards that have valid
+alternatives. For example, one lockfile group can accept npm, pnpm, or Yarn
+while still failing a repository with no lockfile. This makes one shared policy
+credible across teams with uneven JavaScript tooling without weakening the
+standard to the least common denominator. Existing v1-v3 policies remain
+readable, and general starters stay on verified v3 behavior until the v4
+release artifact is independently pinned.
+
 An AI can recreate a scanner, but that is not the commercial claim being
 tested. The active website experiment presents the paid outcome in plain
 language: help agreeing on one rulebook, installing it across uneven projects,

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.22 - 2026-07-11
+
+- Added backward-compatible policy schema v4 with `repository.required_file_groups` while retaining v1-v3 reads.
+- Required at least one existing path from every configured group, with one stable violation per unsatisfied group.
+- Rejected empty or duplicate groups and candidates contradicted by exact requirements, exact forbids, or forbidden patterns.
+- Normalized group and member ordering in cross-repository policy fingerprints.
+- Added a staged mixed-package-manager policy that accepts npm, pnpm, or Yarn lockfiles without making lockfiles optional.
+- Added policy, CLI, example, compatibility, validation, and fingerprint coverage for the new contract.
+- Kept verified policy gates and packaged starters on v3 until the v4 release artifact can be independently pinned.
+- Kept acquisition and revenue totals unchanged; no prospect outreach was attempted.
+
 ## 0.3.21 - 2026-07-11
 
 - Upgraded dogfood and copy-ready policy gates to the independently verified `v0.3.20` wheel.

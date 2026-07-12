@@ -38,7 +38,7 @@ not require a checkout, package installation, administrator access, or an API
 key:
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.21/repo-scout-0.3.21.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.22/repo-scout-0.3.22.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 ```
 
@@ -49,7 +49,7 @@ need the `repo-scout-distribution`, `repo-scout-growth`, `repo-scout-policy`,
 `repo-scout-outreach` commands:
 
 ```bash
-python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.21/repo_scout-0.3.21-py3-none-any.whl
+python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.22/repo_scout-0.3.22-py3-none-any.whl
 repo-scout --languages .
 ```
 
@@ -139,10 +139,11 @@ python3 /tmp/repo-scout.pyz --format markdown --policy examples/team-policy.toml
 Policy files use a strict, versioned TOML contract:
 
 ```toml
-version = 3
+version = 4
 
 [repository]
 required_files = ["README.md", "SECURITY.md"]
+required_file_groups = [["package-lock.json", "pnpm-lock.yaml", "yarn.lock"]]
 forbidden_files = [".env", ".env.local"]
 forbidden_file_patterns = ["**/.env", "**/.env.local"]
 max_files = 5000
@@ -156,9 +157,12 @@ the same path cannot appear in both lists. In Git repositories, forbidden files
 fail when tracked or unignored; ignored local files remain outside enforcement.
 Non-Git scans enforce forbidden files directly from the folder. Unknown keys,
 invalid values, and unsupported policy versions are rejected instead of being
-silently ignored. Repo Scout continues to read policy versions 1 and 2; version
-2 adds exact `forbidden_files`, and version 3 adds
-`forbidden_file_patterns` for nested and filename-wide rules. The general
+silently ignored. Repo Scout continues to read policy versions 1 through 3;
+version 2 adds exact `forbidden_files`, version 3 adds
+`forbidden_file_patterns` for nested and filename-wide rules, and version 4
+adds `required_file_groups`. Every group requires at least one listed path, so
+one shared policy can accept npm, pnpm, or Yarn without accepting no lockfile.
+The general
 profiles use `**/.env` and `**/.env.local` for nested services. Broader patterns
 such as `*.pem` match at any depth and belong in reviewed custom policies, not
 the defaults. Each pattern reports at most 20 sorted paths plus the full match

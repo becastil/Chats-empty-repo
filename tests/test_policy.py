@@ -286,6 +286,113 @@ forbidden_file_patterns = ["*.pem"]
 """
                 )
 
+    def test_required_file_groups_accept_one_alternative_per_group(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "pnpm-lock.yaml").write_text("lockfileVersion: 9\n")
+            (root / "Dockerfile").write_text("FROM scratch\n")
+            policy = parse_policy(
+                """version = 4
+[repository]
+required_file_groups = [
+  ["package-lock.json", "pnpm-lock.yaml", "yarn.lock"],
+  ["Dockerfile", "Containerfile"],
+]
+"""
+            )
+
+            passing = evaluate_policy(scan_project(root), policy)
+            self.assertEqual(passing["status"], "pass")
+            self.assertEqual(passing["rules_checked"], 1)
+
+            (root / "pnpm-lock.yaml").unlink()
+            failing = evaluate_policy(scan_project(root), policy)
+            self.assertEqual(failing["status"], "fail")
+            self.assertEqual(
+                failing["violations"],
+                [
+                    {
+                        "rule": "repository.required_file_groups",
+                        "paths": [
+                            "package-lock.json",
+                            "pnpm-lock.yaml",
+                            "yarn.lock",
+                        ],
+                        "message": (
+                            "Required file group has no present file: "
+                            "package-lock.json, pnpm-lock.yaml, yarn.lock."
+                        ),
+                    }
+                ],
+            )
+
+    def test_policy_versions_before_four_reject_required_file_groups(self) -> None:
+        for version in (1, 2, 3):
+            with self.subTest(version=version), self.assertRaisesRegex(
+                PolicyError, "unknown repository key: required_file_groups"
+            ):
+                parse_policy(
+                    f'''version = {version}
+[repository]
+required_file_groups = [["package-lock.json", "pnpm-lock.yaml"]]
+'''
+                )
+
+    def test_policy_rejects_invalid_or_contradictory_file_groups(self) -> None:
+        invalid_policies = (
+            (
+                """version = 4
+[repository]
+required_file_groups = []
+""",
+                "must be a non-empty array",
+            ),
+            (
+                """version = 4
+[repository]
+required_file_groups = [[]]
+""",
+                "required_file_groups\\[0\\] must be a non-empty array",
+            ),
+            (
+                """version = 4
+[repository]
+required_file_groups = [["a.lock", "b.lock"], ["b.lock", "a.lock"]]
+""",
+                "contains a duplicate group",
+            ),
+            (
+                """version = 4
+[repository]
+required_files = ["package-lock.json"]
+required_file_groups = [["package-lock.json", "pnpm-lock.yaml"]]
+""",
+                "duplicates required path: package-lock.json",
+            ),
+            (
+                """version = 4
+[repository]
+forbidden_files = ["yarn.lock"]
+required_file_groups = [["package-lock.json", "yarn.lock"]]
+""",
+                "contains forbidden path: yarn.lock",
+            ),
+            (
+                """version = 4
+[repository]
+required_file_groups = [["package-lock.json", "secrets/prod.lock"]]
+forbidden_file_patterns = ["secrets/*.lock"]
+""",
+                "path secrets/prod.lock matches forbidden pattern",
+            ),
+        )
+
+        for policy, message in invalid_policies:
+            with self.subTest(message=message), self.assertRaisesRegex(
+                PolicyError, message
+            ):
+                parse_policy(policy)
+
     def test_policy_rejects_invalid_or_contradictory_patterns(self) -> None:
         invalid_policies = (
             (
@@ -434,6 +541,38 @@ forbidden_file_patterns = ["*.pem", "**/.env"]
             """version = 3
 [repository]
 forbidden_file_patterns = ["**/.env", "*.key"]
+"""
+        )
+
+        self.assertEqual(policy_fingerprint(first), policy_fingerprint(reordered))
+        self.assertNotEqual(policy_fingerprint(first), policy_fingerprint(changed))
+
+    def test_policy_fingerprint_normalizes_required_file_groups(self) -> None:
+        first = parse_policy(
+            """version = 4
+[repository]
+required_file_groups = [
+  ["package-lock.json", "pnpm-lock.yaml"],
+  ["Dockerfile", "Containerfile"],
+]
+"""
+        )
+        reordered = parse_policy(
+            """version = 4
+[repository]
+required_file_groups = [
+  ["Containerfile", "Dockerfile"],
+  ["pnpm-lock.yaml", "package-lock.json"],
+]
+"""
+        )
+        changed = parse_policy(
+            """version = 4
+[repository]
+required_file_groups = [
+  ["package-lock.json", "yarn.lock"],
+  ["Dockerfile", "Containerfile"],
+]
 """
         )
 

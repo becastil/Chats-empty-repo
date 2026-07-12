@@ -19,7 +19,8 @@ Every profile also applies `**/.env` and `**/.env.local` to nested service
 folders. Broad filename patterns are intentionally absent from general
 profiles because files such as public `.pem` certificates can be legitimate.
 `node-npm-service` is specifically for npm repositories; teams using pnpm or
-Yarn should start with `service-baseline` and add their actual lockfile.
+Yarn can start with `service-baseline`, or review
+`examples/team-policy-v4.toml` for one lockfile-alternative group.
 
 ## Discover And Inspect
 
@@ -85,3 +86,10 @@ Policy version 3 adds bounded `forbidden_file_patterns` for nested monorepo
 paths. General profiles protect nested environment files; filename-wide rules
 such as `*.pem` should be added only when the team confirms they cannot block
 legitimate public certificates or fixtures.
+
+Policy version 4 adds `required_file_groups` for standards with valid
+alternatives. Every group needs at least one existing file. The staged v4
+example accepts `package-lock.json`, `pnpm-lock.yaml`, or `yarn.lock`, which
+lets one custom pack cover mixed JavaScript package managers without making a
+lockfile optional. General starters remain on verified v3 behavior until the
+v4 release artifact is independently checked and pinned in CI.

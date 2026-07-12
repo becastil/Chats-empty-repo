@@ -8,8 +8,8 @@ import tomllib
 from typing import Any
 
 
-POLICY_VERSION = 3
-SUPPORTED_POLICY_VERSIONS = (1, 2, POLICY_VERSION)
+POLICY_VERSION = 4
+SUPPORTED_POLICY_VERSIONS = (1, 2, 3, POLICY_VERSION)
 MAX_FORBIDDEN_PATTERN_PATHS = 20
 
 _ROOT_KEYS = {"version", "repository"}
@@ -21,6 +21,7 @@ _REPOSITORY_KEYS_V1 = {
 }
 _REPOSITORY_KEYS_V2 = _REPOSITORY_KEYS_V1 | {"forbidden_files"}
 _REPOSITORY_KEYS_V3 = _REPOSITORY_KEYS_V2 | {"forbidden_file_patterns"}
+_REPOSITORY_KEYS_V4 = _REPOSITORY_KEYS_V3 | {"required_file_groups"}
 
 
 class PolicyError(ValueError):
@@ -64,6 +65,17 @@ def evaluate_policy(
                     "rule": "repository.required_files",
                     "path": required_file,
                     "message": f"Required file is missing: {required_file}.",
+                }
+            )
+
+    for required_group in rules.get("required_file_groups", []):
+        if not any((root / candidate).is_file() for candidate in required_group):
+            detail = ", ".join(required_group)
+            violations.append(
+                {
+                    "rule": "repository.required_file_groups",
+                    "paths": required_group,
+                    "message": f"Required file group has no present file: {detail}.",
                 }
             )
 
@@ -175,6 +187,10 @@ def policy_fingerprint(policy: dict[str, Any]) -> str:
     ):
         if key in repository:
             repository[key] = sorted(repository[key])
+    if "required_file_groups" in repository:
+        repository["required_file_groups"] = sorted(
+            sorted(group) for group in repository["required_file_groups"]
+        )
     if repository.get("require_clean_git") is False:
         del repository["require_clean_git"]
     canonical = json.dumps(
@@ -194,7 +210,7 @@ def _validate_policy(policy: Any, source: str | Path) -> dict[str, Any]:
     version = policy.get("version")
     if not _is_integer(version) or version not in SUPPORTED_POLICY_VERSIONS:
         raise PolicyError(
-            "policy version must be 1, 2, or 3: "
+            "policy version must be 1, 2, 3, or 4: "
             f"{source}"
         )
 
@@ -208,6 +224,7 @@ def _validate_policy(policy: Any, source: str | Path) -> dict[str, Any]:
         1: _REPOSITORY_KEYS_V1,
         2: _REPOSITORY_KEYS_V2,
         3: _REPOSITORY_KEYS_V3,
+        4: _REPOSITORY_KEYS_V4,
     }[version]
     _reject_unknown_keys(repository, repository_keys, "repository")
     normalized: dict[str, Any] = {}
@@ -221,12 +238,30 @@ def _validate_policy(policy: Any, source: str | Path) -> dict[str, Any]:
             repository["forbidden_file_patterns"], source
         )
 
+    if "required_file_groups" in repository:
+        normalized["required_file_groups"] = _validate_file_groups(
+            repository["required_file_groups"], source
+        )
+
     overlap = set(normalized.get("required_files", [])) & set(
         normalized.get("forbidden_files", [])
     )
     if overlap:
         path = sorted(overlap)[0]
         raise PolicyError(f"repository path is both required and forbidden: {path}")
+
+    required_files = set(normalized.get("required_files", []))
+    forbidden_files = set(normalized.get("forbidden_files", []))
+    for group in normalized.get("required_file_groups", []):
+        for candidate in group:
+            if candidate in required_files:
+                raise PolicyError(
+                    f"required file group duplicates required path: {candidate}"
+                )
+            if candidate in forbidden_files:
+                raise PolicyError(
+                    f"required file group contains forbidden path: {candidate}"
+                )
 
     patterns = normalized.get("forbidden_file_patterns", [])
     for required_path in normalized.get("required_files", []):
@@ -257,6 +292,21 @@ def _validate_policy(policy: Any, source: str | Path) -> dict[str, Any]:
                 f"forbidden path {forbidden_path} duplicates pattern: "
                 f"{matching_pattern}"
             )
+    for group in normalized.get("required_file_groups", []):
+        for candidate in group:
+            matching_pattern = next(
+                (
+                    pattern
+                    for pattern in patterns
+                    if _matches_file_pattern(candidate, pattern)
+                ),
+                None,
+            )
+            if matching_pattern is not None:
+                raise PolicyError(
+                    f"required file group path {candidate} matches forbidden pattern: "
+                    f"{matching_pattern}"
+                )
 
     for key in ("max_files", "max_total_bytes"):
         if key not in repository:
@@ -317,6 +367,31 @@ def _validate_file_paths(
         paths.append(entry)
 
     return paths
+
+
+def _validate_file_groups(value: Any, source: str | Path) -> list[list[str]]:
+    rule_name = "required_file_groups"
+    if not isinstance(value, list) or not value:
+        raise PolicyError(
+            f"repository.{rule_name} must be a non-empty array: {source}"
+        )
+
+    groups: list[list[str]] = []
+    identities: set[tuple[str, ...]] = set()
+    for index, value_group in enumerate(value):
+        group = _validate_file_paths(
+            value_group, source, f"{rule_name}[{index}]"
+        )
+        identity = tuple(sorted(group))
+        if identity in identities:
+            raise PolicyError(
+                f"repository.{rule_name} contains a duplicate group: "
+                f"{', '.join(group)}"
+            )
+        identities.add(identity)
+        groups.append(group)
+
+    return groups
 
 
 def _validate_file_patterns(value: Any, source: str | Path) -> list[str]:

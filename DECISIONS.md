@@ -289,3 +289,15 @@ public certificates and test fixtures may legitimately use that suffix. Such
 filename-wide patterns belong in a reviewed custom pack. A released-wheel
 simulation and the copy-ready integration test both confirm a force-tracked
 nested environment file fails with remediation evidence preserved.
+
+## 2026-07-11: Model Required Alternatives As File Groups
+
+Policy version 4 adds `required_file_groups` while versions 1 through 3 remain
+readable. Every group requires at least one listed repository-relative file,
+and multiple groups must all be satisfied. Empty groups, semantically duplicate
+groups, candidates already required exactly, and candidates forbidden exactly
+or by pattern fail during parsing. Policy fingerprints sort both groups and
+their members so equivalent TOML ordering produces one identity. The first
+staged example accepts npm, pnpm, or Yarn lockfiles. Verified gates and packaged
+starters remain on v3 until the `v0.3.22` digest and provenance are checked
+independently.

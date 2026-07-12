@@ -144,6 +144,15 @@ class CiExampleTests(unittest.TestCase):
             ["**/.env", "**/.env.local"],
         )
 
+    def test_staged_v4_policy_accepts_supported_lockfile_alternatives(self) -> None:
+        policy = load_policy(ROOT / "examples/team-policy-v4.toml")
+
+        self.assertEqual(policy["version"], 4)
+        self.assertEqual(
+            policy["repository"]["required_file_groups"],
+            [["package-lock.json", "pnpm-lock.yaml", "yarn.lock"]],
+        )
+
     def test_example_command_is_repeatable_and_preserves_failure_evidence(self) -> None:
         with TemporaryDirectory() as tmp:
             workspace = Path(tmp)

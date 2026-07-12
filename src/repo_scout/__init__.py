@@ -1,3 +1,3 @@
 """Repository snapshot tooling."""
 
-__version__ = "0.3.21"
+__version__ = "0.3.22"
