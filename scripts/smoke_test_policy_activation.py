@@ -70,6 +70,12 @@ def verify_policy_activation(
             _assert_bootstrap_receipt(
                 bootstrap, recommended_policy, expected_starter
             )
+            _verify_receipt(
+                python_command,
+                root,
+                bootstrap,
+                environment=environment,
+            )
 
             _run(
                 [
@@ -194,6 +200,12 @@ def verify_policy_activation(
                 _assert_bootstrap_receipt(
                     bootstrap, bootstrap_policy, expected_starter
                 )
+                _verify_receipt(
+                    python_command,
+                    root,
+                    bootstrap,
+                    environment=environment,
+                )
             checked.append(label)
 
     return tuple(checked)
@@ -275,6 +287,40 @@ def _assert_bootstrap_receipt(
         raise SmokeTestError("policy bootstrap receipt omitted policy version")
     if not isinstance(fingerprint, str) or not fingerprint.startswith("sha256:"):
         raise SmokeTestError("policy bootstrap receipt omitted policy fingerprint")
+
+
+def _verify_receipt(
+    python: str,
+    root: Path,
+    bootstrap: subprocess.CompletedProcess[str],
+    *,
+    environment: Mapping[str, str] | None,
+) -> None:
+    receipt_path = root / "bootstrap-receipt.json"
+    receipt_path.write_text(bootstrap.stdout, encoding="utf-8")
+    completed = _run(
+        [
+            python,
+            "-m",
+            "repo_scout.policy_templates",
+            "verify-receipt",
+            str(receipt_path),
+            "--format",
+            "json",
+        ],
+        cwd=root,
+        environment=environment,
+    )
+    try:
+        verification = json.loads(completed.stdout)
+    except json.JSONDecodeError as exc:
+        raise SmokeTestError(
+            "policy receipt verification did not emit valid JSON"
+        ) from exc
+    if verification.get("status") != "pass":
+        raise SmokeTestError("bootstrap receipt did not verify its policy")
+    if verification.get("expected") != verification.get("actual"):
+        raise SmokeTestError("receipt verification identities did not match")
 
 
 def _scan(

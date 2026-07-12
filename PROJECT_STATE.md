@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 55 of 1,000, with 945 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 56 of 1,000, with 944 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -65,7 +65,7 @@ The delivery goal is 1,000 meaningful commits. This update is commit 55 of 1,000
 - Schema-2 rollout evidence with normalized policy fingerprints and exact Git commit IDs.
 - Backward-compatible schema-1 aggregation with explicit policy and commit identity coverage.
 - Shared-policy verification only for complete matching fingerprints across multiple repositories.
-- Copy-ready and dogfooded CI generation of schema-2 rollout bundles from the verified `v0.3.27` release.
+- Copy-ready and dogfooded CI generation of schema-2 rollout bundles from the verified `v0.3.28` release.
 - Stable GitHub `owner/repository` evidence identity with 14-day passing and remediation artifacts.
 - Required self-reported $299 purchase readiness in public pilot intake.
 - Schema-4 funnel reporting for readiness-stage, revenue, conversion, and loss outcomes.
@@ -120,7 +120,7 @@ The delivery goal is 1,000 meaningful commits. This update is commit 55 of 1,000
 - Git-aware pattern matching across all tracked or unignored paths, independent of the snapshot's 500-path detail cap.
 - Bounded pattern evidence with full match counts, 20 sorted paths per pattern, and explicit truncation state.
 - Strict wildcard, path, duplicate, required-file conflict, exact-rule overlap, and fingerprint validation for pattern rules.
-- Independently pinned `v0.3.27` wheel digest, source commit, manifest, provenance, signer workflow, and hosted-runner checks in both policy gates.
+- Independently pinned `v0.3.28` wheel digest, source commit, manifest, provenance, signer workflow, and hosted-runner checks in both policy gates.
 - Policy v3 nested `.env` and `.env.local` patterns in every starter, dogfood policy, and copy-ready CI policy.
 - Released-wheel proof that a force-tracked nested environment file fails while preserving remediation rollout evidence.
 - Explicit exclusion of broad `*.pem` matching from defaults to avoid blocking legitimate public certificates.
@@ -143,15 +143,19 @@ The delivery goal is 1,000 meaningful commits. This update is commit 55 of 1,000
 - Stable schema-1 JSON bootstrap receipts proving create or replace status, resolved output, selected starter, policy version, and policy fingerprint.
 - No-success-receipt behavior for bootstrap review, overwrite, and write failures.
 - Installed-wheel release proof for machine-readable bootstrap receipts across every clear recommendation route.
+- Strict bootstrap-receipt verification against the current policy version and normalized fingerprint.
+- Stable text and JSON pass or drift evidence, policy-path overrides, and exit code 6 for missing, invalid, or changed policies.
+- Duplicate-key, unsupported-schema, malformed-shape, and unknown-field rejection for receipt evidence.
+- Installed-wheel release proof that every clear bootstrap receipt verifies its generated policy.
 
 ## How To Run
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.28/repo-scout-0.3.28.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.29/repo-scout-0.3.29.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 python3 -m unittest discover -s tests
 ```
 
 ## Next Small Task
 
-Obtain authoritative company and contact evidence, then research, contact, and audit the first five qualified prospects. No outreach was attempted and no private ledger exists; do not add another acquisition asset before five real attempts. If authoritative prospect evidence remains unavailable, independently verify and pin `v0.3.28` before making another paid-policy change.
+Obtain authoritative company and contact evidence, then research, contact, and audit the first five qualified prospects. No outreach was attempted and no private ledger exists; do not add another acquisition asset before five real attempts. If authoritative prospect evidence remains unavailable, independently verify and pin `v0.3.29` before making another paid-policy change.

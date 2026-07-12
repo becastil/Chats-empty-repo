@@ -62,7 +62,7 @@ This is useful free CI enforcement; the paid work remains agreeing on the
 right rules and rolling the same reviewed policy across uneven repositories.
 Versions 1 and 2 remain readable so verified CI upgrades can be staged safely.
 The dogfood and copy-ready gates now install the independently verified
-`v0.3.27` wheel, so v4 policies can run locally and in CI
+`v0.3.28` wheel, so v4 policies can run locally and in CI
 without source checkout, mutable package resolution, or a team-managed secret.
 
 Policy version 3 extends custom packs beyond exact root paths. A reviewed
@@ -106,6 +106,11 @@ the selected starter, destination, normalized policy version and fingerprint,
 and whether the file was created or replaced. This gives a team auditable
 handoff evidence without a hosted service; the paid value remains choosing and
 operating one reviewed standard across repositories.
+Receipt verification closes that local handoff loop by comparing the archived
+version and fingerprint to the policy a team is about to commit or enforce.
+It produces stable drift evidence and a CI failure without uploading either
+file. This is useful free activation proof; paid value remains resolving drift
+and operating one reviewed standard across repositories and teams.
 
 An AI can recreate a scanner, but that is not the commercial claim being
 tested. The active website experiment presents the paid outcome in plain

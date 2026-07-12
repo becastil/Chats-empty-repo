@@ -54,6 +54,22 @@ and reason, and the normalized policy version and SHA-256 fingerprint. Teams
 can archive that receipt as CI handoff evidence. Write conflicts, review
 requirements, and other failures emit no JSON receipt.
 
+Archive and verify that handoff without trusting a filename alone:
+
+```bash
+repo-scout-policy bootstrap . --format json > bootstrap-receipt.json
+repo-scout-policy verify-receipt bootstrap-receipt.json
+repo-scout-policy verify-receipt bootstrap-receipt.json \
+  --policy config/team-policy.toml --format json
+```
+
+Verification parses both contracts strictly and compares the receipt's policy
+version and normalized fingerprint to the current TOML. A match returns 0.
+Missing, invalid, or changed policy files emit a report and return 6; malformed,
+duplicate-key, or unsupported receipts return 2 without a success report. The
+`--policy` override supports a policy moved after bootstrap while preserving
+the original receipt as evidence.
+
 Recommendation is deterministic and local. A sole npm lockfile selects the
 npm-only profile; pnpm, Yarn, no lockfile yet, or multiple Node lockfiles select
 the flexible Node profile. Python and agent instructions are detected when no

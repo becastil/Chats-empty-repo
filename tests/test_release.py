@@ -48,7 +48,7 @@ ACTIVATION_SMOKE_SPEC.loader.exec_module(smoke_test_policy_activation)
 
 class ReleaseManifestTests(unittest.TestCase):
     def test_current_project_versions_match(self) -> None:
-        self.assertEqual(prepare_release.load_project_version(ROOT), "0.3.28")
+        self.assertEqual(prepare_release.load_project_version(ROOT), "0.3.29")
 
     def test_public_distribution_metadata_and_quick_start_match_release(self) -> None:
         with (ROOT / "pyproject.toml").open("rb") as project_file:
@@ -195,7 +195,7 @@ class ZipappDistributionTests(unittest.TestCase):
 
             artifact = build_zipapp.build_zipapp(ROOT, dist)
 
-            self.assertEqual(artifact.name, "repo-scout-0.3.28.pyz")
+            self.assertEqual(artifact.name, "repo-scout-0.3.29.pyz")
             self.assertTrue(artifact.is_file())
             self.assertTrue(artifact.stat().st_mode & 0o100)
             with zipfile.ZipFile(artifact) as archive:

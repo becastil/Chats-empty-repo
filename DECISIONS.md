@@ -387,3 +387,17 @@ identifies the normalized policy by version and fingerprint. Review refusals,
 overwrite conflicts, and write failures emit no success receipt. The
 release-blocking installed-wheel smoke validates this contract across every
 clear recommendation route.
+
+## 2026-07-12: Verify Receipt Identity Without A Hosted Service
+
+The independently verified `v0.3.28` wheel, source commit
+`7d3b9a0ba09b3f2a965a1ff795e94265a830f8aa`, and wheel SHA-256
+`f93297de4f2df1b62451169292b8a3d237d50f9ef9b040bbc77083d09b7a0e92`
+are pinned together in both policy gates. `repo-scout-policy verify-receipt`
+strictly parses a schema-1 bootstrap receipt and compares its policy version
+and normalized fingerprint with the current TOML. A policy-path override
+supports deliberate moves. Missing, invalid, or changed policies produce
+stable expected-versus-actual evidence and exit code 6; malformed receipt
+evidence remains a command error with exit code 2. This makes archived handoff
+evidence independently checkable in local or CI workflows without creating a
+hosted trust dependency.

@@ -6,17 +6,20 @@ from importlib import resources
 import json
 import os
 from pathlib import Path
+import re
 import sys
 from tempfile import NamedTemporaryFile
 from typing import Any, Sequence
 
-from .policy import PolicyError, parse_policy, policy_fingerprint
+from .policy import PolicyError, load_policy, parse_policy, policy_fingerprint
 
 
 TEMPLATE_SCHEMA_VERSION = 1
 RECOMMENDATION_SCHEMA_VERSION = 1
 BOOTSTRAP_SCHEMA_VERSION = 1
+RECEIPT_VERIFICATION_SCHEMA_VERSION = 1
 OUTPUT_ERROR_EXIT_CODE = 4
+POLICY_MISMATCH_EXIT_CODE = 6
 
 
 @dataclass(frozen=True)
@@ -271,6 +274,95 @@ def bootstrap_receipt(
     }
 
 
+def load_bootstrap_receipt(path: str | Path) -> dict[str, Any]:
+    source = Path(path).expanduser().resolve()
+    try:
+        content = source.read_text(encoding="utf-8")
+    except FileNotFoundError as exc:
+        raise TemplateError(f"bootstrap receipt does not exist: {source}") from exc
+    except (OSError, UnicodeDecodeError) as exc:
+        raise TemplateError(
+            f"could not read bootstrap receipt {source}: {exc}"
+        ) from exc
+
+    try:
+        receipt = json.loads(
+            content,
+            object_pairs_hook=_reject_duplicate_json_keys,
+        )
+    except json.JSONDecodeError as exc:
+        raise TemplateError(
+            f"invalid bootstrap receipt JSON in {source}: {exc.msg}"
+        ) from exc
+    except TemplateError as exc:
+        raise TemplateError(
+            f"invalid bootstrap receipt JSON in {source}: {exc}"
+        ) from exc
+    return _validate_bootstrap_receipt(receipt)
+
+
+def verify_bootstrap_receipt(
+    receipt_path: str | Path,
+    policy_path: str | Path | None = None,
+) -> dict[str, Any]:
+    receipt_source = Path(receipt_path).expanduser().resolve()
+    receipt = load_bootstrap_receipt(receipt_source)
+    target_value = receipt["output"] if policy_path is None else policy_path
+    target = Path(target_value).expanduser().resolve()
+    expected = dict(receipt["policy"])
+
+    try:
+        policy = load_policy(target)
+    except PolicyError as exc:
+        actual = None
+        status = "fail"
+        message = str(exc)
+    else:
+        actual = {
+            "version": policy["version"],
+            "fingerprint": policy_fingerprint(policy),
+        }
+        status = "pass" if actual == expected else "fail"
+        message = (
+            "Policy matches bootstrap receipt."
+            if status == "pass"
+            else "Policy identity does not match bootstrap receipt."
+        )
+
+    return {
+        "schema_version": RECEIPT_VERIFICATION_SCHEMA_VERSION,
+        "status": status,
+        "receipt": str(receipt_source),
+        "policy": str(target),
+        "expected": expected,
+        "actual": actual,
+        "message": message,
+    }
+
+
+def format_receipt_verification(verification: dict[str, Any]) -> str:
+    expected = verification["expected"]
+    actual = verification["actual"]
+    lines = [
+        "Repo Scout Bootstrap Receipt Verification",
+        f"Status: {verification['status']}",
+        f"Receipt: {verification['receipt']}",
+        f"Policy: {verification['policy']}",
+        (
+            f"Expected: version {expected['version']} / "
+            f"{expected['fingerprint']}"
+        ),
+    ]
+    if actual is None:
+        lines.append("Actual: unavailable")
+    else:
+        lines.append(
+            f"Actual: version {actual['version']} / {actual['fingerprint']}"
+        )
+    lines.append(f"Message: {verification['message']}")
+    return "\n".join(lines)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="repo-scout-policy",
@@ -331,6 +423,25 @@ def build_parser() -> argparse.ArgumentParser:
         choices=("text", "json"),
         default="text",
         help="Success output format. Defaults to text.",
+    )
+
+    verify_parser = subparsers.add_parser(
+        "verify-receipt",
+        help="Verify that a policy still matches a bootstrap receipt.",
+    )
+    verify_parser.add_argument(
+        "receipt",
+        help="Path to a JSON bootstrap receipt.",
+    )
+    verify_parser.add_argument(
+        "--policy",
+        help="Policy path override. Defaults to the receipt output path.",
+    )
+    verify_parser.add_argument(
+        "--format",
+        choices=("text", "json"),
+        default="text",
+        help="Output format. Defaults to text.",
     )
 
     show_parser = subparsers.add_parser(
@@ -403,6 +514,18 @@ def main(argv: Sequence[str] | None = None) -> int:
             if args.format == "json":
                 print(json.dumps(receipt, indent=2, sort_keys=True))
             return 0
+
+        if args.command == "verify-receipt":
+            verification = verify_bootstrap_receipt(args.receipt, args.policy)
+            if args.format == "json":
+                print(json.dumps(verification, indent=2, sort_keys=True))
+            else:
+                print(format_receipt_verification(verification))
+            return (
+                0
+                if verification["status"] == "pass"
+                else POLICY_MISMATCH_EXIT_CODE
+            )
 
         content = get_template(args.template)
     except TemplateError as exc:
@@ -477,6 +600,83 @@ def _write_template(
     if announce:
         print(f"repo-scout-policy: wrote {target}", file=sys.stderr)
     return 0
+
+
+def _validate_bootstrap_receipt(receipt: Any) -> dict[str, Any]:
+    if not isinstance(receipt, dict):
+        raise TemplateError("bootstrap receipt must be a JSON object")
+    _require_exact_keys(
+        receipt,
+        {"schema_version", "status", "output", "starter", "policy"},
+        "bootstrap receipt",
+    )
+    if receipt["schema_version"] != BOOTSTRAP_SCHEMA_VERSION or isinstance(
+        receipt["schema_version"], bool
+    ):
+        raise TemplateError(
+            f"bootstrap receipt schema_version must be {BOOTSTRAP_SCHEMA_VERSION}"
+        )
+    if receipt["status"] not in {"created", "replaced"}:
+        raise TemplateError(
+            "bootstrap receipt status must be created or replaced"
+        )
+    if not isinstance(receipt["output"], str) or not receipt["output"]:
+        raise TemplateError(
+            "bootstrap receipt output must be a non-empty string"
+        )
+
+    starter = receipt["starter"]
+    if not isinstance(starter, dict):
+        raise TemplateError("bootstrap receipt starter must be an object")
+    _require_exact_keys(starter, {"name", "title", "reason"}, "starter")
+    for key in ("name", "title", "reason"):
+        if not isinstance(starter[key], str) or not starter[key]:
+            raise TemplateError(
+                f"bootstrap receipt starter.{key} must be a string"
+            )
+
+    policy = receipt["policy"]
+    if not isinstance(policy, dict):
+        raise TemplateError("bootstrap receipt policy must be an object")
+    _require_exact_keys(policy, {"version", "fingerprint"}, "policy")
+    if not isinstance(policy["version"], int) or isinstance(
+        policy["version"], bool
+    ):
+        raise TemplateError("bootstrap receipt policy.version must be an integer")
+    if not isinstance(policy["fingerprint"], str) or re.fullmatch(
+        r"sha256:[0-9a-f]{64}", policy["fingerprint"]
+    ) is None:
+        raise TemplateError(
+            "bootstrap receipt policy.fingerprint must be a SHA-256 identity"
+        )
+    return receipt
+
+
+def _require_exact_keys(
+    value: dict[str, Any], expected: set[str], label: str
+) -> None:
+    actual = set(value)
+    if actual == expected:
+        return
+    missing = sorted(expected - actual)
+    unknown = sorted(actual - expected)
+    details = []
+    if missing:
+        details.append(f"missing keys: {', '.join(missing)}")
+    if unknown:
+        details.append(f"unknown keys: {', '.join(unknown)}")
+    raise TemplateError(f"{label} has {'; '.join(details)}")
+
+
+def _reject_duplicate_json_keys(
+    pairs: list[tuple[str, Any]],
+) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise TemplateError(f"duplicate key: {key}")
+        result[key] = value
+    return result
 
 
 if __name__ == "__main__":

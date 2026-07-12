@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.29 - 2026-07-12
+
+- Added `repo-scout-policy verify-receipt` to compare archived bootstrap evidence with the current policy.
+- Emitted stable text and JSON pass or drift reports with expected and actual policy versions and fingerprints.
+- Returned exit code 6 for missing, invalid, or changed policies while reserving exit code 2 for malformed receipt evidence.
+- Added policy-path overrides for moved policies and strict duplicate-key, schema, shape, type, and unknown-field receipt validation.
+- Extended installed-wheel release smoke coverage to verify every clear bootstrap receipt against its generated policy.
+- Independently verified and pinned the `v0.3.28` wheel, source commit `7d3b9a0ba09b3f2a965a1ff795e94265a830f8aa`, and SHA-256 `f93297de4f2df1b62451169292b8a3d237d50f9ef9b040bbc77083d09b7a0e92` in both CI gates.
+- Kept acquisition and revenue totals unchanged; no prospect outreach was attempted.
+
 ## 0.3.28 - 2026-07-12
 
 - Added stable schema-1 JSON receipts for successful `repo-scout-policy bootstrap` runs.

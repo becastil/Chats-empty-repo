@@ -62,14 +62,14 @@ Configuration errors return exit code 2; scan-limit failures return exit code
 
 The workflow grants only `contents: read` and `attestations: read`, disables
 persisted checkout credentials, and pins every external action by commit. It downloads the exact
-Repo Scout `v0.3.27` wheel and `SHA256SUMS` from the public GitHub Release using
+Repo Scout `v0.3.28` wheel and `SHA256SUMS` from the public GitHub Release using
 the runner-provided token. No team-managed secret or API key is required.
 
 Before installation, the gate verifies:
 
 - The wheel matches the independently pinned SHA-256 digest in the workflow.
 - The wheel matches the release's `SHA256SUMS` manifest.
-- GitHub's signed provenance names the pinned source commit and `v0.3.27` tag.
+- GitHub's signed provenance names the pinned source commit and `v0.3.28` tag.
 - The signer is this repository's `.github/workflows/release.yml` workflow.
 - The attested build used a GitHub-hosted runner.
 

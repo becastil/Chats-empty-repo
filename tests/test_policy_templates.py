@@ -307,6 +307,153 @@ class PolicyTemplateTests(unittest.TestCase):
             self.assertEqual(replaced["status"], "replaced")
             self.assertEqual(replaced["policy"], created["policy"])
 
+    def test_verify_receipt_reports_matching_and_drifted_policy(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "pyproject.toml").write_text(
+                "[project]\n", encoding="utf-8"
+            )
+            bootstrap_stdout = io.StringIO()
+            with redirect_stdout(bootstrap_stdout), redirect_stderr(
+                io.StringIO()
+            ):
+                bootstrap_exit_code = main(
+                    ["bootstrap", str(root), "--format", "json"]
+                )
+            receipt = json.loads(bootstrap_stdout.getvalue())
+            receipt_path = root / "bootstrap-receipt.json"
+            receipt_path.write_text(
+                bootstrap_stdout.getvalue(), encoding="utf-8"
+            )
+
+            text_stdout = io.StringIO()
+            with redirect_stdout(text_stdout):
+                text_exit_code = main(["verify-receipt", str(receipt_path)])
+
+            copied_policy = root / "copied-policy.toml"
+            copied_policy.write_text(
+                (root / "repo-scout-policy.toml").read_text(encoding="utf-8"),
+                encoding="utf-8",
+            )
+            override_stdout = io.StringIO()
+            with redirect_stdout(override_stdout):
+                override_exit_code = main(
+                    [
+                        "verify-receipt",
+                        str(receipt_path),
+                        "--policy",
+                        str(copied_policy),
+                        "--format",
+                        "json",
+                    ]
+                )
+            override = json.loads(override_stdout.getvalue())
+
+            policy_path = root / "repo-scout-policy.toml"
+            policy_path.write_text(
+                policy_path.read_text(encoding="utf-8").replace(
+                    "max_files = 15000", "max_files = 15001"
+                ),
+                encoding="utf-8",
+            )
+            drift_stdout = io.StringIO()
+            with redirect_stdout(drift_stdout):
+                drift_exit_code = main(
+                    [
+                        "verify-receipt",
+                        str(receipt_path),
+                        "--format",
+                        "json",
+                    ]
+                )
+            drift = json.loads(drift_stdout.getvalue())
+
+            self.assertEqual(bootstrap_exit_code, 0)
+            self.assertEqual(text_exit_code, 0)
+            self.assertIn("Status: pass", text_stdout.getvalue())
+            self.assertEqual(override_exit_code, 0)
+            self.assertEqual(override["status"], "pass")
+            self.assertEqual(override["expected"], override["actual"])
+            self.assertEqual(override["policy"], str(copied_policy.resolve()))
+            self.assertEqual(drift_exit_code, 6)
+            self.assertEqual(drift["status"], "fail")
+            self.assertEqual(drift["expected"], receipt["policy"])
+            self.assertNotEqual(drift["actual"], drift["expected"])
+
+    def test_verify_receipt_rejects_malformed_evidence_and_reports_missing_policy(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "pyproject.toml").write_text(
+                "[project]\n", encoding="utf-8"
+            )
+            bootstrap_stdout = io.StringIO()
+            with redirect_stdout(bootstrap_stdout), redirect_stderr(
+                io.StringIO()
+            ):
+                main(["bootstrap", str(root), "--format", "json"])
+            valid_receipt = json.loads(bootstrap_stdout.getvalue())
+            receipt_path = root / "bootstrap-receipt.json"
+            receipt_path.write_text(
+                bootstrap_stdout.getvalue(), encoding="utf-8"
+            )
+            (root / "repo-scout-policy.toml").unlink()
+
+            missing_stdout = io.StringIO()
+            with redirect_stdout(missing_stdout):
+                missing_exit_code = main(
+                    [
+                        "verify-receipt",
+                        str(receipt_path),
+                        "--format",
+                        "json",
+                    ]
+                )
+            missing = json.loads(missing_stdout.getvalue())
+
+            self.assertEqual(missing_exit_code, 6)
+            self.assertEqual(missing["status"], "fail")
+            self.assertIsNone(missing["actual"])
+            self.assertIn("does not exist", missing["message"])
+
+            unsupported_schema = dict(valid_receipt)
+            unsupported_schema["schema_version"] = 2
+            unknown_field = dict(valid_receipt)
+            unknown_field["untrusted"] = True
+            wrong_policy_type = json.loads(json.dumps(valid_receipt))
+            wrong_policy_type["policy"]["version"] = True
+            malformed_cases = (
+                (
+                    '{"schema_version": 1, "schema_version": 1}\n',
+                    "duplicate key",
+                ),
+                (json.dumps(unsupported_schema), "schema_version"),
+                (json.dumps(unknown_field), "unknown keys"),
+                (json.dumps(wrong_policy_type), "must be an integer"),
+            )
+            for index, (content, expected_error) in enumerate(malformed_cases):
+                with self.subTest(expected_error=expected_error):
+                    malformed_path = root / f"malformed-{index}.json"
+                    malformed_path.write_text(content, encoding="utf-8")
+                    malformed_stdout = io.StringIO()
+                    malformed_stderr = io.StringIO()
+                    with redirect_stdout(malformed_stdout), redirect_stderr(
+                        malformed_stderr
+                    ):
+                        malformed_exit_code = main(
+                            [
+                                "verify-receipt",
+                                str(malformed_path),
+                                "--format",
+                                "json",
+                            ]
+                        )
+
+                    self.assertEqual(malformed_exit_code, 2)
+                    self.assertEqual(malformed_stdout.getvalue(), "")
+                    self.assertIn(expected_error, malformed_stderr.getvalue())
+
     def test_bootstrap_refuses_polyglot_policy_without_writing(self) -> None:
         with TemporaryDirectory() as tmp:
             root = Path(tmp)

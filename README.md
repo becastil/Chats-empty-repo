@@ -38,7 +38,7 @@ not require a checkout, package installation, administrator access, or an API
 key:
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.28/repo-scout-0.3.28.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.29/repo-scout-0.3.29.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 ```
 
@@ -49,7 +49,7 @@ need the `repo-scout-distribution`, `repo-scout-growth`, `repo-scout-policy`,
 `repo-scout-outreach` commands:
 
 ```bash
-python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.28/repo_scout-0.3.28-py3-none-any.whl
+python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.29/repo_scout-0.3.29-py3-none-any.whl
 repo-scout --languages .
 ```
 
@@ -208,6 +208,7 @@ Initialize an offline starter policy for a common repository type:
 ```bash
 repo-scout-policy bootstrap .
 repo-scout-policy bootstrap . --format json
+repo-scout-policy verify-receipt bootstrap-receipt.json
 repo-scout-policy recommend .
 repo-scout-policy list
 repo-scout-policy show python-service
@@ -219,6 +220,10 @@ is required. It refuses to overwrite an existing file and stops on mixed Node
 and Python repositories. Its stable JSON receipt records whether the policy was
 created or replaced, its output path, selected starter, policy version, and
 policy fingerprint for CI handoff evidence. Failed writes emit no receipt.
+Save that JSON to a file and use `verify-receipt` to prove the current policy
+still has the recorded version and fingerprint. A moved policy can be selected
+with `--policy`; policy drift or a missing policy returns exit code 6 with
+expected and actual identity evidence.
 `recommend` uses local manifests and lockfiles, can emit stable JSON, and flags
 mixed Python and Node repositories for review instead of presenting one starter
 as a complete team policy.
@@ -240,7 +245,7 @@ examples/github-actions/repo-scout-policy.toml
 ```
 
 The workflow uses read-only permissions, immutable dependency pins, job-summary
-evidence, and a downloadable schema-2 rollout bundle. It installs the `v0.3.27`
+evidence, and a downloadable schema-2 rollout bundle. It installs the `v0.3.28`
 wheel only after checking its pinned digest, release manifest, source commit,
 tag, signer workflow, and GitHub-hosted provenance. The bundle uses GitHub's
 stable `owner/repository` identity and is preserved even when policy enforcement

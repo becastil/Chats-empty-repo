@@ -52,12 +52,12 @@ test("server-renders the Repo Scout companion page", async () => {
   assert.match(html, /Copy no-install setup/i);
   assert.match(html, /One file\. Python 3\.11\+\. No API key\./i);
   assert.match(html, /curl -fL/i);
-  assert.match(html, /repo-scout-0\.3\.28\.pyz/i);
+  assert.match(html, /repo-scout-0\.3\.29\.pyz/i);
   assert.match(html, /python3 \/tmp\/repo-scout\.pyz --languages \./i);
   assert.match(html, /Download v/i);
   assert.match(
     html,
-    /releases\/download\/v0\.3\.28\/repo-scout-0\.3\.28\.pyz/i,
+    /releases\/download\/v0\.3\.29\/repo-scout-0\.3\.29\.pyz/i,
   );
   assert.doesNotMatch(html, /PYTHONPATH=src python3 -m repo_scout/i);
   assert.match(html, /Snapshot lab/i);
@@ -124,10 +124,10 @@ test("publishes accurate free CLI and paid pilot structured offers", async () =>
     (item) => item["@type"] === "SoftwareApplication",
   );
   assert.equal(software.name, "Repo Scout");
-  assert.equal(software.softwareVersion, "0.3.28");
+  assert.equal(software.softwareVersion, "0.3.29");
   assert.equal(
     software.downloadUrl,
-    "https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.28/repo-scout-0.3.28.pyz",
+    "https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.29/repo-scout-0.3.29.pyz",
   );
   assert.deepEqual(software.offers, {
     "@type": "Offer",
