@@ -25,12 +25,18 @@ from repo_scout.outreach import (  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 SIGNALS = "team_5_50;multi_repo;agent_use"
+EVIDENCE = (
+    "team_5_50=https://evidence.example/team;"
+    "multi_repo=https://evidence.example/repositories;"
+    "agent_use=https://evidence.example/agents"
+)
 
 
 def _row(**overrides: str) -> dict[str, str]:
     row = {
         "prospect_id": "prospect-001",
         "fit_signals": SIGNALS,
+        "fit_evidence": EVIDENCE,
         "contacted_on": "2026-07-01",
         "channel": "published-business",
         "status": "contacted",
@@ -94,13 +100,15 @@ class OutreachReportTests(unittest.TestCase):
 
         report = build_outreach_report(rows, as_of=date(2026, 7, 10))
 
-        self.assertEqual(report["schema_version"], 2)
+        self.assertEqual(report["schema_version"], 3)
         self.assertEqual(report["summary"]["prospects"], 7)
         self.assertEqual(report["summary"]["attempted_prospects"], 5)
         self.assertEqual(report["summary"]["drafted"], 1)
+        self.assertEqual(report["summary"]["fit_evidence_links"], 21)
         self.assertIn(
             "Drafts awaiting review: 1", format_outreach_report(report)
         )
+        self.assertIn("Qualification links: 21", format_outreach_report(report))
         self.assertEqual(report["summary"]["due_followups"], 1)
         self.assertEqual(report["summary"]["pilot_requested"], 1)
         self.assertEqual(
@@ -118,6 +126,7 @@ class OutreachReportTests(unittest.TestCase):
             report["evidence_note"],
         )
         self.assertNotIn("channel", report["due_followups"][0])
+        self.assertNotIn("evidence.example", json.dumps(report))
 
     def test_template_is_a_valid_empty_private_ledger(self) -> None:
         report = load_outreach_report(
@@ -147,6 +156,62 @@ class OutreachReportTests(unittest.TestCase):
                 OutreachInputError, message
             ):
                 build_outreach_report([rows], as_of=date(2026, 7, 11))
+
+    def test_requires_one_secure_evidence_link_per_fit_signal(self) -> None:
+        invalid_rows = (
+            (_row(fit_evidence=""), "must map each signal"),
+            (
+                _row(
+                    fit_evidence=(
+                        "team_5_50=https://evidence.example/team;"
+                        "multi_repo=https://evidence.example/repositories"
+                    )
+                ),
+                "missing fit evidence for: agent_use",
+            ),
+            (
+                _row(
+                    fit_evidence=(
+                        EVIDENCE
+                        + ";local_privacy=https://evidence.example/privacy"
+                    )
+                ),
+                "undeclared signal: local_privacy",
+            ),
+            (
+                _row(
+                    fit_evidence=(
+                        EVIDENCE
+                        + ";agent_use=https://evidence.example/duplicate"
+                    )
+                ),
+                "duplicate signal: agent_use",
+            ),
+            (
+                _row(
+                    fit_evidence=EVIDENCE.replace(
+                        "https://evidence.example/team",
+                        "http://evidence.example/team",
+                    )
+                ),
+                "must be a secure HTTPS URL",
+            ),
+            (
+                _row(
+                    fit_evidence=EVIDENCE.replace(
+                        "https://evidence.example/team",
+                        "https://user:secret@evidence.example/team",
+                    )
+                ),
+                "without credentials",
+            ),
+        )
+
+        for row, message in invalid_rows:
+            with self.subTest(message=message), self.assertRaisesRegex(
+                OutreachInputError, message
+            ):
+                build_outreach_report([row], as_of=date(2026, 7, 11))
 
     def test_enforces_one_seven_day_follow_up_and_terminal_stop(self) -> None:
         invalid_rows = (

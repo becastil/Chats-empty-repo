@@ -8,15 +8,17 @@ from pathlib import Path
 import re
 import sys
 from typing import Any, Sequence
+from urllib.parse import urlsplit
 
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 MAX_PROSPECTS = 10
 FOLLOW_UP_DAYS = 7
 MAX_FOLLOW_UPS = 1
 LEDGER_FIELDS = (
     "prospect_id",
     "fit_signals",
+    "fit_evidence",
     "contacted_on",
     "channel",
     "status",
@@ -89,6 +91,7 @@ def build_outreach_report(
     status_counts = {status: 0 for status in STATUSES}
     seen_ids: set[str] = set()
     due_followups: list[dict[str, Any]] = []
+    fit_evidence_links = 0
 
     for row_number, raw_row in enumerate(rows, start=2):
         row = {field: (raw_row.get(field) or "").strip() for field in LEDGER_FIELDS}
@@ -121,6 +124,19 @@ def build_outreach_report(
             raise OutreachInputError(
                 f"row {row_number}: at least three fit signals are required"
             )
+        evidence = _fit_evidence(row["fit_evidence"], row_number=row_number)
+        missing_evidence = sorted(set(signals) - set(evidence))
+        if missing_evidence:
+            raise OutreachInputError(
+                f"row {row_number}: missing fit evidence for: {missing_evidence[0]}"
+            )
+        extra_evidence = sorted(set(evidence) - set(signals))
+        if extra_evidence:
+            raise OutreachInputError(
+                f"row {row_number}: fit evidence has undeclared signal: "
+                f"{extra_evidence[0]}"
+            )
+        fit_evidence_links += len(evidence)
 
         status = row["status"]
         if status not in STATUSES:
@@ -237,6 +253,7 @@ def build_outreach_report(
             "pilot_requested": status_counts["pilot-requested"],
             "closed": closed,
             "due_followups": len(due_followups),
+            "fit_evidence_links": fit_evidence_links,
         },
         "by_status": status_counts,
         "due_followups": due_followups,
@@ -254,6 +271,7 @@ def format_outreach_report(report: dict[str, Any]) -> str:
         "Repo Scout outreach operations",
         f"As of: {report['as_of']}",
         f"Prospects: {summary['prospects']} / {experiment['max_prospects']}",
+        f"Qualification links: {summary['fit_evidence_links']}",
         f"Drafts awaiting review: {summary['drafted']}",
         f"Attempted prospects: {summary['attempted_prospects']}",
         f"Due follow-ups: {summary['due_followups']}",
@@ -321,6 +339,42 @@ def _optional_date(value: str, *, row_number: int, field: str) -> date | None:
         raise OutreachInputError(
             f"row {row_number}: {field} must be YYYY-MM-DD"
         ) from exc
+
+
+def _fit_evidence(value: str, *, row_number: int) -> dict[str, str]:
+    entries = [entry.strip() for entry in value.split(";")]
+    if not value or "" in entries:
+        raise OutreachInputError(
+            f"row {row_number}: fit_evidence must map each signal to an HTTPS URL"
+        )
+
+    evidence: dict[str, str] = {}
+    for entry in entries:
+        signal, separator, url = entry.partition("=")
+        signal = signal.strip()
+        url = url.strip()
+        if not separator or not signal or not url:
+            raise OutreachInputError(
+                f"row {row_number}: fit_evidence entries must be signal=https://..."
+            )
+        if signal in evidence:
+            raise OutreachInputError(
+                f"row {row_number}: fit_evidence contains duplicate signal: {signal}"
+            )
+        parsed = urlsplit(url)
+        if (
+            parsed.scheme != "https"
+            or not parsed.hostname
+            or parsed.username is not None
+            or parsed.password is not None
+            or any(character.isspace() for character in url)
+        ):
+            raise OutreachInputError(
+                f"row {row_number}: fit evidence for {signal} must be a secure "
+                "HTTPS URL without credentials"
+            )
+        evidence[signal] = url
+    return evidence
 
 
 def _date_argument(value: str) -> date:

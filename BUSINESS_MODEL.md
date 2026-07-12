@@ -161,11 +161,14 @@ The local outreach auditor enforces the 10-prospect boundary, three-signal
 qualification, alias-only records, permitted channels, one seven-day follow-up,
 and terminal stop states. It sends nothing and exposes no recipient details;
 its totals remain operator activity rather than commercial evidence.
-Schema-2 outreach reports also separate reviewed drafts from sent attempts.
+Schema-3 outreach reports also separate reviewed drafts from sent attempts.
 Drafted rows require a permitted channel but forbid contact and follow-up dates,
 preventing message preparation or approval queues from inflating acquisition
-activity. Authoritative prospect evidence remains required before a row is
-treated as qualified.
+activity. Every declared fit signal must map to one private HTTPS source before
+the auditor accepts a prospect. Reports retain only the aggregate link count,
+not source URLs. A valid link makes qualification reviewable but does not make
+the source authoritative, accurate, or current; Sales Intelligence or narrow
+public evidence still requires human review.
 
 Rollout bundles carry a stable, non-sensitive metadata contract so a pilot lead
 can summarize bundle-reported readiness, policy failures, violations, worktree

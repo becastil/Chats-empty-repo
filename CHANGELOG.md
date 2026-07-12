@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.3.31 - 2026-07-12
+
+- Required every private outreach fit signal to map to one reviewable HTTPS evidence link before a prospect can pass the auditor.
+- Rejected missing, extra, duplicate, insecure, credential-bearing, and malformed qualification evidence.
+- Added schema-3 aggregate qualification-link counts while keeping source URLs and prospect identities out of report output.
+- Updated the empty private-ledger template and direct-outreach playbook for Sales Intelligence or narrow public evidence links.
+- Recorded that no connected Sales Intelligence provider or reviewed list was available, so no prospect, draft, attempt, lead, or revenue was claimed.
 - Added a dependency-free maintainer audit for the seven live GitHub labels that connect public pilot intake to revenue reporting.
 - Added an explicit repair mode for missing labels and changed colors or descriptions while leaving unexpected labels untouched for review.
 - Added a dedicated, read-only GitHub check and contract tests tying live label definitions to the issue form and funnel reporter.

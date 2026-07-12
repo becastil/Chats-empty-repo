@@ -461,3 +461,15 @@ but never deletes unexpected labels because those may contain evidence that
 requires operator review. Tests tie the contract to the funnel's known stages
 and the issue form's automatic `pilot-lead` entry label. A passing audit means
 the conversion path is configured; it does not mean anyone applied or paid.
+
+## 2026-07-12: Require Traceable Evidence Before Outreach
+
+Outreach schema 3 requires every declared fit signal to map to one HTTPS source
+in the ignored private ledger. Missing, extra, duplicate, malformed, insecure,
+and credential-bearing mappings fail validation before a prospect, draft, or
+attempt is accepted. The report exposes only an aggregate evidence-link count
+and due aliases, never source URLs or prospect identity. A link preserves what
+the operator reviewed; it does not prove that a provider or public claim is
+authoritative, accurate, or current. No prospect rows were created because the
+live connector registry still has no usable Sales Intelligence provider and no
+reviewed prospect list was supplied.

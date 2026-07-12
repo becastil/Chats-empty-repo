@@ -38,6 +38,7 @@ class DirectOutreachContractTests(unittest.TestCase):
                 [
                     "prospect_id",
                     "fit_signals",
+                    "fit_evidence",
                     "contacted_on",
                     "channel",
                     "status",

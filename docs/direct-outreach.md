@@ -83,6 +83,19 @@ Separate fit-signal keys with semicolons. Use `warm-intro` or
 message has been saved for review through a permitted channel. Drafts have no
 contact or follow-up dates and do not count as attempted outreach.
 
+Map every declared signal to the source reviewed for that claim in
+`fit_evidence`, using semicolon-separated `signal=https://...` entries. For
+example:
+
+```text
+team_5_50=https://provider.example/company/123;multi_repo=https://github.com/example
+```
+
+The links may point to a connected Sales Intelligence record or narrow public
+evidence. They must use HTTPS and must not contain embedded credentials. Keep
+them only in the ignored private ledger: a provider URL is traceability for
+human review, not automatic proof that the claim is accurate or current.
+
 Audit the ledger before each contact session:
 
 ```bash
@@ -90,13 +103,16 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
   --as-of "$(date +%F)"
 ```
 
-The command requires at least three recognized fit signals, accepts only
-`prospect-NNN` aliases, caps the batch at 10, schedules a contacted prospect's
-single follow-up exactly seven days later, and rejects next actions after a
-follow-up, reply, pilot request, rejection, or opt-out. A separate
+The command requires at least three recognized fit signals and one secure
+source link for each, accepts only `prospect-NNN` aliases, caps the batch at 10,
+schedules a contacted prospect's single follow-up exactly seven days later,
+and rejects next actions after a follow-up, reply, pilot request, rejection, or
+opt-out. Missing, extra, duplicate, insecure, and credential-bearing evidence
+links fail validation. A separate
 `followed_up_on` field rejects a second message sent before that date. It
 reports reviewed drafts separately from sent attempts, aliases, and aggregate
-operator activity only. The command never sends
+evidence-link counts only; source URLs never appear in report output. The
+command never sends
 outreach, and its
 reply or pilot-requested counts do not become public demand or revenue evidence;
 only public pilot intake and cumulative funnel labels do.

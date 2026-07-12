@@ -38,7 +38,7 @@ not require a checkout, package installation, administrator access, or an API
 key:
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.30/repo-scout-0.3.30.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.31/repo-scout-0.3.31.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 ```
 
@@ -49,7 +49,7 @@ need the `repo-scout-distribution`, `repo-scout-growth`, `repo-scout-policy`,
 `repo-scout-outreach` commands:
 
 ```bash
-python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.30/repo_scout-0.3.30-py3-none-any.whl
+python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.31/repo_scout-0.3.31-py3-none-any.whl
 repo-scout --languages .
 ```
 
@@ -293,9 +293,11 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
 ```
 
 The reporter enforces the 10-prospect experiment, three-signal qualification,
-permitted contact channels, one seven-day follow-up, and opt-out stop states.
-Schema-2 reports separate personalized drafts awaiting review from messages
-actually sent, so draft preparation cannot inflate attempted-prospect counts.
+one private HTTPS evidence link per signal, permitted contact channels, one
+seven-day follow-up, and opt-out stop states. Schema-3 reports separate
+personalized drafts awaiting review from messages actually sent and expose only
+aggregate evidence-link counts, so neither draft preparation nor untraceable
+qualification can inflate attempted-prospect counts.
 Its activity totals are not lead or revenue evidence. See
 [docs/direct-outreach.md](docs/direct-outreach.md) for the operating contract.
 
