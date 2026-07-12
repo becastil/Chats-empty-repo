@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.25 - 2026-07-11
+
+- Added `repo-scout-policy recommend` to select the closest packaged starter from local repository signals.
+- Recommended npm-only policy only for a sole npm lockfile and the flexible Node policy for pnpm, Yarn, missing, or multiple Node lockfiles.
+- Detected Python and agent-ready repositories while retaining the conservative service baseline fallback.
+- Marked mixed Node and Python repositories for explicit review instead of presenting one starter as complete policy.
+- Added stable text and JSON recommendation output with copy-ready initialization commands.
+- Extended installed-wheel release smoke testing to verify npm, pnpm, and Yarn recommendation behavior before publication.
+- Independently verified and pinned the `v0.3.24` wheel, source commit `1feb1737ed8b3476bf5447881c67ab9d85cefaa1`, and SHA-256 `05b000f451c3a99f6ac6916ec186359bab5b5381b15a88c9e92ce9c574f188df` in both CI gates.
+- Kept acquisition and revenue totals unchanged; no prospect outreach was attempted.
+
 ## 0.3.24 - 2026-07-11
 
 - Independently verified the `v0.3.23` wheel against its manifest, source commit, tag, signer workflow, provenance, and GitHub-hosted runner.

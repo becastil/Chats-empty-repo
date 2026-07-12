@@ -35,6 +35,37 @@ def verify_node_starter(
             (root / "package.json").write_text("{}\n", encoding="utf-8")
             (root / lockfile).write_text("# lockfile\n", encoding="utf-8")
 
+            recommended = _run(
+                [
+                    python_command,
+                    "-m",
+                    "repo_scout.policy_templates",
+                    "recommend",
+                    str(root),
+                    "--format",
+                    "json",
+                ],
+                cwd=root,
+                environment=environment,
+            )
+            try:
+                recommendation = json.loads(recommended.stdout)
+            except json.JSONDecodeError as exc:
+                raise SmokeTestError(
+                    "policy recommendation did not emit valid JSON"
+                ) from exc
+            expected_starter = (
+                "node-npm-service"
+                if lockfile == "package-lock.json"
+                else "node-service"
+            )
+            actual_starter = recommendation.get("recommendation", {}).get("name")
+            if actual_starter != expected_starter:
+                raise SmokeTestError(
+                    f"{lockfile} recommended {actual_starter}; "
+                    f"expected {expected_starter}"
+                )
+
             _run(
                 [
                     python_command,

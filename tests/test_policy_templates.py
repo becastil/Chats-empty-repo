@@ -20,6 +20,7 @@ from repo_scout.policy_templates import (
     get_template,
     list_templates,
     main,
+    recommend_template,
 )
 from repo_scout.scanner import scan_project
 
@@ -107,6 +108,90 @@ class PolicyTemplateTests(unittest.TestCase):
                 self.assertEqual(
                     load_policy(output_path)["version"], expected_version
                 )
+
+    def test_recommends_starters_from_repository_signals(self) -> None:
+        cases = (
+            (("package.json", "package-lock.json"), "node-npm-service"),
+            (
+                ("package.json", "package-lock.json", "pnpm-lock.yaml"),
+                "node-service",
+            ),
+            (("package.json", "pnpm-lock.yaml"), "node-service"),
+            (("package.json", "yarn.lock"), "node-service"),
+            (("package.json",), "node-service"),
+            (("pyproject.toml",), "python-service"),
+            (("AGENTS.md",), "agent-ready-service"),
+            ((), "service-baseline"),
+        )
+
+        for files, expected in cases:
+            with self.subTest(files=files), TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                for filename in files:
+                    (root / filename).write_text("{}\n", encoding="utf-8")
+
+                recommendation = recommend_template(root)
+
+                self.assertEqual(
+                    recommendation["recommendation"]["name"], expected
+                )
+                self.assertEqual(
+                    recommendation["init_command"],
+                    f"repo-scout-policy init {expected}",
+                )
+                self.assertFalse(recommendation["review_required"])
+
+    def test_recommendation_marks_polyglot_repositories_for_review(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "package.json").write_text("{}\n", encoding="utf-8")
+            (root / "pnpm-lock.yaml").write_text("lockfileVersion: 9\n")
+            (root / "pyproject.toml").write_text("[project]\n", encoding="utf-8")
+
+            recommendation = recommend_template(root)
+
+            self.assertEqual(
+                recommendation["recommendation"]["name"], "node-service"
+            )
+            self.assertTrue(recommendation["review_required"])
+            self.assertIn("combine", recommendation["review_note"])
+
+    def test_recommend_command_has_stable_text_and_json_output(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "package.json").write_text("{}\n", encoding="utf-8")
+            (root / "yarn.lock").write_text("# yarn\n", encoding="utf-8")
+
+            text_stdout = io.StringIO()
+            with redirect_stdout(text_stdout):
+                text_exit_code = main(["recommend", str(root)])
+            json_stdout = io.StringIO()
+            with redirect_stdout(json_stdout):
+                json_exit_code = main(
+                    ["recommend", str(root), "--format", "json"]
+                )
+
+            self.assertEqual(text_exit_code, 0)
+            self.assertEqual(json_exit_code, 0)
+            self.assertIn(
+                "Starter: node-service - Node service", text_stdout.getvalue()
+            )
+            self.assertIn("Review required: no", text_stdout.getvalue())
+            result = json.loads(json_stdout.getvalue())
+            self.assertEqual(result["schema_version"], 1)
+            self.assertEqual(result["signals"], ["package.json", "yarn.lock"])
+            self.assertEqual(result["recommendation"]["name"], "node-service")
+
+    def test_recommend_command_rejects_a_non_directory_path(self) -> None:
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / "package.json"
+            path.write_text("{}\n", encoding="utf-8")
+            stderr = io.StringIO()
+            with redirect_stderr(stderr):
+                exit_code = main(["recommend", str(path)])
+
+            self.assertEqual(exit_code, 2)
+            self.assertIn("is not a directory", stderr.getvalue())
 
     def test_init_defaults_to_current_directory_and_protects_overwrites(self) -> None:
         with TemporaryDirectory() as tmp:

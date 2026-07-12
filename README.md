@@ -38,7 +38,7 @@ not require a checkout, package installation, administrator access, or an API
 key:
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.24/repo-scout-0.3.24.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.25/repo-scout-0.3.25.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 ```
 
@@ -49,7 +49,7 @@ need the `repo-scout-distribution`, `repo-scout-growth`, `repo-scout-policy`,
 `repo-scout-outreach` commands:
 
 ```bash
-python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.24/repo_scout-0.3.24-py3-none-any.whl
+python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.25/repo_scout-0.3.25-py3-none-any.whl
 repo-scout --languages .
 ```
 
@@ -206,10 +206,15 @@ performs no uploads, and requires no API key.
 Initialize an offline starter policy for a common repository type:
 
 ```bash
+repo-scout-policy recommend .
 repo-scout-policy list
 repo-scout-policy show python-service
 repo-scout-policy init python-service
 ```
+
+`recommend` uses local manifests and lockfiles, can emit stable JSON, and flags
+mixed Python and Node repositories for review instead of presenting one starter
+as a complete team policy.
 
 Profiles are available for baseline services, Python services, flexible Node
 services, npm-only services, and agent-ready services. The `node-service`
@@ -228,7 +233,7 @@ examples/github-actions/repo-scout-policy.toml
 ```
 
 The workflow uses read-only permissions, immutable dependency pins, job-summary
-evidence, and a downloadable schema-2 rollout bundle. It installs the `v0.3.23`
+evidence, and a downloadable schema-2 rollout bundle. It installs the `v0.3.24`
 wheel only after checking its pinned digest, release manifest, source commit,
 tag, signer workflow, and GitHub-hosted provenance. The bundle uses GitHub's
 stable `owner/repository` identity and is preserved even when policy enforcement

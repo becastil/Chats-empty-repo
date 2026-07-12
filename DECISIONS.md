@@ -328,3 +328,19 @@ exit code 6 with the complete alternative-path evidence. The release workflow
 runs this script after wheel installation and before provenance attestation or
 publication, preventing a package-resource, entry-point, schema, or evaluation
 regression from shipping even when source-level unit tests pass.
+
+## 2026-07-11: Recommend A Starting Policy Without Claiming Full Fit
+
+The independently verified `v0.3.24` wheel, source commit
+`1feb1737ed8b3476bf5447881c67ab9d85cefaa1`, and wheel SHA-256
+`05b000f451c3a99f6ac6916ec186359bab5b5381b15a88c9e92ce9c574f188df`
+are pinned together in both policy gates. `repo-scout-policy recommend` uses
+only local, explicit manifest and lockfile signals. A sole npm lockfile selects
+the npm-only starter; pnpm, Yarn, no Node lockfile, or multiple Node lockfiles
+select the flexible starter. Python and agent-ready profiles apply when no Node
+manifest exists, with the baseline as fallback. Mixed Node and Python manifests
+produce a review warning because one starter cannot represent a polyglot team
+policy. The command emits stable text or JSON but does not write a policy,
+inspect source content, upload data, or claim that a recommendation replaces
+paid policy design. Installed-wheel release smoke tests verify all three Node
+recommendation routes before publication.

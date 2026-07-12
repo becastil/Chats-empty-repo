@@ -25,6 +25,21 @@ all three. `node-npm-service` remains available when npm itself is the standard.
 
 ## Discover And Inspect
 
+Ask Repo Scout for the closest starting profile based on local manifests and
+lockfiles:
+
+```bash
+repo-scout-policy recommend .
+repo-scout-policy recommend . --format json
+```
+
+Recommendation is deterministic and local. A sole npm lockfile selects the
+npm-only profile; pnpm, Yarn, no lockfile yet, or multiple Node lockfiles select
+the flexible Node profile. Python and agent instructions are detected when no
+Node manifest is present. A repository containing both `package.json` and
+`pyproject.toml` is marked for review because one generated starter cannot
+represent both project types without team decisions.
+
 List profiles for a person:
 
 ```bash

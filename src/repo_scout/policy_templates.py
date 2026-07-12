@@ -14,6 +14,7 @@ from .policy import PolicyError, parse_policy
 
 
 TEMPLATE_SCHEMA_VERSION = 1
+RECOMMENDATION_SCHEMA_VERSION = 1
 OUTPUT_ERROR_EXIT_CODE = 4
 
 
@@ -118,6 +119,97 @@ def format_templates(catalog: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def recommend_template(path: str | Path) -> dict[str, Any]:
+    root = Path(path).expanduser().resolve()
+    if not root.is_dir():
+        raise TemplateError(f"recommendation path is not a directory: {root}")
+
+    signal_names = (
+        "README.md",
+        "AGENTS.md",
+        "pyproject.toml",
+        "package.json",
+        "package-lock.json",
+        "pnpm-lock.yaml",
+        "yarn.lock",
+    )
+    signals = [name for name in signal_names if (root / name).is_file()]
+    has_node = "package.json" in signals
+    has_python = "pyproject.toml" in signals
+    node_lockfiles = [
+        name
+        for name in ("package-lock.json", "pnpm-lock.yaml", "yarn.lock")
+        if name in signals
+    ]
+
+    if has_node:
+        if node_lockfiles == ["package-lock.json"]:
+            name = "node-npm-service"
+            reason = "package.json and the npm lockfile were detected."
+        else:
+            name = "node-service"
+            if node_lockfiles:
+                reason = (
+                    "package.json and a supported flexible Node lockfile "
+                    "were detected."
+                )
+            else:
+                reason = (
+                    "package.json was detected; the flexible Node starter "
+                    "will require a committed npm, pnpm, or Yarn lockfile."
+                )
+    elif has_python:
+        name = "python-service"
+        reason = "pyproject.toml was detected."
+    elif "AGENTS.md" in signals:
+        name = "agent-ready-service"
+        reason = "AGENTS.md was detected without a language-specific manifest."
+    else:
+        name = "service-baseline"
+        reason = "No supported language-specific manifest was detected."
+
+    definition = TEMPLATE_BY_NAME[name]
+    review_required = has_node and has_python
+    review_note = None
+    if review_required:
+        review_note = (
+            "Both package.json and pyproject.toml were detected; combine the "
+            "relevant Node and Python rules before team rollout."
+        )
+    return {
+        "schema_version": RECOMMENDATION_SCHEMA_VERSION,
+        "recommendation": {
+            "name": definition.name,
+            "title": definition.title,
+            "reason": reason,
+        },
+        "signals": signals,
+        "review_required": review_required,
+        "review_note": review_note,
+        "init_command": f"repo-scout-policy init {definition.name}",
+    }
+
+
+def format_recommendation(recommendation: dict[str, Any]) -> str:
+    selected = recommendation["recommendation"]
+    signals = ", ".join(recommendation["signals"]) or "none"
+    lines = [
+        "Repo Scout Policy Recommendation",
+        f"Starter: {selected['name']} - {selected['title']}",
+        f"Reason: {selected['reason']}",
+        f"Signals: {signals}",
+        (
+            "Review required: yes"
+            if recommendation["review_required"]
+            else "Review required: no"
+        ),
+    ]
+    if recommendation["review_note"] is not None:
+        lines.append(f"Review note: {recommendation['review_note']}")
+    lines.append(f"Next command: {recommendation['init_command']}")
+    return "\n".join(lines)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="repo-scout-policy",
@@ -129,6 +221,22 @@ def build_parser() -> argparse.ArgumentParser:
         "list", help="List available starter policies."
     )
     list_parser.add_argument(
+        "--format",
+        choices=("text", "json"),
+        default="text",
+        help="Output format. Defaults to text.",
+    )
+
+    recommend_parser = subparsers.add_parser(
+        "recommend", help="Recommend a starter from local repository signals."
+    )
+    recommend_parser.add_argument(
+        "path",
+        nargs="?",
+        default=".",
+        help="Repository path to inspect. Defaults to the current directory.",
+    )
+    recommend_parser.add_argument(
         "--format",
         choices=("text", "json"),
         default="text",
@@ -169,6 +277,14 @@ def main(argv: Sequence[str] | None = None) -> int:
                 print(json.dumps(catalog, indent=2, sort_keys=True))
             else:
                 print(format_templates(catalog))
+            return 0
+
+        if args.command == "recommend":
+            recommendation = recommend_template(args.path)
+            if args.format == "json":
+                print(json.dumps(recommendation, indent=2, sort_keys=True))
+            else:
+                print(format_recommendation(recommendation))
             return 0
 
         content = get_template(args.template)
