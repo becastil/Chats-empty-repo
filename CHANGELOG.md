@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Independently verified and pinned the `v0.3.31` wheel, source commit `949b345c71f800d384ea4b2f056efc7e7a41a6d3`, and SHA-256 `9742b31057e657a4db9a1cc2664c3d40e0bcfd87c659e856f6f4753d4b009db0` in both CI gates.
+- Confirmed the wheel against its release manifest, version tag, signer workflow, provenance, and GitHub-hosted runner before changing customer trust metadata.
+- Kept package and site version `0.3.31` unchanged; no redundant release, prospect, outreach attempt, lead, or revenue was claimed.
+
 ## 0.3.31 - 2026-07-12
 
 - Required every private outreach fit signal to map to one reviewable HTTPS evidence link before a prospect can pass the auditor.

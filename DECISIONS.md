@@ -473,3 +473,14 @@ the operator reviewed; it does not prove that a provider or public claim is
 authoritative, accurate, or current. No prospect rows were created because the
 live connector registry still has no usable Sales Intelligence provider and no
 reviewed prospect list was supplied.
+
+## 2026-07-12: Advance Policy Gates To The Verified Outreach Release
+
+Both policy gates now install the independently verified `v0.3.31` wheel from
+source commit `949b345c71f800d384ea4b2f056efc7e7a41a6d3` with SHA-256
+`9742b31057e657a4db9a1cc2664c3d40e0bcfd87c659e856f6f4753d4b009db0`.
+The release manifest, semantic tag, signer workflow, GitHub-hosted provenance,
+and artifact bytes were checked before the dogfood workflow, customer example,
+and test contract moved together. Package and site versions remain `0.3.31`
+because this change advances verified consumption rather than published
+behavior.
