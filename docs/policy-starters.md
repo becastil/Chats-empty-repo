@@ -15,6 +15,9 @@ profiles are packaged with the CLI and require no network access.
 
 Every profile also requires a clean Git worktree. Forbidden files fail when
 tracked or unignored; a local file covered by Git ignore rules remains allowed.
+Every profile also applies `**/.env` and `**/.env.local` to nested service
+folders. Broad filename patterns are intentionally absent from general
+profiles because files such as public `.pem` certificates can be legitimate.
 `node-npm-service` is specifically for npm repositories; teams using pnpm or
 Yarn should start with `service-baseline` and add their actual lockfile.
 
@@ -79,5 +82,6 @@ the team's own forbidden credential, generated-secret, or local-configuration
 paths rather than a generic list imposed without review. Forbidden-file rules
 use policy version 2; version 1 policies remain readable for existing teams.
 Policy version 3 adds bounded `forbidden_file_patterns` for nested monorepo
-paths. The staged `examples/team-policy-v3.toml` demonstrates nested `.env`
-and filename-wide `.pem` protection without changing the verified v2 CI pin.
+paths. General profiles protect nested environment files; filename-wide rules
+such as `*.pem` should be added only when the team confirms they cannot block
+legitimate public certificates or fixtures.

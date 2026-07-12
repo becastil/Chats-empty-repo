@@ -60,9 +60,9 @@ failing on properly ignored local copies. A founding-team custom pack can use
 the team's agreed credential, generated-secret, and local-configuration paths.
 This is useful free CI enforcement; the paid work remains agreeing on the
 right rules and rolling the same reviewed policy across uneven repositories.
-Version 1 remains readable so verified CI upgrades can be staged safely.
+Versions 1 and 2 remain readable so verified CI upgrades can be staged safely.
 The dogfood and copy-ready gates now install the independently verified
-`v0.3.18` wheel, so the same v2 forbidden-file policy can run locally and in CI
+`v0.3.20` wheel, so the same v3 forbidden-pattern policy can run locally and in CI
 without source checkout, mutable package resolution, or a team-managed secret.
 
 Policy version 3 extends custom packs beyond exact root paths. A reviewed
@@ -70,7 +70,9 @@ pattern can protect nested service `.env` files or certificate-like filenames
 across a monorepo, while ignored local files remain outside Git enforcement.
 Pattern evidence is bounded to 20 sorted paths with a full match count so one
 broad rule cannot flood CI summaries. Existing v1 and v2 policies remain
-readable, and verified gates stay on v2 until a v3-capable release is pinned.
+readable. General profiles protect nested `.env` files but omit broad `*.pem`
+matching because public certificates may be legitimate; that decision belongs
+in a reviewed paid custom pack.
 
 An AI can recreate a scanner, but that is not the commercial claim being
 tested. The active website experiment presents the paid outcome in plain

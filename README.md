@@ -38,7 +38,7 @@ not require a checkout, package installation, administrator access, or an API
 key:
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.20/repo-scout-0.3.20.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.21/repo-scout-0.3.21.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 ```
 
@@ -49,7 +49,7 @@ need the `repo-scout-distribution`, `repo-scout-growth`, `repo-scout-policy`,
 `repo-scout-outreach` commands:
 
 ```bash
-python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.20/repo_scout-0.3.20-py3-none-any.whl
+python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.21/repo_scout-0.3.21-py3-none-any.whl
 repo-scout --languages .
 ```
 
@@ -133,7 +133,7 @@ Exit code 5 means the scan completed but attention findings were present.
 Apply a shared team policy and fail CI when the repository violates it:
 
 ```bash
-python3 /tmp/repo-scout.pyz --format markdown --policy examples/team-policy-v3.toml .
+python3 /tmp/repo-scout.pyz --format markdown --policy examples/team-policy.toml .
 ```
 
 Policy files use a strict, versioned TOML contract:
@@ -144,7 +144,7 @@ version = 3
 [repository]
 required_files = ["README.md", "SECURITY.md"]
 forbidden_files = [".env", ".env.local"]
-forbidden_file_patterns = ["**/.env", "**/.env.local", "*.pem"]
+forbidden_file_patterns = ["**/.env", "**/.env.local"]
 max_files = 5000
 max_total_bytes = 50000000
 require_clean_git = true
@@ -158,10 +158,11 @@ Non-Git scans enforce forbidden files directly from the folder. Unknown keys,
 invalid values, and unsupported policy versions are rejected instead of being
 silently ignored. Repo Scout continues to read policy versions 1 and 2; version
 2 adds exact `forbidden_files`, and version 3 adds
-`forbidden_file_patterns` for nested and filename-wide rules. A pattern such as
-`*.pem` matches that filename suffix at any depth, while `**/.env` targets
-nested environment files. Each pattern reports at most 20 sorted paths plus
-the full match count, keeping CI evidence bounded.
+`forbidden_file_patterns` for nested and filename-wide rules. The general
+profiles use `**/.env` and `**/.env.local` for nested services. Broader patterns
+such as `*.pem` match at any depth and belong in reviewed custom policies, not
+the defaults. Each pattern reports at most 20 sorted paths plus the full match
+count, keeping CI evidence bounded.
 
 Policy results are included in text, JSON, and Markdown reports. Exit code 6
 means the scan completed and at least one team-policy rule failed. Policy
@@ -221,7 +222,7 @@ examples/github-actions/repo-scout-policy.toml
 ```
 
 The workflow uses read-only permissions, immutable dependency pins, job-summary
-evidence, and a downloadable schema-2 rollout bundle. It installs the `v0.3.18`
+evidence, and a downloadable schema-2 rollout bundle. It installs the `v0.3.20`
 wheel only after checking its pinned digest, release manifest, source commit,
 tag, signer workflow, and GitHub-hosted provenance. The bundle uses GitHub's
 stable `owner/repository` identity and is preserved even when policy enforcement

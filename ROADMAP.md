@@ -18,6 +18,5 @@
 
 ## Later
 
-- Upgrade the verified CI pin and packaged starters to policy v3 after the `v0.3.20` wheel digest and provenance are available.
 - Publish to PyPI under a distinct distribution name after trusted-publisher ownership is configured.
 - Add a configurable comparison path-detail limit.

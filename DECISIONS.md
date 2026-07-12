@@ -278,3 +278,14 @@ truncation flag. Invalid or duplicate patterns, patterns without wildcards,
 required-file conflicts, and overlap with exact forbidden paths fail during
 policy parsing. The verified gates and packaged starters remain on v2 until a
 v3-capable release has an independently checked digest and provenance.
+
+## 2026-07-11: Promote Only Safe Nested Patterns To General Policies
+
+Both policy gates now install the independently verified `v0.3.20` wheel, and
+all packaged and copy-ready policies use schema v3. General defaults combine
+exact root `.env` and `.env.local` rules with `**/.env` and `**/.env.local`
+for nested services. They intentionally exclude broad `*.pem` matching because
+public certificates and test fixtures may legitimately use that suffix. Such
+filename-wide patterns belong in a reviewed custom pack. A released-wheel
+simulation and the copy-ready integration test both confirm a force-tracked
+nested environment file fails with remediation evidence preserved.

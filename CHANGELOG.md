@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.21 - 2026-07-11
+
+- Upgraded dogfood and copy-ready policy gates to the independently verified `v0.3.20` wheel.
+- Pinned source commit `a64d1ace85fea21797baf9d1cf2c4dda07e0d404` and wheel SHA-256 `d659d6f5a0695c4cb7380e797e7cf6c974ce11d188a96ad1899f3ad4d36a0767` in both workflows.
+- Moved every packaged starter, the dogfood policy, and the copy-ready CI policy to schema v3.
+- Added tracked-or-unignored `**/.env` and `**/.env.local` protection for nested service folders.
+- Proved the released wheel fails a force-tracked nested environment file while preserving remediation-required rollout evidence.
+- Kept broad `*.pem` matching out of defaults because legitimate public certificates and fixtures may use that suffix.
+- Removed the temporary v3 example now that verified policy gates consume v3 directly.
+- Kept acquisition and revenue totals unchanged; no prospect outreach was attempted.
+
 ## 0.3.20 - 2026-07-11
 
 - Added backward-compatible policy schema v3 with `repository.forbidden_file_patterns` while retaining v1 and v2 reads.

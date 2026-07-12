@@ -22,10 +22,10 @@ ACTION_PINS = {
     "actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1",
     "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
 }
-REPO_SCOUT_VERSION = "0.3.18"
-REPO_SCOUT_SOURCE_SHA = "ae1b746e1fab81bf6536368666017f7a3dfbdde3"
+REPO_SCOUT_VERSION = "0.3.20"
+REPO_SCOUT_SOURCE_SHA = "a64d1ace85fea21797baf9d1cf2c4dda07e0d404"
 REPO_SCOUT_WHEEL_SHA256 = (
-    "6518ac0f1829b81cbae061764c053796e7646a3482bfd76d5cbb6737cab2a63f"
+    "d659d6f5a0695c4cb7380e797e7cf6c974ce11d188a96ad1899f3ad4d36a0767"
 )
 
 
@@ -120,7 +120,7 @@ class CiExampleTests(unittest.TestCase):
 
         policy = load_policy(policy_path)
 
-        self.assertEqual(raw_policy["version"], 2)
+        self.assertEqual(raw_policy["version"], 3)
         self.assertEqual(
             policy["repository"]["required_files"],
             ["README.md", "SECURITY.md"],
@@ -129,15 +129,19 @@ class CiExampleTests(unittest.TestCase):
             policy["repository"]["forbidden_files"],
             [".env", ".env.local"],
         )
+        self.assertEqual(
+            policy["repository"]["forbidden_file_patterns"],
+            ["**/.env", "**/.env.local"],
+        )
         self.assertTrue(policy["repository"]["require_clean_git"])
 
-    def test_manual_v3_policy_example_adds_nested_forbidden_patterns(self) -> None:
-        policy = load_policy(ROOT / "examples/team-policy-v3.toml")
+    def test_dogfood_policy_uses_safe_nested_forbidden_patterns(self) -> None:
+        policy = load_policy(ROOT / "examples/team-policy.toml")
 
         self.assertEqual(policy["version"], 3)
         self.assertEqual(
             policy["repository"]["forbidden_file_patterns"],
-            ["**/.env", "**/.env.local", "*.pem"],
+            ["**/.env", "**/.env.local"],
         )
 
     def test_example_command_is_repeatable_and_preserves_failure_evidence(self) -> None:
@@ -185,9 +189,18 @@ class CiExampleTests(unittest.TestCase):
                 passing_metadata["git"]["commit"], self._git_commit(target)
             )
 
-            (target / ".env").write_text("SECRET=unsafe\n", encoding="utf-8")
+            nested_env = target / "services/api/.env"
+            nested_env.parent.mkdir(parents=True)
+            nested_env.write_text("SECRET=unsafe\n", encoding="utf-8")
             subprocess.run(
-                ["git", "-C", str(target), "add", "--force", ".env"],
+                [
+                    "git",
+                    "-C",
+                    str(target),
+                    "add",
+                    "--force",
+                    "services/api/.env",
+                ],
                 check=True,
             )
             subprocess.run(
@@ -208,13 +221,17 @@ class CiExampleTests(unittest.TestCase):
 
             forbidden_report = report_path.read_text(encoding="utf-8")
             self.assertEqual(forbidden.returncode, 6, forbidden.stderr)
-            self.assertIn("Forbidden file is present: .env.", forbidden_report)
+            self.assertIn(
+                "Forbidden file pattern **/.env matched 1 file(s): "
+                "services/api/.env.",
+                forbidden_report,
+            )
             forbidden_metadata = parse_rollout_metadata(forbidden_report)
             self.assertEqual(
                 forbidden_metadata["readiness"], "remediation-required"
             )
 
-            (target / ".env").unlink()
+            nested_env.unlink()
             subprocess.run(
                 ["git", "-C", str(target), "add", "--all"], check=True
             )
