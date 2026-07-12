@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -30,10 +31,19 @@ build_zipapp = importlib.util.module_from_spec(ZIPAPP_SPEC)
 sys.modules[ZIPAPP_SPEC.name] = build_zipapp
 ZIPAPP_SPEC.loader.exec_module(build_zipapp)
 
+NODE_SMOKE_SCRIPT_PATH = ROOT / "scripts" / "smoke_test_node_starter.py"
+NODE_SMOKE_SPEC = importlib.util.spec_from_file_location(
+    "smoke_test_node_starter", NODE_SMOKE_SCRIPT_PATH
+)
+assert NODE_SMOKE_SPEC is not None and NODE_SMOKE_SPEC.loader is not None
+smoke_test_node_starter = importlib.util.module_from_spec(NODE_SMOKE_SPEC)
+sys.modules[NODE_SMOKE_SPEC.name] = smoke_test_node_starter
+NODE_SMOKE_SPEC.loader.exec_module(smoke_test_node_starter)
+
 
 class ReleaseManifestTests(unittest.TestCase):
     def test_current_project_versions_match(self) -> None:
-        self.assertEqual(prepare_release.load_project_version(ROOT), "0.3.23")
+        self.assertEqual(prepare_release.load_project_version(ROOT), "0.3.24")
 
     def test_public_distribution_metadata_and_quick_start_match_release(self) -> None:
         with (ROOT / "pyproject.toml").open("rb") as project_file:
@@ -72,6 +82,18 @@ class ReleaseManifestTests(unittest.TestCase):
             readme,
         )
         self.assertNotIn("PYTHONPATH=src python3 -m repo_scout", readme)
+
+    def test_node_starter_smoke_contract_passes_against_source(self) -> None:
+        environment = os.environ.copy()
+        environment["PYTHONPATH"] = str(ROOT / "src")
+
+        checked = smoke_test_node_starter.verify_node_starter(
+            sys.executable, environment=environment
+        )
+
+        self.assertEqual(
+            checked, ("package-lock.json", "pnpm-lock.yaml", "yarn.lock")
+        )
 
     def test_writes_deterministic_checksums_for_exact_artifacts(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -159,7 +181,7 @@ class ZipappDistributionTests(unittest.TestCase):
 
             artifact = build_zipapp.build_zipapp(ROOT, dist)
 
-            self.assertEqual(artifact.name, "repo-scout-0.3.23.pyz")
+            self.assertEqual(artifact.name, "repo-scout-0.3.24.pyz")
             self.assertTrue(artifact.is_file())
             self.assertTrue(artifact.stat().st_mode & 0o100)
             with zipfile.ZipFile(artifact) as archive:
@@ -235,6 +257,16 @@ class ReleaseWorkflowTests(unittest.TestCase):
         self.assertIn(
             '"$RUNNER_TEMP/repo-scout-release/bin/repo-scout-growth" --help',
             workflow,
+        )
+        self.assertIn(
+            "python scripts/smoke_test_node_starter.py", workflow
+        )
+        self.assertIn(
+            '--python "$RUNNER_TEMP/repo-scout-release/bin/python"', workflow
+        )
+        self.assertLess(
+            workflow.index("python scripts/smoke_test_node_starter.py"),
+            workflow.index("- name: Attest release provenance"),
         )
         self.assertIn(
             '"$RUNNER_TEMP/repo-scout-release/bin/repo-scout-outreach" --help',

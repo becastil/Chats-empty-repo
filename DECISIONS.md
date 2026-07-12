@@ -314,3 +314,17 @@ is a valid stricter standard, and silently broadening it would weaken existing
 expectations. Policy discovery names the alternatives explicitly, and the
 temporary manual v4 example is removed now that the behavior has a packaged,
 tested adoption path.
+
+## 2026-07-11: Block Releases On Installed Node Starter Behavior
+
+The independently verified `v0.3.23` wheel, source commit
+`1375911f47a4a91f822314250771f8dd198c886c`, and wheel SHA-256
+`ddd75b6662dcec53989c5db382cc596ba8f2cd9b741a7ff120f00012044fab7c`
+are pinned together in both policy gates. A dependency-free smoke script uses
+an installed Repo Scout Python environment to initialize `node-service` in
+three separate clean Git repositories. It requires package-lock, pnpm-lock,
+and Yarn lockfiles to pass individually, then removes each lockfile and requires
+exit code 6 with the complete alternative-path evidence. The release workflow
+runs this script after wheel installation and before provenance attestation or
+publication, preventing a package-resource, entry-point, schema, or evaluation
+regression from shipping even when source-level unit tests pass.

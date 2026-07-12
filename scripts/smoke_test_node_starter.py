@@ -1,0 +1,187 @@
+from __future__ import annotations
+
+import argparse
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+from tempfile import TemporaryDirectory
+import tomllib
+from typing import Mapping, Sequence
+
+
+LOCKFILES = ("package-lock.json", "pnpm-lock.yaml", "yarn.lock")
+
+
+class SmokeTestError(RuntimeError):
+    """Raised when an installed Node starter does not enforce its contract."""
+
+
+def verify_node_starter(
+    python: str | Path,
+    *,
+    environment: Mapping[str, str] | None = None,
+) -> tuple[str, ...]:
+    python_command = str(Path(python))
+    checked: list[str] = []
+
+    for lockfile in LOCKFILES:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp) / "service"
+            root.mkdir()
+            policy_path = root / "repo-scout-policy.toml"
+            (root / "README.md").write_text("# Node service\n", encoding="utf-8")
+            (root / "package.json").write_text("{}\n", encoding="utf-8")
+            (root / lockfile).write_text("# lockfile\n", encoding="utf-8")
+
+            _run(
+                [
+                    python_command,
+                    "-m",
+                    "repo_scout.policy_templates",
+                    "init",
+                    "node-service",
+                    "--output",
+                    str(policy_path),
+                ],
+                cwd=root,
+                environment=environment,
+            )
+            with policy_path.open("rb") as policy_file:
+                policy = tomllib.load(policy_file)
+            if policy.get("version") != 4:
+                raise SmokeTestError("node-service did not initialize policy version 4")
+            groups = policy.get("repository", {}).get("required_file_groups")
+            if groups != [list(LOCKFILES)]:
+                raise SmokeTestError(
+                    "node-service lockfile alternatives do not match the release contract"
+                )
+
+            _initialize_repository(root)
+            passing = _scan(
+                python_command, root, policy_path, environment=environment
+            )
+            if passing.get("policy", {}).get("status") != "pass":
+                raise SmokeTestError(f"node-service rejected {lockfile}")
+
+            (root / lockfile).unlink()
+            _commit_all(root, "Remove lockfile")
+            failing = _scan(
+                python_command,
+                root,
+                policy_path,
+                environment=environment,
+                expected_exit_code=6,
+            )
+            violations = failing.get("policy", {}).get("violations", [])
+            if not violations or violations[0].get("rule") != (
+                "repository.required_file_groups"
+            ):
+                raise SmokeTestError(
+                    f"node-service did not reject missing {lockfile} alternatives"
+                )
+            if violations[0].get("paths") != list(LOCKFILES):
+                raise SmokeTestError("missing-lockfile evidence changed alternatives")
+            checked.append(lockfile)
+
+    return tuple(checked)
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Smoke test the installed Repo Scout Node starter."
+    )
+    parser.add_argument(
+        "--python",
+        default=sys.executable,
+        help="Python interpreter from the Repo Scout installation to test.",
+    )
+    return parser
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    try:
+        checked = verify_node_starter(args.python, environment=os.environ)
+    except SmokeTestError as exc:
+        print(f"node starter smoke test: {exc}", file=sys.stderr)
+        return 1
+    print(f"node starter smoke test: passed {', '.join(checked)}")
+    return 0
+
+
+def _scan(
+    python: str,
+    root: Path,
+    policy_path: Path,
+    *,
+    environment: Mapping[str, str] | None,
+    expected_exit_code: int = 0,
+) -> dict[str, object]:
+    completed = _run(
+        [
+            python,
+            "-m",
+            "repo_scout",
+            "--format",
+            "json",
+            "--policy",
+            str(policy_path),
+            str(root),
+        ],
+        cwd=root,
+        environment=environment,
+        expected_exit_code=expected_exit_code,
+    )
+    try:
+        result = json.loads(completed.stdout)
+    except json.JSONDecodeError as exc:
+        raise SmokeTestError("Repo Scout did not emit valid JSON") from exc
+    if not isinstance(result, dict):
+        raise SmokeTestError("Repo Scout JSON output must be an object")
+    return result
+
+
+def _initialize_repository(root: Path) -> None:
+    _run(["git", "init", "--quiet"], cwd=root)
+    _run(["git", "config", "user.name", "Repo Scout Release"], cwd=root)
+    _run(
+        ["git", "config", "user.email", "release@example.invalid"], cwd=root
+    )
+    _commit_all(root, "Initialize Node service")
+
+
+def _commit_all(root: Path, message: str) -> None:
+    _run(["git", "add", "--all"], cwd=root)
+    _run(["git", "commit", "--quiet", "-m", message], cwd=root)
+
+
+def _run(
+    command: list[str],
+    *,
+    cwd: Path,
+    environment: Mapping[str, str] | None = None,
+    expected_exit_code: int = 0,
+) -> subprocess.CompletedProcess[str]:
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=cwd,
+            env=dict(environment) if environment is not None else None,
+            capture_output=True,
+            text=True,
+        )
+    except OSError as exc:
+        raise SmokeTestError(f"could not run {command[0]}: {exc}") from exc
+    if completed.returncode != expected_exit_code:
+        detail = completed.stderr.strip() or completed.stdout.strip() or "no output"
+        raise SmokeTestError(
+            f"{' '.join(command)} exited {completed.returncode}; "
+            f"expected {expected_exit_code}: {detail}"
+        )
+    return completed
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

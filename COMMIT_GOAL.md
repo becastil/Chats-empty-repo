@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this flexible-node-starter commit: 50 / 1,000 (5.0%).
-- Remaining after this flexible-node-starter commit: 950 commits.
+- Progress after this released-node-starter-proof commit: 51 / 1,000 (5.1%).
+- Remaining after this released-node-starter-proof commit: 949 commits.
 
 ## Commit Standard
 

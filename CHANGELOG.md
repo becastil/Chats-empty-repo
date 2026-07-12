@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.24 - 2026-07-11
+
+- Independently verified the `v0.3.23` wheel against its manifest, source commit, tag, signer workflow, provenance, and GitHub-hosted runner.
+- Installed that wheel without dependencies and proved `node-service` pass/fail behavior in clean npm, pnpm, and Yarn repositories.
+- Added a reusable dependency-free smoke script for installed Node starter verification.
+- Required every future wheel release to initialize the packaged starter, accept each supported lockfile, and reject no lockfile before publication.
+- Pinned `v0.3.23`, source commit `1375911f47a4a91f822314250771f8dd198c886c`, and wheel SHA-256 `ddd75b6662dcec53989c5db382cc596ba8f2cd9b741a7ff120f00012044fab7c` in both CI gates.
+- Added source-level smoke-script and release-workflow contract coverage.
+- Kept acquisition and revenue totals unchanged; no prospect outreach was attempted.
+
 ## 0.3.23 - 2026-07-11
 
 - Independently verified the `v0.3.22` wheel against its release manifest, source commit, tag, signer workflow, provenance, and GitHub-hosted runner.
