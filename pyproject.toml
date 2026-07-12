@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "repo-scout"
-version = "0.3.22"
+version = "0.3.23"
 description = "Local repository snapshots and policy enforcement for developer teams."
 readme = "README.md"
 requires-python = ">=3.11"

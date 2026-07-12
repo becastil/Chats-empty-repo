@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.23 - 2026-07-11
+
+- Independently verified the `v0.3.22` wheel against its release manifest, source commit, tag, signer workflow, provenance, and GitHub-hosted runner.
+- Pinned `v0.3.22`, source commit `4ad97481a7f7d2d444cddc6fc77126503b4697d6`, and wheel SHA-256 `c79fa0ce2c5e706aae9356cdad124aee1f5771e1ecd41f82f9fba7a26011a556` in both CI gates.
+- Added a packaged `node-service` policy that requires `package.json` plus one npm, pnpm, or Yarn lockfile.
+- Preserved the existing `node-npm-service` profile for teams that explicitly standardize on npm.
+- Exposed required alternatives in the human policy catalog and normalized rules in its JSON output.
+- Added all-three-package-manager, missing-lockfile, catalog, initialization, package-resource, and portable-build coverage.
+- Removed the temporary v4 policy example after promoting its behavior into the packaged starter catalog.
+- Kept acquisition and revenue totals unchanged; no prospect outreach was attempted.
+
 ## 0.3.22 - 2026-07-11
 
 - Added backward-compatible policy schema v4 with `repository.required_file_groups` while retaining v1-v3 reads.

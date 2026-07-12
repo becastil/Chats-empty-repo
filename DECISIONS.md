@@ -301,3 +301,16 @@ their members so equivalent TOML ordering produces one identity. The first
 staged example accepts npm, pnpm, or Yarn lockfiles. Verified gates and packaged
 starters remain on v3 until the `v0.3.22` digest and provenance are checked
 independently.
+
+## 2026-07-11: Add A Flexible Node Starter Without Replacing Npm Policy
+
+The independently verified `v0.3.22` wheel, source commit
+`4ad97481a7f7d2d444cddc6fc77126503b4697d6`, and wheel SHA-256
+`c79fa0ce2c5e706aae9356cdad124aee1f5771e1ecd41f82f9fba7a26011a556`
+are pinned together in both policy gates. A new `node-service` starter uses
+policy v4 to require `package.json` and one npm, pnpm, or Yarn lockfile. The
+existing `node-npm-service` starter remains unchanged because npm-only policy
+is a valid stricter standard, and silently broadening it would weaken existing
+expectations. Policy discovery names the alternatives explicitly, and the
+temporary manual v4 example is removed now that the behavior has a packaged,
+tested adoption path.

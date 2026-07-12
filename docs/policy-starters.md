@@ -1,6 +1,6 @@
 # Starter Policy Profiles
 
-Repo Scout includes four policy profiles that turn the first team-policy setup
+Repo Scout includes five policy profiles that turn the first team-policy setup
 into a review-and-commit task instead of a blank-file design exercise. The
 profiles are packaged with the CLI and require no network access.
 
@@ -11,6 +11,7 @@ profiles are packaged with the CLI and require no network access.
 | `service-baseline` | `README.md` | `.env`, `.env.local` | 25,000 | 250,000,000 |
 | `python-service` | `README.md`, `pyproject.toml` | `.env`, `.env.local` | 15,000 | 100,000,000 |
 | `node-npm-service` | `README.md`, `package.json`, `package-lock.json` | `.env`, `.env.local` | 20,000 | 150,000,000 |
+| `node-service` | `README.md`, `package.json`, one npm/pnpm/Yarn lockfile | `.env`, `.env.local` | 20,000 | 150,000,000 |
 | `agent-ready-service` | `README.md`, `AGENTS.md` | `.env`, `.env.local` | 15,000 | 100,000,000 |
 
 Every profile also requires a clean Git worktree. Forbidden files fail when
@@ -18,9 +19,9 @@ tracked or unignored; a local file covered by Git ignore rules remains allowed.
 Every profile also applies `**/.env` and `**/.env.local` to nested service
 folders. Broad filename patterns are intentionally absent from general
 profiles because files such as public `.pem` certificates can be legitimate.
-`node-npm-service` is specifically for npm repositories; teams using pnpm or
-Yarn can start with `service-baseline`, or review
-`examples/team-policy-v4.toml` for one lockfile-alternative group.
+Use `node-service` when repositories may use npm, pnpm, or Yarn. It requires
+one of `package-lock.json`, `pnpm-lock.yaml`, or `yarn.lock` without requiring
+all three. `node-npm-service` remains available when npm itself is the standard.
 
 ## Discover And Inspect
 
@@ -88,8 +89,8 @@ such as `*.pem` should be added only when the team confirms they cannot block
 legitimate public certificates or fixtures.
 
 Policy version 4 adds `required_file_groups` for standards with valid
-alternatives. Every group needs at least one existing file. The staged v4
-example accepts `package-lock.json`, `pnpm-lock.yaml`, or `yarn.lock`, which
-lets one custom pack cover mixed JavaScript package managers without making a
-lockfile optional. General starters remain on verified v3 behavior until the
-v4 release artifact is independently checked and pinned in CI.
+alternatives. Every group needs at least one existing file. The packaged
+`node-service` profile uses this rule for `package-lock.json`,
+`pnpm-lock.yaml`, or `yarn.lock`, which lets one shared starting point cover
+mixed JavaScript package managers without making a lockfile optional. The
+existing profiles remain unchanged, including the npm-only option.

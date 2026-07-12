@@ -38,7 +38,7 @@ not require a checkout, package installation, administrator access, or an API
 key:
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.22/repo-scout-0.3.22.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.23/repo-scout-0.3.23.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 ```
 
@@ -49,7 +49,7 @@ need the `repo-scout-distribution`, `repo-scout-growth`, `repo-scout-policy`,
 `repo-scout-outreach` commands:
 
 ```bash
-python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.22/repo_scout-0.3.22-py3-none-any.whl
+python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.23/repo_scout-0.3.23-py3-none-any.whl
 repo-scout --languages .
 ```
 
@@ -211,8 +211,10 @@ repo-scout-policy show python-service
 repo-scout-policy init python-service
 ```
 
-Profiles are available for baseline services, Python services, npm services,
-and agent-ready services. Initialization protects existing files unless
+Profiles are available for baseline services, Python services, flexible Node
+services, npm-only services, and agent-ready services. The `node-service`
+profile accepts npm, pnpm, or Yarn but still requires one committed lockfile.
+Initialization protects existing files unless
 `--force` is explicit. Review and commit the policy before enforcement because
 the profiles require a clean Git worktree. See
 [docs/policy-starters.md](docs/policy-starters.md) for the full profile matrix.
@@ -226,7 +228,7 @@ examples/github-actions/repo-scout-policy.toml
 ```
 
 The workflow uses read-only permissions, immutable dependency pins, job-summary
-evidence, and a downloadable schema-2 rollout bundle. It installs the `v0.3.20`
+evidence, and a downloadable schema-2 rollout bundle. It installs the `v0.3.22`
 wheel only after checking its pinned digest, release manifest, source commit,
 tag, signer workflow, and GitHub-hosted provenance. The bundle uses GitHub's
 stable `owner/repository` identity and is preserved even when policy enforcement

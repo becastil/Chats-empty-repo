@@ -41,6 +41,11 @@ TEMPLATES = (
         "A Node service that commits an npm lockfile for repeatable installs.",
     ),
     TemplateDefinition(
+        "node-service",
+        "Node service",
+        "A Node service using npm, pnpm, or Yarn with a committed lockfile.",
+    ),
+    TemplateDefinition(
         "agent-ready-service",
         "Agent-ready service",
         "A service with explicit instructions for developers and coding agents.",
@@ -102,11 +107,13 @@ def format_templates(catalog: dict[str, Any]) -> str:
                 f"{template['name']} - {template['title']}",
                 f"  {template['description']}",
                 f"  Required files: {required}",
-                (
-                    f"  Limits: {rules.get('max_files', 'none')} files / "
-                    f"{rules.get('max_total_bytes', 'none')} bytes"
-                ),
             ]
+        )
+        for group in rules.get("required_file_groups", []):
+            lines.append(f"  Required alternative: {' or '.join(group)}")
+        lines.append(
+            f"  Limits: {rules.get('max_files', 'none')} files / "
+            f"{rules.get('max_total_bytes', 'none')} bytes"
         )
     return "\n".join(lines)
 

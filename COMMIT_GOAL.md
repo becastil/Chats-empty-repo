@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this required-file-groups commit: 49 / 1,000 (4.9%).
-- Remaining after this required-file-groups commit: 951 commits.
+- Progress after this flexible-node-starter commit: 50 / 1,000 (5.0%).
+- Remaining after this flexible-node-starter commit: 950 commits.
 
 ## Commit Standard
 

@@ -33,7 +33,7 @@ ZIPAPP_SPEC.loader.exec_module(build_zipapp)
 
 class ReleaseManifestTests(unittest.TestCase):
     def test_current_project_versions_match(self) -> None:
-        self.assertEqual(prepare_release.load_project_version(ROOT), "0.3.22")
+        self.assertEqual(prepare_release.load_project_version(ROOT), "0.3.23")
 
     def test_public_distribution_metadata_and_quick_start_match_release(self) -> None:
         with (ROOT / "pyproject.toml").open("rb") as project_file:
@@ -159,7 +159,7 @@ class ZipappDistributionTests(unittest.TestCase):
 
             artifact = build_zipapp.build_zipapp(ROOT, dist)
 
-            self.assertEqual(artifact.name, "repo-scout-0.3.22.pyz")
+            self.assertEqual(artifact.name, "repo-scout-0.3.23.pyz")
             self.assertTrue(artifact.is_file())
             self.assertTrue(artifact.stat().st_mode & 0o100)
             with zipfile.ZipFile(artifact) as archive:
@@ -168,6 +168,9 @@ class ZipappDistributionTests(unittest.TestCase):
             self.assertIn("repo_scout/cli.py", names)
             self.assertIn(
                 "repo_scout/templates/policies/python-service.toml", names
+            )
+            self.assertIn(
+                "repo_scout/templates/policies/node-service.toml", names
             )
             self.assertFalse(
                 any("__pycache__" in name or ".egg-info/" in name for name in names)

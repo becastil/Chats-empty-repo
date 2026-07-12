@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 49 of 1,000, with 951 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 50 of 1,000, with 950 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -28,7 +28,7 @@ The delivery goal is 1,000 meaningful commits. This update is commit 49 of 1,000
 - CI gating with exit code 5 when attention findings are present.
 - Strict version-controlled TOML team policies for required files, repository size, and clean Git state.
 - Policy results in every report format with exit code 6 for CI violations.
-- Four packaged starter profiles for baseline, Python, npm, and agent-ready services.
+- Five packaged starter profiles for baseline, Python, flexible Node, npm-only, and agent-ready services.
 - `repo-scout-policy` discovery, inspection, and overwrite-safe initialization commands.
 - A dogfooded GitHub Actions policy gate with read-only permissions and immutable action pins.
 - Copy-ready CI and policy templates that preserve Markdown evidence when enforcement fails.
@@ -65,7 +65,7 @@ The delivery goal is 1,000 meaningful commits. This update is commit 49 of 1,000
 - Schema-2 rollout evidence with normalized policy fingerprints and exact Git commit IDs.
 - Backward-compatible schema-1 aggregation with explicit policy and commit identity coverage.
 - Shared-policy verification only for complete matching fingerprints across multiple repositories.
-- Copy-ready and dogfooded CI generation of schema-2 rollout bundles from the verified `v0.3.20` release.
+- Copy-ready and dogfooded CI generation of schema-2 rollout bundles from the verified `v0.3.22` release.
 - Stable GitHub `owner/repository` evidence identity with 14-day passing and remediation artifacts.
 - Required self-reported $299 purchase readiness in public pilot intake.
 - Schema-4 funnel reporting for readiness-stage, revenue, conversion, and loss outcomes.
@@ -120,23 +120,25 @@ The delivery goal is 1,000 meaningful commits. This update is commit 49 of 1,000
 - Git-aware pattern matching across all tracked or unignored paths, independent of the snapshot's 500-path detail cap.
 - Bounded pattern evidence with full match counts, 20 sorted paths per pattern, and explicit truncation state.
 - Strict wildcard, path, duplicate, required-file conflict, exact-rule overlap, and fingerprint validation for pattern rules.
-- Independently pinned `v0.3.20` wheel digest, source commit, manifest, provenance, signer workflow, and hosted-runner checks in both policy gates.
+- Independently pinned `v0.3.22` wheel digest, source commit, manifest, provenance, signer workflow, and hosted-runner checks in both policy gates.
 - Policy v3 nested `.env` and `.env.local` patterns in every starter, dogfood policy, and copy-ready CI policy.
 - Released-wheel proof that a force-tracked nested environment file fails while preserving remediation rollout evidence.
 - Explicit exclusion of broad `*.pem` matching from defaults to avoid blocking legitimate public certificates.
 - Backward-compatible policy v4 `required_file_groups` for standards with valid file alternatives.
 - Stable one-violation-per-group evidence and order-independent group fingerprints.
 - Strict empty, duplicate, exact-rule, and forbidden-pattern contradiction checks for required groups.
-- A staged mixed npm, pnpm, and Yarn lockfile policy while verified gates remain on v3.
+- A packaged `node-service` starter that accepts one npm, pnpm, or Yarn lockfile while still rejecting no lockfile.
+- Human-readable required alternatives in policy discovery and normalized group rules in JSON discovery.
+- The retained npm-only starter for teams whose standard intentionally excludes pnpm and Yarn.
 
 ## How To Run
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.22/repo-scout-0.3.22.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.23/repo-scout-0.3.23.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 python3 -m unittest discover -s tests
 ```
 
 ## Next Small Task
 
-Obtain authoritative company and contact evidence, then research, contact, and audit the first five qualified prospects. No outreach was attempted and no private ledger exists; do not add another acquisition asset before five real attempts. If authoritative prospect evidence remains unavailable, independently verify `v0.3.22` and decide whether the mixed-package-manager group belongs in a packaged starter.
+Obtain authoritative company and contact evidence, then research, contact, and audit the first five qualified prospects. No outreach was attempted and no private ledger exists; do not add another acquisition asset before five real attempts. If authoritative prospect evidence remains unavailable, verify the released `v0.3.23` Node starter from its wheel in clean npm, pnpm, and Yarn repositories before changing the starter catalog again.

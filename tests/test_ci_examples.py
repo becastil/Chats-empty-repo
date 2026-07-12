@@ -22,10 +22,10 @@ ACTION_PINS = {
     "actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1",
     "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
 }
-REPO_SCOUT_VERSION = "0.3.20"
-REPO_SCOUT_SOURCE_SHA = "a64d1ace85fea21797baf9d1cf2c4dda07e0d404"
+REPO_SCOUT_VERSION = "0.3.22"
+REPO_SCOUT_SOURCE_SHA = "4ad97481a7f7d2d444cddc6fc77126503b4697d6"
 REPO_SCOUT_WHEEL_SHA256 = (
-    "d659d6f5a0695c4cb7380e797e7cf6c974ce11d188a96ad1899f3ad4d36a0767"
+    "c79fa0ce2c5e706aae9356cdad124aee1f5771e1ecd41f82f9fba7a26011a556"
 )
 
 
@@ -142,15 +142,6 @@ class CiExampleTests(unittest.TestCase):
         self.assertEqual(
             policy["repository"]["forbidden_file_patterns"],
             ["**/.env", "**/.env.local"],
-        )
-
-    def test_staged_v4_policy_accepts_supported_lockfile_alternatives(self) -> None:
-        policy = load_policy(ROOT / "examples/team-policy-v4.toml")
-
-        self.assertEqual(policy["version"], 4)
-        self.assertEqual(
-            policy["repository"]["required_file_groups"],
-            [["package-lock.json", "pnpm-lock.yaml", "yarn.lock"]],
         )
 
     def test_example_command_is_repeatable_and_preserves_failure_evidence(self) -> None:

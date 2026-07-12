@@ -28,6 +28,7 @@ EXPECTED_TEMPLATES = [
     "service-baseline",
     "python-service",
     "node-npm-service",
+    "node-service",
     "agent-ready-service",
 ]
 
@@ -62,7 +63,20 @@ class PolicyTemplateTests(unittest.TestCase):
                 ["**/.env", "**/.env.local"],
             )
             self.assertTrue(template["rules"]["require_clean_git"])
+        node_service = next(
+            template
+            for template in catalog["templates"]
+            if template["name"] == "node-service"
+        )
+        self.assertEqual(
+            node_service["rules"]["required_file_groups"],
+            [["package-lock.json", "pnpm-lock.yaml", "yarn.lock"]],
+        )
         self.assertIn("Repo Scout Policy Templates", text_stdout.getvalue())
+        self.assertIn(
+            "Required alternative: package-lock.json or pnpm-lock.yaml or yarn.lock",
+            text_stdout.getvalue(),
+        )
         self.assertLess(
             text_stdout.getvalue().index("service-baseline"),
             text_stdout.getvalue().index("agent-ready-service"),
@@ -89,7 +103,10 @@ class PolicyTemplateTests(unittest.TestCase):
                 self.assertEqual(init_exit_code, 0)
                 self.assertEqual(stdout.getvalue(), content)
                 self.assertEqual(output_path.read_text(encoding="utf-8"), content)
-                self.assertEqual(load_policy(output_path)["version"], 3)
+                expected_version = 4 if name == "node-service" else 3
+                self.assertEqual(
+                    load_policy(output_path)["version"], expected_version
+                )
 
     def test_init_defaults_to_current_directory_and_protects_overwrites(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -174,6 +191,12 @@ class PolicyTemplateTests(unittest.TestCase):
                     path = root / required_file
                     path.parent.mkdir(parents=True, exist_ok=True)
                     path.write_text(f"# {required_file}\n", encoding="utf-8")
+                for required_group in policy["repository"].get(
+                    "required_file_groups", []
+                ):
+                    (root / required_group[0]).write_text(
+                        "# generated lockfile\n", encoding="utf-8"
+                    )
                 self._commit_repository(root)
 
                 passing_result = evaluate_policy(scan_project(root), policy)
@@ -187,6 +210,33 @@ class PolicyTemplateTests(unittest.TestCase):
                 self.assertEqual(failing_result["status"], "fail")
                 self.assertEqual(
                     failing_result["violations"][0]["path"], required_files[0]
+                )
+
+    def test_node_service_accepts_each_supported_lockfile(self) -> None:
+        policy = parse_policy(
+            get_template("node-service"), source="node-service template"
+        )
+        alternatives = policy["repository"]["required_file_groups"][0]
+
+        for lockfile in alternatives:
+            with self.subTest(lockfile=lockfile), TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                (root / "README.md").write_text("# Service\n", encoding="utf-8")
+                (root / "package.json").write_text("{}\n", encoding="utf-8")
+                (root / lockfile).write_text("# lockfile\n", encoding="utf-8")
+                self._commit_repository(root)
+
+                self.assertEqual(
+                    evaluate_policy(scan_project(root), policy)["status"], "pass"
+                )
+
+                (root / lockfile).unlink()
+                self._commit_all(root, "Remove lockfile")
+                failing = evaluate_policy(scan_project(root), policy)
+                self.assertEqual(failing["status"], "fail")
+                self.assertEqual(
+                    failing["violations"][0]["rule"],
+                    "repository.required_file_groups",
                 )
 
     def test_missing_packaged_resource_is_a_controlled_error(self) -> None:
