@@ -62,7 +62,7 @@ This is useful free CI enforcement; the paid work remains agreeing on the
 right rules and rolling the same reviewed policy across uneven repositories.
 Versions 1 and 2 remain readable so verified CI upgrades can be staged safely.
 The dogfood and copy-ready gates now install the independently verified
-`v0.3.33` wheel, so v4 policies can run locally and in CI
+`v0.3.34` wheel, so v4 policies can run locally and in CI
 without source checkout, mutable package resolution, or a team-managed secret.
 Maintainer pin upgrades now preflight and update the dogfood workflow,
 copy-ready customer example, and contract test as one reviewed change, reducing
@@ -185,7 +185,7 @@ and missing approval or extra CSV data is rejected. Temporary synthetic rows
 are used, so the check sends nothing and creates no prospect, demand, or revenue
 evidence.
 
-The same verified `v0.3.33` distribution now carries outreach schema 5 and
+The same verified `v0.3.34` distribution now carries outreach schema 5 and
 pilot qualification schema 7, so operator workflows and customer CI examples
 come from one source commit,
 manifest, wheel digest, and provenance-attested release. This alignment reduces
@@ -194,17 +194,19 @@ deployment ambiguity; it does not create qualified prospects or demand.
 Public `v0.3.33` adds the schema-5 approval status and retained approval-date
 checks needed to execute the prepared outreach batch without relying on source
 checkout. Its portable, wheel, and source artifacts use the same checksum and
-provenance release contract. Both policy gates now pin its independently
-measured wheel digest and exact source commit; publishing and pinning a package
-do not count as a prospect, attempt, lead, or sale.
+provenance release contract. It established the independently measured wheel,
+source-commit, and provenance pinning path; publishing a package does not count
+as a prospect, attempt, lead, or sale.
 
 Public `v0.3.34` adds exact nine-cell ledger enforcement and makes the installed
 outreach lifecycle smoke test part of the release boundary. This closes the
 row-shift ambiguity found after `v0.3.33` while keeping the human approval,
 privacy, checksum, and provenance contracts together in one installable wheel.
-Customer policy gates remain on independently verified `v0.3.33` until the new
-artifacts receive a separate trust review. Publication does not approve or send
-the five drafts and does not create a prospect, pilot request, or sale.
+Both policy gates now pin its independently measured wheel digest and exact
+source commit after a separate manifest, tag, signer-workflow, provenance,
+hosted-runner, policy-activation, and outreach-lifecycle review. Publication and
+pinning do not approve or send the five drafts and do not create a prospect,
+pilot request, or sale.
 
 The first five personalized outreach drafts now exist in the ignored private
 workspace. Sixteen fit links were reviewed against narrow, company-controlled

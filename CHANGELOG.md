@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Independently verified and pinned the `v0.3.34` wheel, source commit
+  `fbfbbc59350b1b0f6e411f2cb481b3c447ea7a0b`, and SHA-256
+  `f2164f4b328c0d311e16492faf16a52d42c3944073a850b9d64d9b8a013cb668` in both CI gates.
+- Confirmed all release assets against the checksum manifest, semantic tag,
+  signer workflow, provenance, and GitHub-hosted runner before changing pins.
+- Installed the public wheel without dependencies and proved policy activation
+  plus strict outreach approval, contact, privacy, and row-width behavior.
+
 ## 0.3.34 - 2026-07-13
 
 - Published strict nine-column outreach parsing in the wheel and source archive,

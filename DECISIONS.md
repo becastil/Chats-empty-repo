@@ -611,3 +611,16 @@ portable and wheel URLs, verification instructions, and hosted software identity
 advance together. Policy gates remain on independently verified `v0.3.33` until
 the new artifacts receive a separate provenance review. This release sends no
 message and leaves approvals, attempts, pilot requests, and revenue at zero.
+
+## 2026-07-13: Advance Both Policy Gates To Verified v0.3.34
+
+The public wheel was downloaded independently and measured at SHA-256
+`f2164f4b328c0d311e16492faf16a52d42c3944073a850b9d64d9b8a013cb668`.
+All three artifacts reconcile with the release manifest and attest to source
+commit `fbfbbc59350b1b0f6e411f2cb481b3c447ea7a0b`, tag `v0.3.34`, the pinned
+release workflow, and a GitHub-hosted runner. The wheel was installed without
+dependencies and passed every policy-activation route plus approved, contacted,
+missing-approval, and extra-column outreach checks. The preflighted updater then
+advanced the dogfood workflow, customer example, and test contract together.
+This reduces distribution ambiguity; it creates no prospect, attempt, request,
+or revenue.
