@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from contextlib import redirect_stderr, redirect_stdout
+import csv
 from datetime import date
 import io
 import json
@@ -9,6 +10,7 @@ import sys
 from tempfile import TemporaryDirectory
 import tomllib
 import unittest
+from unittest.mock import patch
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -48,6 +50,17 @@ def _row(**overrides: str) -> dict[str, str]:
     }
     row.update(overrides)
     return row
+
+
+def _write_ledger(path: Path, rows: list[dict[str, str]]) -> None:
+    with path.open("w", newline="", encoding="utf-8") as ledger_file:
+        writer = csv.DictWriter(
+            ledger_file,
+            fieldnames=LEDGER_FIELDS,
+            lineterminator="\n",
+        )
+        writer.writeheader()
+        writer.writerows(rows)
 
 
 class OutreachReportTests(unittest.TestCase):
@@ -254,6 +267,199 @@ class OutreachReportTests(unittest.TestCase):
             "No drafts are awaiting human review.",
             format_next_outreach_review(report),
         )
+
+    def test_approve_next_records_review_without_contact_or_private_data(self) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            original_rows = [
+                _row(
+                    prospect_id="prospect-002",
+                    status="drafted",
+                    contacted_on="",
+                    next_action_on="",
+                    approved_on="",
+                ),
+                _row(
+                    prospect_id="prospect-001",
+                    status="drafted",
+                    contacted_on="",
+                    next_action_on="",
+                    approved_on="",
+                ),
+            ]
+            _write_ledger(ledger, original_rows)
+            ledger.chmod(0o600)
+            stdout = io.StringIO()
+
+            with redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--approve-next",
+                        "prospect-001",
+                        "--approved-on",
+                        "2026-07-12",
+                        "--confirm-reviewed",
+                        "--format",
+                        "json",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(ledger.stat().st_mode & 0o777, 0o600)
+            with ledger.open(newline="", encoding="utf-8") as ledger_file:
+                rows = list(csv.DictReader(ledger_file))
+            original_by_id = {row["prospect_id"]: row for row in original_rows}
+            rows_by_id = {row["prospect_id"]: row for row in rows}
+            approved = rows_by_id["prospect-001"]
+            changed_fields = {
+                field
+                for field in LEDGER_FIELDS
+                if approved[field] != original_by_id["prospect-001"][field]
+            }
+            self.assertEqual(changed_fields, {"status", "approved_on"})
+            self.assertEqual(
+                rows_by_id["prospect-002"], original_by_id["prospect-002"]
+            )
+            self.assertEqual(approved["status"], "approved")
+            self.assertEqual(approved["approved_on"], "2026-07-12")
+            self.assertEqual(approved["contacted_on"], "")
+            self.assertEqual(approved["next_action_on"], "")
+            report = load_outreach_report(ledger, as_of=date(2026, 7, 13))
+            self.assertEqual(report["summary"]["approved"], 1)
+            self.assertEqual(report["summary"]["drafted"], 1)
+            self.assertEqual(report["summary"]["attempted_prospects"], 0)
+            receipt = json.loads(stdout.getvalue())
+            self.assertTrue(receipt["private_output"])
+            self.assertTrue(receipt["human_review_confirmed"])
+            self.assertEqual(receipt["approval"]["status"], "approved")
+            self.assertNotIn("approved_on", json.dumps(receipt))
+            self.assertNotIn("2026-07-12", json.dumps(receipt))
+            self.assertNotIn("evidence.example", json.dumps(receipt))
+            self.assertIn("No outreach was sent", receipt["action_note"])
+            self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
+
+    def test_approve_next_rejects_unsafe_transitions_without_mutation(self) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            rows = [
+                _row(
+                    prospect_id="prospect-002",
+                    status="drafted",
+                    contacted_on="",
+                    next_action_on="",
+                    approved_on="",
+                ),
+                _row(
+                    prospect_id="prospect-001",
+                    status="drafted",
+                    contacted_on="",
+                    next_action_on="",
+                    approved_on="",
+                ),
+            ]
+            cases = (
+                (
+                    [
+                        "--approve-next",
+                        "prospect-001",
+                        "--confirm-reviewed",
+                    ],
+                    "requires --approved-on",
+                ),
+                (
+                    [
+                        "--approve-next",
+                        "prospect-001",
+                        "--approved-on",
+                        "2026-07-12",
+                    ],
+                    "requires --confirm-reviewed",
+                ),
+                (
+                    [
+                        "--approve-next",
+                        "prospect-002",
+                        "--approved-on",
+                        "2026-07-12",
+                        "--confirm-reviewed",
+                    ],
+                    "next drafted prospect is prospect-001",
+                ),
+                (
+                    [
+                        "--approve-next",
+                        "prospect-001",
+                        "--approved-on",
+                        "2026-07-14",
+                        "--confirm-reviewed",
+                    ],
+                    "approved_on cannot be after as-of",
+                ),
+            )
+
+            for arguments, message in cases:
+                with self.subTest(message=message):
+                    _write_ledger(ledger, rows)
+                    before = ledger.read_bytes()
+                    stderr = io.StringIO()
+                    with redirect_stderr(stderr):
+                        exit_code = main(
+                            [
+                                str(ledger),
+                                "--as-of",
+                                "2026-07-13",
+                                *arguments,
+                            ]
+                        )
+
+                    self.assertEqual(exit_code, 2)
+                    self.assertIn(message, stderr.getvalue())
+                    self.assertEqual(ledger.read_bytes(), before)
+                    self.assertEqual(
+                        list(Path(tmp).glob(".ledger.csv.*.tmp")), []
+                    )
+
+    def test_approve_next_preserves_original_when_atomic_replace_fails(self) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            _write_ledger(
+                ledger,
+                [
+                    _row(
+                        status="drafted",
+                        contacted_on="",
+                        next_action_on="",
+                        approved_on="",
+                    )
+                ],
+            )
+            before = ledger.read_bytes()
+            stderr = io.StringIO()
+
+            with patch(
+                "repo_scout.outreach.os.replace",
+                side_effect=OSError("synthetic replace failure"),
+            ), redirect_stderr(stderr):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--approve-next",
+                        "prospect-001",
+                        "--approved-on",
+                        "2026-07-12",
+                        "--confirm-reviewed",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 2)
+            self.assertIn("cannot update outreach ledger safely", stderr.getvalue())
+            self.assertEqual(ledger.read_bytes(), before)
+            self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
 
     def test_requires_aliases_and_three_closed_fit_signals(self) -> None:
         invalid_rows = (

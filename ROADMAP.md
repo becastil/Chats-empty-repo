@@ -8,9 +8,10 @@
 ## Near Term
 
 - Human-review the five prepared, publicly qualified drafts, mark each
-  `approved` with its review date, and send them one at a time; then audit their
-  exact seven-day follow-ups with `repo-scout-outreach`. Do not add another
-  acquisition asset before those attempts.
+  `approved` with its review date through guarded `--approve-next`, and send
+  them one at a time; then audit their exact seven-day follow-ups with
+  `repo-scout-outreach`. Do not add another acquisition asset before those
+  attempts.
 - Collect the first three public pilot requests, work the prioritized sales queue, and compare readiness and purchase criteria by source.
 - Add a private pilot contact path after public intake validates demand.
 

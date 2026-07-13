@@ -224,6 +224,14 @@ does not expose draft text, edit status or dates, approve a message, or send it.
 Its output stays private and cannot be used as a counts-only public baseline;
 review readiness remains operator preparation rather than demand or revenue.
 
+After a human completes those checks, guarded `--approve-next` can record the
+decision without hand-editing CSV. It requires the exact next alias, an explicit
+review date, and a confirmation flag; validates all rows before and after; and
+atomically preserves file permissions while changing only status and approval
+date. The receipt excludes evidence and review dates. Approval still sends
+nothing, creates no contact or follow-up date, and is not an attempt, lead,
+pilot request, or revenue event.
+
 Rollout bundles carry a stable, non-sensitive metadata contract so a pilot lead
 can summarize bundle-reported readiness, policy failures, violations, worktree
 state, and attention across repositories without sending source code to Repo

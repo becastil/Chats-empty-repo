@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 76 of 1,000, with 924 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 77 of 1,000, with 923 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -140,6 +140,10 @@ The delivery goal is 1,000 meaningful commits. This update is commit 76 of 1,000
   unchecked human criteria without editing, approving, or sending outreach.
 - Qualification counts in the review checklist without evidence URLs, draft
   text, approval dates, recipient details, or public-baseline eligibility.
+- Guarded `--approve-next` recording that requires the exact next alias, an
+  explicit review date, and confirmation that a human completed every check.
+- Full-ledger preflight and postflight validation plus permission-preserving,
+  atomic approval writes that never create contact or follow-up dates.
 - Public `v0.3.34` release of strict schema-5 outreach operations in the wheel
   and source archive alongside the portable CLI, checksums, and provenance.
 - Five personalized, qualified outreach drafts prepared from narrow
@@ -195,11 +199,12 @@ python3 scripts/audit_pilot_labels.py --repo becastil/Chats-empty-repo
 
 ## Next Small Task
 
-Human-review the five private, evidence-backed drafts, mark each `approved` with
-its review date, and send them one at a time through their published business
-channels. Retain that date, record each contact date, and schedule its exact
-seven-day follow-up before sending the next message. No outreach has been
-approved or attempted yet, and drafts are not leads or revenue. Do not add
-another acquisition asset or paid-policy feature before five real attempts.
+Human-review the five private, evidence-backed drafts, record each decision with
+the guarded `--approve-next` action, and send them one at a time through their
+published business channels. Retain that date, record each contact date, and
+schedule its exact seven-day follow-up before sending the next message. No
+outreach has been approved or attempted yet, and drafts are not leads or
+revenue. Do not add another acquisition asset or paid-policy feature before
+five real attempts.
 Release, pilot, repository-traffic, and outreach-draft baselines are recorded;
 refresh them only at a deliberate review point or meaningful funnel change.

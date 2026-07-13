@@ -635,4 +635,18 @@ local-code boundary, and opt-out behavior. It exposes only the alias, channel,
 and qualification counts, marks the output private, and never includes source
 URLs, draft text, or approval dates. It does not edit, approve, or send. A human
 must still inspect the private evidence and draft, then record `approved` and
-`approved_on` manually. The checklist is not an attempt, lead, request, or sale.
+`approved_on` through an explicit action. The checklist is not an attempt, lead,
+request, or sale.
+
+## 2026-07-13: Guard The Human Approval Write
+
+Manual CSV edits are the next avoidable failure point between a completed human
+review and the first outreach attempt. `--approve-next` now requires the exact
+lowest drafted alias, an explicit review date, and confirmation that a human
+completed every checklist item. It validates the complete ledger before and
+after changing only `status` and `approved_on`, then replaces the private CSV
+atomically while preserving its permissions. Any missing confirmation,
+out-of-order alias, future date, invalid transition, or write failure leaves the
+original ledger untouched. The private receipt omits evidence and review dates.
+This records a human decision only; it does not send a message, add contact or
+follow-up dates, create a lead, or establish revenue.

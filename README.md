@@ -307,6 +307,22 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
 
 Keep this review output private; it intentionally names the next ledger alias.
 
+After a human completes all five checks, record approval for that exact next
+alias with an explicit review date:
+
+```bash
+repo-scout-outreach outreach-private/outreach-ledger.csv \
+  --as-of "$(date +%F)" \
+  --approve-next prospect-001 \
+  --approved-on "$(date +%F)" \
+  --confirm-reviewed
+```
+
+The guarded action validates the full ledger before and after the change,
+atomically records only `status=approved` and `approved_on`, and preserves the
+ledger's file permissions. It refuses an alias other than the one shown by
+`--review-next`. It does not send a message or create contact or follow-up dates.
+
 The reporter enforces the 10-prospect experiment, three-signal qualification,
 one private HTTPS evidence link per signal, permitted contact channels, one
 seven-day follow-up, and opt-out stop states. Schema-3 reports separate

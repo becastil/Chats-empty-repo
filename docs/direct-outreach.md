@@ -119,9 +119,29 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
 This mode prints five unchecked criteria plus only the alias, permitted channel,
 and qualification counts. It does not expose evidence URLs or draft text, does
 not edit the ledger, and does not approve or send a message. The human reviewer
-must inspect the private evidence and saved draft before recording `approved`
-and `approved_on` manually. The checklist is private operator material because
-it names a ledger alias; do not commit it as a measurement baseline.
+must inspect the private evidence and saved draft before using the guarded
+approval action. The checklist is private operator material because it names a
+ledger alias; do not commit it as a measurement baseline.
+
+After a human completes every displayed check, record that decision for the
+same alias:
+
+```bash
+repo-scout-outreach outreach-private/outreach-ledger.csv \
+  --as-of "$(date +%F)" \
+  --approve-next prospect-001 \
+  --approved-on "$(date +%F)" \
+  --confirm-reviewed
+```
+
+`--approve-next` requires the lowest drafted alias selected by `--review-next`,
+an explicit review date, and the confirmation flag. It validates the complete
+ledger before and after the transition, preserves file permissions, and
+atomically changes only `status` and `approved_on`. Missing confirmation,
+out-of-order aliases, future dates, or invalid ledger state leave the file
+unchanged. The private receipt omits evidence URLs and the review date. This
+action records a human decision; it does not send outreach or create a contact
+or follow-up date.
 
 After review, the aggregate `Approved to send` count must include the selected
 row before contact; the report still does not reveal its alias. Immediately

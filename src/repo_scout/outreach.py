@@ -4,15 +4,19 @@ import argparse
 import csv
 from datetime import date, timedelta
 import json
+import os
 from pathlib import Path
 import re
+import stat
 import sys
+from tempfile import NamedTemporaryFile
 from typing import Any, Sequence
 from urllib.parse import urlsplit
 
 
 SCHEMA_VERSION = 5
 REVIEW_SCHEMA_VERSION = 1
+APPROVAL_SCHEMA_VERSION = 1
 MAX_PROSPECTS = 10
 FOLLOW_UP_DAYS = 7
 MAX_FOLLOW_UPS = 1
@@ -65,7 +69,7 @@ HUMAN_REVIEW_CHECKS = (
 
 
 class OutreachInputError(ValueError):
-    """Raised when private outreach activity cannot be reported safely."""
+    """Raised when private outreach activity cannot be processed safely."""
 
 
 def load_outreach_report(path: Path, *, as_of: date | None = None) -> dict[str, Any]:
@@ -86,6 +90,63 @@ def load_next_outreach_review(
     return build_next_outreach_review(
         _load_outreach_rows(path), as_of=report_date
     )
+
+
+def approve_next_outreach_draft(
+    path: Path,
+    *,
+    prospect_id: str,
+    approved_on: date,
+    review_confirmed: bool,
+    as_of: date | None = None,
+) -> dict[str, Any]:
+    report_date = as_of or date.today()
+    if type(report_date) is not date:
+        raise OutreachInputError("as-of must be a date")
+    if type(approved_on) is not date:
+        raise OutreachInputError("approved-on must be a date")
+    if review_confirmed is not True:
+        raise OutreachInputError(
+            "--approve-next requires --confirm-reviewed after a human "
+            "completes every review check"
+        )
+    if not PROSPECT_ID_PATTERN.fullmatch(prospect_id):
+        raise OutreachInputError("prospect_id must match prospect-NNN")
+
+    rows = _load_outreach_rows(path)
+    build_outreach_report(rows, as_of=report_date)
+    next_draft = _next_drafted_row(rows)
+    if next_draft is None:
+        raise OutreachInputError("no drafted prospects await human approval")
+    if next_draft["prospect_id"] != prospect_id:
+        raise OutreachInputError(
+            f"next drafted prospect is {next_draft['prospect_id']}; "
+            "review and approve it first"
+        )
+
+    updated_rows = [dict(row) for row in rows]
+    for row in updated_rows:
+        if (row.get("prospect_id") or "").strip() == prospect_id:
+            row["status"] = "approved"
+            row["approved_on"] = approved_on.isoformat()
+            break
+
+    build_outreach_report(updated_rows, as_of=report_date)
+    _write_outreach_rows(path, updated_rows)
+    return {
+        "schema_version": APPROVAL_SCHEMA_VERSION,
+        "as_of": report_date.isoformat(),
+        "private_output": True,
+        "human_review_confirmed": True,
+        "approval": {
+            "prospect_id": prospect_id,
+            "status": "approved",
+        },
+        "action_note": (
+            "Human approval was recorded atomically. No outreach was sent, "
+            "and no contact or follow-up date was created."
+        ),
+    }
 
 
 def _load_outreach_rows(path: Path) -> list[dict[str, str]]:
@@ -112,6 +173,41 @@ def _load_outreach_rows(path: Path) -> list[dict[str, str]]:
         raise OutreachInputError(f"cannot read outreach ledger: {exc}") from exc
 
     return rows
+
+
+def _write_outreach_rows(path: Path, rows: list[dict[str, str]]) -> None:
+    temporary_path: Path | None = None
+    try:
+        existing_mode = stat.S_IMODE(path.stat().st_mode)
+        with NamedTemporaryFile(
+            "w",
+            newline="",
+            encoding="utf-8",
+            dir=path.parent,
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as ledger_file:
+            temporary_path = Path(ledger_file.name)
+            writer = csv.DictWriter(
+                ledger_file,
+                fieldnames=LEDGER_FIELDS,
+                extrasaction="raise",
+                lineterminator="\n",
+            )
+            writer.writeheader()
+            writer.writerows(rows)
+            ledger_file.flush()
+            os.fsync(ledger_file.fileno())
+        os.chmod(temporary_path, existing_mode)
+        os.replace(temporary_path, path)
+    except (csv.Error, OSError, UnicodeError, ValueError) as exc:
+        if temporary_path is not None:
+            try:
+                temporary_path.unlink(missing_ok=True)
+            except OSError:
+                pass
+        raise OutreachInputError("cannot update outreach ledger safely") from exc
 
 
 def build_outreach_report(
@@ -326,17 +422,9 @@ def build_next_outreach_review(
     rows: list[dict[str, str | None]], *, as_of: date
 ) -> dict[str, Any]:
     build_outreach_report(rows, as_of=as_of)
-    drafts = sorted(
-        (
-            {field: (raw_row.get(field) or "").strip() for field in LEDGER_FIELDS}
-            for raw_row in rows
-            if (raw_row.get("status") or "").strip() == "drafted"
-        ),
-        key=lambda row: row["prospect_id"],
-    )
+    draft = _next_drafted_row(rows)
     review = None
-    if drafts:
-        draft = drafts[0]
+    if draft is not None:
         review = {
             "prospect_id": draft["prospect_id"],
             "channel": draft["channel"],
@@ -354,6 +442,20 @@ def build_next_outreach_review(
             "This checklist does not approve, modify, or send outreach."
         ),
     }
+
+
+def _next_drafted_row(
+    rows: list[dict[str, str | None]],
+) -> dict[str, str] | None:
+    drafts = sorted(
+        (
+            {field: (raw_row.get(field) or "").strip() for field in LEDGER_FIELDS}
+            for raw_row in rows
+            if (raw_row.get("status") or "").strip() == "drafted"
+        ),
+        key=lambda row: row["prospect_id"],
+    )
+    return drafts[0] if drafts else None
 
 
 def format_outreach_report(report: dict[str, Any]) -> str:
@@ -403,8 +505,9 @@ def format_next_outreach_review(review_report: dict[str, Any]) -> str:
                 "Human checks:",
                 *(f"- [ ] {check}" for check in review["checks"]),
                 (
-                    "Next: after a human completes every check, record "
-                    "status=approved and approved_on in the private ledger."
+                    "Next: after a human completes every check, run "
+                    f"--approve-next {review['prospect_id']} with --approved-on "
+                    "and --confirm-reviewed."
                 ),
             ]
         )
@@ -413,10 +516,30 @@ def format_next_outreach_review(review_report: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def format_outreach_approval(approval_report: dict[str, Any]) -> str:
+    approval = approval_report["approval"]
+    lines = [
+        "Repo Scout outreach approval",
+        f"As of: {approval_report['as_of']}",
+        f"Prospect alias: {approval['prospect_id']}",
+        f"Status: {approval['status']}",
+        "Private ledger updated atomically.",
+        f"Boundary: {approval_report['action_note']}",
+        (
+            "Next: send this one message manually, then record its contact date "
+            "and exact seven-day follow-up."
+        ),
+    ]
+    return "\n".join(lines)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="repo-scout-outreach",
-        description="Validate a private outreach ledger and report bounded follow-ups.",
+        description=(
+            "Validate a private outreach ledger, review drafts, record human "
+            "approvals, and report bounded follow-ups."
+        ),
     )
     parser.add_argument("ledger", type=Path, help="Path to the private outreach CSV.")
     parser.add_argument(
@@ -426,12 +549,35 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="YYYY-MM-DD",
         help="Report date. Defaults to the local calendar date.",
     )
-    parser.add_argument(
+    action_group = parser.add_mutually_exclusive_group()
+    action_group.add_argument(
         "--review-next",
         action="store_true",
         help=(
             "Show one alias-only human review checklist without modifying "
             "the ledger or sending outreach."
+        ),
+    )
+    action_group.add_argument(
+        "--approve-next",
+        metavar="PROSPECT_ID",
+        help=(
+            "Record human approval for the next reviewed draft without "
+            "sending outreach."
+        ),
+    )
+    parser.add_argument(
+        "--approved-on",
+        type=_date_argument,
+        metavar="YYYY-MM-DD",
+        help="Human review date. Required with --approve-next.",
+    )
+    parser.add_argument(
+        "--confirm-reviewed",
+        action="store_true",
+        help=(
+            "Confirm a human completed every --review-next check. Required "
+            "with --approve-next."
         ),
     )
     parser.add_argument(
@@ -447,7 +593,23 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
-        if args.review_next:
+        if args.approve_next is not None:
+            if args.approved_on is None:
+                raise OutreachInputError(
+                    "--approve-next requires --approved-on YYYY-MM-DD"
+                )
+            report = approve_next_outreach_draft(
+                args.ledger,
+                prospect_id=args.approve_next,
+                approved_on=args.approved_on,
+                review_confirmed=args.confirm_reviewed,
+                as_of=args.as_of,
+            )
+        elif args.approved_on is not None or args.confirm_reviewed:
+            raise OutreachInputError(
+                "--approved-on and --confirm-reviewed require --approve-next"
+            )
+        elif args.review_next:
             report = load_next_outreach_review(args.ledger, as_of=args.as_of)
         else:
             report = load_outreach_report(args.ledger, as_of=args.as_of)
@@ -457,6 +619,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.format == "json":
         print(json.dumps(report, indent=2, sort_keys=True))
+    elif args.approve_next is not None:
+        print(format_outreach_approval(report))
     elif args.review_next:
         print(format_next_outreach_review(report))
     else:

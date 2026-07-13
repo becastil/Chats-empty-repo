@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added guarded `repo-scout-outreach --approve-next` recording for the exact
+  alias selected by the deterministic one-at-a-time review queue.
+- Required an explicit review date and human-confirmation flag, with full-ledger
+  validation before and after a permission-preserving atomic CSV replacement.
+- Kept approval distinct from contact: the action creates no contact or
+  follow-up date, sends nothing, and omits private evidence and review dates
+  from its receipt.
 - Added `repo-scout-outreach --review-next` to surface one deterministic,
   alias-only draft with five explicit criteria for the required human decision.
 - Kept review output private and free of evidence URLs, draft text, approval

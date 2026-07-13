@@ -27,6 +27,12 @@ class DirectOutreachContractTests(unittest.TestCase):
         self.assertIn("does not approve or", playbook)
         self.assertIn("--review-next", playbook)
         self.assertIn("does not edit the ledger", " ".join(playbook.split()))
+        self.assertIn("--approve-next", playbook)
+        self.assertIn("--confirm-reviewed", playbook)
+        self.assertIn(
+            "atomically changes only `status` and `approved_on`", playbook
+        )
+        self.assertIn("does not send outreach", playbook)
         self.assertIn("Stop immediately after an opt-out", playbook)
         self.assertIn("reply, page visit, or release request", playbook)
         self.assertIn("do not count", playbook.lower())

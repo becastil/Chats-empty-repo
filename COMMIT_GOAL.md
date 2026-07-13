@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after adding one-at-a-time review: 76 / 1,000 (7.6%).
-- Remaining after adding one-at-a-time review: 924 commits.
+- Progress after guarding human approval writes: 77 / 1,000 (7.7%).
+- Remaining after guarding human approval writes: 923 commits.
 
 ## Commit Standard
 
