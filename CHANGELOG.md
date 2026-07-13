@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added `repo-scout-outreach --review-next` to surface one deterministic,
+  alias-only draft with five explicit criteria for the required human decision.
+- Kept review output private and free of evidence URLs, draft text, approval
+  dates, recipient details, and any automatic ledger mutation or sending.
+- Preserved zero approval and attempt semantics: an unchecked checklist remains
+  operator preparation, not contact, pilot demand, or revenue evidence.
 - Independently verified and pinned the `v0.3.34` wheel, source commit
   `fbfbbc59350b1b0f6e411f2cb481b3c447ea7a0b`, and SHA-256
   `f2164f4b328c0d311e16492faf16a52d42c3944073a850b9d64d9b8a013cb668` in both CI gates.

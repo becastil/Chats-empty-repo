@@ -216,6 +216,14 @@ The committed schema-3 baseline contains only aggregate counts. All five remain
 revenue are still zero until a human reviews and sends each message through its
 published business channel.
 
+The operator can now request one deterministic `--review-next` checklist. It
+names only the next private alias and permitted channel, reports qualification
+counts instead of URLs, and prints five unchecked criteria covering observation,
+recipient, price and scope, local-code handling, and opt-out behavior. The mode
+does not expose draft text, edit status or dates, approve a message, or send it.
+Its output stays private and cannot be used as a counts-only public baseline;
+review readiness remains operator preparation rather than demand or revenue.
+
 Rollout bundles carry a stable, non-sensitive metadata contract so a pilot lead
 can summarize bundle-reported readiness, policy failures, violations, worktree
 state, and attention across repositories without sending source code to Repo

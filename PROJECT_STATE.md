@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 75 of 1,000, with 925 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 76 of 1,000, with 924 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -136,6 +136,10 @@ The delivery goal is 1,000 meaningful commits. This update is commit 75 of 1,000
   missing-cell, and extra-cell rejection.
 - Release-blocking installed-wheel proof for outreach approval, contact counts,
   private-field omission, missing approval, and extra-column rejection.
+- An explicit `--review-next` mode that surfaces one private alias and five
+  unchecked human criteria without editing, approving, or sending outreach.
+- Qualification counts in the review checklist without evidence URLs, draft
+  text, approval dates, recipient details, or public-baseline eligibility.
 - Public `v0.3.34` release of strict schema-5 outreach operations in the wheel
   and source archive alongside the portable CLI, checksums, and provenance.
 - Five personalized, qualified outreach drafts prepared from narrow

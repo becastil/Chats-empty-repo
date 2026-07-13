@@ -624,3 +624,15 @@ missing-approval, and extra-column outreach checks. The preflighted updater then
 advanced the dogfood workflow, customer example, and test contract together.
 This reduces distribution ambiguity; it creates no prospect, attempt, request,
 or revenue.
+
+## 2026-07-13: Surface One Private Human Review At A Time
+
+The public pilot queue remains empty while five private outreach rows remain
+drafted, so acquisition execution is the active constraint. The auditor now
+offers `--review-next`, which selects the lowest drafted alias and prints five
+unchecked criteria for the observation, recipient and channel, price and scope,
+local-code boundary, and opt-out behavior. It exposes only the alias, channel,
+and qualification counts, marks the output private, and never includes source
+URLs, draft text, or approval dates. It does not edit, approve, or send. A human
+must still inspect the private evidence and draft, then record `approved` and
+`approved_on` manually. The checklist is not an attempt, lead, request, or sale.

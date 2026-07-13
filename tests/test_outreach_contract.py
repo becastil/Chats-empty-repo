@@ -25,6 +25,8 @@ class DirectOutreachContractTests(unittest.TestCase):
         self.assertIn("Neither status counts as attempted", playbook)
         self.assertIn("Keep `approved_on` on every later status", playbook)
         self.assertIn("does not approve or", playbook)
+        self.assertIn("--review-next", playbook)
+        self.assertIn("does not edit the ledger", " ".join(playbook.split()))
         self.assertIn("Stop immediately after an opt-out", playbook)
         self.assertIn("reply, page visit, or release request", playbook)
         self.assertIn("do not count", playbook.lower())

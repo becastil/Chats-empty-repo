@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after advancing verified v0.3.34 pins: 75 / 1,000 (7.5%).
-- Remaining after advancing verified v0.3.34 pins: 925 commits.
+- Progress after adding one-at-a-time review: 76 / 1,000 (7.6%).
+- Remaining after adding one-at-a-time review: 924 commits.
 
 ## Commit Standard
 

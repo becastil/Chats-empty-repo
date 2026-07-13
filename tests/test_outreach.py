@@ -16,7 +16,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from repo_scout.outreach import (  # noqa: E402
     LEDGER_FIELDS,
     OutreachInputError,
+    build_next_outreach_review,
     build_outreach_report,
+    format_next_outreach_review,
     format_outreach_report,
     load_outreach_report,
     main,
@@ -152,6 +154,106 @@ class OutreachReportTests(unittest.TestCase):
 
         self.assertEqual(report["summary"]["prospects"], 0)
         self.assertEqual(report["due_followups"], [])
+
+    def test_surfaces_one_alias_only_human_review_at_a_time(self) -> None:
+        rows = [
+            _row(
+                prospect_id="prospect-002",
+                status="drafted",
+                contacted_on="",
+                next_action_on="",
+                approved_on="",
+            ),
+            _row(
+                prospect_id="prospect-003",
+                status="approved",
+                contacted_on="",
+                next_action_on="",
+                approved_on="2026-07-11",
+            ),
+            _row(
+                prospect_id="prospect-001",
+                status="drafted",
+                contacted_on="",
+                next_action_on="",
+                approved_on="",
+            ),
+        ]
+
+        report = build_next_outreach_review(rows, as_of=date(2026, 7, 13))
+
+        self.assertEqual(report["schema_version"], 1)
+        self.assertTrue(report["human_review_required"])
+        self.assertTrue(report["private_output"])
+        self.assertEqual(report["review"]["prospect_id"], "prospect-001")
+        self.assertEqual(report["review"]["channel"], "published-business")
+        self.assertEqual(report["review"]["fit_signals"], 3)
+        self.assertEqual(report["review"]["fit_evidence_links"], 3)
+        self.assertEqual(len(report["review"]["checks"]), 5)
+        serialized = json.dumps(report)
+        self.assertNotIn("evidence.example", serialized)
+        self.assertNotIn("approved_on", serialized)
+        self.assertNotIn("2026-07-11", serialized)
+        text = format_next_outreach_review(report)
+        self.assertEqual(text.count("- [ ]"), 5)
+        self.assertIn("Keep this alias-only checklist in the private workspace", text)
+        self.assertIn("does not approve, modify, or send", text)
+
+    def test_review_next_cli_does_not_modify_the_private_ledger(self) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            row = _row(
+                status="drafted",
+                contacted_on="",
+                next_action_on="",
+                approved_on="",
+            )
+            ledger.write_text(
+                ",".join(LEDGER_FIELDS)
+                + "\n"
+                + ",".join(row[field] for field in LEDGER_FIELDS)
+                + "\n",
+                encoding="utf-8",
+            )
+            before = ledger.read_bytes()
+            stdout = io.StringIO()
+
+            with redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--review-next",
+                        "--format",
+                        "json",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(ledger.read_bytes(), before)
+            report = json.loads(stdout.getvalue())
+            self.assertEqual(report["review"]["prospect_id"], "prospect-001")
+            self.assertIn("does not approve", report["action_note"])
+
+    def test_review_next_reports_when_no_drafts_are_waiting(self) -> None:
+        report = build_next_outreach_review(
+            [
+                _row(
+                    status="approved",
+                    contacted_on="",
+                    next_action_on="",
+                    approved_on="2026-07-11",
+                )
+            ],
+            as_of=date(2026, 7, 13),
+        )
+
+        self.assertIsNone(report["review"])
+        self.assertIn(
+            "No drafts are awaiting human review.",
+            format_next_outreach_review(report),
+        )
 
     def test_requires_aliases_and_three_closed_fit_signals(self) -> None:
         invalid_rows = (

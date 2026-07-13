@@ -297,6 +297,16 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
   --as-of "$(date +%F)"
 ```
 
+After the batch passes validation, surface one private, alias-only checklist for
+the required human review without changing the ledger or sending a message:
+
+```bash
+repo-scout-outreach outreach-private/outreach-ledger.csv \
+  --as-of "$(date +%F)" --review-next
+```
+
+Keep this review output private; it intentionally names the next ledger alias.
+
 The reporter enforces the 10-prospect experiment, three-signal qualification,
 one private HTTPS evidence link per signal, permitted contact channels, one
 seven-day follow-up, and opt-out stop states. Schema-3 reports separate
