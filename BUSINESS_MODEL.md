@@ -181,6 +181,13 @@ come from one source commit,
 manifest, wheel digest, and provenance-attested release. This alignment reduces
 deployment ambiguity; it does not create qualified prospects or demand.
 
+Public `v0.3.33` adds the schema-5 approval status and retained approval-date
+checks needed to execute the prepared outreach batch without relying on source
+checkout. Its portable, wheel, and source artifacts use the same checksum and
+provenance release contract. Customer policy gates remain pinned to independently
+verified `v0.3.32` until the new wheel is separately checked; publishing a
+package does not count as a prospect, attempt, lead, or sale.
+
 The first five personalized outreach drafts now exist in the ignored private
 workspace. Sixteen fit links were reviewed against narrow, company-controlled
 public evidence because no Sales Intelligence or CRM provider is connected.

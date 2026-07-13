@@ -554,3 +554,14 @@ rejected. The report exposes only that human approval is required and the
 aggregate approved count, never the private date. The existing five draft rows
 remain valid with blank approval dates, zero approved messages, zero attempts,
 and no revenue evidence.
+
+## 2026-07-12: Release The Approval Workflow Before Outreach Execution
+
+Version `0.3.33` publishes the schema-4 approval state and schema-5 retained
+approval date through the portable zipapp, wheel, and source archive. Public
+install instructions and hosted software metadata advance together so the
+operator does not need an editable source checkout to audit the five prepared
+drafts. The tag-driven release still builds checksums and provenance from the
+main-branch release commit. Policy gates remain on independently verified
+`v0.3.32` until a separate pin review; a new release is distribution evidence,
+not a prospect, attempt, lead, or revenue event.

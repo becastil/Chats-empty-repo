@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.3.33 - 2026-07-12
+
+- Published the schema-5 outreach approval workflow in the portable, wheel,
+  and source distributions with the existing checksum and provenance contract.
+- Advanced website metadata, machine-readable software identity, and public
+  install instructions to the same `v0.3.33` artifact set.
 - Added outreach schema 5 with a private `approved_on` date that must persist
   from human approval through every later lifecycle status.
 - Rejected missing and future approval dates plus approvals recorded after the
@@ -26,7 +32,6 @@
 - Added a counts-only outreach baseline and regression coverage that rejects leaked aliases, URLs, or email addresses from the committed evidence.
 - Independently verified and pinned the `v0.3.32` wheel, source commit `2c983c8db3d32ec40b8a20ed585dfc2a48feed2c`, and SHA-256 `14ed1f4bd1138574a59cd86c68cf0f67395216a902e0a49aef2d6d98d4173649` in both CI gates.
 - Confirmed the wheel against its release manifest, semantic tag, signer workflow, provenance, and GitHub-hosted runner before changing customer trust metadata.
-- Kept package and site version `0.3.32` unchanged; no redundant release, prospect, outreach attempt, lead, or revenue was claimed.
 
 ## 0.3.32 - 2026-07-12
 

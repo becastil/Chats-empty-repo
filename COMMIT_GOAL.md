@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after retaining outreach approval dates: 69 / 1,000 (6.9%).
-- Remaining after retaining outreach approval dates: 931 commits.
+- Progress after publishing the approval workflow: 70 / 1,000 (7.0%).
+- Remaining after publishing the approval workflow: 930 commits.
 
 ## Commit Standard
 

@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 69 of 1,000, with 931 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 70 of 1,000, with 930 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -132,6 +132,8 @@ The delivery goal is 1,000 meaningful commits. This update is commit 69 of 1,000
   reply, pilot-requested, rejection, and opt-out states.
 - Missing, future, and post-contact approval-date rejection without exposing
   private review dates in report output.
+- Public `v0.3.33` portable, wheel, and source distribution of the schema-5
+  approval workflow with checksums and build provenance.
 - Five personalized, qualified outreach drafts prepared from narrow
   company-controlled public evidence and kept in the ignored private workspace.
 - A committed schema-3 outreach draft baseline proving 5 drafts and 16 reviewed
@@ -177,7 +179,7 @@ The delivery goal is 1,000 meaningful commits. This update is commit 69 of 1,000
 ## How To Run
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.32/repo-scout-0.3.32.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.33/repo-scout-0.3.33.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 python3 -m unittest discover -s tests
 python3 scripts/audit_pilot_labels.py --repo becastil/Chats-empty-repo
@@ -185,11 +187,13 @@ python3 scripts/audit_pilot_labels.py --repo becastil/Chats-empty-repo
 
 ## Next Small Task
 
-Human-review the five private, evidence-backed drafts, mark each `approved` with
-its review date, then send them one at a time through their published business
-channels. Retain that date, record each contact date, and schedule its exact
-seven-day follow-up before sending the next message. No outreach has been
-approved or attempted yet, and drafts are not leads or revenue. Do not add
-another acquisition asset or paid-policy feature before five real attempts.
+Independently verify and pin the `v0.3.33` wheel before advancing the customer
+CI examples. Then human-review the five private, evidence-backed drafts, mark
+each `approved` with its review date, and send them one at a time through their
+published business channels. Retain that date, record each contact date, and
+schedule its exact seven-day follow-up before sending the next message. No
+outreach has been approved or attempted yet, and drafts are not leads or
+revenue. Do not add another acquisition asset or paid-policy feature before
+five real attempts.
 Release, pilot, repository-traffic, and outreach-draft baselines are recorded;
 refresh them only at a deliberate review point or meaningful funnel change.
