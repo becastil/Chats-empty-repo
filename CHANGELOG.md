@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.3.34 - 2026-07-13
+
+- Published strict nine-column outreach parsing in the wheel and source archive,
+  with installed-wheel lifecycle verification before release publication.
+- Advanced website metadata, machine-readable software identity, public install
+  instructions, and the verification guide to the same `v0.3.34` artifact set.
 - Added an installed-wheel outreach lifecycle smoke test covering approved and
   contacted states plus the human-approval and aggregate-count contract.
 - Required future releases to prove approved-row aliases, evidence URLs, and

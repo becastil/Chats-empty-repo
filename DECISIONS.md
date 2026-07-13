@@ -600,3 +600,14 @@ approval flag, future follow-up handling, private-field omission, and bounded
 validation errors. This protects the exact operator distribution used for the
 first acquisition batch without approving, contacting, or exposing a real
 prospect. Release verification is product safety, not demand or revenue.
+
+## 2026-07-13: Release Strict Outreach Operations Before Contact
+
+Version `0.3.34` publishes exact nine-cell CSV enforcement together with the
+installed approval-to-contact smoke test. The public wheel is the operator path
+for reviewing the five prepared drafts, and `v0.3.33` does not reject the
+synthetic extra-cell case that the strict loader now catches. Package metadata,
+portable and wheel URLs, verification instructions, and hosted software identity
+advance together. Policy gates remain on independently verified `v0.3.33` until
+the new artifacts receive a separate provenance review. This release sends no
+message and leaves approvals, attempts, pilot requests, and revenue at zero.

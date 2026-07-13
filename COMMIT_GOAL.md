@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after smoke testing installed outreach: 73 / 1,000 (7.3%).
-- Remaining after smoke testing installed outreach: 927 commits.
+- Progress after publishing strict outreach operations: 74 / 1,000 (7.4%).
+- Remaining after publishing strict outreach operations: 926 commits.
 
 ## Commit Standard
 

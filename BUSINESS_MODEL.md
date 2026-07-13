@@ -198,6 +198,14 @@ provenance release contract. Both policy gates now pin its independently
 measured wheel digest and exact source commit; publishing and pinning a package
 do not count as a prospect, attempt, lead, or sale.
 
+Public `v0.3.34` adds exact nine-cell ledger enforcement and makes the installed
+outreach lifecycle smoke test part of the release boundary. This closes the
+row-shift ambiguity found after `v0.3.33` while keeping the human approval,
+privacy, checksum, and provenance contracts together in one installable wheel.
+Customer policy gates remain on independently verified `v0.3.33` until the new
+artifacts receive a separate trust review. Publication does not approve or send
+the five drafts and does not create a prospect, pilot request, or sale.
+
 The first five personalized outreach drafts now exist in the ignored private
 workspace. Sixteen fit links were reviewed against narrow, company-controlled
 public evidence because no Sales Intelligence or CRM provider is connected.
