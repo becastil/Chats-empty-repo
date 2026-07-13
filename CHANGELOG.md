@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Independently verified and pinned the `v0.3.32` wheel, source commit `2c983c8db3d32ec40b8a20ed585dfc2a48feed2c`, and SHA-256 `14ed1f4bd1138574a59cd86c68cf0f67395216a902e0a49aef2d6d98d4173649` in both CI gates.
+- Confirmed the wheel against its release manifest, semantic tag, signer workflow, provenance, and GitHub-hosted runner before changing customer trust metadata.
+- Kept package and site version `0.3.32` unchanged; no redundant release, prospect, outreach attempt, lead, or revenue was claimed.
+
 ## 0.3.32 - 2026-07-12
 
 - Upgraded pilot reporting to schema 7 with normalized team size, repository count, CI provider, and repository-standard-presence evidence.

@@ -497,3 +497,14 @@ pilot scope rather than automatic rejection. Reports retain only whether the
 free-text standard exists, not its contents. Labels and payment stages remain
 operator decisions, and schema-5 through schema-7 reports remain readable by
 the growth review.
+
+## 2026-07-12: Advance Policy Gates To The Verified Qualification Release
+
+Both policy gates now install the independently verified `v0.3.32` wheel from
+source commit `2c983c8db3d32ec40b8a20ed585dfc2a48feed2c` with SHA-256
+`14ed1f4bd1138574a59cd86c68cf0f67395216a902e0a49aef2d6d98d4173649`.
+The release manifest, semantic tag, signer workflow, GitHub-hosted provenance,
+and artifact bytes were checked before the dogfood workflow, customer example,
+and test contract moved together. This gives teams the same verified release as
+the schema-7 qualification workflow without creating a redundant package or
+site release. No prospect, outreach attempt, lead, or revenue is inferred.

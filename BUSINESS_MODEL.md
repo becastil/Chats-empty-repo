@@ -62,7 +62,7 @@ This is useful free CI enforcement; the paid work remains agreeing on the
 right rules and rolling the same reviewed policy across uneven repositories.
 Versions 1 and 2 remain readable so verified CI upgrades can be staged safely.
 The dogfood and copy-ready gates now install the independently verified
-`v0.3.31` wheel, so v4 policies can run locally and in CI
+`v0.3.32` wheel, so v4 policies can run locally and in CI
 without source checkout, mutable package resolution, or a team-managed secret.
 Maintainer pin upgrades now preflight and update the dogfood workflow,
 copy-ready customer example, and contract test as one reviewed change, reducing
@@ -170,8 +170,9 @@ not source URLs. A valid link makes qualification reviewable but does not make
 the source authoritative, accurate, or current; Sales Intelligence or narrow
 public evidence still requires human review.
 
-The same verified `v0.3.31` distribution now carries outreach schema 3, so the
-operator workflow and customer CI examples come from one source commit,
+The same verified `v0.3.32` distribution now carries outreach schema 3 and
+pilot qualification schema 7, so operator workflows and customer CI examples
+come from one source commit,
 manifest, wheel digest, and provenance-attested release. This alignment reduces
 deployment ambiguity; it does not create qualified prospects or demand.
 

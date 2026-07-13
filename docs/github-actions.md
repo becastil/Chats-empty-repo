@@ -69,7 +69,8 @@ Before installation, the gate verifies:
 
 - The wheel matches the independently pinned SHA-256 digest in the workflow.
 - The wheel matches the release's `SHA256SUMS` manifest.
-- GitHub's signed provenance names the pinned source commit and `v0.3.29` tag.
+- GitHub's signed provenance names the pinned source commit and semantic release
+  tag.
 - The signer is this repository's `.github/workflows/release.yml` workflow.
 - The attested build used a GitHub-hosted runner.
 
