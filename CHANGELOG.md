@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Replaced permissive outreach row mapping with strict standard-library CSV
+  parsing and exact nine-column enforcement.
+- Rejected malformed quoting plus missing and extra row cells with controlled
+  errors that do not echo private prospect values.
+- Normalized the ignored five-draft ledger to the exact schema without changing
+  approval, attempt, pilot-request, or revenue evidence.
 - Independently verified and pinned the `v0.3.33` wheel, source commit
   `b2838064940003ebfb40af686ea91445eae9c984`, and SHA-256
   `66c120d5107b9e51986dd08a884d66db06eef54629af208b82456506562e2e3e` in both CI gates.

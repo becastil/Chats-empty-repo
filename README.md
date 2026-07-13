@@ -306,6 +306,8 @@ qualification can inflate attempted-prospect counts.
 Unreleased schema-5 reports add an explicit human-approved pre-send count and
 require a retained approval date no later than contact, while keeping both
 drafted and approved messages outside attempted outreach.
+The auditor also rejects malformed CSV and any row with missing or extra cells
+instead of silently dropping private sales evidence.
 Its activity totals are not lead or revenue evidence. See
 [docs/direct-outreach.md](docs/direct-outreach.md) for the operating contract.
 

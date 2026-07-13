@@ -578,3 +578,14 @@ was installed without dependencies and reported package version `0.3.33` plus
 outreach schema 5 before the preflighted updater changed the dogfood workflow,
 customer example, and CI contract together. This advances trusted distribution;
 it does not create an outreach attempt, pilot request, or revenue.
+
+## 2026-07-13: Reject Ambiguous Outreach CSV Rows
+
+The private outreach loader now uses the standard CSV reader in strict mode and
+requires exactly nine cells on every data row. Extra cells can otherwise be
+silently placed under an unnamed key by a dictionary reader and omitted from
+validation; missing cells can hide an incomplete approval record. Malformed
+quoting, short rows, and long rows now produce bounded errors containing only
+the row number and column count, never private values. The ignored five-draft
+ledger was normalized to the exact width with no change to its zero approvals,
+attempts, pilot requests, or revenue.

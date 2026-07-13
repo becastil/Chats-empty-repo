@@ -67,13 +67,23 @@ def load_outreach_report(path: Path, *, as_of: date | None = None) -> dict[str, 
 
     try:
         with path.open(newline="", encoding="utf-8") as ledger_file:
-            reader = csv.DictReader(ledger_file)
-            if tuple(reader.fieldnames or ()) != LEDGER_FIELDS:
+            reader = csv.reader(ledger_file, strict=True)
+            header = next(reader, [])
+            if tuple(header) != LEDGER_FIELDS:
                 expected = ",".join(LEDGER_FIELDS)
                 raise OutreachInputError(
                     f"ledger header must be exactly: {expected}"
                 )
-            rows = list(reader)
+            rows = []
+            for row_number, values in enumerate(reader, start=2):
+                if len(values) != len(LEDGER_FIELDS):
+                    raise OutreachInputError(
+                        f"row {row_number}: ledger row must have exactly "
+                        f"{len(LEDGER_FIELDS)} columns; found {len(values)}"
+                    )
+                rows.append(dict(zip(LEDGER_FIELDS, values, strict=True)))
+    except csv.Error as exc:
+        raise OutreachInputError(f"cannot parse outreach ledger: {exc}") from exc
     except (OSError, UnicodeError) as exc:
         raise OutreachInputError(f"cannot read outreach ledger: {exc}") from exc
 

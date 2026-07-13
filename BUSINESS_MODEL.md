@@ -173,7 +173,9 @@ private HTTPS source before the auditor accepts a prospect. Reports retain only
 aggregate link and approval counts, not source URLs or approval dates. A valid
 link makes qualification reviewable but does not make the source authoritative,
 accurate, or current; Sales Intelligence or narrow public evidence still
-requires human review.
+requires human review. Strict CSV parsing also rejects malformed quoting and
+any row with missing or extra cells, so a shifted private date or status cannot
+silently disappear from the operating record.
 
 The same verified `v0.3.33` distribution now carries outreach schema 5 and
 pilot qualification schema 7, so operator workflows and customer CI examples

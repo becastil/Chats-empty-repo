@@ -374,6 +374,32 @@ class OutreachReportTests(unittest.TestCase):
             self.assertEqual(exit_code, 2)
             self.assertIn("ledger header must be exactly", stderr.getvalue())
 
+    def test_rejects_wrong_row_width_and_malformed_csv(self) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            header = ",".join(LEDGER_FIELDS)
+            values = [_row()[field] for field in LEDGER_FIELDS]
+            invalid_ledgers = (
+                (
+                    header + "\n" + ",".join(values + ["unexpected"]) + "\n",
+                    "must have exactly 9 columns; found 10",
+                ),
+                (
+                    header + "\n" + ",".join(values[:-1]) + "\n",
+                    "must have exactly 9 columns; found 8",
+                ),
+                (
+                    header + '\n"unterminated\n',
+                    "cannot parse outreach ledger",
+                ),
+            )
+
+            for contents, message in invalid_ledgers:
+                with self.subTest(message=message):
+                    ledger.write_text(contents, encoding="utf-8")
+                    with self.assertRaisesRegex(OutreachInputError, message):
+                        load_outreach_report(ledger, as_of=date(2026, 7, 13))
+
 
 if __name__ == "__main__":
     unittest.main()

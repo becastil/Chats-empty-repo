@@ -122,8 +122,10 @@ The command requires at least three recognized fit signals and one secure
 source link for each, accepts only `prospect-NNN` aliases, caps the batch at 10,
 schedules a contacted prospect's single follow-up exactly seven days later,
 and rejects next actions after a follow-up, reply, pilot request, rejection, or
-opt-out. Missing, extra, duplicate, insecure, and credential-bearing evidence
-links fail validation. A separate
+opt-out. Every CSV row must contain exactly the nine header columns; missing or
+extra cells and malformed quoting fail without echoing private values. Missing,
+extra, duplicate, insecure, and credential-bearing evidence links also fail
+validation. A separate
 `followed_up_on` field rejects a second message sent before that date. It
 reports drafts awaiting review and approved messages separately from sent
 attempts, aliases, and aggregate evidence-link counts only; source URLs never
