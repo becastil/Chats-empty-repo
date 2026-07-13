@@ -1,26 +1,31 @@
 {
   "bottleneck": {
     "next_action": "Run one source-identifiable outreach or launch experiment and ask qualified teams to submit the price-disclosed pilot form.",
-    "reason": "No pilot request has entered the attributed funnel.",
+    "reason": "Primary artifact requests increased, but no pilot request entered the attributed funnel.",
     "stage": "acquisition"
   },
   "decision_criteria": [],
   "distribution_change": {
-    "manifest_downloads_delta": 0,
-    "new_releases": [],
-    "portable_downloads_delta": 0,
-    "primary_artifact_downloads_delta": 0,
+    "manifest_downloads_delta": 12,
+    "new_releases": [
+      "v0.3.32",
+      "v0.3.31"
+    ],
+    "portable_downloads_delta": 5,
+    "primary_artifact_downloads_delta": 17,
     "removed_releases": [],
-    "source_downloads_delta": 0,
+    "source_downloads_delta": 4,
     "unknown_downloads_delta": 0,
-    "wheel_downloads_delta": 0
+    "wheel_downloads_delta": 12
   },
   "evidence_quality": {
     "decision_criterion_reporting_available": true,
     "distribution_warnings": 0,
     "missing_decision_criterion_requests": 0,
-    "pilot_schema_version": 6,
+    "pilot_schema_version": 7,
     "pilot_warnings": 0,
+    "qualification_reporting_available": true,
+    "qualification_review_requests": 0,
     "unattributed_pilot_requests": 0,
     "unknown_decision_criterion_requests": 0,
     "unknown_source_pilot_requests": 0
@@ -33,6 +38,7 @@
     "attributed_pilot_requests": 0,
     "booked_pilots": 0,
     "booked_revenue_usd": 0,
+    "complete_qualification_requests": 0,
     "decision_criterion_reporting_available": true,
     "declared_decision_criterion_requests": 0,
     "distribution_baseline_present": true,
@@ -40,8 +46,12 @@
     "missing_decision_criterion_requests": 0,
     "offered_pilots": 0,
     "open_sales_actions": 0,
+    "qualification_reporting_available": true,
+    "qualification_review_requests": 0,
     "qualified_pilots": 0,
+    "subset_scope_requests": 0,
     "target_pilots": 3,
+    "target_profile_requests": 0,
     "target_revenue_usd": 897,
     "tracked_pilot_requests": 0,
     "unknown_decision_criterion_requests": 0

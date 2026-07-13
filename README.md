@@ -364,9 +364,9 @@ review never calculates a download-to-lead conversion rate: GitHub artifact
 requests are not unique people and cannot be assigned to a discovery source or
 purchase criterion.
 
-The reviewed public-only baseline under [`metrics/`](metrics/) provides the
-current comparison point and records why cumulative GitHub requests are not
-users, leads, or revenue.
+The reviewed public or counts-only baseline under [`metrics/`](metrics/)
+provides the current comparison point and records why cumulative GitHub
+requests and private outreach drafts are not users, leads, or revenue.
 
 Run the tests:
 

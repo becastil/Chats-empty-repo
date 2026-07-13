@@ -310,12 +310,13 @@ experiments comparable over time, but they retain the same CI and maintainer
 confounders and therefore remain directional until a buyer self-reports a source
 or enters the paid funnel.
 
-The 2026-07-12 public baseline records 61 cumulative primary artifact requests
-across 34 contract-complete releases, but only one request was for the portable
-artifact and the 60 wheel requests are materially confounded by Repo Scout's
-own verified CI. The same checkpoint records zero pilot requests and $0 booked
-revenue. These committed reports establish future movement without relabeling
-automation traffic as adoption.
+The 2026-07-13 public checkpoint records 78 cumulative primary artifact
+requests across 36 contract-complete releases: 6 portable and 72 wheel. That is
+17 more primary requests than the prior checkpoint, including 5 portable and 12
+wheel requests across `v0.3.31` and `v0.3.32`. Repo Scout's own CI, release, and
+maintainer verification materially confound those counts. The same checkpoint
+records zero pilot requests and $0 booked revenue, so acquisition remains the
+honest bottleneck.
 
 The owner-visible 14-day GitHub traffic checkpoint adds one unique repository
 viewer, 119 unique cloners, and 310 clone events. That extreme clone-to-view
@@ -324,10 +325,11 @@ presented as 119 users, installs, or qualified prospects. Together with zero
 pilot requests, it confirms that acquisition remains the honest bottleneck.
 
 The dependency-free `repo-scout-growth` review places those signed deltas beside
-schema-5, schema-6, or schema-7 pilot source, qualification, offer, payment, and revenue
-totals. It names one current commercial bottleneck and next action so weekly
-roadmap work responds to the paid funnel instead of optimizing raw download
-counts. Input warnings and missing or ambiguous source answers remain visible.
+schema-5, schema-6, or schema-7 pilot source, qualification, offer, payment, and
+revenue totals. It names one current commercial bottleneck and next action so
+weekly roadmap work responds to the paid funnel instead of optimizing raw
+download counts. Input warnings and missing or ambiguous source answers remain
+visible.
 Because release requests are neither unique people nor attributable sessions,
 the review never computes a download-to-lead conversion rate or assigns request
 movement to a discovery source.

@@ -57,7 +57,11 @@ class MetricsBaselineTests(unittest.TestCase):
         self.assertEqual(summary["stable_releases"], len(releases))
         self.assertEqual(summary["complete_releases"], len(releases))
         self.assertTrue(all(release["contract"]["complete"] for release in releases))
-        self.assertEqual(report["latest"]["tag"], "v0.3.30")
+        self.assertEqual(report["latest"]["tag"], "v0.3.32")
+        self.assertEqual(summary["stable_releases"], 36)
+        self.assertEqual(summary["primary_artifact_downloads"], 78)
+        self.assertEqual(summary["portable_downloads"], 6)
+        self.assertEqual(summary["wheel_downloads"], 72)
         self.assertEqual(
             summary["primary_artifact_downloads"],
             summary["portable_downloads"] + summary["wheel_downloads"],
@@ -78,19 +82,32 @@ class MetricsBaselineTests(unittest.TestCase):
         pilot = self._read("pilot-baseline.json")
         growth = self._read("growth-baseline.json")
 
-        self.assertEqual(pilot["schema_version"], 6)
+        self.assertEqual(pilot["schema_version"], 7)
         self.assertEqual(pilot["summary"]["tracked_issues"], 0)
         self.assertEqual(pilot["summary"]["booked_revenue_usd"], 0)
+        self.assertEqual(pilot["summary"]["qualification_review_issues"], 0)
         self.assertEqual(pilot["warnings"], [])
 
         self.assertEqual(growth["schema_version"], 2)
         self.assertEqual(growth["summary"]["tracked_pilot_requests"], 0)
         self.assertEqual(growth["summary"]["booked_revenue_usd"], 0)
         self.assertTrue(growth["summary"]["distribution_baseline_present"])
+        self.assertTrue(growth["summary"]["qualification_reporting_available"])
         self.assertEqual(growth["bottleneck"]["stage"], "acquisition")
         self.assertEqual(growth["warnings"], [])
-        for key, value in growth["distribution_change"].items():
-            self.assertEqual(value, [] if key.endswith("releases") else 0)
+        self.assertEqual(
+            growth["distribution_change"],
+            {
+                "manifest_downloads_delta": 12,
+                "new_releases": ["v0.3.32", "v0.3.31"],
+                "portable_downloads_delta": 5,
+                "primary_artifact_downloads_delta": 17,
+                "removed_releases": [],
+                "source_downloads_delta": 4,
+                "unknown_downloads_delta": 0,
+                "wheel_downloads_delta": 12,
+            },
+        )
 
     def test_outreach_draft_baseline_is_aggregate_and_unsent(self) -> None:
         report = self._read("outreach-draft-baseline.json")

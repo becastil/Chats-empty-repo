@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this outreach-draft baseline commit: 66 / 1,000 (6.6%).
-- Remaining after this outreach-draft baseline commit: 934 commits.
+- Progress after this commercial-evidence refresh: 67 / 1,000 (6.7%).
+- Remaining after this commercial-evidence refresh: 933 commits.
 
 ## Commit Standard
 

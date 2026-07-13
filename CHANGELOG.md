@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Refreshed public distribution, schema-7 pilot, and joined growth baselines at the first qualified-draft review point.
+- Recorded 17 additional primary artifact requests across two new complete releases, while preserving zero pilot requests and $0 booked revenue.
+- Advanced baseline contracts to `v0.3.32` and schema-7 qualification evidence with no distribution, pilot, or growth warnings.
 - Prepared five personalized outreach drafts from narrow, company-controlled public evidence and kept all identities, business addresses, messages, and source links in the ignored private workspace.
 - Audited the batch as five schema-3 drafts with 16 fit-evidence links and zero contact attempts, replies, pilot requests, or revenue.
 - Added a counts-only outreach baseline and regression coverage that rejects leaked aliases, URLs, or email addresses from the committed evidence.

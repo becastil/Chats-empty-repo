@@ -520,3 +520,15 @@ with 16 evidence links. A committed aggregate baseline proves those counts and
 is regression-tested to contain no alias, URL, or email address. No message was
 sent, so attempted prospects, replies, pilot requests, leads, and revenue remain
 zero. Human review is still required before each one-at-a-time contact.
+
+## 2026-07-12: Refresh Commercial Evidence At The First Draft Checkpoint
+
+The five qualified drafts are a meaningful funnel change, so distribution,
+pilot, and growth baselines were deliberately refreshed rather than waiting for
+another arbitrary hourly run. Public release evidence now covers 36 complete
+releases and 78 primary artifact requests. The signed comparison shows 17 new
+requests across `v0.3.31` and `v0.3.32`, but the public pilot queue remains empty
+and booked revenue remains zero. Pilot evidence moves from schema 6 to schema 7,
+and the growth report confirms qualification reporting is available with no
+warnings. Artifact movement remains automation-confounded and is not labeled as
+users, leads, demand, or revenue.
