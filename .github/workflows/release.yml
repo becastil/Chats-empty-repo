@@ -63,6 +63,8 @@ jobs:
           "$RUNNER_TEMP/repo-scout-release/bin/repo-scout-policy" list --format json
           python scripts/smoke_test_policy_activation.py \
             --python "$RUNNER_TEMP/repo-scout-release/bin/python"
+          python scripts/smoke_test_outreach_lifecycle.py \
+            --python "$RUNNER_TEMP/repo-scout-release/bin/python"
           "$RUNNER_TEMP/repo-scout-release/bin/repo-scout-pilot" --help
           "$RUNNER_TEMP/repo-scout-release/bin/repo-scout-rollout" --help
 

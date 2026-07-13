@@ -45,6 +45,19 @@ smoke_test_policy_activation = importlib.util.module_from_spec(
 sys.modules[ACTIVATION_SMOKE_SPEC.name] = smoke_test_policy_activation
 ACTIVATION_SMOKE_SPEC.loader.exec_module(smoke_test_policy_activation)
 
+OUTREACH_SMOKE_SCRIPT_PATH = (
+    ROOT / "scripts" / "smoke_test_outreach_lifecycle.py"
+)
+OUTREACH_SMOKE_SPEC = importlib.util.spec_from_file_location(
+    "smoke_test_outreach_lifecycle", OUTREACH_SMOKE_SCRIPT_PATH
+)
+assert OUTREACH_SMOKE_SPEC is not None and OUTREACH_SMOKE_SPEC.loader is not None
+smoke_test_outreach_lifecycle = importlib.util.module_from_spec(
+    OUTREACH_SMOKE_SPEC
+)
+sys.modules[OUTREACH_SMOKE_SPEC.name] = smoke_test_outreach_lifecycle
+OUTREACH_SMOKE_SPEC.loader.exec_module(smoke_test_outreach_lifecycle)
+
 
 class ReleaseManifestTests(unittest.TestCase):
     def test_current_project_versions_match(self) -> None:
@@ -106,6 +119,24 @@ class ReleaseManifestTests(unittest.TestCase):
                 "agent-ready-service",
                 "service-baseline",
                 "polyglot-review",
+            ),
+        )
+
+    def test_outreach_lifecycle_smoke_contract_passes_against_source(self) -> None:
+        environment = os.environ.copy()
+        environment["PYTHONPATH"] = str(ROOT / "src")
+
+        checked = smoke_test_outreach_lifecycle.verify_outreach_lifecycle(
+            sys.executable, environment=environment
+        )
+
+        self.assertEqual(
+            checked,
+            (
+                "approved",
+                "contacted",
+                "missing-approval-rejected",
+                "extra-column-rejected",
             ),
         )
 
@@ -285,6 +316,13 @@ class ReleaseWorkflowTests(unittest.TestCase):
         self.assertIn(
             '"$RUNNER_TEMP/repo-scout-release/bin/repo-scout-outreach" --help',
             workflow,
+        )
+        self.assertIn(
+            "python scripts/smoke_test_outreach_lifecycle.py", workflow
+        )
+        self.assertLess(
+            workflow.index("python scripts/smoke_test_outreach_lifecycle.py"),
+            workflow.index("- name: Attest release provenance"),
         )
         self.assertIn(
             '"$RUNNER_TEMP/repo-scout-release/bin/repo-scout-rollout" --help',

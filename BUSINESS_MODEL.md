@@ -161,8 +161,8 @@ The local outreach auditor enforces the 10-prospect boundary, three-signal
 qualification, alias-only records, permitted channels, one seven-day follow-up,
 and terminal stop states. It sends nothing and exposes no recipient details;
 its totals remain operator activity rather than commercial evidence.
-Schema-3 outreach reports separate drafts from sent attempts. Unreleased schema
-5 adds an explicit `approved` checkpoint and requires its private approval date
+Schema-3 outreach reports separate drafts from sent attempts. Schema 5 adds an
+explicit `approved` checkpoint and requires its private approval date
 to survive every later status. Drafted and approved rows require a permitted
 channel but forbid contact and follow-up dates, preventing message preparation
 or approval queues from inflating acquisition activity. Every approved or sent
@@ -176,6 +176,14 @@ accurate, or current; Sales Intelligence or narrow public evidence still
 requires human review. Strict CSV parsing also rejects malformed quoting and
 any row with missing or extra cells, so a shifted private date or status cannot
 silently disappear from the operating record.
+
+Future tagged releases must exercise this lifecycle through the installed wheel
+before provenance attestation. The release check proves an approved draft stays
+outside attempt totals, a contacted row enters them, future follow-up is not due,
+an approved-row alias, evidence, and approval date stay out of aggregate output,
+and missing approval or extra CSV data is rejected. Temporary synthetic rows
+are used, so the check sends nothing and creates no prospect, demand, or revenue
+evidence.
 
 The same verified `v0.3.33` distribution now carries outreach schema 5 and
 pilot qualification schema 7, so operator workflows and customer CI examples

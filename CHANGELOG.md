@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added an installed-wheel outreach lifecycle smoke test covering approved and
+  contacted states plus the human-approval and aggregate-count contract.
+- Required future releases to prove approved-row aliases, evidence URLs, and
+  approval dates stay out of aggregate reports before attestation.
+- Blocked publication when the installed outreach command accepts a missing
+  approval date or an extra private CSV cell.
 - Replaced permissive outreach row mapping with strict standard-library CSV
   parsing and exact nine-column enforcement.
 - Rejected malformed quoting plus missing and extra row cells with controlled

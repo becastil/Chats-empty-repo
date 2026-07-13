@@ -589,3 +589,14 @@ quoting, short rows, and long rows now produce bounded errors containing only
 the row number and column count, never private values. The ignored five-draft
 ledger was normalized to the exact width with no change to its zero approvals,
 attempts, pilot requests, or revenue.
+
+## 2026-07-13: Exercise Installed Outreach Behavior Before Release
+
+The tag workflow previously proved only that the installed outreach command
+could display help. Every future release now runs the built wheel through one
+approved row, one contacted row, a missing approval date, and an extra CSV cell
+before provenance attestation. The smoke test checks schema-5 counts, the human
+approval flag, future follow-up handling, private-field omission, and bounded
+validation errors. This protects the exact operator distribution used for the
+first acquisition batch without approving, contacting, or exposing a real
+prospect. Release verification is product safety, not demand or revenue.
