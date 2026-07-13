@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Independently verified and pinned the `v0.3.33` wheel, source commit
+  `b2838064940003ebfb40af686ea91445eae9c984`, and SHA-256
+  `66c120d5107b9e51986dd08a884d66db06eef54629af208b82456506562e2e3e` in both CI gates.
+- Confirmed the exact release assets, checksum manifest, semantic tag, signer
+  workflow, provenance, and GitHub-hosted runner before changing trust metadata.
+- Installed the downloaded wheel without dependencies and proved its package
+  version and schema-5 outreach behavior before advancing customer CI.
+
 ## 0.3.33 - 2026-07-12
 
 - Published the schema-5 outreach approval workflow in the portable, wheel,

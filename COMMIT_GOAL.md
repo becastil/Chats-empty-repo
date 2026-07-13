@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after publishing the approval workflow: 70 / 1,000 (7.0%).
-- Remaining after publishing the approval workflow: 930 commits.
+- Progress after advancing the verified release pins: 71 / 1,000 (7.1%).
+- Remaining after advancing the verified release pins: 929 commits.
 
 ## Commit Standard
 

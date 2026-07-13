@@ -62,7 +62,7 @@ This is useful free CI enforcement; the paid work remains agreeing on the
 right rules and rolling the same reviewed policy across uneven repositories.
 Versions 1 and 2 remain readable so verified CI upgrades can be staged safely.
 The dogfood and copy-ready gates now install the independently verified
-`v0.3.32` wheel, so v4 policies can run locally and in CI
+`v0.3.33` wheel, so v4 policies can run locally and in CI
 without source checkout, mutable package resolution, or a team-managed secret.
 Maintainer pin upgrades now preflight and update the dogfood workflow,
 copy-ready customer example, and contract test as one reviewed change, reducing
@@ -175,7 +175,7 @@ link makes qualification reviewable but does not make the source authoritative,
 accurate, or current; Sales Intelligence or narrow public evidence still
 requires human review.
 
-The same verified `v0.3.32` distribution now carries outreach schema 3 and
+The same verified `v0.3.33` distribution now carries outreach schema 5 and
 pilot qualification schema 7, so operator workflows and customer CI examples
 come from one source commit,
 manifest, wheel digest, and provenance-attested release. This alignment reduces
@@ -184,9 +184,9 @@ deployment ambiguity; it does not create qualified prospects or demand.
 Public `v0.3.33` adds the schema-5 approval status and retained approval-date
 checks needed to execute the prepared outreach batch without relying on source
 checkout. Its portable, wheel, and source artifacts use the same checksum and
-provenance release contract. Customer policy gates remain pinned to independently
-verified `v0.3.32` until the new wheel is separately checked; publishing a
-package does not count as a prospect, attempt, lead, or sale.
+provenance release contract. Both policy gates now pin its independently
+measured wheel digest and exact source commit; publishing and pinning a package
+do not count as a prospect, attempt, lead, or sale.
 
 The first five personalized outreach drafts now exist in the ignored private
 workspace. Sixteen fit links were reviewed against narrow, company-controlled

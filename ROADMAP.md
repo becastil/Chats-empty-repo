@@ -7,8 +7,6 @@
 
 ## Near Term
 
-- Independently verify the `v0.3.33` wheel, manifest, source commit, tag,
-  provenance, and hosted runner before advancing both policy gates together.
 - Human-review the five prepared, publicly qualified drafts, mark each
   `approved` with its review date, and send them one at a time; then audit their
   exact seven-day follow-ups with `repo-scout-outreach`. Do not add another

@@ -565,3 +565,16 @@ drafts. The tag-driven release still builds checksums and provenance from the
 main-branch release commit. Policy gates remain on independently verified
 `v0.3.32` until a separate pin review; a new release is distribution evidence,
 not a prospect, attempt, lead, or revenue event.
+
+## 2026-07-13: Advance Both Policy Gates To Verified v0.3.33
+
+The published wheel was downloaded independently and measured at SHA-256
+`66c120d5107b9e51986dd08a884d66db06eef54629af208b82456506562e2e3e`.
+Its manifest reconciles the exact wheel, source archive, and portable zipapp.
+GitHub attestation verification enforced source commit
+`b2838064940003ebfb40af686ea91445eae9c984`, tag `v0.3.33`, the repository's
+release workflow, and a GitHub-hosted runner for all three artifacts. The wheel
+was installed without dependencies and reported package version `0.3.33` plus
+outreach schema 5 before the preflighted updater changed the dogfood workflow,
+customer example, and CI contract together. This advances trusted distribution;
+it does not create an outreach attempt, pilot request, or revenue.
