@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added outreach schema 5 with a private `approved_on` date that must persist
+  from human approval through every later lifecycle status.
+- Rejected missing and future approval dates plus approvals recorded after the
+  contact date, closing the status-only review gap.
+- Kept approval dates out of text and JSON reports while exposing that human
+  approval is required as non-sensitive experiment metadata.
+- Extended the public and ignored private ledger headers without changing the
+  existing five-draft, zero-approval, zero-attempt evidence.
 - Added outreach schema 4 with an explicit `approved` status between a saved
   draft and a sent contact.
 - Reported drafts awaiting review and human-approved messages separately while

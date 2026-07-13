@@ -42,6 +42,7 @@ def _row(**overrides: str) -> dict[str, str]:
         "status": "contacted",
         "followed_up_on": "",
         "next_action_on": "2026-07-08",
+        "approved_on": "2026-06-30",
     }
     row.update(overrides)
     return row
@@ -88,6 +89,7 @@ class OutreachReportTests(unittest.TestCase):
                 channel="",
                 followed_up_on="",
                 next_action_on="",
+                approved_on="",
             ),
             _row(
                 prospect_id="prospect-007",
@@ -95,6 +97,7 @@ class OutreachReportTests(unittest.TestCase):
                 contacted_on="",
                 followed_up_on="",
                 next_action_on="",
+                approved_on="",
             ),
             _row(
                 prospect_id="prospect-008",
@@ -102,12 +105,14 @@ class OutreachReportTests(unittest.TestCase):
                 contacted_on="",
                 followed_up_on="",
                 next_action_on="",
+                approved_on="2026-07-01",
             ),
         ]
 
         report = build_outreach_report(rows, as_of=date(2026, 7, 10))
 
-        self.assertEqual(report["schema_version"], 4)
+        self.assertEqual(report["schema_version"], 5)
+        self.assertTrue(report["experiment"]["human_approval_required"])
         self.assertEqual(report["summary"]["prospects"], 8)
         self.assertEqual(report["summary"]["attempted_prospects"], 5)
         self.assertEqual(report["summary"]["drafted"], 1)
@@ -136,6 +141,8 @@ class OutreachReportTests(unittest.TestCase):
         )
         self.assertNotIn("channel", report["due_followups"][0])
         self.assertNotIn("evidence.example", json.dumps(report))
+        self.assertNotIn("approved_on", json.dumps(report))
+        self.assertNotIn("2026-06-30", json.dumps(report))
 
     def test_template_is_a_valid_empty_private_ledger(self) -> None:
         report = load_outreach_report(
@@ -251,6 +258,7 @@ class OutreachReportTests(unittest.TestCase):
                     contacted_on="",
                     channel="",
                     next_action_on="",
+                    approved_on="",
                 ),
                 "require a permitted channel",
             ),
@@ -259,6 +267,7 @@ class OutreachReportTests(unittest.TestCase):
                     status="drafted",
                     contacted_on="2026-07-01",
                     next_action_on="",
+                    approved_on="",
                 ),
                 "drafted prospects cannot have contact dates",
             ),
@@ -268,6 +277,7 @@ class OutreachReportTests(unittest.TestCase):
                     contacted_on="",
                     channel="",
                     next_action_on="",
+                    approved_on="2026-07-01",
                 ),
                 "approved prospects require a permitted channel",
             ),
@@ -276,8 +286,40 @@ class OutreachReportTests(unittest.TestCase):
                     status="approved",
                     contacted_on="2026-07-01",
                     next_action_on="",
+                    approved_on="2026-07-01",
                 ),
                 "approved prospects cannot have contact dates",
+            ),
+            (
+                _row(
+                    status="drafted",
+                    contacted_on="",
+                    next_action_on="",
+                    approved_on="2026-07-01",
+                ),
+                "drafted prospects cannot have approved_on",
+            ),
+            (
+                _row(
+                    status="approved",
+                    contacted_on="",
+                    next_action_on="",
+                    approved_on="",
+                ),
+                "approved_on is required after draft review",
+            ),
+            (
+                _row(
+                    status="approved",
+                    contacted_on="",
+                    next_action_on="",
+                    approved_on="2026-07-12",
+                ),
+                "approved_on cannot be after as-of",
+            ),
+            (
+                _row(approved_on="2026-07-02"),
+                "approved_on must be no later than contacted_on",
             ),
         )
 
@@ -296,6 +338,7 @@ class OutreachReportTests(unittest.TestCase):
                 channel="",
                 followed_up_on="",
                 next_action_on="",
+                approved_on="",
             )
             for index in range(1, 12)
         ]

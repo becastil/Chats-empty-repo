@@ -84,8 +84,10 @@ personalized message has been saved for review through a permitted channel.
 Change it to `approved` only after a human confirms that the public observation
 is accurate and current, the recipient and published business channel are
 appropriate, and the message accurately states the price, scope, local-code
-boundary, and opt-out behavior. Drafted and approved rows have no contact or
-follow-up dates and do not count as attempted outreach.
+boundary, and opt-out behavior. Record that calendar date in `approved_on`.
+Drafted rows cannot have an approval date. Approved rows require one but still
+have no contact or follow-up dates. Neither status counts as attempted
+outreach.
 
 Map every declared signal to the source reviewed for that claim in
 `fit_evidence`, using semicolon-separated `signal=https://...` entries. For
@@ -111,7 +113,9 @@ After review, the aggregate `Approved to send` count must include the selected
 row before contact; the report still does not reveal its alias. Immediately
 after sending, change that row to `contacted`, record `contacted_on`, and set
 `next_action_on` to exactly seven days later before sending the next message.
-The approval status records a human decision; the command does not approve or
+Keep `approved_on` on every later status. The command rejects a missing or
+future approval date and requires it to be no later than `contacted_on`. The
+approval record preserves a human decision; the command does not approve or
 send anything itself.
 
 The command requires at least three recognized fit signals and one secure
@@ -123,7 +127,8 @@ links fail validation. A separate
 `followed_up_on` field rejects a second message sent before that date. It
 reports drafts awaiting review and approved messages separately from sent
 attempts, aliases, and aggregate evidence-link counts only; source URLs never
-appear in report output. The command never sends outreach, and its
+appear in report output. Approval dates also remain private. The command never
+sends outreach, and its
 reply or pilot-requested counts do not become public demand or revenue evidence;
 only public pilot intake and cumulative funnel labels do.
 

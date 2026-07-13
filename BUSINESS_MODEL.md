@@ -162,16 +162,18 @@ qualification, alias-only records, permitted channels, one seven-day follow-up,
 and terminal stop states. It sends nothing and exposes no recipient details;
 its totals remain operator activity rather than commercial evidence.
 Schema-3 outreach reports separate drafts from sent attempts. Unreleased schema
-4 adds an explicit `approved` checkpoint between those states. Drafted and
-approved rows require a permitted channel but forbid contact and follow-up
-dates, preventing message preparation or approval queues from inflating
-acquisition activity. Approval is a human record that the observation,
-recipient, channel, and offer were checked; the auditor does not make that
-judgment. Every declared fit signal must map to one private HTTPS source before
-the auditor accepts a prospect. Reports retain only the aggregate link count,
-not source URLs. A valid link makes qualification reviewable but does not make
-the source authoritative, accurate, or current; Sales Intelligence or narrow
-public evidence still requires human review.
+5 adds an explicit `approved` checkpoint and requires its private approval date
+to survive every later status. Drafted and approved rows require a permitted
+channel but forbid contact and follow-up dates, preventing message preparation
+or approval queues from inflating acquisition activity. Every approved or sent
+row must retain an approval date no later than contact. Approval is a human
+record that the observation, recipient, channel, and offer were checked; the
+auditor does not make that judgment. Every declared fit signal must map to one
+private HTTPS source before the auditor accepts a prospect. Reports retain only
+aggregate link and approval counts, not source URLs or approval dates. A valid
+link makes qualification reviewable but does not make the source authoritative,
+accurate, or current; Sales Intelligence or narrow public evidence still
+requires human review.
 
 The same verified `v0.3.32` distribution now carries outreach schema 3 and
 pilot qualification schema 7, so operator workflows and customer CI examples

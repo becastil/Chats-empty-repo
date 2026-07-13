@@ -303,8 +303,9 @@ seven-day follow-up, and opt-out stop states. Schema-3 reports separate
 personalized drafts awaiting review from messages actually sent and expose only
 aggregate evidence-link counts, so neither draft preparation nor untraceable
 qualification can inflate attempted-prospect counts.
-Unreleased schema-4 reports add an explicit human-approved pre-send count while
-keeping both drafted and approved messages outside attempted outreach.
+Unreleased schema-5 reports add an explicit human-approved pre-send count and
+require a retained approval date no later than contact, while keeping both
+drafted and approved messages outside attempted outreach.
 Its activity totals are not lead or revenue evidence. See
 [docs/direct-outreach.md](docs/direct-outreach.md) for the operating contract.
 

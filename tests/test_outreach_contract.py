@@ -20,8 +20,10 @@ class DirectOutreachContractTests(unittest.TestCase):
         self.assertIn("?source=outreach#why-teams-buy", playbook)
         self.assertIn("Contact 10 qualified prospects", playbook)
         self.assertIn("at most one follow-up after seven days", playbook)
-        self.assertIn("Drafted and approved rows have no", playbook)
-        self.assertIn("do not count as attempted outreach", playbook)
+        self.assertIn("Drafted rows cannot have an approval date", playbook)
+        self.assertIn("Approved rows require one", playbook)
+        self.assertIn("Neither status counts as attempted", playbook)
+        self.assertIn("Keep `approved_on` on every later status", playbook)
         self.assertIn("does not approve or", playbook)
         self.assertIn("Stop immediately after an opt-out", playbook)
         self.assertIn("reply, page visit, or release request", playbook)
@@ -45,6 +47,7 @@ class DirectOutreachContractTests(unittest.TestCase):
                     "status",
                     "followed_up_on",
                     "next_action_on",
+                    "approved_on",
                 ]
             ],
         )

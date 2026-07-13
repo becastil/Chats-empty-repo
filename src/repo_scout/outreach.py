@@ -11,7 +11,7 @@ from typing import Any, Sequence
 from urllib.parse import urlsplit
 
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 MAX_PROSPECTS = 10
 FOLLOW_UP_DAYS = 7
 MAX_FOLLOW_UPS = 1
@@ -24,6 +24,7 @@ LEDGER_FIELDS = (
     "status",
     "followed_up_on",
     "next_action_on",
+    "approved_on",
 )
 FIT_SIGNALS = (
     "team_5_50",
@@ -161,6 +162,9 @@ def build_outreach_report(
         next_action_on = _optional_date(
             row["next_action_on"], row_number=row_number, field="next_action_on"
         )
+        approved_on = _optional_date(
+            row["approved_on"], row_number=row_number, field="approved_on"
+        )
 
         if status in PRE_CONTACT_STATUSES:
             if any(
@@ -186,6 +190,25 @@ def build_outreach_report(
             if contacted_on > as_of:
                 raise OutreachInputError(
                     f"row {row_number}: contacted_on cannot be after as-of"
+                )
+
+        if status in {"researched", "drafted"}:
+            if approved_on is not None:
+                raise OutreachInputError(
+                    f"row {row_number}: {status} prospects cannot have approved_on"
+                )
+        else:
+            if approved_on is None:
+                raise OutreachInputError(
+                    f"row {row_number}: approved_on is required after draft review"
+                )
+            if approved_on > as_of:
+                raise OutreachInputError(
+                    f"row {row_number}: approved_on cannot be after as-of"
+                )
+            if contacted_on is not None and approved_on > contacted_on:
+                raise OutreachInputError(
+                    f"row {row_number}: approved_on must be no later than contacted_on"
                 )
 
         if followed_up_on is not None:
@@ -240,6 +263,7 @@ def build_outreach_report(
             "max_prospects": MAX_PROSPECTS,
             "follow_up_days": FOLLOW_UP_DAYS,
             "max_follow_ups": MAX_FOLLOW_UPS,
+            "human_approval_required": True,
         },
         "summary": {
             "prospects": len(rows),

@@ -543,3 +543,14 @@ contact and follow-up dates, and remain excluded from attempted-prospect totals.
 The text and JSON reports expose only aggregate approval counts. The auditor
 does not approve or send messages, and the existing five drafts remain
 unapproved with zero attempts, leads, pilot requests, or revenue.
+
+## 2026-07-12: Retain Approval Evidence After A Message Is Sent
+
+Outreach schema 5 appends `approved_on` to the private ledger so adding the
+human-review checkpoint does not disappear when a row advances to `contacted`
+or a later status. Drafted and researched rows cannot carry the date; approved
+and later rows require it; future dates and approvals after contact are
+rejected. The report exposes only that human approval is required and the
+aggregate approved count, never the private date. The existing five draft rows
+remain valid with blank approval dates, zero approved messages, zero attempts,
+and no revenue evidence.
