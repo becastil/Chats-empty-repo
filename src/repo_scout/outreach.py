@@ -11,7 +11,7 @@ from typing import Any, Sequence
 from urllib.parse import urlsplit
 
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 MAX_PROSPECTS = 10
 FOLLOW_UP_DAYS = 7
 MAX_FOLLOW_UPS = 1
@@ -36,6 +36,7 @@ CHANNELS = ("warm-intro", "published-business")
 STATUSES = (
     "researched",
     "drafted",
+    "approved",
     "contacted",
     "followed-up",
     "replied",
@@ -43,7 +44,7 @@ STATUSES = (
     "not-a-fit",
     "do-not-contact",
 )
-PRE_CONTACT_STATUSES = {"researched", "drafted"}
+PRE_CONTACT_STATUSES = {"researched", "drafted", "approved"}
 NO_NEXT_ACTION_STATUSES = {
     "followed-up",
     "replied",
@@ -169,9 +170,9 @@ def build_outreach_report(
                 raise OutreachInputError(
                     f"row {row_number}: {status} prospects cannot have contact dates"
                 )
-            if status == "drafted" and channel not in CHANNELS:
+            if status in {"drafted", "approved"} and channel not in CHANNELS:
                 raise OutreachInputError(
-                    f"row {row_number}: drafted prospects require a permitted channel"
+                    f"row {row_number}: {status} prospects require a permitted channel"
                 )
         else:
             if contacted_on is None:
@@ -228,10 +229,8 @@ def build_outreach_report(
             )
 
     due_followups.sort(key=lambda item: (item["due_on"], item["prospect_id"]))
-    attempted = (
-        len(rows)
-        - status_counts["researched"]
-        - status_counts["drafted"]
+    attempted = len(rows) - sum(
+        status_counts[status] for status in PRE_CONTACT_STATUSES
     )
     closed = status_counts["not-a-fit"] + status_counts["do-not-contact"]
     return {
@@ -247,6 +246,7 @@ def build_outreach_report(
             "attempted_prospects": attempted,
             "researched": status_counts["researched"],
             "drafted": status_counts["drafted"],
+            "approved": status_counts["approved"],
             "contacted": status_counts["contacted"],
             "followed_up": status_counts["followed-up"],
             "replied": status_counts["replied"],
@@ -273,6 +273,7 @@ def format_outreach_report(report: dict[str, Any]) -> str:
         f"Prospects: {summary['prospects']} / {experiment['max_prospects']}",
         f"Qualification links: {summary['fit_evidence_links']}",
         f"Drafts awaiting review: {summary['drafted']}",
+        f"Approved to send: {summary['approved']}",
         f"Attempted prospects: {summary['attempted_prospects']}",
         f"Due follow-ups: {summary['due_followups']}",
         f"Ledger pilot requests: {summary['pilot_requested']}",

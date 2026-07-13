@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added outreach schema 4 with an explicit `approved` status between a saved
+  draft and a sent contact.
+- Reported drafts awaiting review and human-approved messages separately while
+  excluding both from attempted-prospect totals.
+- Required approved messages to retain a permitted channel and no contact or
+  follow-up dates until they are actually sent.
+- Documented the one-at-a-time review, approval, send, and exact seven-day
+  follow-up workflow without changing the five-draft, zero-attempt baseline.
 - Refreshed public distribution, schema-7 pilot, and joined growth baselines at the first qualified-draft review point.
 - Recorded 17 additional primary artifact requests across two new complete releases, while preserving zero pilot requests and $0 booked revenue.
 - Advanced baseline contracts to `v0.3.32` and schema-7 qualification evidence with no distribution, pilot, or growth warnings.

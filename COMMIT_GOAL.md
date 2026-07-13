@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this commercial-evidence refresh: 67 / 1,000 (6.7%).
-- Remaining after this commercial-evidence refresh: 933 commits.
+- Progress after adding the outreach approval checkpoint: 68 / 1,000 (6.8%).
+- Remaining after adding the outreach approval checkpoint: 932 commits.
 
 ## Commit Standard
 

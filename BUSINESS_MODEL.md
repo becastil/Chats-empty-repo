@@ -161,10 +161,13 @@ The local outreach auditor enforces the 10-prospect boundary, three-signal
 qualification, alias-only records, permitted channels, one seven-day follow-up,
 and terminal stop states. It sends nothing and exposes no recipient details;
 its totals remain operator activity rather than commercial evidence.
-Schema-3 outreach reports also separate reviewed drafts from sent attempts.
-Drafted rows require a permitted channel but forbid contact and follow-up dates,
-preventing message preparation or approval queues from inflating acquisition
-activity. Every declared fit signal must map to one private HTTPS source before
+Schema-3 outreach reports separate drafts from sent attempts. Unreleased schema
+4 adds an explicit `approved` checkpoint between those states. Drafted and
+approved rows require a permitted channel but forbid contact and follow-up
+dates, preventing message preparation or approval queues from inflating
+acquisition activity. Approval is a human record that the observation,
+recipient, channel, and offer were checked; the auditor does not make that
+judgment. Every declared fit signal must map to one private HTTPS source before
 the auditor accepts a prospect. Reports retain only the aggregate link count,
 not source URLs. A valid link makes qualification reviewable but does not make
 the source authoritative, accurate, or current; Sales Intelligence or narrow
@@ -180,9 +183,9 @@ The first five personalized outreach drafts now exist in the ignored private
 workspace. Sixteen fit links were reviewed against narrow, company-controlled
 public evidence because no Sales Intelligence or CRM provider is connected.
 The committed schema-3 baseline contains only aggregate counts. All five remain
-`drafted`: attempted outreach, replies, pilot requests, and revenue are still
-zero until a human reviews and sends each message through its published
-business channel.
+`drafted`: approved messages, attempted outreach, replies, pilot requests, and
+revenue are still zero until a human reviews and sends each message through its
+published business channel.
 
 Rollout bundles carry a stable, non-sensitive metadata contract so a pilot lead
 can summarize bundle-reported readiness, policy failures, violations, worktree

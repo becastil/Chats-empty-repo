@@ -532,3 +532,14 @@ and booked revenue remains zero. Pilot evidence moves from schema 6 to schema 7,
 and the growth report confirms qualification reporting is available with no
 warnings. Artifact movement remains automation-confounded and is not labeled as
 users, leads, demand, or revenue.
+
+## 2026-07-12: Record Human Approval Before Counting A Contact
+
+Outreach schema 4 adds `approved` between `drafted` and `contacted`. Drafted
+means a personalized message is waiting for review; approved means a human has
+checked the public observation, recipient, published business channel, stated
+offer, and opt-out behavior. Both states require a permitted channel, forbid
+contact and follow-up dates, and remain excluded from attempted-prospect totals.
+The text and JSON reports expose only aggregate approval counts. The auditor
+does not approve or send messages, and the existing five drafts remain
+unapproved with zero attempts, leads, pilot requests, or revenue.

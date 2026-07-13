@@ -78,10 +78,14 @@ repository.
 
 Separate fit-signal keys with semicolons. Use `warm-intro` or
 `published-business` as the channel. Allowed statuses are `researched`,
-`drafted`, `contacted`, `followed-up`, `replied`, `pilot-requested`,
-`not-a-fit`, and `do-not-contact`. Use `drafted` only after a personalized
-message has been saved for review through a permitted channel. Drafts have no
-contact or follow-up dates and do not count as attempted outreach.
+`drafted`, `approved`, `contacted`, `followed-up`, `replied`,
+`pilot-requested`, `not-a-fit`, and `do-not-contact`. Use `drafted` only after a
+personalized message has been saved for review through a permitted channel.
+Change it to `approved` only after a human confirms that the public observation
+is accurate and current, the recipient and published business channel are
+appropriate, and the message accurately states the price, scope, local-code
+boundary, and opt-out behavior. Drafted and approved rows have no contact or
+follow-up dates and do not count as attempted outreach.
 
 Map every declared signal to the source reviewed for that claim in
 `fit_evidence`, using semicolon-separated `signal=https://...` entries. For
@@ -103,6 +107,13 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
   --as-of "$(date +%F)"
 ```
 
+After review, the aggregate `Approved to send` count must include the selected
+row before contact; the report still does not reveal its alias. Immediately
+after sending, change that row to `contacted`, record `contacted_on`, and set
+`next_action_on` to exactly seven days later before sending the next message.
+The approval status records a human decision; the command does not approve or
+send anything itself.
+
 The command requires at least three recognized fit signals and one secure
 source link for each, accepts only `prospect-NNN` aliases, caps the batch at 10,
 schedules a contacted prospect's single follow-up exactly seven days later,
@@ -110,10 +121,9 @@ and rejects next actions after a follow-up, reply, pilot request, rejection, or
 opt-out. Missing, extra, duplicate, insecure, and credential-bearing evidence
 links fail validation. A separate
 `followed_up_on` field rejects a second message sent before that date. It
-reports reviewed drafts separately from sent attempts, aliases, and aggregate
-evidence-link counts only; source URLs never appear in report output. The
-command never sends
-outreach, and its
+reports drafts awaiting review and approved messages separately from sent
+attempts, aliases, and aggregate evidence-link counts only; source URLs never
+appear in report output. The command never sends outreach, and its
 reply or pilot-requested counts do not become public demand or revenue evidence;
 only public pilot intake and cumulative funnel labels do.
 

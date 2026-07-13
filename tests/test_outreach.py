@@ -96,19 +96,28 @@ class OutreachReportTests(unittest.TestCase):
                 followed_up_on="",
                 next_action_on="",
             ),
+            _row(
+                prospect_id="prospect-008",
+                status="approved",
+                contacted_on="",
+                followed_up_on="",
+                next_action_on="",
+            ),
         ]
 
         report = build_outreach_report(rows, as_of=date(2026, 7, 10))
 
-        self.assertEqual(report["schema_version"], 3)
-        self.assertEqual(report["summary"]["prospects"], 7)
+        self.assertEqual(report["schema_version"], 4)
+        self.assertEqual(report["summary"]["prospects"], 8)
         self.assertEqual(report["summary"]["attempted_prospects"], 5)
         self.assertEqual(report["summary"]["drafted"], 1)
-        self.assertEqual(report["summary"]["fit_evidence_links"], 21)
+        self.assertEqual(report["summary"]["approved"], 1)
+        self.assertEqual(report["summary"]["fit_evidence_links"], 24)
         self.assertIn(
             "Drafts awaiting review: 1", format_outreach_report(report)
         )
-        self.assertIn("Qualification links: 21", format_outreach_report(report))
+        self.assertIn("Approved to send: 1", format_outreach_report(report))
+        self.assertIn("Qualification links: 24", format_outreach_report(report))
         self.assertEqual(report["summary"]["due_followups"], 1)
         self.assertEqual(report["summary"]["pilot_requested"], 1)
         self.assertEqual(
@@ -252,6 +261,23 @@ class OutreachReportTests(unittest.TestCase):
                     next_action_on="",
                 ),
                 "drafted prospects cannot have contact dates",
+            ),
+            (
+                _row(
+                    status="approved",
+                    contacted_on="",
+                    channel="",
+                    next_action_on="",
+                ),
+                "approved prospects require a permitted channel",
+            ),
+            (
+                _row(
+                    status="approved",
+                    contacted_on="2026-07-01",
+                    next_action_on="",
+                ),
+                "approved prospects cannot have contact dates",
             ),
         )
 
