@@ -232,6 +232,15 @@ date. The receipt excludes evidence and review dates. Approval still sends
 nothing, creates no contact or follow-up date, and is not an attempt, lead,
 pilot request, or revenue event.
 
+After a human sends that approved message, guarded `--record-contact` records
+the exact next approved alias with an explicit send date and confirmation flag.
+It retains approval evidence, atomically changes only status, contact date, and
+the exact seven-day next action, and produces a private receipt that omits
+evidence and approval dates. The follow-up date makes send timing inferable, so
+the receipt stays private. The tool does not deliver the message or an automatic
+follow-up. A recorded contact enters outreach-attempt operations, but still is
+not a lead, pilot request, payment, or revenue.
+
 Rollout bundles carry a stable, non-sensitive metadata contract so a pilot lead
 can summarize bundle-reported readiness, policy failures, violations, worktree
 state, and attention across repositories without sending source code to Repo

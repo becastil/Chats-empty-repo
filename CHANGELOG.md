@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added guarded `repo-scout-outreach --record-contact` recording for the exact
+  next human-approved alias after a human confirms the message was already sent.
+- Retained private approval evidence while atomically changing only status,
+  contact date, and the automatically calculated seven-day next action.
+- Kept recording distinct from delivery: Repo Scout sends nothing, schedules no
+  automatic follow-up, and omits evidence and approval dates from a receipt
+  kept private because its follow-up date makes send timing inferable.
 - Added guarded `repo-scout-outreach --approve-next` recording for the exact
   alias selected by the deterministic one-at-a-time review queue.
 - Required an explicit review date and human-confirmation flag, with full-ledger

@@ -650,3 +650,19 @@ out-of-order alias, future date, invalid transition, or write failure leaves the
 original ledger untouched. The private receipt omits evidence and review dates.
 This records a human decision only; it does not send a message, add contact or
 follow-up dates, create a lead, or establish revenue.
+
+## 2026-07-13: Record A Human Send Without Sending
+
+The transition from approved message to contacted prospect is the second manual
+CSV risk in the first acquisition batch. `--record-contact` now requires the
+lowest approved alias, an explicit send date, and confirmation that a human
+already sent the message through its permitted channel. It retains
+`approved_on`, changes only `status`, `contacted_on`, and `next_action_on`, and
+calculates that next action at exactly seven days. Full validation and the same
+permission-preserving atomic replacement protect the original file on every
+rejected transition or write failure. Its private receipt omits evidence,
+approval dates, and the explicit contact field while exposing the manual
+follow-up due date. That date makes send timing inferable, so the receipt stays
+private. Repo Scout sends no message and schedules no follow-up. The recorded
+attempt is operational evidence only, not a lead, pilot request, payment, or
+revenue.

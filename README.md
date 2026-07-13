@@ -323,6 +323,22 @@ atomically records only `status=approved` and `approved_on`, and preserves the
 ledger's file permissions. It refuses an alias other than the one shown by
 `--review-next`. It does not send a message or create contact or follow-up dates.
 
+After a human actually sends that approved message, record the send and its
+required follow-up without hand-editing the ledger:
+
+```bash
+repo-scout-outreach outreach-private/outreach-ledger.csv \
+  --as-of "$(date +%F)" \
+  --record-contact prospect-001 \
+  --contacted-on "$(date +%F)" \
+  --confirm-sent
+```
+
+This action accepts only the next approved alias, retains `approved_on`, records
+the contact date, and sets `next_action_on` to exactly seven days later. Its
+private receipt names the manual follow-up date. Repo Scout sends no message and
+schedules no automatic follow-up.
+
 The reporter enforces the 10-prospect experiment, three-signal qualification,
 one private HTTPS evidence link per signal, permitted contact channels, one
 seven-day follow-up, and opt-out stop states. Schema-3 reports separate

@@ -144,13 +144,28 @@ action records a human decision; it does not send outreach or create a contact
 or follow-up date.
 
 After review, the aggregate `Approved to send` count must include the selected
-row before contact; the report still does not reveal its alias. Immediately
-after sending, change that row to `contacted`, record `contacted_on`, and set
-`next_action_on` to exactly seven days later before sending the next message.
-Keep `approved_on` on every later status. The command rejects a missing or
-future approval date and requires it to be no later than `contacted_on`. The
-approval record preserves a human decision; the command does not approve or
-send anything itself.
+row before contact; the report still does not reveal its alias. A human must
+then send that approved message through the permitted channel. Immediately
+after the send, record it:
+
+```bash
+repo-scout-outreach outreach-private/outreach-ledger.csv \
+  --as-of "$(date +%F)" \
+  --record-contact prospect-001 \
+  --contacted-on "$(date +%F)" \
+  --confirm-sent
+```
+
+`--record-contact` requires the lowest approved alias, an explicit send date,
+and confirmation that a human already sent the message. It retains
+`approved_on`, changes only `status`, `contacted_on`, and `next_action_on`, and
+computes the next action at exactly seven days. Keep `approved_on` on every
+later status. Missing confirmation,
+out-of-order aliases, dates before approval, future dates, invalid ledger state,
+or write failures leave the file unchanged. The private receipt omits evidence,
+approval dates, and the explicit contact field while naming the manual follow-up
+due date. That date makes send timing inferable, so keep the receipt private.
+Repo Scout sends nothing and schedules no automatic message.
 
 The command requires at least three recognized fit signals and one secure
 source link for each, accepts only `prospect-NNN` aliases, caps the batch at 10,

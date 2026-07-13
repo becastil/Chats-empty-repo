@@ -21,6 +21,7 @@ from repo_scout.outreach import (  # noqa: E402
     build_next_outreach_review,
     build_outreach_report,
     format_next_outreach_review,
+    format_outreach_contact,
     format_outreach_report,
     load_outreach_report,
     main,
@@ -398,6 +399,18 @@ class OutreachReportTests(unittest.TestCase):
                     ],
                     "approved_on cannot be after as-of",
                 ),
+                (
+                    [
+                        "--approve-next",
+                        "prospect-001",
+                        "--approved-on",
+                        "2026-07-12",
+                        "--confirm-reviewed",
+                        "--contacted-on",
+                        "2026-07-12",
+                    ],
+                    "--contacted-on and --confirm-sent require --record-contact",
+                ),
             )
 
             for arguments, message in cases:
@@ -460,6 +473,279 @@ class OutreachReportTests(unittest.TestCase):
             self.assertIn("cannot update outreach ledger safely", stderr.getvalue())
             self.assertEqual(ledger.read_bytes(), before)
             self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
+
+    def test_record_contact_tracks_human_send_and_exact_follow_up(self) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            original_rows = [
+                _row(
+                    prospect_id="prospect-002",
+                    status="approved",
+                    contacted_on="",
+                    next_action_on="",
+                    approved_on="2026-07-10",
+                ),
+                _row(
+                    prospect_id="prospect-001",
+                    status="approved",
+                    contacted_on="",
+                    next_action_on="",
+                    approved_on="2026-07-11",
+                ),
+            ]
+            _write_ledger(ledger, original_rows)
+            ledger.chmod(0o600)
+            stdout = io.StringIO()
+
+            with redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--record-contact",
+                        "prospect-001",
+                        "--contacted-on",
+                        "2026-07-12",
+                        "--confirm-sent",
+                        "--format",
+                        "json",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(ledger.stat().st_mode & 0o777, 0o600)
+            with ledger.open(newline="", encoding="utf-8") as ledger_file:
+                rows = list(csv.DictReader(ledger_file))
+            original_by_id = {row["prospect_id"]: row for row in original_rows}
+            rows_by_id = {row["prospect_id"]: row for row in rows}
+            contacted = rows_by_id["prospect-001"]
+            changed_fields = {
+                field
+                for field in LEDGER_FIELDS
+                if contacted[field] != original_by_id["prospect-001"][field]
+            }
+            self.assertEqual(
+                changed_fields, {"status", "contacted_on", "next_action_on"}
+            )
+            self.assertEqual(contacted["status"], "contacted")
+            self.assertEqual(contacted["contacted_on"], "2026-07-12")
+            self.assertEqual(contacted["next_action_on"], "2026-07-19")
+            self.assertEqual(contacted["approved_on"], "2026-07-11")
+            self.assertEqual(
+                rows_by_id["prospect-002"], original_by_id["prospect-002"]
+            )
+            report = load_outreach_report(ledger, as_of=date(2026, 7, 13))
+            self.assertEqual(report["summary"]["approved"], 1)
+            self.assertEqual(report["summary"]["contacted"], 1)
+            self.assertEqual(report["summary"]["attempted_prospects"], 1)
+            self.assertEqual(report["summary"]["due_followups"], 0)
+            receipt = json.loads(stdout.getvalue())
+            self.assertTrue(receipt["private_output"])
+            self.assertTrue(receipt["human_send_confirmed"])
+            self.assertEqual(receipt["contact"]["status"], "contacted")
+            self.assertEqual(receipt["contact"]["follow_up_due"], "2026-07-19")
+            serialized = json.dumps(receipt)
+            self.assertNotIn("approved_on", serialized)
+            self.assertNotIn("contacted_on", serialized)
+            self.assertNotIn("2026-07-12", serialized)
+            self.assertNotIn("evidence.example", serialized)
+            self.assertIn("Repo Scout sent nothing", receipt["action_note"])
+            text = format_outreach_contact(receipt)
+            self.assertIn("Manual follow-up due: 2026-07-19", text)
+            self.assertIn("follow up manually", text)
+            self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
+
+    def test_record_contact_rejects_unsafe_transitions_without_mutation(self) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            rows = [
+                _row(
+                    prospect_id="prospect-002",
+                    status="approved",
+                    contacted_on="",
+                    next_action_on="",
+                    approved_on="2026-07-10",
+                ),
+                _row(
+                    prospect_id="prospect-001",
+                    status="approved",
+                    contacted_on="",
+                    next_action_on="",
+                    approved_on="2026-07-11",
+                ),
+            ]
+            cases = (
+                (
+                    ["--record-contact", "prospect-001", "--confirm-sent"],
+                    "requires --contacted-on",
+                ),
+                (
+                    [
+                        "--record-contact",
+                        "prospect-001",
+                        "--contacted-on",
+                        "2026-07-12",
+                    ],
+                    "requires --confirm-sent",
+                ),
+                (
+                    [
+                        "--record-contact",
+                        "prospect-002",
+                        "--contacted-on",
+                        "2026-07-12",
+                        "--confirm-sent",
+                    ],
+                    "next approved prospect is prospect-001",
+                ),
+                (
+                    [
+                        "--record-contact",
+                        "prospect-001",
+                        "--contacted-on",
+                        "2026-07-10",
+                        "--confirm-sent",
+                    ],
+                    "approved_on must be no later than contacted_on",
+                ),
+                (
+                    [
+                        "--record-contact",
+                        "prospect-001",
+                        "--contacted-on",
+                        "2026-07-14",
+                        "--confirm-sent",
+                    ],
+                    "contacted_on cannot be after as-of",
+                ),
+                (
+                    [
+                        "--record-contact",
+                        "prospect-001",
+                        "--contacted-on",
+                        "2026-07-12",
+                        "--confirm-sent",
+                        "--approved-on",
+                        "2026-07-11",
+                    ],
+                    "--approved-on and --confirm-reviewed require --approve-next",
+                ),
+            )
+
+            for arguments, message in cases:
+                with self.subTest(message=message):
+                    _write_ledger(ledger, rows)
+                    before = ledger.read_bytes()
+                    stderr = io.StringIO()
+                    with redirect_stderr(stderr):
+                        exit_code = main(
+                            [
+                                str(ledger),
+                                "--as-of",
+                                "2026-07-13",
+                                *arguments,
+                            ]
+                        )
+
+                    self.assertEqual(exit_code, 2)
+                    self.assertIn(message, stderr.getvalue())
+                    self.assertEqual(ledger.read_bytes(), before)
+                    self.assertEqual(
+                        list(Path(tmp).glob(".ledger.csv.*.tmp")), []
+                    )
+
+    def test_record_contact_preserves_original_when_atomic_replace_fails(self) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            _write_ledger(
+                ledger,
+                [
+                    _row(
+                        status="approved",
+                        contacted_on="",
+                        next_action_on="",
+                        approved_on="2026-07-11",
+                    )
+                ],
+            )
+            before = ledger.read_bytes()
+            stderr = io.StringIO()
+
+            with patch(
+                "repo_scout.outreach.os.replace",
+                side_effect=OSError("synthetic replace failure"),
+            ), redirect_stderr(stderr):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--record-contact",
+                        "prospect-001",
+                        "--contacted-on",
+                        "2026-07-12",
+                        "--confirm-sent",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 2)
+            self.assertIn("cannot update outreach ledger safely", stderr.getvalue())
+            self.assertEqual(ledger.read_bytes(), before)
+            self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
+
+    def test_guarded_approval_and_contact_actions_compose(self) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            _write_ledger(
+                ledger,
+                [
+                    _row(
+                        status="drafted",
+                        contacted_on="",
+                        next_action_on="",
+                        approved_on="",
+                    )
+                ],
+            )
+            stdout = io.StringIO()
+
+            with redirect_stdout(stdout):
+                approval_exit = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--approve-next",
+                        "prospect-001",
+                        "--approved-on",
+                        "2026-07-11",
+                        "--confirm-reviewed",
+                    ]
+                )
+                contact_exit = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--record-contact",
+                        "prospect-001",
+                        "--contacted-on",
+                        "2026-07-12",
+                        "--confirm-sent",
+                    ]
+                )
+
+            self.assertEqual((approval_exit, contact_exit), (0, 0))
+            with ledger.open(newline="", encoding="utf-8") as ledger_file:
+                row = next(csv.DictReader(ledger_file))
+            self.assertEqual(row["status"], "contacted")
+            self.assertEqual(row["approved_on"], "2026-07-11")
+            self.assertEqual(row["contacted_on"], "2026-07-12")
+            self.assertEqual(row["next_action_on"], "2026-07-19")
+            report = load_outreach_report(ledger, as_of=date(2026, 7, 13))
+            self.assertEqual(report["summary"]["attempted_prospects"], 1)
+            self.assertEqual(report["summary"]["due_followups"], 0)
 
     def test_requires_aliases_and_three_closed_fit_signals(self) -> None:
         invalid_rows = (
