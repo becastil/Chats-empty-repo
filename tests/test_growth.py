@@ -49,7 +49,7 @@ class GrowthReportTests(unittest.TestCase):
         self.assertIn("Pilot funnel: 0 requests", text)
         self.assertIn("Bottleneck: acquisition", text)
         self.assertIn("Sources:\n  none", text)
-        self.assertIn("Purchase criteria:\n  schema-6 pilot report required", text)
+        self.assertIn("Purchase criteria:\n  schema-6+ pilot report required", text)
 
     def test_joins_source_progress_and_selects_payment_bottleneck(self) -> None:
         pilot = self._pilot(
@@ -114,6 +114,40 @@ class GrowthReportTests(unittest.TestCase):
             text,
         )
 
+    def test_accepts_schema_seven_qualification_reports(self) -> None:
+        pilot = self._pilot(
+            schema_version=7,
+            sources={"website": self._source(deals=1, qualified=1)},
+            criteria={"rollout_fit": self._source(deals=1, qualified=1)},
+        )
+
+        report = build_growth_report(self._distribution(), pilot)
+
+        self.assertEqual(report["evidence_quality"]["pilot_schema_version"], 7)
+        self.assertTrue(
+            report["summary"]["decision_criterion_reporting_available"]
+        )
+        self.assertEqual(report["decision_criteria"][0]["criterion"], "rollout_fit")
+        self.assertEqual(report["summary"]["target_profile_requests"], 1)
+        self.assertEqual(report["summary"]["qualification_review_requests"], 0)
+        self.assertIn(
+            "Qualification scope: 1 complete / 1 target / 0 review / "
+            "0 subset required",
+            format_growth_report(report),
+        )
+
+    def test_rejects_inconsistent_schema_seven_qualification_evidence(self) -> None:
+        pilot = self._pilot(
+            schema_version=7,
+            sources={"website": self._source(deals=1)},
+        )
+        pilot["summary"]["target_profile_issues"] = 2
+
+        with self.assertRaisesRegex(
+            GrowthInputError, "target profile exceeds complete qualification"
+        ):
+            build_growth_report(self._distribution(), pilot)
+
     def test_surfaces_missing_and_unknown_purchase_criteria(self) -> None:
         pilot = self._pilot(
             schema_version=6,
@@ -177,8 +211,8 @@ class GrowthReportTests(unittest.TestCase):
             "booked_revenue_usd"
         ] = 1
         cases = [
-            (missing_key, "keys do not match schema 6"),
-            (extra_key, "keys do not match schema 6"),
+            (missing_key, "keys do not match schema 6+"),
+            (extra_key, "keys do not match schema 6+"),
             (non_string_key, "keys must be non-empty strings"),
             (boolean_count, "must be an integer"),
             (stage_mismatch, "qualified_pilots does not match by_source"),
@@ -303,7 +337,7 @@ class GrowthReportTests(unittest.TestCase):
         )
         cases = [
             ({**valid_distribution, "schema_version": 3}, valid_pilot, "schema_version"),
-            (valid_distribution, {**valid_pilot, "schema_version": 7}, "schema_version"),
+            (valid_distribution, {**valid_pilot, "schema_version": 8}, "schema_version"),
             (
                 {**valid_distribution, "change": {"portable_downloads_delta": 1}},
                 valid_pilot,
@@ -448,7 +482,7 @@ class GrowthReportTests(unittest.TestCase):
             "by_source": source_totals,
             "warnings": pilot_warnings or [],
         }
-        if schema_version == 6:
+        if schema_version >= 6:
             empty = cls._source(deals=0)
             criterion_totals = {
                 criterion: dict(empty) for criterion in DECISION_CRITERION_KEYS
@@ -478,6 +512,15 @@ class GrowthReportTests(unittest.TestCase):
                 }
             )
             report["by_decision_criterion"] = criterion_totals
+        if schema_version == 7:
+            report["summary"].update(
+                {
+                    "complete_qualification_issues": tracked,
+                    "target_profile_issues": tracked,
+                    "qualification_review_issues": 0,
+                    "subset_scope_issues": 0,
+                }
+            )
         return report
 
     @staticmethod

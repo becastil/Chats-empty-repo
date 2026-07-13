@@ -11,7 +11,7 @@ from .pilot_funnel import DECISION_CRITERION_KEYS
 
 SCHEMA_VERSION = 2
 SUPPORTED_DISTRIBUTION_SCHEMAS = {2}
-SUPPORTED_PILOT_SCHEMAS = {5, 6}
+SUPPORTED_PILOT_SCHEMAS = {5, 6, 7}
 DELTA_FIELDS = (
     "primary_artifact_downloads_delta",
     "portable_downloads_delta",
@@ -140,6 +140,19 @@ def build_growth_report(
                     ),
                 }
             )
+    if (
+        pilot["qualification_reporting_available"]
+        and pilot_summary["qualification_review_issues"]
+    ):
+        warnings.append(
+            {
+                "kind": "qualification_scope_review_required",
+                "message": (
+                    f"{pilot_summary['qualification_review_issues']} pilot "
+                    "request(s) need scope or target-profile review."
+                ),
+            }
+        )
 
     return {
         "schema_version": SCHEMA_VERSION,
@@ -168,6 +181,19 @@ def build_growth_report(
             "unknown_decision_criterion_requests": pilot_summary.get(
                 "unknown_decision_criterion_issues"
             ),
+            "qualification_reporting_available": pilot[
+                "qualification_reporting_available"
+            ],
+            "complete_qualification_requests": pilot_summary.get(
+                "complete_qualification_issues"
+            ),
+            "target_profile_requests": pilot_summary.get(
+                "target_profile_issues"
+            ),
+            "qualification_review_requests": pilot_summary.get(
+                "qualification_review_issues"
+            ),
+            "subset_scope_requests": pilot_summary.get("subset_scope_issues"),
         },
         "distribution_change": distribution["change"],
         "sources": source_rows,
@@ -189,6 +215,12 @@ def build_growth_report(
             ),
             "unknown_decision_criterion_requests": pilot_summary.get(
                 "unknown_decision_criterion_issues"
+            ),
+            "qualification_reporting_available": pilot[
+                "qualification_reporting_available"
+            ],
+            "qualification_review_requests": pilot_summary.get(
+                "qualification_review_issues"
             ),
         },
         "warnings": warnings,
@@ -230,6 +262,17 @@ def format_growth_report(report: dict[str, Any]) -> str:
             f"Revenue: ${summary['booked_revenue_usd']} booked / "
             f"${summary['target_revenue_usd']} target"
         ),
+        (
+            "Qualification scope: schema-7 pilot report required"
+            if not summary["qualification_reporting_available"]
+            else (
+                f"Qualification scope: "
+                f"{summary['complete_qualification_requests']} complete / "
+                f"{summary['target_profile_requests']} target / "
+                f"{summary['qualification_review_requests']} review / "
+                f"{summary['subset_scope_requests']} subset required"
+            )
+        ),
         f"Bottleneck: {report['bottleneck']['stage']}",
         f"Reason: {report['bottleneck']['reason']}",
         f"Next action: {report['bottleneck']['next_action']}",
@@ -249,7 +292,7 @@ def format_growth_report(report: dict[str, Any]) -> str:
 
     lines.append("Purchase criteria:")
     if not quality["decision_criterion_reporting_available"]:
-        lines.append("  schema-6 pilot report required")
+        lines.append("  schema-6+ pilot report required")
     elif report["decision_criteria"]:
         for criterion in report["decision_criteria"]:
             lines.append(
@@ -301,7 +344,7 @@ def build_parser() -> argparse.ArgumentParser:
         "pilot_report",
         type=Path,
         metavar="PILOT_REPORT",
-        help="Schema-5 or schema-6 repo-scout-pilot JSON report.",
+        help="Schema-5, schema-6, or schema-7 repo-scout-pilot JSON report.",
     )
     parser.add_argument(
         "--format",
@@ -398,7 +441,7 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
         )
         for field in summary_fields
     }
-    if schema == 6:
+    if schema >= 6:
         for field in (
             "declared_decision_criterion_issues",
             "missing_decision_criterion_issues",
@@ -406,6 +449,41 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
         ):
             summary[field] = _require_non_negative_int(
                 summary_object.get(field), f"pilot report.summary.{field}"
+            )
+    if schema == 7:
+        for field in (
+            "complete_qualification_issues",
+            "target_profile_issues",
+            "qualification_review_issues",
+            "subset_scope_issues",
+        ):
+            summary[field] = _require_non_negative_int(
+                summary_object.get(field), f"pilot report.summary.{field}"
+            )
+        if summary["complete_qualification_issues"] > summary["tracked_issues"]:
+            raise GrowthInputError(
+                "pilot report complete qualification exceeds tracked issues"
+            )
+        if (
+            summary["target_profile_issues"]
+            > summary["complete_qualification_issues"]
+        ):
+            raise GrowthInputError(
+                "pilot report target profile exceeds complete qualification"
+            )
+        if summary["qualification_review_issues"] != (
+            summary["tracked_issues"] - summary["target_profile_issues"]
+        ):
+            raise GrowthInputError(
+                "pilot report qualification review does not reconcile to tracked "
+                "and target issues"
+            )
+        if (
+            summary["subset_scope_issues"]
+            > summary["complete_qualification_issues"]
+        ):
+            raise GrowthInputError(
+                "pilot report subset scope exceeds complete qualification"
             )
     pricing = {
         field: _require_positive_int(
@@ -443,7 +521,7 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
 
     _validate_pilot_totals(summary, pricing, sources)
     decision_criteria: list[dict[str, Any]] | None = None
-    if schema == 6:
+    if schema >= 6:
         raw_criteria = _require_object(
             root.get("by_decision_criterion"),
             "pilot report.by_decision_criterion",
@@ -466,7 +544,7 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
             if unexpected:
                 details.append(f"unexpected: {', '.join(unexpected)}")
             raise GrowthInputError(
-                "pilot report.by_decision_criterion keys do not match schema 6 "
+                "pilot report.by_decision_criterion keys do not match schema 6+ "
                 f"({'; '.join(details)})"
             )
         decision_criteria = []
@@ -498,7 +576,8 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
         "summary": summary,
         "pricing": pricing,
         "sources": sources,
-        "decision_criterion_reporting_available": schema == 6,
+        "decision_criterion_reporting_available": schema >= 6,
+        "qualification_reporting_available": schema == 7,
         "decision_criteria": decision_criteria,
         "warning_count": len(raw_warnings),
     }

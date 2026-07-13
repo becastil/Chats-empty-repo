@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 63 of 1,000, with 937 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 64 of 1,000, with 936 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -91,8 +91,10 @@ The delivery goal is 1,000 meaningful commits. This update is commit 63 of 1,000
 - A 14-day owner-visible GitHub traffic baseline with reconciled daily views and clones, top referrers, popular paths, and explicit automation caveats.
 - Required self-reported primary purchase criteria in public pilot intake.
 - Schema-6 criterion totals for qualification, offers, booked revenue, conversion, and loss.
+- Schema-7 scope qualification from required team size, repository count, CI provider, and repository-standard answers.
+- Target, outside-target, incomplete, and first-10-repository subset classifications without repeating free-text standards.
 - Normalized criterion evidence across deals, stale follow-up, and sales queues with explicit missing, edited, and duplicate-answer warnings.
-- Backward-compatible schema-5 and schema-6 pilot support in weekly growth reviews.
+- Backward-compatible schema-5, schema-6, and schema-7 pilot support in weekly growth reviews.
 - Schema-2 growth reviews with ordered purchase-criterion qualification, offer, payment, conversion, and loss outcomes.
 - Exact criterion-taxonomy and cross-segment reconciliation against source totals.
 - Explicit schema-5 criterion unavailability and schema-6 missing or ambiguous criterion evidence warnings.
@@ -160,7 +162,7 @@ The delivery goal is 1,000 meaningful commits. This update is commit 63 of 1,000
 ## How To Run
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.31/repo-scout-0.3.31.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.32/repo-scout-0.3.32.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 python3 -m unittest discover -s tests
 python3 scripts/audit_pilot_labels.py --repo becastil/Chats-empty-repo

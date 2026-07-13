@@ -14,13 +14,18 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from repo_scout.pilot_funnel import (
+    CI_PROVIDER_FIELD_HEADING,
+    CI_PROVIDER_OPTIONS,
     DECISION_CRITERION_FIELD_HEADING,
     DECISION_CRITERION_OPTIONS,
     FunnelInputError,
     READINESS_FIELD_HEADING,
     READINESS_OPTIONS,
+    REPOSITORY_COUNT_FIELD_HEADING,
+    REPOSITORY_STANDARD_FIELD_HEADING,
     SOURCE_FIELD_HEADING,
     SOURCE_OPTIONS,
+    TEAM_SIZE_FIELD_HEADING,
     build_funnel,
     format_funnel,
     main,
@@ -72,12 +77,31 @@ class PilotFunnelTests(unittest.TestCase):
         self.assertEqual(criterion_positions, sorted(criterion_positions))
         self.assertIn("required: true", criterion_section)
 
+        for field_id, heading in (
+            ("team_size", TEAM_SIZE_FIELD_HEADING),
+            ("repository_count", REPOSITORY_COUNT_FIELD_HEADING),
+            ("repository_standard", REPOSITORY_STANDARD_FIELD_HEADING),
+        ):
+            self.assertIn(f"id: {field_id}", form)
+            self.assertIn(f"label: {heading}", form)
+
+        self.assertIn("id: ci_provider", form)
+        self.assertIn(f"label: {CI_PROVIDER_FIELD_HEADING}", form)
+        ci_section = form[form.index("id: ci_provider") :]
+        next_field = ci_section.find("\n  - type:")
+        ci_section = ci_section[:next_field]
+        ci_positions = [
+            ci_section.index(f"        - {answer}")
+            for _, answer in CI_PROVIDER_OPTIONS
+        ]
+        self.assertEqual(ci_positions, sorted(ci_positions))
+
     def test_build_funnel_tracks_revenue_stages_and_label_drift(self) -> None:
         payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
 
         report = build_funnel(payload, as_of=date(2026, 7, 10))
 
-        self.assertEqual(report["schema_version"], 6)
+        self.assertEqual(report["schema_version"], 7)
         self.assertEqual(report["summary"]["tracked_issues"], 8)
         self.assertEqual(report["summary"]["ignored_issues"], 1)
         self.assertEqual(report["summary"]["booked_pilots"], 4)
@@ -105,6 +129,10 @@ class PilotFunnelTests(unittest.TestCase):
         self.assertEqual(
             report["summary"]["unknown_decision_criterion_issues"], 0
         )
+        self.assertEqual(report["summary"]["complete_qualification_issues"], 0)
+        self.assertEqual(report["summary"]["target_profile_issues"], 0)
+        self.assertEqual(report["summary"]["qualification_review_issues"], 8)
+        self.assertEqual(report["summary"]["subset_scope_issues"], 0)
         self.assertEqual(
             report["by_stage"],
             {
@@ -236,6 +264,83 @@ class PilotFunnelTests(unittest.TestCase):
         self.assertEqual(
             report,
             build_funnel(list(reversed(payload)), as_of=date(2026, 7, 10)),
+        )
+
+    def test_classifies_application_scope_without_exposing_standard_text(self) -> None:
+        common = (
+            "### How did you hear about Repo Scout?\n\nRepo Scout website\n\n"
+            "### Purchase readiness\n\nReady to purchase the $299 pilot\n\n"
+            "### Primary purchase criterion\n\n"
+            "Works across our repositories and CI"
+        )
+
+        def issue(
+            number: int,
+            *,
+            team_size: str,
+            repository_count: str,
+            ci_provider: str = "GitHub Actions",
+            standard: str = "Use one reviewed repository policy.",
+        ) -> dict[str, object]:
+            return {
+                "number": number,
+                "title": f"Pilot {number}",
+                "state": "OPEN",
+                "updatedAt": "2026-07-13T00:00:00Z",
+                "labels": ["pilot-lead"],
+                "body": (
+                    f"### Team size\n\n{team_size}\n\n"
+                    f"### Repository count\n\n{repository_count}\n\n"
+                    f"### CI provider\n\n{ci_provider}\n\n"
+                    f"### Repository standard to enforce\n\n{standard}\n\n"
+                    f"{common}"
+                ),
+            }
+
+        report = build_funnel(
+            [
+                issue(1, team_size="12", repository_count="6"),
+                issue(2, team_size="2", repository_count="1"),
+                issue(
+                    3,
+                    team_size="20",
+                    repository_count="15",
+                    ci_provider="GitLab CI",
+                ),
+                issue(4, team_size="about ten", repository_count="_No response_"),
+            ],
+            as_of=date(2026, 7, 13),
+        )
+
+        self.assertEqual(report["summary"]["complete_qualification_issues"], 3)
+        self.assertEqual(report["summary"]["target_profile_issues"], 2)
+        self.assertEqual(report["summary"]["qualification_review_issues"], 2)
+        self.assertEqual(report["summary"]["subset_scope_issues"], 1)
+        self.assertEqual(
+            [deal["qualification"]["status"] for deal in report["deals"]],
+            ["target", "outside_target", "target", "incomplete"],
+        )
+        self.assertEqual(
+            report["deals"][1]["qualification"]["review_reasons"],
+            ["team_size_outside_target", "single_repository"],
+        )
+        self.assertEqual(
+            report["deals"][2]["qualification"]["ci_provider"], "gitlab_ci"
+        )
+        self.assertEqual(
+            report["deals"][2]["qualification"]["pilot_repository_scope"],
+            "subset_required",
+        )
+        self.assertEqual(
+            report["deals"][3]["qualification"]["review_reasons"],
+            ["invalid_team_size", "missing_repository_count"],
+        )
+        serialized = json.dumps(report)
+        self.assertNotIn("Use one reviewed repository policy.", serialized)
+        self.assertIn(
+            "Qualification scope: 3 complete / 2 target / 2 review / "
+            "1 subset required",
+            format_funnel(report),
         )
 
     def test_source_attribution_handles_legacy_unknown_and_ambiguous_answers(

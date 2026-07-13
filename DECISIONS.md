@@ -484,3 +484,16 @@ and artifact bytes were checked before the dogfood workflow, customer example,
 and test contract moved together. Package and site versions remain `0.3.31`
 because this change advances verified consumption rather than published
 behavior.
+
+## 2026-07-12: Verify Application Scope Without Repeating Buyer Free Text
+
+Pilot schema 7 parses the form's required team size, repository count, CI
+provider, and repository-standard fields before the sales queue is reviewed.
+Complete teams of 5 to 50 developers with at least two repositories are marked
+`target`; complete requests outside that profile are `outside_target`; missing,
+duplicate, edited, or invalid answers are `incomplete` with stable review
+reasons. More than 10 repositories produces `subset_required` for the first-10
+pilot scope rather than automatic rejection. Reports retain only whether the
+free-text standard exists, not its contents. Labels and payment stages remain
+operator decisions, and schema-5 through schema-7 reports remain readable by
+the growth review.

@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this verified-pin commit: 63 / 1,000 (6.3%).
-- Remaining after this verified-pin commit: 937 commits.
+- Progress after this qualification-scope commit: 64 / 1,000 (6.4%).
+- Remaining after this qualification-scope commit: 936 commits.
 
 ## Commit Standard
 

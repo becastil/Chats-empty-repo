@@ -38,7 +38,7 @@ not require a checkout, package installation, administrator access, or an API
 key:
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.31/repo-scout-0.3.31.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.32/repo-scout-0.3.32.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 ```
 
@@ -49,7 +49,7 @@ need the `repo-scout-distribution`, `repo-scout-growth`, `repo-scout-policy`,
 `repo-scout-outreach` commands:
 
 ```bash
-python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.31/repo_scout-0.3.31-py3-none-any.whl
+python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.32/repo_scout-0.3.32-py3-none-any.whl
 repo-scout --languages .
 ```
 
@@ -281,6 +281,11 @@ implementation capacity, and commercial fit, so repeated paid outcomes can
 shape stronger policy packs and rollout playbooks. A deterministic sales queue ranks every open
 pre-payment deal by declared readiness and funnel stage, then names the next
 conversion action without advancing labels automatically.
+Schema-7 reports also normalize the required team size, repository count, and
+CI provider, confirm that a repository-standard answer exists without copying
+its text into reports, and mark each request as target, outside-target, or
+incomplete. Teams with more than 10 repositories are flagged for a first-10
+subset rather than rejected.
 See [docs/pilot-tracking.md](docs/pilot-tracking.md) for stage definitions and
 privacy rules.
 
@@ -352,8 +357,9 @@ repo-scout-growth distribution-current.json pilot-current.json
 The growth review reports signed reach movement, attributed pilot progress,
 booked revenue, purchase-criterion outcomes, evidence warnings, and one current
 bottleneck from acquisition through retention. Schema-5 pilot reports remain
-readable with criterion evidence marked unavailable; schema-6 reports reconcile
-every criterion total to the same deals and revenue as source reporting. The
+readable with criterion evidence marked unavailable; schema-6 and schema-7
+reports reconcile every criterion total to the same deals and revenue as source
+reporting. The
 review never calculates a download-to-lead conversion rate: GitHub artifact
 requests are not unique people and cannot be assigned to a discovery source or
 purchase criterion.

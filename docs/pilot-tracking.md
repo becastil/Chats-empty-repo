@@ -52,7 +52,7 @@ Use `--format json` for a machine-readable report. `--pilot-price` and
 `--target-pilots` change the commercial assumptions without changing issue
 data.
 
-Funnel JSON declares `schema_version: 6`. Its `follow_up` object records the
+Funnel JSON declares `schema_version: 7`. Its `follow_up` object records the
 UTC `as_of` date, the inactivity threshold, and a deterministic deal list.
 Omit `--as-of` to use the current UTC date. `--stale-days` changes the default
 seven-day threshold.
@@ -65,6 +65,17 @@ before qualified deals, then leads; older issue activity breaks ties before
 issue number. Each record includes a stage-specific `next_action`. The queue
 does not apply labels, send messages, infer willingness to pay, or count
 revenue.
+
+Every deal, stale-deal, and sales-queue record also contains a `qualification`
+object derived from the four required scope fields. It includes normalized
+positive integers for team and repository counts, a closed CI-provider key,
+whether a repository-standard answer is present, and review reasons. Status is
+`target` for teams of 5 to 50 developers with at least two repositories,
+`outside_target` for complete requests outside that profile, and `incomplete`
+for missing, duplicate, or invalid answers. Repository counts above 10 remain
+target-profile candidates but use `pilot_repository_scope: subset_required` so
+the written pilot scope selects the first 10 repositories. The reporter never
+copies repository-standard free text into its output.
 
 The request form also asks how the buyer discovered Repo Scout. The reporter
 maps that issue-body answer to a stable source key:
@@ -113,7 +124,7 @@ match the taxonomy, or duplicate criterion headings, use `unknown`. Both remain
 visible in summary totals and warnings. Sales priority remains based on purchase
 readiness, not on the criterion selected.
 
-`repo-scout-growth` consumes these schema-6 criterion totals in its weekly
+`repo-scout-growth` consumes these schema-6 and schema-7 criterion totals in its weekly
 commercial review. It requires the exact taxonomy, validates each cumulative
 stage and revenue value, and reconciles aggregate criterion outcomes to source
 outcomes. Schema-5 pilot reports remain readable with criterion reporting marked

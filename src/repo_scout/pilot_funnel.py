@@ -10,7 +10,7 @@ import sys
 from typing import Any, Sequence, TextIO
 
 
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 7
 DEFAULT_PILOT_PRICE_USD = 299
 DEFAULT_TARGET_PILOTS = 3
 DEFAULT_STALE_DAYS = 7
@@ -82,6 +82,20 @@ DECISION_CRITERION_KEYS = (
     "unattributed",
     "unknown",
 )
+TEAM_SIZE_FIELD_HEADING = "Team size"
+REPOSITORY_COUNT_FIELD_HEADING = "Repository count"
+CI_PROVIDER_FIELD_HEADING = "CI provider"
+REPOSITORY_STANDARD_FIELD_HEADING = "Repository standard to enforce"
+CI_PROVIDER_OPTIONS = (
+    ("github_actions", "GitHub Actions"),
+    ("gitlab_ci", "GitLab CI"),
+    ("circleci", "CircleCI"),
+    ("buildkite", "Buildkite"),
+    ("other", "Other"),
+)
+CI_PROVIDER_BY_ANSWER = {
+    answer: provider for provider, answer in CI_PROVIDER_OPTIONS
+}
 SALES_PRIORITY_BY_READINESS = {
     "ready": 1,
     "needs_approval": 2,
@@ -167,6 +181,10 @@ def build_funnel(
     attributed_issues = 0
     unattributed_issues = 0
     unknown_source_issues = 0
+    complete_qualification_issues = 0
+    target_profile_issues = 0
+    qualification_review_issues = 0
+    subset_scope_issues = 0
     seen_issue_numbers: set[int] = set()
     issues: list[PilotIssue] = []
 
@@ -223,6 +241,16 @@ def build_funnel(
         if decision_criterion_warning is not None:
             warnings.append(decision_criterion_warning)
         decision_criterion_counts[decision_criterion] += 1
+
+        qualification = _qualification_scope(issue)
+        if qualification["status"] != "incomplete":
+            complete_qualification_issues += 1
+        if qualification["status"] == "target":
+            target_profile_issues += 1
+        else:
+            qualification_review_issues += 1
+        if qualification["pilot_repository_scope"] == "subset_required":
+            subset_scope_issues += 1
 
         present_stages = [
             position
@@ -300,6 +328,7 @@ def build_funnel(
                     "source": source,
                     "purchase_readiness": readiness,
                     "decision_criterion": decision_criterion,
+                    "qualification": qualification,
                     "priority": sales_priority,
                     "next_action": next_action,
                     "age_days": age_days,
@@ -336,6 +365,7 @@ def build_funnel(
                         "source": source,
                         "purchase_readiness": readiness,
                         "decision_criterion": decision_criterion,
+                        "qualification": qualification,
                         "priority": sales_priority,
                         "next_action": next_action,
                         "age_days": age_days,
@@ -376,6 +406,7 @@ def build_funnel(
                 "purchase_readiness_raw": readiness_raw,
                 "decision_criterion": decision_criterion,
                 "decision_criterion_raw": decision_criterion_raw,
+                "qualification": qualification,
                 "booked": is_booked,
                 "state": issue.state,
                 "updated_at": _format_timestamp(issue.updated_at),
@@ -429,6 +460,10 @@ def build_funnel(
             "unknown_decision_criterion_issues": decision_criterion_counts[
                 "unknown"
             ],
+            "complete_qualification_issues": complete_qualification_issues,
+            "target_profile_issues": target_profile_issues,
+            "qualification_review_issues": qualification_review_issues,
+            "subset_scope_issues": subset_scope_issues,
         },
         "follow_up": {
             "as_of": report_date.isoformat(),
@@ -488,6 +523,13 @@ def format_funnel(report: dict[str, Any]) -> str:
             f"{summary['declared_decision_criterion_issues']} declared / "
             f"{summary['missing_decision_criterion_issues']} missing / "
             f"{summary['unknown_decision_criterion_issues']} unknown"
+        ),
+        (
+            "Qualification scope: "
+            f"{summary['complete_qualification_issues']} complete / "
+            f"{summary['target_profile_issues']} target / "
+            f"{summary['qualification_review_issues']} review / "
+            f"{summary['subset_scope_issues']} subset required"
         ),
         (
             f"Follow-up: {summary['stale_deals']} stale open pre-payment "
@@ -575,7 +617,8 @@ def format_funnel(report: dict[str, Any]) -> str:
             lines.append(
                 f"  #{deal['number']} [{deal['stage']}, {deal['source']}, "
                 f"{deal['purchase_readiness']}, {deal['decision_criterion']}] "
-                f"{deal['title']}{suffix}"
+                f"{deal['title']} [qualification: "
+                f"{deal['qualification']['status']}]{suffix}"
             )
     else:
         lines.append("  none")
@@ -600,7 +643,8 @@ def format_funnel(report: dict[str, Any]) -> str:
                 f"  #{deal['number']} [P{deal['priority']}, {deal['stage']}, "
                 f"{deal['purchase_readiness']}, {deal['decision_criterion']}] "
                 f"{deal['next_action']} "
-                f"{deal['title']}{suffix}"
+                f"{deal['title']} [qualification: "
+                f"{deal['qualification']['status']}]{suffix}"
             )
     else:
         lines.append("  none")
@@ -942,6 +986,102 @@ def _classify_decision_criterion(
             ),
         )
     return criterion, raw_answer, None
+
+
+def _qualification_scope(issue: PilotIssue) -> dict[str, Any]:
+    review_reasons: list[str] = []
+    team_size = _positive_form_integer(
+        issue.body,
+        TEAM_SIZE_FIELD_HEADING,
+        "team_size",
+        review_reasons,
+    )
+    repository_count = _positive_form_integer(
+        issue.body,
+        REPOSITORY_COUNT_FIELD_HEADING,
+        "repository_count",
+        review_reasons,
+    )
+
+    ci_answer = _single_form_answer(
+        issue.body,
+        CI_PROVIDER_FIELD_HEADING,
+        "ci_provider",
+        review_reasons,
+    )
+    ci_provider = (
+        CI_PROVIDER_BY_ANSWER.get(ci_answer) if ci_answer is not None else None
+    )
+    if ci_answer is not None and ci_provider is None:
+        review_reasons.append("unknown_ci_provider")
+
+    repository_standard = _single_form_answer(
+        issue.body,
+        REPOSITORY_STANDARD_FIELD_HEADING,
+        "repository_standard",
+        review_reasons,
+    )
+    standard_present = repository_standard is not None
+
+    incomplete = any(
+        value is None
+        for value in (team_size, repository_count, ci_provider)
+    ) or not standard_present
+    if incomplete:
+        status = "incomplete"
+        pilot_repository_scope = None
+    else:
+        assert team_size is not None
+        assert repository_count is not None
+        if not 5 <= team_size <= 50:
+            review_reasons.append("team_size_outside_target")
+        if repository_count < 2:
+            review_reasons.append("single_repository")
+        status = "target" if not review_reasons else "outside_target"
+        pilot_repository_scope = (
+            "subset_required" if repository_count > 10 else "within_offer"
+        )
+
+    return {
+        "status": status,
+        "team_size": team_size,
+        "repository_count": repository_count,
+        "ci_provider": ci_provider,
+        "repository_standard_present": standard_present,
+        "pilot_repository_scope": pilot_repository_scope,
+        "review_reasons": review_reasons,
+    }
+
+
+def _positive_form_integer(
+    body: str,
+    heading: str,
+    field: str,
+    review_reasons: list[str],
+) -> int | None:
+    answer = _single_form_answer(body, heading, field, review_reasons)
+    if answer is None:
+        return None
+    if re.fullmatch(r"[0-9]+", answer) is None or int(answer) < 1:
+        review_reasons.append(f"invalid_{field}")
+        return None
+    return int(answer)
+
+
+def _single_form_answer(
+    body: str,
+    heading: str,
+    field: str,
+    review_reasons: list[str],
+) -> str | None:
+    answers = _issue_form_answers(body, heading)
+    if not answers or answers == ["_No response_"]:
+        review_reasons.append(f"missing_{field}")
+        return None
+    if len(answers) != 1:
+        review_reasons.append(f"ambiguous_{field}")
+        return None
+    return answers[0]
 
 
 def _issue_form_answers(body: str, heading: str) -> list[str]:

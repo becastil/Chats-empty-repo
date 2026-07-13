@@ -252,18 +252,26 @@ cash; only `pilot-paid` or a later paid stage counts as booked revenue.
 
 The intake requires one primary purchase criterion covering policy fit,
 cross-repository rollout, leadership or audit evidence, privacy and security,
-implementation capacity, commercial fit, or other. Schema-6 funnel totals
+implementation capacity, commercial fit, or other. Schema-7 funnel totals
 connect that criterion to qualification, offers, payment, conversion, and loss.
 This creates structured customer learning before outreach scales, but a stated
 criterion is not a moat or proof of demand. Repeated paid outcomes must show
 which policy packs, evidence patterns, and rollout playbooks are defensible.
 
-Schema-6 reporting also turns every open pre-payment request into a prioritized
+Schema-7 reporting also turns every open pre-payment request into a prioritized
 sales action. Ready buyers surface first, approval-dependent buyers receive an
 approval-oriented action, exploratory buyers receive a proof or decision-criteria
 action, and unclear answers require clarification. Funnel stage and issue age
 order deals within those groups. The queue is an operating aid, not an automated
 decision, and it neither sends outreach nor changes booked-revenue semantics.
+
+Schema 7 also verifies the required application scope before an operator relies
+on a qualification label. It normalizes team size, repository count, and CI
+provider, records only whether the requested standard is present, and marks the
+request as target, outside-target, or incomplete with explicit review reasons.
+Teams above the 10-repository pilot limit are scoped to a first-10 subset rather
+than discarded. This is qualification evidence, not an automated buying
+decision, and repository-standard free text is not repeated in reports.
 
 ## Product Filter
 
@@ -307,7 +315,7 @@ presented as 119 users, installs, or qualified prospects. Together with zero
 pilot requests, it confirms that acquisition remains the honest bottleneck.
 
 The dependency-free `repo-scout-growth` review places those signed deltas beside
-schema-5 or schema-6 pilot source, qualification, offer, payment, and revenue
+schema-5, schema-6, or schema-7 pilot source, qualification, offer, payment, and revenue
 totals. It names one current commercial bottleneck and next action so weekly
 roadmap work responds to the paid funnel instead of optimizing raw download
 counts. Input warnings and missing or ambiguous source answers remain visible.
@@ -315,7 +323,7 @@ Because release requests are neither unique people nor attributable sessions,
 the review never computes a download-to-lead conversion rate or assigns request
 movement to a discovery source.
 
-Schema-2 growth reviews also expose ordered schema-6 purchase-criterion outcomes
+Schema-2 growth reviews also expose ordered schema-6+ purchase-criterion outcomes
 and reconcile every criterion aggregate to the same source-reported deals and
 revenue. Schema-5 reports mark criterion evidence unavailable instead of zero.
 Missing and ambiguous criteria remain warnings. Criteria are self-reported

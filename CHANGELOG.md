@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.3.32 - 2026-07-12
+
+- Upgraded pilot reporting to schema 7 with normalized team size, repository count, CI provider, and repository-standard-presence evidence.
+- Classified every tracked request as target, outside-target, or incomplete while preserving explicit review reasons.
+- Flagged teams with more than 10 repositories for a first-10 subset instead of rejecting an otherwise qualified multi-repository buyer.
+- Kept repository-standard free text out of funnel, follow-up, and sales-queue output.
+- Extended weekly growth reviews to accept schema-7 reports while retaining schema-5 and schema-6 compatibility.
+- Recorded that workspace search found no suitable Repo Scout prospect list and excluded an unrelated healthcare contact workbook; no prospect or outreach activity was claimed.
 - Independently verified and pinned the `v0.3.31` wheel, source commit `949b345c71f800d384ea4b2f056efc7e7a41a6d3`, and SHA-256 `9742b31057e657a4db9a1cc2664c3d40e0bcfd87c659e856f6f4753d4b009db0` in both CI gates.
 - Confirmed the wheel against its release manifest, version tag, signer workflow, provenance, and GitHub-hosted runner before changing customer trust metadata.
 - Kept package and site version `0.3.31` unchanged; no redundant release, prospect, outreach attempt, lead, or revenue was claimed.
