@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after this verified-pin commit: 65 / 1,000 (6.5%).
-- Remaining after this verified-pin commit: 935 commits.
+- Progress after this outreach-draft baseline commit: 66 / 1,000 (6.6%).
+- Remaining after this outreach-draft baseline commit: 934 commits.
 
 ## Commit Standard
 

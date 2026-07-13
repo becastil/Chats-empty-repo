@@ -1,12 +1,15 @@
 # Commercial Evidence Baseline
 
-These generated reports preserve a public-only starting point for future
-distribution and pilot-funnel comparisons. They were captured on
-2026-07-12 at 19:22 UTC from:
+These generated reports preserve public or privacy-safe starting points for
+future commercial comparisons. Distribution, pilot, growth, and traffic reports
+were captured on 2026-07-12 at 19:22 UTC. The outreach draft report was captured
+on 2026-07-13 at 02:32 UTC from:
 
 - GitHub's public release API for `becastil/Chats-empty-repo`.
 - Public issues carrying the repository's `pilot-lead` label.
 - Repo Scout's dependency-free distribution, pilot, and growth commands.
+- An ignored private outreach ledger whose fit links were reviewed against
+  narrow company-controlled public evidence.
 
 ## Current Readout
 
@@ -15,6 +18,8 @@ distribution and pilot-funnel comparisons. They were captured on
 - 55 manifest requests, 6 source requests, and 0 unknown requests.
 - 0 tracked pilot requests, 0 booked pilots, and $0 booked revenue.
 - 0 evidence warnings in the distribution, pilot, and joined growth reports.
+- 5 qualified outreach drafts backed by 16 fit-evidence links, with 0 contact
+  attempts, replies, pilot requests, or revenue claims.
 - A 14-day GitHub traffic window with 1 unique viewer, 119 unique cloners, and
   310 clone events.
 
@@ -36,6 +41,8 @@ organic visitors.
   baseline with the pilot baseline.
 - `github-traffic-baseline.json` preserves the owner-visible 14-day aggregate,
   daily series, top referrers, and popular paths without visitor identities.
+- `outreach-draft-baseline.json` preserves only schema-3 aggregate counts; it
+  contains no prospect alias, company, contact address, draft, or source URL.
 
 ## Refresh Contract
 

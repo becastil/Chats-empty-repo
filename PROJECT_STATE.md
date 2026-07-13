@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 65 of 1,000, with 935 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 66 of 1,000, with 934 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -121,6 +121,10 @@ The delivery goal is 1,000 meaningful commits. This update is commit 65 of 1,000
 - Schema-2 outreach reporting with a reviewed-draft state that requires a permitted channel and remains excluded from attempted-prospect totals.
 - Schema-3 outreach qualification requiring one private, secure evidence link for every declared fit signal.
 - Aggregate qualification-link reporting that never emits private source URLs.
+- Five personalized, qualified outreach drafts prepared from narrow
+  company-controlled public evidence and kept in the ignored private workspace.
+- A committed schema-3 outreach draft baseline proving 5 drafts and 16 reviewed
+  fit links while exposing no identity, address, alias, draft, or source URL.
 - Backward-compatible policy v2 `forbidden_files` rules with normalized exact paths and contradictory-rule rejection.
 - Git-aware forbidden-file enforcement that catches tracked or unignored files without failing properly ignored local environment files.
 - Manual team-policy, CLI, fingerprint, and compatibility coverage for `.env` and `.env.local` protection.
@@ -170,4 +174,4 @@ python3 scripts/audit_pilot_labels.py --repo becastil/Chats-empty-repo
 
 ## Next Small Task
 
-Connect an authoritative sales-intelligence source or supply a reviewed prospect list, then research and prepare the first five qualified drafts for human review before sending. No private ledger or drafts were created and no outreach was attempted; broad web guesses are not qualification evidence. Do not add another acquisition asset or paid-policy feature before five real attempts. Release, pilot, and repository-traffic baselines are now recorded; refresh them only at a deliberate review point or meaningful funnel change.
+Human-review the five private, evidence-backed drafts, then send them one at a time through their published business channels. Record each contact date and its exact seven-day follow-up before sending the next message. No outreach has been attempted yet, and drafts are not leads or revenue. Do not add another acquisition asset or paid-policy feature before five real attempts. Release, pilot, repository-traffic, and outreach-draft baselines are recorded; refresh them only at a deliberate review point or meaningful funnel change.

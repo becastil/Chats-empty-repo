@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Prepared five personalized outreach drafts from narrow, company-controlled public evidence and kept all identities, business addresses, messages, and source links in the ignored private workspace.
+- Audited the batch as five schema-3 drafts with 16 fit-evidence links and zero contact attempts, replies, pilot requests, or revenue.
+- Added a counts-only outreach baseline and regression coverage that rejects leaked aliases, URLs, or email addresses from the committed evidence.
 - Independently verified and pinned the `v0.3.32` wheel, source commit `2c983c8db3d32ec40b8a20ed585dfc2a48feed2c`, and SHA-256 `14ed1f4bd1138574a59cd86c68cf0f67395216a902e0a49aef2d6d98d4173649` in both CI gates.
 - Confirmed the wheel against its release manifest, semantic tag, signer workflow, provenance, and GitHub-hosted runner before changing customer trust metadata.
 - Kept package and site version `0.3.32` unchanged; no redundant release, prospect, outreach attempt, lead, or revenue was claimed.

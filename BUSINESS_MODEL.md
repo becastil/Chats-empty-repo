@@ -176,6 +176,14 @@ come from one source commit,
 manifest, wheel digest, and provenance-attested release. This alignment reduces
 deployment ambiguity; it does not create qualified prospects or demand.
 
+The first five personalized outreach drafts now exist in the ignored private
+workspace. Sixteen fit links were reviewed against narrow, company-controlled
+public evidence because no Sales Intelligence or CRM provider is connected.
+The committed schema-3 baseline contains only aggregate counts. All five remain
+`drafted`: attempted outreach, replies, pilot requests, and revenue are still
+zero until a human reviews and sends each message through its published
+business channel.
+
 Rollout bundles carry a stable, non-sensitive metadata contract so a pilot lead
 can summarize bundle-reported readiness, policy failures, violations, worktree
 state, and attention across repositories without sending source code to Repo

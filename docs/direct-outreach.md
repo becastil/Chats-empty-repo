@@ -116,3 +116,8 @@ command never sends
 outreach, and its
 reply or pilot-requested counts do not become public demand or revenue evidence;
 only public pilot intake and cumulative funnel labels do.
+
+A reviewed batch may publish the command's counts-only JSON as a measurement
+baseline. Before committing it, verify that it contains no `prospect-` alias,
+URL, email address, company name, or message text. The ignored ledger and draft
+notes remain the only source for identities and qualification links.

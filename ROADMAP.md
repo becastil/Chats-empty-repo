@@ -7,7 +7,9 @@
 
 ## Near Term
 
-- Obtain authoritative company and contact evidence, then execute and audit the first five qualified contacts with `repo-scout-outreach`; do not add another acquisition asset before those attempts.
+- Human-review and send the five prepared, publicly qualified drafts one at a
+  time, then audit their exact seven-day follow-ups with `repo-scout-outreach`;
+  do not add another acquisition asset before those attempts.
 - Collect the first three public pilot requests, work the prioritized sales queue, and compare readiness and purchase criteria by source.
 - Add a private pilot contact path after public intake validates demand.
 

@@ -92,6 +92,25 @@ class MetricsBaselineTests(unittest.TestCase):
         for key, value in growth["distribution_change"].items():
             self.assertEqual(value, [] if key.endswith("releases") else 0)
 
+    def test_outreach_draft_baseline_is_aggregate_and_unsent(self) -> None:
+        report = self._read("outreach-draft-baseline.json")
+        summary = report["summary"]
+        serialized = json.dumps(report)
+
+        self.assertEqual(report["schema_version"], 3)
+        self.assertEqual(summary["prospects"], 5)
+        self.assertEqual(summary["drafted"], 5)
+        self.assertEqual(summary["fit_evidence_links"], 16)
+        self.assertEqual(summary["attempted_prospects"], 0)
+        self.assertEqual(summary["contacted"], 0)
+        self.assertEqual(summary["replied"], 0)
+        self.assertEqual(summary["pilot_requested"], 0)
+        self.assertEqual(report["due_followups"], [])
+        self.assertNotIn("prospect-", serialized)
+        self.assertNotIn("https://", serialized)
+        self.assertNotIn("@", serialized)
+        self.assertIn("not lead, demand, payment, or revenue", report["evidence_note"])
+
     @staticmethod
     def _read(name: str) -> dict[str, object]:
         return json.loads((METRICS / name).read_text(encoding="utf-8"))

@@ -508,3 +508,15 @@ and artifact bytes were checked before the dogfood workflow, customer example,
 and test contract moved together. This gives teams the same verified release as
 the schema-7 qualification workflow without creating a redundant package or
 site release. No prospect, outreach attempt, lead, or revenue is inferred.
+
+## 2026-07-12: Prepare The First Draft Batch From Narrow Public Evidence
+
+Five commercial software teams were qualified only after reviewing their own
+public GitHub organizations, repository-level agent guidance, and official team,
+privacy, or business-contact pages. The identities, published addresses,
+personalized messages, aliases, and evidence URLs remain in the ignored private
+workspace. `repo-scout-outreach` accepts the rows as five `drafted` prospects
+with 16 evidence links. A committed aggregate baseline proves those counts and
+is regression-tested to contain no alias, URL, or email address. No message was
+sent, so attempted prospects, replies, pilot requests, leads, and revenue remain
+zero. Human review is still required before each one-at-a-time contact.
