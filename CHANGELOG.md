@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added an installed-wheel cross-repository rollout smoke test to releases.
+- Proved matching policy fingerprints, complete commit coverage, and one ready
+  plus one remediation-required repository survive packaged aggregation.
+- Kept repository IDs, fingerprints, commits, and evidence paths out of default
+  output while testing explicit details and duplicate-repository rejection.
 - Added an installed-wheel pilot-funnel smoke test to the release boundary.
 - Proved a synthetic offer remains outside revenue while one synthetic paid
   pilot books $299 toward the three-pilot, $897 target.

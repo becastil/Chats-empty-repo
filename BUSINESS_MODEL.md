@@ -266,6 +266,15 @@ completed scan, including policy failures. This turns weekly CI use and
 cross-repository policy reuse into evidence a pilot operator can review without
 a Repo Scout-hosted database.
 
+Future tagged releases aggregate two temporary schema-2 bundles through the
+installed wheel before provenance attestation. The check requires one
+ready-for-CI repository, one remediation-required repository, complete policy
+fingerprint and Git commit coverage, and verified shared policy identity. It
+also proves the default summary omits repository IDs, fingerprints, commits,
+and evidence paths while explicit details remain available, and rejects a
+duplicate repository before emitting a report. Synthetic bundles validate the
+distribution contract; they are not pilot usage or customer evidence.
+
 The hosted offer now leads with this cross-repository outcome: complete policy
 and commit identity coverage, shared-policy verification, and visible
 remediation work. Its example is labeled bundle-reported and the application

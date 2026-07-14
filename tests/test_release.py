@@ -67,6 +67,15 @@ smoke_test_pilot_funnel = importlib.util.module_from_spec(PILOT_SMOKE_SPEC)
 sys.modules[PILOT_SMOKE_SPEC.name] = smoke_test_pilot_funnel
 PILOT_SMOKE_SPEC.loader.exec_module(smoke_test_pilot_funnel)
 
+ROLLOUT_SMOKE_SCRIPT_PATH = ROOT / "scripts" / "smoke_test_rollout_summary.py"
+ROLLOUT_SMOKE_SPEC = importlib.util.spec_from_file_location(
+    "smoke_test_rollout_summary", ROLLOUT_SMOKE_SCRIPT_PATH
+)
+assert ROLLOUT_SMOKE_SPEC is not None and ROLLOUT_SMOKE_SPEC.loader is not None
+smoke_test_rollout_summary = importlib.util.module_from_spec(ROLLOUT_SMOKE_SPEC)
+sys.modules[ROLLOUT_SMOKE_SPEC.name] = smoke_test_rollout_summary
+ROLLOUT_SMOKE_SPEC.loader.exec_module(smoke_test_rollout_summary)
+
 
 class ReleaseManifestTests(unittest.TestCase):
     def test_current_project_versions_match(self) -> None:
@@ -168,6 +177,24 @@ class ReleaseManifestTests(unittest.TestCase):
                 "qualified-segmentation",
                 "operator-text",
                 "invalid-export-rejected",
+            ),
+        )
+
+    def test_rollout_summary_smoke_contract_passes_against_source(self) -> None:
+        environment = os.environ.copy()
+        environment["PYTHONPATH"] = str(ROOT / "src")
+
+        checked = smoke_test_rollout_summary.verify_rollout_summary(
+            sys.executable, environment=environment
+        )
+
+        self.assertEqual(
+            checked,
+            (
+                "counts-only-summary",
+                "shared-policy-remediation",
+                "explicit-details",
+                "duplicate-rejected",
             ),
         )
 
@@ -363,6 +390,11 @@ class ReleaseWorkflowTests(unittest.TestCase):
         self.assertIn(
             '"$RUNNER_TEMP/repo-scout-release/bin/repo-scout-rollout" --help',
             workflow,
+        )
+        self.assertIn("python scripts/smoke_test_rollout_summary.py", workflow)
+        self.assertLess(
+            workflow.index("python scripts/smoke_test_rollout_summary.py"),
+            workflow.index("- name: Attest release provenance"),
         )
         self.assertIn('python "dist/repo-scout-${version}.pyz" --help', workflow)
         self.assertIn("dist/repo-scout-*.pyz", workflow)

@@ -710,3 +710,17 @@ sales action, stable operator totals, repository-standard free-text omission,
 and controlled non-array input rejection. Synthetic labels and payment state
 prove reporter behavior only. They do not create a request, payment, sale, or
 revenue evidence, all of which remain grounded in the live public funnel.
+
+## 2026-07-14: Release-Test The Cross-Repository Pilot Outcome
+
+The installed release previously checked only that `repo-scout-rollout --help`
+opened, even though cross-repository consistency is the central paid-pilot
+outcome. Every future release now aggregates two temporary schema-2 evidence
+bundles through the built wheel before provenance attestation. The fixtures
+share one policy fingerprint and retain distinct scanned commits while showing
+one ready repository and one remediation-required repository. The release is
+blocked unless default text and JSON remain counts-only, shared-policy and
+identity coverage remain accurate, explicit detail opt-in exposes the expected
+records, and duplicate repository IDs fail without a summary. This strengthens
+the existing paid workflow without creating another policy feature, customer,
+usage event, or revenue claim.
