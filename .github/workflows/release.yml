@@ -66,6 +66,8 @@ jobs:
           python scripts/smoke_test_outreach_lifecycle.py \
             --python "$RUNNER_TEMP/repo-scout-release/bin/python"
           "$RUNNER_TEMP/repo-scout-release/bin/repo-scout-pilot" --help
+          python scripts/smoke_test_pilot_funnel.py \
+            --python "$RUNNER_TEMP/repo-scout-release/bin/python"
           "$RUNNER_TEMP/repo-scout-release/bin/repo-scout-rollout" --help
 
       - name: Smoke test the portable zipapp

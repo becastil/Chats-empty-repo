@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 80 of 1,000, with 920 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 81 of 1,000, with 919 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -38,6 +38,9 @@ The delivery goal is 1,000 meaningful commits. This update is commit 80 of 1,000
 - A hosted founding-team pilot offer with price, scope, implemented policy proof, and a direct conversion CTA.
 - A structured public pilot intake that qualifies team size, repository count, CI provider, and policy need.
 - A dependency-free pilot funnel reporter with stable text and JSON revenue summaries.
+- Release-blocking installed-wheel proof that offers remain outside revenue,
+  paid pilots book $299 toward the $897 target, and qualification, attribution,
+  sales queues, and non-sensitive reporting retain their commercial semantics.
 - Cumulative GitHub labels for lead, qualification, offer, payment, activation, conversion, and loss.
 - A dependency-free live audit and conservative repair command for the seven public pilot lifecycle labels.
 - A dedicated GitHub check that detects intake-label drift without deleting unexpected labels.

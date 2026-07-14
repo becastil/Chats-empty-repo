@@ -58,6 +58,15 @@ smoke_test_outreach_lifecycle = importlib.util.module_from_spec(
 sys.modules[OUTREACH_SMOKE_SPEC.name] = smoke_test_outreach_lifecycle
 OUTREACH_SMOKE_SPEC.loader.exec_module(smoke_test_outreach_lifecycle)
 
+PILOT_SMOKE_SCRIPT_PATH = ROOT / "scripts" / "smoke_test_pilot_funnel.py"
+PILOT_SMOKE_SPEC = importlib.util.spec_from_file_location(
+    "smoke_test_pilot_funnel", PILOT_SMOKE_SCRIPT_PATH
+)
+assert PILOT_SMOKE_SPEC is not None and PILOT_SMOKE_SPEC.loader is not None
+smoke_test_pilot_funnel = importlib.util.module_from_spec(PILOT_SMOKE_SPEC)
+sys.modules[PILOT_SMOKE_SPEC.name] = smoke_test_pilot_funnel
+PILOT_SMOKE_SPEC.loader.exec_module(smoke_test_pilot_funnel)
+
 
 class ReleaseManifestTests(unittest.TestCase):
     def test_current_project_versions_match(self) -> None:
@@ -141,6 +150,24 @@ class ReleaseManifestTests(unittest.TestCase):
                 "duplicate-follow-up-rejected",
                 "missing-approval-rejected",
                 "extra-column-rejected",
+            ),
+        )
+
+    def test_pilot_funnel_smoke_contract_passes_against_source(self) -> None:
+        environment = os.environ.copy()
+        environment["PYTHONPATH"] = str(ROOT / "src")
+
+        checked = smoke_test_pilot_funnel.verify_pilot_funnel(
+            sys.executable, environment=environment
+        )
+
+        self.assertEqual(
+            checked,
+            (
+                "commercial-totals",
+                "qualified-segmentation",
+                "operator-text",
+                "invalid-export-rejected",
             ),
         )
 
@@ -326,6 +353,11 @@ class ReleaseWorkflowTests(unittest.TestCase):
         )
         self.assertLess(
             workflow.index("python scripts/smoke_test_outreach_lifecycle.py"),
+            workflow.index("- name: Attest release provenance"),
+        )
+        self.assertIn("python scripts/smoke_test_pilot_funnel.py", workflow)
+        self.assertLess(
+            workflow.index("python scripts/smoke_test_pilot_funnel.py"),
             workflow.index("- name: Attest release provenance"),
         )
         self.assertIn(

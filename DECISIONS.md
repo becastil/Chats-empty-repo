@@ -696,3 +696,17 @@ confirmation and a repeated follow-up fail without changing the ledger, while
 retaining strict missing-approval and extra-cell rejection. All data is
 temporary and synthetic; the check sends nothing and does not create demand or
 revenue evidence. The five real drafts remain unapproved and unattempted.
+
+## 2026-07-14: Exercise Revenue Accounting From The Installed Wheel
+
+The release workflow previously checked only that `repo-scout-pilot --help`
+started, leaving the installable artifact's commercial accounting untested.
+Every future release now runs a temporary two-request export through the built
+wheel before provenance attestation. One cumulative offered request must remain
+outside booked revenue; one cumulative paid request must book exactly $299
+toward the three-pilot, $897 target. The check also covers target-profile
+qualification, website and outreach segmentation, the remaining pre-payment
+sales action, stable operator totals, repository-standard free-text omission,
+and controlled non-array input rejection. Synthetic labels and payment state
+prove reporter behavior only. They do not create a request, payment, sale, or
+revenue evidence, all of which remain grounded in the live public funnel.

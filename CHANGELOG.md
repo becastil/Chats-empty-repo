@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added an installed-wheel pilot-funnel smoke test to the release boundary.
+- Proved a synthetic offer remains outside revenue while one synthetic paid
+  pilot books $299 toward the three-pilot, $897 target.
+- Covered target-profile qualification, source attribution, the open sales
+  queue, operator text, free-text omission, and controlled invalid input.
 - Expanded the installed-wheel outreach release check from prebuilt rows to a
   complete synthetic draft-review, approval, contact, and follow-up journey.
 - Proved the wheel preserves private dates and evidence, ledger permissions,

@@ -305,6 +305,14 @@ targets. Qualified leads and written offers remain pipeline, not booked
 revenue. Label warnings must be resolved before totals are used in a roadmap or
 sales decision.
 
+Future tagged releases exercise that accounting contract through the installed
+wheel before provenance attestation. A temporary synthetic export proves an
+offer remains at $0, one paid pilot books exactly $299 toward the $897 target,
+both requests retain target-profile and source segmentation, and only the open
+pre-payment request enters the sales queue. Repository-standard free text stays
+out of JSON and operator output. These fixtures validate distribution behavior;
+they are not real requests, payments, or revenue evidence.
+
 The repository also audits the seven live GitHub lifecycle labels against one
 tested maintainer contract. Its repair mode may create missing labels or restore
 their color and description, but it never deletes an unexpected `pilot-*`
