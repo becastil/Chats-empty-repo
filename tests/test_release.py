@@ -185,6 +185,16 @@ class ReleaseManifestTests(unittest.TestCase):
             ),
         )
 
+    def test_pilot_funnel_smoke_rejects_missing_installed_commands(self) -> None:
+        with TemporaryDirectory() as tmp, self.assertRaisesRegex(
+            smoke_test_pilot_funnel.SmokeTestError,
+            "installed command is missing or not executable",
+        ):
+            smoke_test_pilot_funnel.verify_pilot_funnel(
+                sys.executable,
+                command_directory=tmp,
+            )
+
     def test_rollout_summary_smoke_contract_passes_against_source(self) -> None:
         environment = os.environ.copy()
         environment["PYTHONPATH"] = str(ROOT / "src")
@@ -388,6 +398,10 @@ class ReleaseWorkflowTests(unittest.TestCase):
             workflow.index("- name: Attest release provenance"),
         )
         self.assertIn("python scripts/smoke_test_pilot_funnel.py", workflow)
+        self.assertIn(
+            '--command-directory "$RUNNER_TEMP/repo-scout-release/bin"',
+            workflow,
+        )
         self.assertLess(
             workflow.index("python scripts/smoke_test_pilot_funnel.py"),
             workflow.index("- name: Attest release provenance"),

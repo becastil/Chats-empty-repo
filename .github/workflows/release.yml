@@ -67,7 +67,8 @@ jobs:
             --python "$RUNNER_TEMP/repo-scout-release/bin/python"
           "$RUNNER_TEMP/repo-scout-release/bin/repo-scout-pilot" --help
           python scripts/smoke_test_pilot_funnel.py \
-            --python "$RUNNER_TEMP/repo-scout-release/bin/python"
+            --python "$RUNNER_TEMP/repo-scout-release/bin/python" \
+            --command-directory "$RUNNER_TEMP/repo-scout-release/bin"
           "$RUNNER_TEMP/repo-scout-release/bin/repo-scout-rollout" --help
           python scripts/smoke_test_rollout_summary.py \
             --python "$RUNNER_TEMP/repo-scout-release/bin/python"

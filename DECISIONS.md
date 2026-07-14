@@ -752,3 +752,15 @@ warnings, and pass its signed portable and wheel movement unchanged into the
 growth review. Duplicate asset names must fail without output. Request counts
 remain synthetic and non-unique; this test establishes packaged evidence-chain
 integrity, not users, demand, attribution, payment, or revenue.
+
+## 2026-07-14: Behavior-Test The Commands Customers Install
+
+The release smoke previously ran commercial behavior with `python -m` after
+checking each installed console script only with `--help`. That could miss
+packaging metadata that starts successfully but routes real arguments to the
+wrong behavior. The commercial harness now accepts an explicit installation
+directory and runs pilot, distribution, and growth evidence through the exact
+`repo-scout-pilot`, `repo-scout-distribution`, and `repo-scout-growth` scripts
+from the built wheel. Source tests retain module mode for speed, and a missing
+or non-executable installed command fails with a controlled error. This closes
+a paid-distribution assurance gap; it does not create usage, demand, or revenue.

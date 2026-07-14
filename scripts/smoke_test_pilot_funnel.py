@@ -23,9 +23,14 @@ class SmokeTestError(RuntimeError):
 def verify_pilot_funnel(
     python: str | Path,
     *,
+    command_directory: str | Path | None = None,
     environment: Mapping[str, str] | None = None,
 ) -> tuple[str, ...]:
     python_command = str(Path(python))
+    pilot_command, distribution_command, growth_command = _commercial_commands(
+        python_command,
+        command_directory=command_directory,
+    )
     checked: list[str] = []
 
     with TemporaryDirectory() as tmp:
@@ -65,7 +70,7 @@ def verify_pilot_funnel(
         )
 
         report = _json_report(
-            python_command,
+            pilot_command,
             issue_export,
             environment=environment,
         )
@@ -129,7 +134,7 @@ def verify_pilot_funnel(
         checked.append("qualified-segmentation")
 
         text_report = _run(
-            python_command,
+            pilot_command,
             issue_export,
             output_format="text",
             environment=environment,
@@ -168,7 +173,7 @@ def verify_pilot_funnel(
             encoding="utf-8",
         )
         baseline_distribution = _distribution_json_report(
-            python_command,
+            distribution_command,
             baseline_release_export,
             baseline=None,
             environment=environment,
@@ -178,7 +183,7 @@ def verify_pilot_funnel(
             encoding="utf-8",
         )
         distribution = _distribution_json_report(
-            python_command,
+            distribution_command,
             current_release_export,
             baseline=baseline_distribution_report,
             environment=environment,
@@ -228,7 +233,7 @@ def verify_pilot_funnel(
         checked.append("distribution-evidence")
 
         growth = _growth_report(
-            python_command,
+            growth_command,
             distribution_report,
             pilot_report,
             environment=environment,
@@ -279,7 +284,7 @@ def verify_pilot_funnel(
         checked.append("joined-growth-review")
 
         growth_text = _run_growth(
-            python_command,
+            growth_command,
             distribution_report,
             pilot_report,
             output_format="text",
@@ -309,7 +314,7 @@ def verify_pilot_funnel(
             encoding="utf-8",
         )
         invalid_growth = _run_growth(
-            python_command,
+            growth_command,
             distribution_report,
             pilot_report,
             output_format="json",
@@ -332,7 +337,7 @@ def verify_pilot_funnel(
             encoding="utf-8",
         )
         invalid_distribution = _run_distribution(
-            python_command,
+            distribution_command,
             current_release_export,
             baseline=baseline_distribution_report,
             output_format="json",
@@ -351,7 +356,7 @@ def verify_pilot_funnel(
 
         issue_export.write_text("{}\n", encoding="utf-8")
         invalid = _run(
-            python_command,
+            pilot_command,
             issue_export,
             output_format="json",
             environment=environment,
@@ -364,6 +369,34 @@ def verify_pilot_funnel(
         checked.append("invalid-export-rejected")
 
     return tuple(checked)
+
+
+def _commercial_commands(
+    python: str,
+    *,
+    command_directory: str | Path | None,
+) -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]]:
+    if command_directory is None:
+        return (
+            (python, "-m", "repo_scout.pilot_funnel"),
+            (python, "-m", "repo_scout.distribution"),
+            (python, "-m", "repo_scout.growth"),
+        )
+
+    directory = Path(command_directory)
+    commands: list[tuple[str, ...]] = []
+    for name in (
+        "repo-scout-pilot",
+        "repo-scout-distribution",
+        "repo-scout-growth",
+    ):
+        path = directory / name
+        if not path.is_file() or not os.access(path, os.X_OK):
+            raise SmokeTestError(
+                f"installed command is missing or not executable: {path}"
+            )
+        commands.append((str(path),))
+    return commands[0], commands[1], commands[2]
 
 
 def _release_export(
@@ -427,13 +460,13 @@ def _issue(
 
 
 def _json_report(
-    python: str,
+    command: Sequence[str],
     issue_export: Path,
     *,
     environment: Mapping[str, str] | None,
 ) -> dict[str, Any]:
     completed = _run(
-        python,
+        command,
         issue_export,
         output_format="json",
         environment=environment,
@@ -449,14 +482,14 @@ def _json_report(
 
 
 def _growth_report(
-    python: str,
+    command: Sequence[str],
     distribution_report: Path,
     pilot_report: Path,
     *,
     environment: Mapping[str, str] | None,
 ) -> dict[str, Any]:
     completed = _run_growth(
-        python,
+        command,
         distribution_report,
         pilot_report,
         output_format="json",
@@ -473,14 +506,14 @@ def _growth_report(
 
 
 def _distribution_json_report(
-    python: str,
+    command: Sequence[str],
     release_export: Path,
     *,
     baseline: Path | None,
     environment: Mapping[str, str] | None,
 ) -> dict[str, Any]:
     completed = _run_distribution(
-        python,
+        command,
         release_export,
         baseline=baseline,
         output_format="json",
@@ -497,7 +530,7 @@ def _distribution_json_report(
 
 
 def _run(
-    python: str,
+    command: Sequence[str],
     issue_export: Path,
     *,
     output_format: str,
@@ -506,9 +539,7 @@ def _run(
 ) -> subprocess.CompletedProcess[str]:
     completed = subprocess.run(
         [
-            python,
-            "-m",
-            "repo_scout.pilot_funnel",
+            *command,
             str(issue_export),
             "--format",
             output_format,
@@ -531,7 +562,7 @@ def _run(
 
 
 def _run_distribution(
-    python: str,
+    command: Sequence[str],
     release_export: Path,
     *,
     baseline: Path | None,
@@ -539,18 +570,16 @@ def _run_distribution(
     environment: Mapping[str, str] | None,
     expected_exit_code: int,
 ) -> subprocess.CompletedProcess[str]:
-    command = [
-        python,
-        "-m",
-        "repo_scout.distribution",
+    arguments = [
+        *command,
         str(release_export),
         "--format",
         output_format,
     ]
     if baseline is not None:
-        command.extend(("--baseline", str(baseline)))
+        arguments.extend(("--baseline", str(baseline)))
     completed = subprocess.run(
-        command,
+        arguments,
         capture_output=True,
         text=True,
         env=dict(environment) if environment is not None else None,
@@ -565,7 +594,7 @@ def _run_distribution(
 
 
 def _run_growth(
-    python: str,
+    command: Sequence[str],
     distribution_report: Path,
     pilot_report: Path,
     *,
@@ -575,9 +604,7 @@ def _run_growth(
 ) -> subprocess.CompletedProcess[str]:
     completed = subprocess.run(
         [
-            python,
-            "-m",
-            "repo_scout.growth",
+            *command,
             str(distribution_report),
             str(pilot_report),
             "--format",
@@ -606,13 +633,25 @@ def build_parser() -> argparse.ArgumentParser:
         description="Smoke test installed Repo Scout pilot and growth reporting."
     )
     parser.add_argument("--python", default=sys.executable)
+    parser.add_argument(
+        "--command-directory",
+        type=Path,
+        help=(
+            "Directory containing installed repo-scout-pilot, "
+            "repo-scout-distribution, and repo-scout-growth commands."
+        ),
+    )
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
-        checked = verify_pilot_funnel(args.python, environment=os.environ)
+        checked = verify_pilot_funnel(
+            args.python,
+            command_directory=args.command_directory,
+            environment=os.environ,
+        )
     except SmokeTestError as exc:
         print(f"commercial reporting smoke test failed: {exc}", file=sys.stderr)
         return 1

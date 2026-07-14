@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Routed release-blocking pilot, distribution, and growth behavior through the
+  built wheel's public console commands rather than their Python modules.
+- Added controlled rejection when any required installed commercial command is
+  missing or not executable, while retaining fast module-mode source coverage.
+- Required the release workflow to supply its exact installation directory to
+  the commercial smoke harness before provenance attestation.
 - Replaced the hand-built reach delta in the installed commercial smoke test
   with baseline and current raw GitHub release exports processed by
   `repo-scout-distribution` from the built wheel.

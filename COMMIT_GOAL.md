@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after smoke testing raw release evidence through growth: 84 / 1,000 (8.4%).
-- Remaining after smoke testing raw release evidence through growth: 916 commits.
+- Progress after behavior-testing installed commercial commands: 85 / 1,000 (8.5%).
+- Remaining after behavior-testing installed commercial commands: 915 commits.
 
 ## Commit Standard
 
