@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 90 of 1,000, with 910 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 91 of 1,000, with 909 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -106,10 +106,10 @@ The delivery goal is 1,000 meaningful commits. This update is commit 90 of 1,000
 - Consistent `--version` identity across all seven installed commands and the
   portable zipapp, with release-tag reconciliation before attestation.
 - A refreshed schema-2 distribution, schema-7 pilot, and joined growth baseline
-  generated from public evidence on 2026-07-13.
+  generated from public evidence on 2026-07-14.
 - Baseline contract tests reconciling every release channel while preserving zero pilot and revenue truth.
-- A warning-free signed checkpoint showing 17 additional primary artifact
-  requests across `v0.3.31` and `v0.3.32`, with zero pilot requests and revenue.
+- A warning-free signed checkpoint showing 31 additional primary artifact
+  requests across `v0.3.33` through `v0.3.35`, with zero pilot requests and revenue.
 - A 14-day owner-visible GitHub traffic baseline with reconciled daily views and clones, top referrers, popular paths, and explicit automation caveats.
 - Required self-reported primary purchase criteria in public pilot intake.
 - Schema-6 criterion totals for qualification, offers, booked revenue, conversion, and loss.
@@ -182,8 +182,9 @@ The delivery goal is 1,000 meaningful commits. This update is commit 90 of 1,000
   installed-command behavior, and consistent wheel and zipapp version identity.
 - Five personalized, qualified outreach drafts prepared from narrow
   company-controlled public evidence and kept in the ignored private workspace.
-- A committed schema-3 outreach draft baseline proving 5 drafts and 16 reviewed
-  fit links while exposing no identity, address, alias, draft, or source URL.
+- A committed schema-5 outreach draft baseline proving 5 drafts, 16 reviewed
+  fit links, 0 approvals, and 0 attempts while exposing no identity, address,
+  alias, draft, review date, or source URL.
 - Backward-compatible policy v2 `forbidden_files` rules with normalized exact paths and contradictory-rule rejection.
 - Git-aware forbidden-file enforcement that catches tracked or unignored files without failing properly ignored local environment files.
 - Manual team-policy, CLI, fingerprint, and compatibility coverage for `.env` and `.env.local` protection.

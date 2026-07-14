@@ -822,3 +822,15 @@ signal-to-URL mappings, clearly marked as private and read-only. Default text an
 JSON remain redacted, the flag is rejected outside review mode, and release
 smoke coverage proves neither path modifies the ledger. This reduces execution
 friction without automating source judgment, approval, sending, or revenue.
+
+## 2026-07-14: Record The First Verified v0.3.35 Demand Checkpoint
+
+The independently pinned `v0.3.35` release and its customer CI gate create a
+meaningful measurement boundary after the `v0.3.32` baseline. Public release
+records now reconcile 39 complete releases and 109 cumulative primary artifact
+requests, a signed increase of 31 across `v0.3.33` through `v0.3.35`. Twenty-eight
+of those requests are wheels, and Repo Scout's own release, CI, pinning, and
+maintainer verification materially confound them. The refreshed pilot and
+schema-5 outreach baselines still show zero pilot requests, approvals, attempts,
+and revenue, so the joined growth report keeps acquisition as the bottleneck.
+This checkpoint measures reach without relabeling automation as adoption.

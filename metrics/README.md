@@ -1,10 +1,9 @@
 # Commercial Evidence Baseline
 
 These generated reports preserve public or privacy-safe starting points for
-future commercial comparisons. Distribution, pilot, and growth reports were
-refreshed on 2026-07-13 at 03:28 UTC. The traffic report was captured on
-2026-07-12 at 19:22 UTC, and the outreach draft report on 2026-07-13 at 02:32
-UTC, from:
+future commercial comparisons. Distribution, pilot, growth, and outreach draft
+reports were refreshed on 2026-07-14 at 21:47 UTC. The traffic report was
+captured on 2026-07-12 at 19:22 UTC, from:
 
 - GitHub's public release API for `becastil/Chats-empty-repo`.
 - Public issues carrying the repository's `pilot-lead` label.
@@ -14,21 +13,21 @@ UTC, from:
 
 ## Current Readout
 
-- 36 stable releases, all satisfying their version-aware artifact contracts.
-- 78 cumulative primary artifact requests: 6 portable and 72 wheel.
-- 67 manifest requests, 10 source requests, and 0 unknown requests.
-- 17 additional primary artifact requests since the prior checkpoint: 5
-  portable and 12 wheel, across two new releases.
+- 39 stable releases, all satisfying their version-aware artifact contracts.
+- 109 cumulative primary artifact requests: 9 portable and 100 wheel.
+- 94 manifest requests, 13 source requests, and 0 unknown requests.
+- 31 additional primary artifact requests since the prior checkpoint: 3
+  portable and 28 wheel, across three new releases.
 - 0 tracked pilot requests, 0 booked pilots, and $0 booked revenue.
 - 0 evidence warnings in the distribution, pilot, and joined growth reports.
-- 5 qualified outreach drafts backed by 16 fit-evidence links, with 0 contact
-  attempts, replies, pilot requests, or revenue claims.
+- 5 qualified outreach drafts backed by 16 fit-evidence links, with 0 approvals,
+  contact attempts, replies, pilot requests, or revenue claims.
 - A 14-day GitHub traffic window with 1 unique viewer, 119 unique cloners, and
   310 clone events.
 
 GitHub reports cumulative asset requests, not unique people or installations.
 The wheel and manifest totals include Repo Scout's own CI and maintainer
-verification, so they are directional reach evidence only. The 17-request
+verification, so they are directional reach evidence only. The 31-request
 increase did not produce a pilot request; the joined report correctly keeps
 acquisition as the commercial bottleneck.
 The gap between one viewer and 119 unique cloners is consistent with CI,
@@ -41,11 +40,11 @@ organic visitors.
   per-channel deltas and release-set changes.
 - `pilot-baseline.json` is the schema-7 aggregate from the empty public pilot
   queue.
-- `growth-baseline.json` joins the signed 17-request movement from the prior
+- `growth-baseline.json` joins the signed 31-request movement from the prior
   distribution checkpoint with the schema-7 pilot baseline.
 - `github-traffic-baseline.json` preserves the owner-visible 14-day aggregate,
   daily series, top referrers, and popular paths without visitor identities.
-- `outreach-draft-baseline.json` preserves only schema-3 aggregate counts; it
+- `outreach-draft-baseline.json` preserves only schema-5 aggregate counts; it
   contains no prospect alias, company, contact address, draft, or source URL.
 
 ## Refresh Contract
@@ -69,6 +68,8 @@ repo-scout-pilot --format json --as-of "$(date -u +%F)" \
   pilot-issues.json > pilot-current.json
 repo-scout-growth distribution-comparison.json pilot-current.json \
   > growth-current.json
+repo-scout-outreach outreach-private/outreach-ledger.csv \
+  --as-of "$(date -u +%F)" --format json > outreach-current.json
 gh api repos/becastil/Chats-empty-repo/traffic/views > traffic-views.json
 gh api repos/becastil/Chats-empty-repo/traffic/clones > traffic-clones.json
 gh api repos/becastil/Chats-empty-repo/traffic/popular/referrers \

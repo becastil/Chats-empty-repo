@@ -1,6 +1,7 @@
 {
-  "as_of": "2026-07-12",
+  "as_of": "2026-07-14",
   "by_status": {
+    "approved": 0,
     "contacted": 0,
     "do-not-contact": 0,
     "drafted": 5,
@@ -14,11 +15,13 @@
   "evidence_note": "Outreach ledger activity is not lead, demand, payment, or revenue evidence.",
   "experiment": {
     "follow_up_days": 7,
+    "human_approval_required": true,
     "max_follow_ups": 1,
     "max_prospects": 10
   },
-  "schema_version": 3,
+  "schema_version": 5,
   "summary": {
+    "approved": 0,
     "attempted_prospects": 0,
     "closed": 0,
     "contacted": 0,

@@ -57,11 +57,11 @@ class MetricsBaselineTests(unittest.TestCase):
         self.assertEqual(summary["stable_releases"], len(releases))
         self.assertEqual(summary["complete_releases"], len(releases))
         self.assertTrue(all(release["contract"]["complete"] for release in releases))
-        self.assertEqual(report["latest"]["tag"], "v0.3.32")
-        self.assertEqual(summary["stable_releases"], 36)
-        self.assertEqual(summary["primary_artifact_downloads"], 78)
-        self.assertEqual(summary["portable_downloads"], 6)
-        self.assertEqual(summary["wheel_downloads"], 72)
+        self.assertEqual(report["latest"]["tag"], "v0.3.35")
+        self.assertEqual(summary["stable_releases"], 39)
+        self.assertEqual(summary["primary_artifact_downloads"], 109)
+        self.assertEqual(summary["portable_downloads"], 9)
+        self.assertEqual(summary["wheel_downloads"], 100)
         self.assertEqual(
             summary["primary_artifact_downloads"],
             summary["portable_downloads"] + summary["wheel_downloads"],
@@ -83,6 +83,7 @@ class MetricsBaselineTests(unittest.TestCase):
         growth = self._read("growth-baseline.json")
 
         self.assertEqual(pilot["schema_version"], 7)
+        self.assertEqual(pilot["follow_up"]["as_of"], "2026-07-14")
         self.assertEqual(pilot["summary"]["tracked_issues"], 0)
         self.assertEqual(pilot["summary"]["booked_revenue_usd"], 0)
         self.assertEqual(pilot["summary"]["qualification_review_issues"], 0)
@@ -98,14 +99,14 @@ class MetricsBaselineTests(unittest.TestCase):
         self.assertEqual(
             growth["distribution_change"],
             {
-                "manifest_downloads_delta": 12,
-                "new_releases": ["v0.3.32", "v0.3.31"],
-                "portable_downloads_delta": 5,
-                "primary_artifact_downloads_delta": 17,
+                "manifest_downloads_delta": 27,
+                "new_releases": ["v0.3.35", "v0.3.34", "v0.3.33"],
+                "portable_downloads_delta": 3,
+                "primary_artifact_downloads_delta": 31,
                 "removed_releases": [],
-                "source_downloads_delta": 4,
+                "source_downloads_delta": 3,
                 "unknown_downloads_delta": 0,
-                "wheel_downloads_delta": 12,
+                "wheel_downloads_delta": 28,
             },
         )
 
@@ -114,11 +115,13 @@ class MetricsBaselineTests(unittest.TestCase):
         summary = report["summary"]
         serialized = json.dumps(report)
 
-        self.assertEqual(report["schema_version"], 3)
+        self.assertEqual(report["schema_version"], 5)
+        self.assertEqual(report["as_of"], "2026-07-14")
         self.assertEqual(summary["prospects"], 5)
         self.assertEqual(summary["drafted"], 5)
         self.assertEqual(summary["fit_evidence_links"], 16)
         self.assertEqual(summary["attempted_prospects"], 0)
+        self.assertEqual(summary["approved"], 0)
         self.assertEqual(summary["contacted"], 0)
         self.assertEqual(summary["replied"], 0)
         self.assertEqual(summary["pilot_requested"], 0)

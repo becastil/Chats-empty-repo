@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Refreshed the warning-free distribution, pilot, growth, and aggregate outreach
+  baselines at the first verified `v0.3.35` post-release checkpoint.
+- Recorded 31 additional primary artifact requests across three new complete
+  releases, including 28 wheel requests materially confounded by Repo Scout's
+  own release, CI, pinning, and maintainer verification.
+- Preserved the commercial truth of zero pilot requests, zero outreach attempts,
+  and $0 revenue, with acquisition still identified as the bottleneck.
 - Added `--include-private-evidence` as an explicit `--review-next` opt-in so a
   human can inspect the selected draft's fit-signal sources without parsing CSV.
 - Kept default review output redacted and marked evidence-bearing text and JSON
