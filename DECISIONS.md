@@ -681,3 +681,18 @@ private because it includes the alias and `as_of` context. Repo Scout sends
 nothing and schedules no additional message. One initial message plus one
 follow-up remains one attempted prospect and no lead, pilot request, payment,
 or revenue unless separate funnel evidence appears.
+
+## 2026-07-14: Release-Test The Guarded Journey, Not Prebuilt States
+
+The installed-wheel smoke test previously loaded separate approved and
+contacted rows, so it did not prove that the newly guarded commands compose in
+the artifact an operator will install. Every future release now starts with one
+synthetic draft and runs review, confirmed approval, confirmed contact, and the
+one confirmed follow-up through the built wheel before provenance attestation.
+The check verifies the exact seven-day cadence, retained approval and contact
+evidence, one attempted-prospect total, private receipt and aggregate output,
+and preserved file permissions. It also proves that missing approval
+confirmation and a repeated follow-up fail without changing the ledger, while
+retaining strict missing-approval and extra-cell rejection. All data is
+temporary and synthetic; the check sends nothing and does not create demand or
+revenue evidence. The five real drafts remain unapproved and unattempted.

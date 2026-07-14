@@ -44,17 +44,101 @@ def verify_outreach_lifecycle(
 
     with TemporaryDirectory() as tmp:
         ledger = Path(tmp) / "outreach-ledger.csv"
-
-        approved = _row(
+        draft = _row(
             contacted_on="",
-            status="approved",
+            status="drafted",
             next_action_on="",
+            approved_on="",
         )
-        _write_ledger(ledger, approved)
+        _write_ledger(ledger, draft)
+        ledger.chmod(0o600)
+        draft_bytes = ledger.read_bytes()
+
+        review = _json_command(
+            python_command,
+            ledger,
+            as_of="2026-07-02",
+            arguments=("--review-next",),
+            environment=environment,
+        )
+        _require(ledger.read_bytes() == draft_bytes, "review modified the ledger")
+        _require(review.get("private_output") is True, "review was not private")
+        _require(
+            review.get("review", {}).get("prospect_id") == draft["prospect_id"],
+            "review did not select the synthetic draft",
+        )
+        _require(
+            len(review.get("review", {}).get("checks", ())) == 5,
+            "review checklist changed",
+        )
+        _require_private_values_absent(
+            review,
+            ("https://evidence.example",),
+            context="review",
+        )
+        checked.append("draft-reviewed")
+
+        unconfirmed = _run(
+            python_command,
+            ledger,
+            as_of="2026-07-02",
+            arguments=(
+                "--approve-next",
+                draft["prospect_id"],
+                "--approved-on",
+                "2026-07-01",
+            ),
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(
+            "requires --confirm-reviewed" in unconfirmed.stderr,
+            "unconfirmed approval did not produce its controlled error",
+        )
+        _require(
+            ledger.read_bytes() == draft_bytes,
+            "unconfirmed approval modified the ledger",
+        )
+        _require(
+            "https://evidence.example" not in unconfirmed.stderr,
+            "unconfirmed-approval error exposed evidence",
+        )
+        checked.append("unconfirmed-approval-rejected")
+
+        approval = _json_command(
+            python_command,
+            ledger,
+            as_of="2026-07-02",
+            arguments=(
+                "--approve-next",
+                draft["prospect_id"],
+                "--approved-on",
+                "2026-07-01",
+                "--confirm-reviewed",
+            ),
+            environment=environment,
+        )
+        _require(
+            ledger.stat().st_mode & 0o777 == 0o600,
+            "approval changed ledger permissions",
+        )
+        _require(
+            approval.get("human_review_confirmed") is True,
+            "approval confirmation is missing",
+        )
+        _require(
+            approval.get("approval", {}).get("status") == "approved",
+            "draft was not approved",
+        )
+        _require_private_values_absent(
+            approval,
+            (draft["approved_on"], "2026-07-01", "https://evidence.example"),
+            context="approval receipt",
+        )
         approved_report = _report(
             python_command,
             ledger,
-            as_of="2026-07-01",
+            as_of="2026-07-02",
             environment=environment,
         )
         _require(approved_report.get("schema_version") == 5, "schema changed")
@@ -71,22 +155,56 @@ def verify_outreach_lifecycle(
         )
         serialized = json.dumps(approved_report, sort_keys=True)
         for private_value in (
-            approved["prospect_id"],
-            approved["approved_on"],
+            draft["prospect_id"],
+            "2026-07-01",
             "https://evidence.example",
         ):
             _require(
                 private_value not in serialized,
                 "approved report exposed private ledger data",
             )
-        checked.append("approved")
+        approved_row = _read_row(ledger)
+        _require(approved_row["status"] == "approved", "approval was not saved")
+        _require(
+            approved_row["approved_on"] == "2026-07-01",
+            "approval date was not saved",
+        )
+        _require(
+            not approved_row["contacted_on"] and not approved_row["next_action_on"],
+            "approval created contact activity",
+        )
+        checked.append("draft-approved")
 
-        contacted = _row()
-        _write_ledger(ledger, contacted)
+        contact = _json_command(
+            python_command,
+            ledger,
+            as_of="2026-07-04",
+            arguments=(
+                "--record-contact",
+                draft["prospect_id"],
+                "--contacted-on",
+                "2026-07-03",
+                "--confirm-sent",
+            ),
+            environment=environment,
+        )
+        _require(
+            contact.get("human_send_confirmed") is True,
+            "contact confirmation is missing",
+        )
+        _require(
+            contact.get("contact", {}).get("follow_up_due") == "2026-07-10",
+            "contact did not create the exact seven-day follow-up",
+        )
+        _require_private_values_absent(
+            contact,
+            ("2026-07-01", "2026-07-03", "https://evidence.example"),
+            context="contact receipt",
+        )
         contacted_report = _report(
             python_command,
             ledger,
-            as_of="2026-07-01",
+            as_of="2026-07-04",
             environment=environment,
         )
         contacted_summary = contacted_report.get("summary", {})
@@ -102,7 +220,108 @@ def verify_outreach_lifecycle(
             contacted_summary.get("due_followups") == 0,
             "future follow-up was reported as due",
         )
-        checked.append("contacted")
+        contacted_row = _read_row(ledger)
+        _require(
+            contacted_row["approved_on"] == "2026-07-01",
+            "contact discarded approval evidence",
+        )
+        _require(
+            contacted_row["contacted_on"] == "2026-07-03",
+            "contact date was not saved",
+        )
+        _require(
+            contacted_row["next_action_on"] == "2026-07-10",
+            "follow-up date was not saved",
+        )
+        checked.append("contact-recorded")
+
+        follow_up = _json_command(
+            python_command,
+            ledger,
+            as_of="2026-07-11",
+            arguments=(
+                "--record-follow-up",
+                draft["prospect_id"],
+                "--followed-up-on",
+                "2026-07-10",
+                "--confirm-follow-up-sent",
+            ),
+            environment=environment,
+        )
+        _require(
+            follow_up.get("human_follow_up_confirmed") is True,
+            "follow-up confirmation is missing",
+        )
+        _require(
+            follow_up.get("follow_up", {}).get("status") == "followed-up",
+            "follow-up was not recorded",
+        )
+        _require_private_values_absent(
+            follow_up,
+            (
+                "2026-07-01",
+                "2026-07-03",
+                "2026-07-10",
+                "https://evidence.example",
+            ),
+            context="follow-up receipt",
+        )
+        followed_report = _report(
+            python_command,
+            ledger,
+            as_of="2026-07-11",
+            environment=environment,
+        )
+        followed_summary = followed_report.get("summary", {})
+        _require(
+            followed_summary.get("followed_up") == 1,
+            "follow-up was not counted",
+        )
+        _require(
+            followed_summary.get("attempted_prospects") == 1,
+            "follow-up inflated the prospect attempt total",
+        )
+        _require(
+            followed_summary.get("due_followups") == 0,
+            "completed follow-up remained due",
+        )
+        followed_row = _read_row(ledger)
+        _require(
+            followed_row["approved_on"] == "2026-07-01"
+            and followed_row["contacted_on"] == "2026-07-03",
+            "follow-up discarded approval or contact evidence",
+        )
+        _require(
+            followed_row["followed_up_on"] == "2026-07-10"
+            and not followed_row["next_action_on"],
+            "follow-up state was not saved safely",
+        )
+        checked.append("follow-up-recorded")
+
+        followed_bytes = ledger.read_bytes()
+        duplicate = _run(
+            python_command,
+            ledger,
+            as_of="2026-07-11",
+            arguments=(
+                "--record-follow-up",
+                draft["prospect_id"],
+                "--followed-up-on",
+                "2026-07-10",
+                "--confirm-follow-up-sent",
+            ),
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(
+            "no contacted prospects await a follow-up record" in duplicate.stderr,
+            "duplicate follow-up did not produce its controlled error",
+        )
+        _require(
+            ledger.read_bytes() == followed_bytes,
+            "duplicate follow-up modified the ledger",
+        )
+        checked.append("duplicate-follow-up-rejected")
 
         _write_ledger(ledger, _row(approved_on=""))
         missing_approval = _run(
@@ -175,6 +394,14 @@ def _write_ledger(
         writer.writerow(values)
 
 
+def _read_row(path: Path) -> dict[str, str]:
+    with path.open(newline="", encoding="utf-8") as ledger_file:
+        rows = list(csv.DictReader(ledger_file))
+    if len(rows) != 1:
+        raise SmokeTestError("synthetic ledger did not contain exactly one row")
+    return rows[0]
+
+
 def _report(
     python: str,
     ledger: Path,
@@ -198,11 +425,37 @@ def _report(
     return report
 
 
+def _json_command(
+    python: str,
+    ledger: Path,
+    *,
+    as_of: str,
+    arguments: Sequence[str],
+    environment: Mapping[str, str] | None,
+) -> dict[str, Any]:
+    completed = _run(
+        python,
+        ledger,
+        as_of=as_of,
+        arguments=arguments,
+        environment=environment,
+        expected_exit_code=0,
+    )
+    try:
+        report = json.loads(completed.stdout)
+    except json.JSONDecodeError as exc:
+        raise SmokeTestError("outreach action did not emit valid JSON") from exc
+    if not isinstance(report, dict):
+        raise SmokeTestError("outreach action emitted a non-object report")
+    return report
+
+
 def _run(
     python: str,
     ledger: Path,
     *,
     as_of: str,
+    arguments: Sequence[str] = (),
     environment: Mapping[str, str] | None,
     expected_exit_code: int,
 ) -> subprocess.CompletedProcess[str]:
@@ -216,6 +469,7 @@ def _run(
             as_of,
             "--format",
             "json",
+            *arguments,
         ],
         capture_output=True,
         text=True,
@@ -228,6 +482,21 @@ def _run(
             f"expected {expected_exit_code}: {detail}"
         )
     return completed
+
+
+def _require_private_values_absent(
+    report: Mapping[str, Any],
+    private_values: Sequence[str],
+    *,
+    context: str,
+) -> None:
+    serialized = json.dumps(report, sort_keys=True)
+    for private_value in private_values:
+        if private_value:
+            _require(
+                private_value not in serialized,
+                f"{context} exposed private ledger data",
+            )
 
 
 def _require(condition: bool, message: str) -> None:

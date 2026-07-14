@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Expanded the installed-wheel outreach release check from prebuilt rows to a
+  complete synthetic draft-review, approval, contact, and follow-up journey.
+- Proved the wheel preserves private dates and evidence, ledger permissions,
+  the seven-day cadence, and one attempted-prospect count through every step.
+- Made unconfirmed approval and duplicate follow-up rejection release-blocking,
+  including byte-for-byte proof that failed actions do not modify the ledger.
 - Added guarded `repo-scout-outreach --record-follow-up` recording for the
   earliest due contacted alias after a human confirms the one allowed follow-up.
 - Rejected early, future, and out-of-order follow-up records while retaining

@@ -177,12 +177,15 @@ requires human review. Strict CSV parsing also rejects malformed quoting and
 any row with missing or extra cells, so a shifted private date or status cannot
 silently disappear from the operating record.
 
-Future tagged releases must exercise this lifecycle through the installed wheel
-before provenance attestation. The release check proves an approved draft stays
-outside attempt totals, a contacted row enters them, future follow-up is not due,
-an approved-row alias, evidence, and approval date stay out of aggregate output,
-and missing approval or extra CSV data is rejected. Temporary synthetic rows
-are used, so the check sends nothing and creates no prospect, demand, or revenue
+Future tagged releases must exercise the complete guarded lifecycle through the
+installed wheel before provenance attestation. Starting from one synthetic
+draft, the release check requests the private human checklist, rejects an
+unconfirmed approval without changing the file, records confirmed approval and
+contact, calculates the exact seven-day follow-up, closes that one follow-up,
+and refuses a duplicate without changing the file. It also proves permission
+retention, one attempted-prospect accounting, private-field omission, and
+bounded missing-approval and extra-cell errors. Temporary synthetic rows are
+used, so the check sends nothing and creates no prospect, demand, or revenue
 evidence.
 
 The same verified `v0.3.34` distribution now carries outreach schema 5 and

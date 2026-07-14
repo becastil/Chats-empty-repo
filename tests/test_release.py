@@ -133,8 +133,12 @@ class ReleaseManifestTests(unittest.TestCase):
         self.assertEqual(
             checked,
             (
-                "approved",
-                "contacted",
+                "draft-reviewed",
+                "unconfirmed-approval-rejected",
+                "draft-approved",
+                "contact-recorded",
+                "follow-up-recorded",
+                "duplicate-follow-up-rejected",
                 "missing-approval-rejected",
                 "extra-column-rejected",
             ),
