@@ -17,7 +17,7 @@ from urllib.parse import urlsplit
 
 
 SCHEMA_VERSION = 5
-REVIEW_SCHEMA_VERSION = 1
+REVIEW_SCHEMA_VERSION = 2
 APPROVAL_SCHEMA_VERSION = 1
 CONTACT_SCHEMA_VERSION = 1
 FOLLOW_UP_SCHEMA_VERSION = 1
@@ -85,14 +85,19 @@ def load_outreach_report(path: Path, *, as_of: date | None = None) -> dict[str, 
 
 
 def load_next_outreach_review(
-    path: Path, *, as_of: date | None = None
+    path: Path,
+    *,
+    as_of: date | None = None,
+    include_private_evidence: bool = False,
 ) -> dict[str, Any]:
     report_date = as_of or date.today()
     if type(report_date) is not date:
         raise OutreachInputError("as-of must be a date")
 
     return build_next_outreach_review(
-        _load_outreach_rows(path), as_of=report_date
+        _load_outreach_rows(path),
+        as_of=report_date,
+        include_private_evidence=include_private_evidence,
     )
 
 
@@ -541,12 +546,23 @@ def build_outreach_report(
 
 
 def build_next_outreach_review(
-    rows: list[dict[str, str | None]], *, as_of: date
+    rows: list[dict[str, str | None]],
+    *,
+    as_of: date,
+    include_private_evidence: bool = False,
 ) -> dict[str, Any]:
     build_outreach_report(rows, as_of=as_of)
     draft = _next_status_row(rows, "drafted")
     review = None
+    private_evidence_included = include_private_evidence and draft is not None
     if draft is not None:
+        private_evidence = []
+        if private_evidence_included:
+            evidence = _fit_evidence(draft["fit_evidence"], row_number=2)
+            private_evidence = [
+                {"signal": signal, "url": evidence[signal]}
+                for signal in sorted(evidence)
+            ]
         review = {
             "prospect_id": draft["prospect_id"],
             "channel": draft["channel"],
@@ -554,14 +570,22 @@ def build_next_outreach_review(
             "fit_evidence_links": len(draft["fit_evidence"].split(";")),
             "checks": list(HUMAN_REVIEW_CHECKS),
         }
+        if private_evidence_included:
+            review["private_evidence"] = private_evidence
     return {
         "schema_version": REVIEW_SCHEMA_VERSION,
         "as_of": as_of.isoformat(),
         "human_review_required": True,
         "private_output": True,
+        "private_evidence_included": private_evidence_included,
         "review": review,
         "action_note": (
-            "This checklist does not approve, modify, or send outreach."
+            "This checklist does not approve, modify, or send outreach. "
+            + (
+                "Private evidence links are included only for human review."
+                if private_evidence_included
+                else "Private evidence links remain redacted."
+            )
         ),
     }
 
@@ -639,6 +663,17 @@ def format_next_outreach_review(review_report: dict[str, Any]) -> str:
                     f"{review['fit_signals']} signals / "
                     f"{review['fit_evidence_links']} private links"
                 ),
+                *(
+                    [
+                        "Private evidence (do not commit or share):",
+                        *(
+                            f"- {item['signal']}: {item['url']}"
+                            for item in review.get("private_evidence", [])
+                        ),
+                    ]
+                    if review_report["private_evidence_included"]
+                    else []
+                ),
                 "Human checks:",
                 *(f"- [ ] {check}" for check in review["checks"]),
                 (
@@ -648,7 +683,14 @@ def format_next_outreach_review(review_report: dict[str, Any]) -> str:
                 ),
             ]
         )
-    lines.append("Privacy: Keep this alias-only checklist in the private workspace.")
+    privacy_description = (
+        "evidence-bearing review"
+        if review_report["private_evidence_included"]
+        else "alias-only checklist"
+    )
+    lines.append(
+        f"Privacy: Keep this {privacy_description} in the private workspace."
+    )
     lines.append(f"Boundary: {review_report['action_note']}")
     return "\n".join(lines)
 
@@ -806,6 +848,14 @@ def build_parser() -> argparse.ArgumentParser:
         default="text",
         help="Output format. Defaults to text.",
     )
+    parser.add_argument(
+        "--include-private-evidence",
+        action="store_true",
+        help=(
+            "With --review-next, include the selected draft's private fit "
+            "evidence links. Never use for committed output."
+        ),
+    )
     return parser
 
 
@@ -818,6 +868,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         args.followed_up_on is not None or args.confirm_follow_up_sent
     )
     try:
+        if args.include_private_evidence and not args.review_next:
+            raise OutreachInputError(
+                "--include-private-evidence requires --review-next"
+            )
         if args.approve_next is not None:
             if contact_options:
                 raise OutreachInputError(
@@ -894,7 +948,11 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "--record-follow-up"
             )
         elif args.review_next:
-            report = load_next_outreach_review(args.ledger, as_of=args.as_of)
+            report = load_next_outreach_review(
+                args.ledger,
+                as_of=args.as_of,
+                include_private_evidence=args.include_private_evidence,
+            )
         else:
             report = load_outreach_report(args.ledger, as_of=args.as_of)
     except OutreachInputError as exc:

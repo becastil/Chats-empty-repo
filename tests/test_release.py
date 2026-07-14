@@ -152,6 +152,7 @@ class ReleaseManifestTests(unittest.TestCase):
             checked,
             (
                 "draft-reviewed",
+                "private-evidence-reviewed",
                 "unconfirmed-approval-rejected",
                 "draft-approved",
                 "contact-recorded",

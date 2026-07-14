@@ -29,6 +29,8 @@ class DirectOutreachContractTests(unittest.TestCase):
         )
         self.assertIn("does not approve or", playbook)
         self.assertIn("--review-next", playbook)
+        self.assertIn("--include-private-evidence", playbook)
+        self.assertIn("Without the flag, review output remains redacted", playbook)
         self.assertIn("does not edit the ledger", " ".join(playbook.split()))
         self.assertIn("--approve-next", playbook)
         self.assertIn("--confirm-reviewed", playbook)

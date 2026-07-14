@@ -811,3 +811,14 @@ command and passes the policy-activation and guarded-outreach lifecycle checks.
 The preflighted pin updater therefore advances the dogfood gate, copy-ready
 customer gate, and their test contract together. This removes a known version
 gap from paid-pilot onboarding; it does not prove activation, demand, or revenue.
+
+## 2026-07-14: Make Qualification Evidence An Explicit Private Review Opt-In
+
+The next commercial action is human review of the five prepared drafts, but the
+default alias-only checklist hides the source links needed to complete that
+review and forces the operator to parse the private CSV. `--review-next` now
+accepts `--include-private-evidence` to show only the selected draft's validated
+signal-to-URL mappings, clearly marked as private and read-only. Default text and
+JSON remain redacted, the flag is rejected outside review mode, and release
+smoke coverage proves neither path modifies the ledger. This reduces execution
+friction without automating source judgment, approval, sending, or revenue.

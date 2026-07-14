@@ -197,14 +197,16 @@ class OutreachReportTests(unittest.TestCase):
 
         report = build_next_outreach_review(rows, as_of=date(2026, 7, 13))
 
-        self.assertEqual(report["schema_version"], 1)
+        self.assertEqual(report["schema_version"], 2)
         self.assertTrue(report["human_review_required"])
         self.assertTrue(report["private_output"])
+        self.assertFalse(report["private_evidence_included"])
         self.assertEqual(report["review"]["prospect_id"], "prospect-001")
         self.assertEqual(report["review"]["channel"], "published-business")
         self.assertEqual(report["review"]["fit_signals"], 3)
         self.assertEqual(report["review"]["fit_evidence_links"], 3)
         self.assertEqual(len(report["review"]["checks"]), 5)
+        self.assertNotIn("private_evidence", report["review"])
         serialized = json.dumps(report)
         self.assertNotIn("evidence.example", serialized)
         self.assertNotIn("approved_on", serialized)
@@ -212,6 +214,51 @@ class OutreachReportTests(unittest.TestCase):
         text = format_next_outreach_review(report)
         self.assertEqual(text.count("- [ ]"), 5)
         self.assertIn("Keep this alias-only checklist in the private workspace", text)
+        self.assertIn("does not approve, modify, or send", text)
+
+    def test_review_next_can_explicitly_include_private_evidence(self) -> None:
+        rows = [
+            _row(
+                prospect_id="prospect-001",
+                status="drafted",
+                contacted_on="",
+                next_action_on="",
+                approved_on="",
+            )
+        ]
+
+        report = build_next_outreach_review(
+            rows,
+            as_of=date(2026, 7, 13),
+            include_private_evidence=True,
+        )
+
+        self.assertTrue(report["private_output"])
+        self.assertTrue(report["private_evidence_included"])
+        self.assertEqual(
+            report["review"]["private_evidence"],
+            [
+                {
+                    "signal": "agent_use",
+                    "url": "https://evidence.example/agents",
+                },
+                {
+                    "signal": "multi_repo",
+                    "url": "https://evidence.example/repositories",
+                },
+                {
+                    "signal": "team_5_50",
+                    "url": "https://evidence.example/team",
+                },
+            ],
+        )
+        text = format_next_outreach_review(report)
+        self.assertIn("Private evidence (do not commit or share):", text)
+        self.assertIn(
+            "- agent_use: https://evidence.example/agents",
+            text,
+        )
+        self.assertIn("evidence-bearing review", text)
         self.assertIn("does not approve, modify, or send", text)
 
     def test_review_next_cli_does_not_modify_the_private_ledger(self) -> None:
@@ -251,6 +298,38 @@ class OutreachReportTests(unittest.TestCase):
             self.assertEqual(report["review"]["prospect_id"], "prospect-001")
             self.assertIn("does not approve", report["action_note"])
 
+    def test_private_evidence_flag_requires_review_next(self) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            _write_ledger(
+                ledger,
+                [
+                    _row(
+                        status="drafted",
+                        contacted_on="",
+                        next_action_on="",
+                        approved_on="",
+                    )
+                ],
+            )
+            stderr = io.StringIO()
+
+            with redirect_stderr(stderr):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--include-private-evidence",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 2)
+            self.assertIn(
+                "--include-private-evidence requires --review-next",
+                stderr.getvalue(),
+            )
+
     def test_review_next_reports_when_no_drafts_are_waiting(self) -> None:
         report = build_next_outreach_review(
             [
@@ -262,9 +341,11 @@ class OutreachReportTests(unittest.TestCase):
                 )
             ],
             as_of=date(2026, 7, 13),
+            include_private_evidence=True,
         )
 
         self.assertIsNone(report["review"])
+        self.assertFalse(report["private_evidence_included"])
         self.assertIn(
             "No drafts are awaiting human review.",
             format_next_outreach_review(report),

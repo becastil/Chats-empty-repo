@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added `--include-private-evidence` as an explicit `--review-next` opt-in so a
+  human can inspect the selected draft's fit-signal sources without parsing CSV.
+- Kept default review output redacted and marked evidence-bearing text and JSON
+  as private material that must not enter committed reports or CI artifacts.
+- Extended release smoke coverage to prove private evidence disclosure is
+  complete, explicit, and read-only before guarded approval can proceed.
 - Independently verified and pinned the `v0.3.35` wheel, source commit
   `d095f2f9db4991e7c9f69d6f939b8bdf9a40964f`, and SHA-256
   `c3730e78d55d04385062931f6f2f3c5ba022120c8fc43a5117db9e06f109a650` in both CI gates.

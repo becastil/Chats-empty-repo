@@ -83,6 +83,40 @@ def verify_outreach_lifecycle(
         )
         checked.append("draft-reviewed")
 
+        evidence_review = _json_command(
+            outreach_command,
+            ledger,
+            as_of="2026-07-02",
+            arguments=("--review-next", "--include-private-evidence"),
+            environment=environment,
+        )
+        _require(
+            ledger.read_bytes() == draft_bytes,
+            "private evidence review modified the ledger",
+        )
+        _require(
+            evidence_review.get("private_evidence_included") is True,
+            "private evidence review did not mark its disclosure",
+        )
+        disclosed_evidence = evidence_review.get("review", {}).get(
+            "private_evidence", ()
+        )
+        _require(
+            len(disclosed_evidence) == 3,
+            "private evidence review did not disclose all qualification links",
+        )
+        disclosed_urls = {item.get("url") for item in disclosed_evidence}
+        _require(
+            disclosed_urls
+            == {
+                "https://evidence.example/agents",
+                "https://evidence.example/repositories",
+                "https://evidence.example/team",
+            },
+            "private evidence review disclosed unexpected links",
+        )
+        checked.append("private-evidence-reviewed")
+
         unconfirmed = _run(
             outreach_command,
             ledger,

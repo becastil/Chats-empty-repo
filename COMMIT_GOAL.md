@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after advancing both CI gates to verified v0.3.35: 89 / 1,000 (8.9%).
-- Remaining after advancing both CI gates to verified v0.3.35: 911 commits.
+- Progress after adding explicit private evidence review: 90 / 1,000 (9.0%).
+- Remaining after adding explicit private evidence review: 910 commits.
 
 ## Commit Standard
 

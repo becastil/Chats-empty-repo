@@ -237,6 +237,12 @@ recipient, price and scope, local-code handling, and opt-out behavior. The mode
 does not expose draft text, edit status or dates, approve a message, or send it.
 Its output stays private and cannot be used as a counts-only public baseline;
 review readiness remains operator preparation rather than demand or revenue.
+When the reviewer needs the underlying qualification sources, the explicit
+`--include-private-evidence` opt-in maps that one draft's signals to their HTTPS
+links without editing the ledger. Default output remains redacted, while the
+opt-in output is clearly private and excluded from committed reports and CI
+artifacts. This removes manual CSV parsing from the human decision without
+turning a link into verification, approval, contact, demand, or revenue.
 
 After a human completes those checks, guarded `--approve-next` can record the
 decision without hand-editing CSV. It requires the exact next alias, an explicit
