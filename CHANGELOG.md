@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Preflighted private draft notes against the complete outreach ledger before
+  review, requiring coverage for every drafted alias and rejecting unknown ones.
+- Preserved notes for approved or contacted aliases as private history while
+  keeping review output limited to the deterministic next prospect.
+- Made note-to-ledger identity drift release-blocking and proved controlled
+  rejection does not modify the ledger or expose private message text.
 - Added `--include-private-draft DRAFTS_MD` as an explicit `--review-next`
   opt-in that selects only the next alias's bounded Markdown section.
 - Rejected duplicate, malformed, empty, oversized, and missing selected draft

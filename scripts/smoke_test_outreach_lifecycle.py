@@ -90,6 +90,38 @@ def verify_outreach_lifecycle(
         )
         checked.append("draft-reviewed")
 
+        drifted_review = _run(
+            outreach_command,
+            ledger,
+            as_of="2026-07-02",
+            arguments=(
+                "--review-next",
+                "--include-private-draft",
+                str(private_drafts),
+            ),
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(
+            "section absent from the ledger: prospect-002" in drifted_review.stderr,
+            "draft identity drift did not produce its controlled error",
+        )
+        _require(
+            "Other private message" not in drifted_review.stderr,
+            "draft identity drift exposed private message text",
+        )
+        _require(
+            ledger.read_bytes() == draft_bytes,
+            "draft identity drift modified the ledger",
+        )
+        checked.append("draft-ledger-drift-rejected")
+
+        private_drafts.write_text(
+            "# Private drafts\n\n"
+            f"## {draft['prospect_id']}\n\nSelected private message\n",
+            encoding="utf-8",
+        )
+
         evidence_review = _json_command(
             outreach_command,
             ledger,
@@ -135,10 +167,6 @@ def verify_outreach_lifecycle(
         _require(
             private_draft == "Selected private message",
             "private review did not select the synthetic draft notes",
-        )
-        _require(
-            "Other private message" not in json.dumps(evidence_review),
-            "private review exposed a different prospect's draft notes",
         )
         checked.append("private-review-bundle")
 

@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after adding a complete private review bundle: 92 / 1,000 (9.2%).
-- Remaining after adding a complete private review bundle: 908 commits.
+- Progress after preflighting private review identity: 93 / 1,000 (9.3%).
+- Remaining after preflighting private review identity: 907 commits.
 
 ## Commit Standard
 

@@ -152,6 +152,7 @@ class ReleaseManifestTests(unittest.TestCase):
             checked,
             (
                 "draft-reviewed",
+                "draft-ledger-drift-rejected",
                 "private-review-bundle",
                 "unconfirmed-approval-rejected",
                 "draft-approved",

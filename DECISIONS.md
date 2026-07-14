@@ -846,3 +846,13 @@ matching the deterministic next alias. Ambiguous, malformed, empty, oversized,
 or missing selected sections fail without editing the ledger. Combined with the
 evidence opt-in, this creates one clearly private decision bundle while keeping
 default output redacted and all judgment, approval, and sending human-controlled.
+
+## 2026-07-14: Require Private Notes And Ledger Identities To Reconcile
+
+A selected section can look valid even when the private notes and ledger have
+drifted elsewhere. Before including any draft text, review now requires one note
+section for every row still marked `drafted` and rejects sections whose alias is
+absent from the ledger. Notes for aliases that progressed may remain as private
+history. The check runs after full ledger and bounded-note validation, exposes
+no message text on failure, and never edits either file. This guards the human
+decision input without approving, sending, or creating commercial evidence.

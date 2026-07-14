@@ -622,6 +622,28 @@ def build_next_outreach_review(
     private_drafts: Mapping[str, str] | None = None,
 ) -> dict[str, Any]:
     build_outreach_report(rows, as_of=as_of)
+    if private_drafts is not None:
+        ledger_ids = {
+            (row.get("prospect_id") or "").strip() for row in rows
+        }
+        drafted_ids = {
+            (row.get("prospect_id") or "").strip()
+            for row in rows
+            if (row.get("status") or "").strip() == "drafted"
+        }
+        note_ids = set(private_drafts)
+        missing_ids = sorted(drafted_ids - note_ids)
+        if missing_ids:
+            raise OutreachInputError(
+                "private draft notes are missing a drafted section: "
+                f"{missing_ids[0]}"
+            )
+        unknown_ids = sorted(note_ids - ledger_ids)
+        if unknown_ids:
+            raise OutreachInputError(
+                "private draft notes contain a section absent from the ledger: "
+                f"{unknown_ids[0]}"
+            )
     draft = _next_status_row(rows, "drafted")
     review = None
     private_evidence_included = include_private_evidence and draft is not None
@@ -647,7 +669,7 @@ def build_next_outreach_review(
             private_draft = private_drafts.get(draft["prospect_id"])
             if not isinstance(private_draft, str) or not private_draft.strip():
                 raise OutreachInputError(
-                    "private draft notes are missing the selected section: "
+                    "private draft notes are missing a drafted section: "
                     f"{draft['prospect_id']}"
                 )
             review["private_draft"] = private_draft.strip()

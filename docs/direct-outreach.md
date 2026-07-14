@@ -134,12 +134,16 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
   --include-private-draft outreach-private/drafts.md
 ```
 
-The notes file uses one exact `## prospect-NNN` heading per draft. The opt-in
-output selects only the section matching the next ledger alias, maps every
+The notes file uses one exact `## prospect-NNN` heading per draft. Before
+showing anything, the opt-in requires a section for every ledger row still in
+`drafted` status and rejects any section whose alias is absent from the ledger.
+Sections for approved or contacted aliases may remain as private history. The
+output then selects only the section matching the next ledger alias, maps every
 declared fit signal to its private HTTPS source, and marks both disclosures.
-Duplicate, malformed, empty, oversized, or missing selected sections fail
-without changing the ledger. Keep this output in the ignored workspace and do
-not redirect it into committed reports, logs, issue comments, or CI artifacts.
+Duplicate, malformed, empty, oversized, missing, or unknown sections fail
+without changing the ledger or exposing message text. Keep this output in the
+ignored workspace and do not redirect it into committed reports, logs, issue
+comments, or CI artifacts.
 Without the flags, review output remains redacted. Showing the bundle still does
 not verify a claim, approve a draft, or send a message; the human must read the
 draft, open each source, and complete every displayed check.

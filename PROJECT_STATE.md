@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 92 of 1,000, with 908 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 93 of 1,000, with 907 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -168,6 +168,9 @@ The delivery goal is 1,000 meaningful commits. This update is commit 92 of 1,000
   section rejection without modifying the outreach ledger.
 - Release-smoke coverage proving the opt-ins expose only the selected evidence
   and draft, mark both disclosures as private, and never mutate the ledger.
+- Cross-file private review preflight requiring notes for every drafted ledger
+  alias, rejecting aliases absent from the ledger, and retaining progressed
+  aliases as history without exposing their messages.
 - Guarded `--approve-next` recording that requires the exact next alias, an
   explicit review date, and confirmation that a human completed every check.
 - Full-ledger preflight and postflight validation plus permission-preserving,

@@ -304,6 +304,37 @@ class OutreachReportTests(unittest.TestCase):
         self.assertIn("Selected message", text)
         self.assertIn("draft-bearing review", text)
 
+    def test_private_draft_notes_can_retain_progressed_ledger_sections(self) -> None:
+        rows = [
+            _row(
+                prospect_id="prospect-001",
+                status="drafted",
+                contacted_on="",
+                next_action_on="",
+                approved_on="",
+            ),
+            _row(
+                prospect_id="prospect-002",
+                status="approved",
+                contacted_on="",
+                next_action_on="",
+                approved_on="2026-07-12",
+            ),
+        ]
+
+        report = build_next_outreach_review(
+            rows,
+            as_of=date(2026, 7, 13),
+            private_drafts={
+                "prospect-001": "Selected message",
+                "prospect-002": "Previously approved message",
+            },
+        )
+
+        self.assertEqual(report["review"]["prospect_id"], "prospect-001")
+        self.assertEqual(report["review"]["private_draft"], "Selected message")
+        self.assertNotIn("Previously approved message", json.dumps(report))
+
     def test_review_next_cli_does_not_modify_the_private_ledger(self) -> None:
         with TemporaryDirectory() as tmp:
             ledger = Path(tmp) / "ledger.csv"
@@ -354,7 +385,6 @@ class OutreachReportTests(unittest.TestCase):
             _write_ledger(ledger, [row])
             notes.write_text(
                 "# Private drafts\n\n"
-                "## prospect-002\n\nOther private message\n\n"
                 "## prospect-001\n\nSelected private message\n",
                 encoding="utf-8",
             )
@@ -384,7 +414,6 @@ class OutreachReportTests(unittest.TestCase):
             self.assertEqual(
                 report["review"]["private_draft"], "Selected private message"
             )
-            self.assertNotIn("Other private message", stdout.getvalue())
 
     def test_private_draft_notes_reject_missing_or_ambiguous_sections(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -404,7 +433,7 @@ class OutreachReportTests(unittest.TestCase):
             cases = (
                 (
                     "## prospect-002\n\nOther private message\n",
-                    "missing the selected section: prospect-001",
+                    "missing a drafted section: prospect-001",
                 ),
                 (
                     "## prospect-001\n\nFirst\n\n## prospect-001\n\nSecond\n",
@@ -446,6 +475,49 @@ class OutreachReportTests(unittest.TestCase):
                     self.assertEqual(exit_code, 2)
                     self.assertIn(expected, stderr.getvalue())
                     self.assertNotIn("Private message", stderr.getvalue())
+
+    def test_private_draft_notes_reject_sections_absent_from_ledger(self) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            notes = Path(tmp) / "drafts.md"
+            _write_ledger(
+                ledger,
+                [
+                    _row(
+                        status="drafted",
+                        contacted_on="",
+                        next_action_on="",
+                        approved_on="",
+                    )
+                ],
+            )
+            notes.write_text(
+                "## prospect-001\n\nSelected private message\n\n"
+                "## prospect-999\n\nUnknown private message\n",
+                encoding="utf-8",
+            )
+            before = ledger.read_bytes()
+            stderr = io.StringIO()
+
+            with redirect_stderr(stderr):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--review-next",
+                        "--include-private-draft",
+                        str(notes),
+                    ]
+                )
+
+            self.assertEqual(exit_code, 2)
+            self.assertEqual(ledger.read_bytes(), before)
+            self.assertIn(
+                "section absent from the ledger: prospect-999",
+                stderr.getvalue(),
+            )
+            self.assertNotIn("Unknown private message", stderr.getvalue())
 
     def test_private_review_flags_require_review_next(self) -> None:
         with TemporaryDirectory() as tmp:
