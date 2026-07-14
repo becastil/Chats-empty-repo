@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Completed installed-entry-point release coverage by routing policy activation,
+  main policy enforcement, guarded outreach, and rollout aggregation through
+  the built wheel's public commands.
+- Added controlled missing-command rejection to the policy, outreach, and
+  rollout smoke harnesses while preserving fast source-module test mode.
+- Required all four behavioral release harnesses to receive the exact wheel
+  installation directory before provenance attestation.
 - Routed release-blocking pilot, distribution, and growth behavior through the
   built wheel's public console commands rather than their Python modules.
 - Added controlled rejection when any required installed commercial command is

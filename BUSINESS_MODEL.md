@@ -434,6 +434,16 @@ portable plus wheel movement must fail without a report. These fixtures prove
 packaged entry-point, parsing, joining, and validation behavior, not adoption,
 attribution, demand, or revenue.
 
+The release boundary applies the same installed-command rule to the rest of
+the paid workflow. Policy recommendation, bootstrap, receipt verification, and
+enforcement run through `repo-scout-policy` and `repo-scout`; the guarded human
+outreach lifecycle runs through `repo-scout-outreach`; and cross-repository
+evidence runs through `repo-scout-rollout`. Each harness receives the exact
+wheel installation directory and fails cleanly if a required command is absent
+or non-executable. Source tests retain direct module execution for speed. This
+proves packaging routes customer commands to tested behavior; it does not prove
+customer activation, outreach attempts, pilot demand, or revenue.
+
 Schema-2 growth reviews also expose ordered schema-6+ purchase-criterion outcomes
 and reconcile every criterion aggregate to the same source-reported deals and
 revenue. Schema-5 reports mark criterion evidence unavailable instead of zero.

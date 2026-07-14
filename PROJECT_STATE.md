@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 85 of 1,000, with 915 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 86 of 1,000, with 914 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -100,6 +100,9 @@ The delivery goal is 1,000 meaningful commits. This update is commit 85 of 1,000
 - Release-blocking behavioral proof through the installed `repo-scout-pilot`,
   `repo-scout-distribution`, and `repo-scout-growth` console commands instead of
   bypassing public entry points after their help checks.
+- Complete installed-entry-point release proof for policy activation and
+  enforcement, guarded outreach, commercial reporting, and rollout aggregation,
+  with controlled rejection when any required command is unavailable.
 - A refreshed schema-2 distribution, schema-7 pilot, and joined growth baseline
   generated from public evidence on 2026-07-13.
 - Baseline contract tests reconciling every release channel while preserving zero pilot and revenue truth.

@@ -22,9 +22,14 @@ class SmokeTestError(RuntimeError):
 def verify_rollout_summary(
     python: str | Path,
     *,
+    command_directory: str | Path | None = None,
     environment: Mapping[str, str] | None = None,
 ) -> tuple[str, ...]:
     python_command = str(Path(python))
+    rollout_command = _rollout_command(
+        python_command,
+        command_directory=command_directory,
+    )
     checked: list[str] = []
 
     with TemporaryDirectory() as tmp:
@@ -45,7 +50,7 @@ def verify_rollout_summary(
         )
 
         report = _json_report(
-            python_command,
+            rollout_command,
             (web, api),
             environment=environment,
         )
@@ -82,7 +87,7 @@ def verify_rollout_summary(
         checked.append("counts-only-summary")
 
         text_report = _run(
-            python_command,
+            rollout_command,
             (web, api),
             output_format="text",
             environment=environment,
@@ -102,7 +107,7 @@ def verify_rollout_summary(
         checked.append("shared-policy-remediation")
 
         detailed = _json_report(
-            python_command,
+            rollout_command,
             (web, api),
             details=True,
             environment=environment,
@@ -127,7 +132,7 @@ def verify_rollout_summary(
         duplicate = root / "duplicate.md"
         _write_bundle(duplicate, _metadata("company/api", commit=WEB_COMMIT))
         rejected = _run(
-            python_command,
+            rollout_command,
             (api, duplicate),
             output_format="json",
             environment=environment,
@@ -141,6 +146,22 @@ def verify_rollout_summary(
         checked.append("duplicate-rejected")
 
     return tuple(checked)
+
+
+def _rollout_command(
+    python: str,
+    *,
+    command_directory: str | Path | None,
+) -> tuple[str, ...]:
+    if command_directory is None:
+        return (python, "-m", "repo_scout.rollout_summary")
+
+    path = Path(command_directory) / "repo-scout-rollout"
+    if not path.is_file() or not os.access(path, os.X_OK):
+        raise SmokeTestError(
+            f"installed command is missing or not executable: {path}"
+        )
+    return (str(path),)
 
 
 def _metadata(
@@ -189,14 +210,14 @@ def _write_bundle(path: Path, metadata: Mapping[str, Any]) -> None:
 
 
 def _json_report(
-    python: str,
+    command: Sequence[str],
     evidence: Sequence[Path],
     *,
     details: bool = False,
     environment: Mapping[str, str] | None,
 ) -> dict[str, Any]:
     completed = _run(
-        python,
+        command,
         evidence,
         output_format="json",
         details=details,
@@ -213,7 +234,7 @@ def _json_report(
 
 
 def _run(
-    python: str,
+    command: Sequence[str],
     evidence: Sequence[Path],
     *,
     output_format: str,
@@ -221,18 +242,16 @@ def _run(
     environment: Mapping[str, str] | None,
     expected_exit_code: int,
 ) -> subprocess.CompletedProcess[str]:
-    command = [
-        python,
-        "-m",
-        "repo_scout.rollout_summary",
+    arguments = [
+        *command,
         "--format",
         output_format,
     ]
     if details:
-        command.append("--details")
-    command.extend(str(path) for path in evidence)
+        arguments.append("--details")
+    arguments.extend(str(path) for path in evidence)
     completed = subprocess.run(
-        command,
+        arguments,
         capture_output=True,
         text=True,
         env=dict(environment) if environment is not None else None,
@@ -276,13 +295,22 @@ def build_parser() -> argparse.ArgumentParser:
         description="Smoke test installed Repo Scout rollout summaries."
     )
     parser.add_argument("--python", default=sys.executable)
+    parser.add_argument(
+        "--command-directory",
+        type=Path,
+        help="Directory containing the installed repo-scout-rollout command.",
+    )
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
-        checked = verify_rollout_summary(args.python, environment=os.environ)
+        checked = verify_rollout_summary(
+            args.python,
+            command_directory=args.command_directory,
+            environment=os.environ,
+        )
     except SmokeTestError as exc:
         print(f"rollout summary smoke test failed: {exc}", file=sys.stderr)
         return 1

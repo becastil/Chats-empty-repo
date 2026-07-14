@@ -764,3 +764,16 @@ directory and runs pilot, distribution, and growth evidence through the exact
 from the built wheel. Source tests retain module mode for speed, and a missing
 or non-executable installed command fails with a controlled error. This closes
 a paid-distribution assurance gap; it does not create usage, demand, or revenue.
+
+## 2026-07-14: Apply The Installed-Command Rule To Every Release Harness
+
+Commercial reporting was not the only behavioral smoke that bypassed wheel
+entry points after a shallow help check. Policy activation and enforcement,
+guarded outreach, and rollout aggregation still used `python -m` for their real
+assertions. The release workflow now passes its exact installation directory to
+all four harnesses, which execute `repo-scout`, `repo-scout-policy`,
+`repo-scout-outreach`, `repo-scout-pilot`, `repo-scout-distribution`,
+`repo-scout-growth`, and `repo-scout-rollout` as customers receive them. Source
+tests keep module mode, and every harness rejects missing or non-executable
+commands before creating fixtures. This closes one packaging-risk class as a
+single coherent change; it does not add a feature or create commercial evidence.

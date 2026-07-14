@@ -37,9 +37,14 @@ class SmokeTestError(RuntimeError):
 def verify_outreach_lifecycle(
     python: str | Path,
     *,
+    command_directory: str | Path | None = None,
     environment: Mapping[str, str] | None = None,
 ) -> tuple[str, ...]:
     python_command = str(Path(python))
+    outreach_command = _outreach_command(
+        python_command,
+        command_directory=command_directory,
+    )
     checked: list[str] = []
 
     with TemporaryDirectory() as tmp:
@@ -55,7 +60,7 @@ def verify_outreach_lifecycle(
         draft_bytes = ledger.read_bytes()
 
         review = _json_command(
-            python_command,
+            outreach_command,
             ledger,
             as_of="2026-07-02",
             arguments=("--review-next",),
@@ -79,7 +84,7 @@ def verify_outreach_lifecycle(
         checked.append("draft-reviewed")
 
         unconfirmed = _run(
-            python_command,
+            outreach_command,
             ledger,
             as_of="2026-07-02",
             arguments=(
@@ -106,7 +111,7 @@ def verify_outreach_lifecycle(
         checked.append("unconfirmed-approval-rejected")
 
         approval = _json_command(
-            python_command,
+            outreach_command,
             ledger,
             as_of="2026-07-02",
             arguments=(
@@ -136,7 +141,7 @@ def verify_outreach_lifecycle(
             context="approval receipt",
         )
         approved_report = _report(
-            python_command,
+            outreach_command,
             ledger,
             as_of="2026-07-02",
             environment=environment,
@@ -176,7 +181,7 @@ def verify_outreach_lifecycle(
         checked.append("draft-approved")
 
         contact = _json_command(
-            python_command,
+            outreach_command,
             ledger,
             as_of="2026-07-04",
             arguments=(
@@ -202,7 +207,7 @@ def verify_outreach_lifecycle(
             context="contact receipt",
         )
         contacted_report = _report(
-            python_command,
+            outreach_command,
             ledger,
             as_of="2026-07-04",
             environment=environment,
@@ -236,7 +241,7 @@ def verify_outreach_lifecycle(
         checked.append("contact-recorded")
 
         follow_up = _json_command(
-            python_command,
+            outreach_command,
             ledger,
             as_of="2026-07-11",
             arguments=(
@@ -267,7 +272,7 @@ def verify_outreach_lifecycle(
             context="follow-up receipt",
         )
         followed_report = _report(
-            python_command,
+            outreach_command,
             ledger,
             as_of="2026-07-11",
             environment=environment,
@@ -300,7 +305,7 @@ def verify_outreach_lifecycle(
 
         followed_bytes = ledger.read_bytes()
         duplicate = _run(
-            python_command,
+            outreach_command,
             ledger,
             as_of="2026-07-11",
             arguments=(
@@ -325,7 +330,7 @@ def verify_outreach_lifecycle(
 
         _write_ledger(ledger, _row(approved_on=""))
         missing_approval = _run(
-            python_command,
+            outreach_command,
             ledger,
             as_of="2026-07-01",
             environment=environment,
@@ -343,7 +348,7 @@ def verify_outreach_lifecycle(
 
         _write_ledger(ledger, _row(), extra_value="private-extra-value")
         extra_column = _run(
-            python_command,
+            outreach_command,
             ledger,
             as_of="2026-07-01",
             environment=environment,
@@ -361,6 +366,22 @@ def verify_outreach_lifecycle(
         checked.append("extra-column-rejected")
 
     return tuple(checked)
+
+
+def _outreach_command(
+    python: str,
+    *,
+    command_directory: str | Path | None,
+) -> tuple[str, ...]:
+    if command_directory is None:
+        return (python, "-m", "repo_scout.outreach")
+
+    path = Path(command_directory) / "repo-scout-outreach"
+    if not path.is_file() or not os.access(path, os.X_OK):
+        raise SmokeTestError(
+            f"installed command is missing or not executable: {path}"
+        )
+    return (str(path),)
 
 
 def _row(**overrides: str) -> dict[str, str]:
@@ -403,14 +424,14 @@ def _read_row(path: Path) -> dict[str, str]:
 
 
 def _report(
-    python: str,
+    command: Sequence[str],
     ledger: Path,
     *,
     as_of: str,
     environment: Mapping[str, str] | None,
 ) -> dict[str, Any]:
     completed = _run(
-        python,
+        command,
         ledger,
         as_of=as_of,
         environment=environment,
@@ -426,7 +447,7 @@ def _report(
 
 
 def _json_command(
-    python: str,
+    command: Sequence[str],
     ledger: Path,
     *,
     as_of: str,
@@ -434,7 +455,7 @@ def _json_command(
     environment: Mapping[str, str] | None,
 ) -> dict[str, Any]:
     completed = _run(
-        python,
+        command,
         ledger,
         as_of=as_of,
         arguments=arguments,
@@ -451,7 +472,7 @@ def _json_command(
 
 
 def _run(
-    python: str,
+    command: Sequence[str],
     ledger: Path,
     *,
     as_of: str,
@@ -461,9 +482,7 @@ def _run(
 ) -> subprocess.CompletedProcess[str]:
     completed = subprocess.run(
         [
-            python,
-            "-m",
-            "repo_scout.outreach",
+            *command,
             str(ledger),
             "--as-of",
             as_of,
@@ -509,13 +528,22 @@ def build_parser() -> argparse.ArgumentParser:
         description="Smoke test the installed Repo Scout outreach lifecycle."
     )
     parser.add_argument("--python", default=sys.executable)
+    parser.add_argument(
+        "--command-directory",
+        type=Path,
+        help="Directory containing the installed repo-scout-outreach command.",
+    )
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
-        checked = verify_outreach_lifecycle(args.python, environment=os.environ)
+        checked = verify_outreach_lifecycle(
+            args.python,
+            command_directory=args.command_directory,
+            environment=os.environ,
+        )
     except SmokeTestError as exc:
         print(f"outreach lifecycle smoke test failed: {exc}", file=sys.stderr)
         return 1

@@ -21,9 +21,14 @@ class SmokeTestError(RuntimeError):
 def verify_policy_activation(
     python: str | Path,
     *,
+    command_directory: str | Path | None = None,
     environment: Mapping[str, str] | None = None,
 ) -> tuple[str, ...]:
     python_command = str(Path(python))
+    policy_command, scan_command = _installed_commands(
+        python_command,
+        command_directory=command_directory,
+    )
     checked: list[str] = []
 
     for lockfile in LOCKFILES:
@@ -36,7 +41,7 @@ def verify_policy_activation(
             (root / lockfile).write_text("# lockfile\n", encoding="utf-8")
 
             recommendation = _recommend(
-                python_command, root, environment=environment
+                policy_command, root, environment=environment
             )
             expected_starter = (
                 "node-npm-service"
@@ -52,9 +57,7 @@ def verify_policy_activation(
             recommended_policy = root / "recommended-policy.toml"
             bootstrap = _run(
                 [
-                    python_command,
-                    "-m",
-                    "repo_scout.policy_templates",
+                    *policy_command,
                     "bootstrap",
                     str(root),
                     "--output",
@@ -71,7 +74,7 @@ def verify_policy_activation(
                 bootstrap, recommended_policy, expected_starter
             )
             _verify_receipt(
-                python_command,
+                policy_command,
                 root,
                 bootstrap,
                 environment=environment,
@@ -79,9 +82,7 @@ def verify_policy_activation(
 
             _run(
                 [
-                    python_command,
-                    "-m",
-                    "repo_scout.policy_templates",
+                    *policy_command,
                     "init",
                     "node-service",
                     "--output",
@@ -102,7 +103,7 @@ def verify_policy_activation(
 
             _initialize_repository(root)
             passing = _scan(
-                python_command, root, policy_path, environment=environment
+                scan_command, root, policy_path, environment=environment
             )
             if passing.get("policy", {}).get("status") != "pass":
                 raise SmokeTestError(f"node-service rejected {lockfile}")
@@ -110,7 +111,7 @@ def verify_policy_activation(
             (root / lockfile).unlink()
             _commit_all(root, "Remove lockfile")
             failing = _scan(
-                python_command,
+                scan_command,
                 root,
                 policy_path,
                 environment=environment,
@@ -160,7 +161,7 @@ def verify_policy_activation(
                 (root / filename).write_text(content, encoding="utf-8")
 
             recommendation = _recommend(
-                python_command, root, environment=environment
+                policy_command, root, environment=environment
             )
             actual_starter = recommendation.get("recommendation", {}).get("name")
             if actual_starter != expected_starter:
@@ -177,9 +178,7 @@ def verify_policy_activation(
             bootstrap_policy = root / "repo-scout-policy.toml"
             bootstrap = _run(
                 [
-                    python_command,
-                    "-m",
-                    "repo_scout.policy_templates",
+                    *policy_command,
                     "bootstrap",
                     str(root),
                     "--format",
@@ -201,7 +200,7 @@ def verify_policy_activation(
                     bootstrap, bootstrap_policy, expected_starter
                 )
                 _verify_receipt(
-                    python_command,
+                    policy_command,
                     root,
                     bootstrap,
                     environment=environment,
@@ -209,6 +208,29 @@ def verify_policy_activation(
             checked.append(label)
 
     return tuple(checked)
+
+
+def _installed_commands(
+    python: str,
+    *,
+    command_directory: str | Path | None,
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    if command_directory is None:
+        return (
+            (python, "-m", "repo_scout.policy_templates"),
+            (python, "-m", "repo_scout"),
+        )
+
+    directory = Path(command_directory)
+    commands: list[tuple[str, ...]] = []
+    for name in ("repo-scout-policy", "repo-scout"):
+        path = directory / name
+        if not path.is_file() or not os.access(path, os.X_OK):
+            raise SmokeTestError(
+                f"installed command is missing or not executable: {path}"
+            )
+        commands.append((str(path),))
+    return commands[0], commands[1]
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -220,13 +242,25 @@ def build_parser() -> argparse.ArgumentParser:
         default=sys.executable,
         help="Python interpreter from the Repo Scout installation to test.",
     )
+    parser.add_argument(
+        "--command-directory",
+        type=Path,
+        help=(
+            "Directory containing installed repo-scout and "
+            "repo-scout-policy commands."
+        ),
+    )
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
-        checked = verify_policy_activation(args.python, environment=os.environ)
+        checked = verify_policy_activation(
+            args.python,
+            command_directory=args.command_directory,
+            environment=os.environ,
+        )
     except SmokeTestError as exc:
         print(f"policy activation smoke test: {exc}", file=sys.stderr)
         return 1
@@ -235,16 +269,14 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 
 def _recommend(
-    python: str,
+    command: Sequence[str],
     root: Path,
     *,
     environment: Mapping[str, str] | None,
 ) -> dict[str, object]:
     completed = _run(
         [
-            python,
-            "-m",
-            "repo_scout.policy_templates",
+            *command,
             "recommend",
             str(root),
             "--format",
@@ -290,7 +322,7 @@ def _assert_bootstrap_receipt(
 
 
 def _verify_receipt(
-    python: str,
+    command: Sequence[str],
     root: Path,
     bootstrap: subprocess.CompletedProcess[str],
     *,
@@ -300,9 +332,7 @@ def _verify_receipt(
     receipt_path.write_text(bootstrap.stdout, encoding="utf-8")
     completed = _run(
         [
-            python,
-            "-m",
-            "repo_scout.policy_templates",
+            *command,
             "verify-receipt",
             str(receipt_path),
             "--format",
@@ -324,7 +354,7 @@ def _verify_receipt(
 
 
 def _scan(
-    python: str,
+    command: Sequence[str],
     root: Path,
     policy_path: Path,
     *,
@@ -333,9 +363,7 @@ def _scan(
 ) -> dict[str, object]:
     completed = _run(
         [
-            python,
-            "-m",
-            "repo_scout",
+            *command,
             "--format",
             "json",
             "--policy",

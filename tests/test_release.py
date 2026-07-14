@@ -162,6 +162,29 @@ class ReleaseManifestTests(unittest.TestCase):
             ),
         )
 
+    def test_remaining_smokes_reject_missing_installed_commands(self) -> None:
+        cases = (
+            (
+                smoke_test_policy_activation.verify_policy_activation,
+                smoke_test_policy_activation.SmokeTestError,
+            ),
+            (
+                smoke_test_outreach_lifecycle.verify_outreach_lifecycle,
+                smoke_test_outreach_lifecycle.SmokeTestError,
+            ),
+            (
+                smoke_test_rollout_summary.verify_rollout_summary,
+                smoke_test_rollout_summary.SmokeTestError,
+            ),
+        )
+        with TemporaryDirectory() as tmp:
+            for verify, error in cases:
+                with self.subTest(verify=verify.__name__), self.assertRaisesRegex(
+                    error,
+                    "installed command is missing or not executable",
+                ):
+                    verify(sys.executable, command_directory=tmp)
+
     def test_pilot_funnel_smoke_contract_passes_against_source(self) -> None:
         environment = os.environ.copy()
         environment["PYTHONPATH"] = str(ROOT / "src")
@@ -401,6 +424,12 @@ class ReleaseWorkflowTests(unittest.TestCase):
         self.assertIn(
             '--command-directory "$RUNNER_TEMP/repo-scout-release/bin"',
             workflow,
+        )
+        self.assertEqual(
+            workflow.count(
+                '--command-directory "$RUNNER_TEMP/repo-scout-release/bin"'
+            ),
+            4,
         )
         self.assertLess(
             workflow.index("python scripts/smoke_test_pilot_funnel.py"),

@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after behavior-testing installed commercial commands: 85 / 1,000 (8.5%).
-- Remaining after behavior-testing installed commercial commands: 915 commits.
+- Progress after completing installed-command release coverage: 86 / 1,000 (8.6%).
+- Remaining after completing installed-command release coverage: 914 commits.
 
 ## Commit Standard
 
