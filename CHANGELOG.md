@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.35 - 2026-07-14
+
 - Added a consistent `--version` flag to every public Repo Scout command and the
   portable zipapp for support and CI diagnostics.
 - Required all seven built-wheel commands and the zipapp to report the exact

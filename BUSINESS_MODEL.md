@@ -211,6 +211,16 @@ hosted-runner, policy-activation, and outreach-lifecycle review. Publication and
 pinning do not approve or send the five drafts and do not create a prospect,
 pilot request, or sale.
 
+Public `v0.3.35` packages the guarded approval, contact, and one-follow-up
+operations added after `v0.3.34`, along with complete installed-entry-point
+behavioral checks and consistent command and zipapp version identity. Its
+release boundary blocks publication unless the paid-workflow commands compose
+through the built wheel and report the semantic tag exactly. Customer CI
+examples remain on independently verified `v0.3.34` until the new wheel digest,
+source commit, manifest, signer workflow, and provenance are measured after
+publication. Releasing tested operations improves distribution readiness; it
+does not approve drafts, create attempts, validate demand, or book revenue.
+
 The first five personalized outreach drafts now exist in the ignored private
 workspace. Sixteen fit links were reviewed against narrow, company-controlled
 public evidence because no Sales Intelligence or CRM provider is connected.

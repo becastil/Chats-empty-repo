@@ -788,3 +788,15 @@ release workflow compares every output to the semantic version tag before
 attestation, preventing mixed or stale entry-point metadata from publishing
 silently. This is a diagnostic and distribution contract, not provenance by
 itself and not evidence of activation, demand, payment, or revenue.
+
+## 2026-07-14: Release The Coherent Guarded-Operations Set
+
+Thirteen tested commits after `v0.3.34` form one installable patch set: guarded
+human approval, contact, and follow-up recording; behavioral release checks for
+every paid-workflow entry point; raw distribution-to-growth evidence; and
+observable command version identity. Version `0.3.35` publishes that set rather
+than continuing to accumulate source-only improvements. Package, runtime,
+portable, website, install-documentation, and release-test versions advance
+together. Customer CI pins deliberately remain on independently verified
+`v0.3.34` until the new release exists and its exact digest and provenance can
+be measured. Publication is distribution evidence, not adoption or revenue.

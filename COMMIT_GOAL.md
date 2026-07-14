@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after adding observable installed version identity: 87 / 1,000 (8.7%).
-- Remaining after adding observable installed version identity: 913 commits.
+- Progress after preparing the v0.3.35 patch release: 88 / 1,000 (8.8%).
+- Remaining after preparing the v0.3.35 patch release: 912 commits.
 
 ## Commit Standard
 
