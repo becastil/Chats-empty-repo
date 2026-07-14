@@ -339,6 +339,21 @@ the contact date, and sets `next_action_on` to exactly seven days later. Its
 private receipt names the manual follow-up date. Repo Scout sends no message and
 schedules no automatic follow-up.
 
+On that due date, after a human sends the one allowed follow-up, close the
+cadence with a guarded record:
+
+```bash
+repo-scout-outreach outreach-private/outreach-ledger.csv \
+  --as-of "$(date +%F)" \
+  --record-follow-up prospect-001 \
+  --followed-up-on "$(date +%F)" \
+  --confirm-follow-up-sent
+```
+
+The action selects the earliest due contact, rejects an early or future send,
+retains approval and initial-contact evidence, and clears `next_action_on` so no
+second follow-up is scheduled. Repo Scout still sends nothing.
+
 The reporter enforces the 10-prospect experiment, three-signal qualification,
 one private HTTPS evidence link per signal, permitted contact channels, one
 seven-day follow-up, and opt-out stop states. Schema-3 reports separate

@@ -44,6 +44,15 @@ class DirectOutreachContractTests(unittest.TestCase):
         )
         self.assertIn("Repo Scout sends nothing", playbook)
         self.assertIn("makes send timing inferable", " ".join(playbook.split()))
+        self.assertIn("--record-follow-up", playbook)
+        self.assertIn("--confirm-follow-up-sent", playbook)
+        self.assertIn(
+            "changes only `status`, `followed_up_on`, and `next_action_on`",
+            " ".join(playbook.split()),
+        )
+        self.assertIn(
+            "second follow-up is not scheduled", " ".join(playbook.split())
+        )
         self.assertIn("Stop immediately after an opt-out", playbook)
         self.assertIn("reply, page visit, or release request", playbook)
         self.assertIn("do not count", playbook.lower())

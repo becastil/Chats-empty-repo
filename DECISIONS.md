@@ -666,3 +666,18 @@ follow-up due date. That date makes send timing inferable, so the receipt stays
 private. Repo Scout sends no message and schedules no follow-up. The recorded
 attempt is operational evidence only, not a lead, pilot request, payment, or
 revenue.
+
+## 2026-07-14: Close The One-Follow-Up Cadence Explicitly
+
+The bounded outreach experiment allows one follow-up no earlier than seven days
+after initial contact, but manual CSV edits could record it early or leave a
+second next action behind. `--record-follow-up` now selects the earliest due
+contacted alias, requires an explicit date and confirmation that a human already
+sent the follow-up, and rejects early, future, and out-of-order transitions. It
+retains approval and initial-contact evidence, changes only `status`,
+`followed_up_on`, and `next_action_on`, and clears the next action atomically.
+The receipt omits explicit approval, contact, and follow-up fields but remains
+private because it includes the alias and `as_of` context. Repo Scout sends
+nothing and schedules no additional message. One initial message plus one
+follow-up remains one attempted prospect and no lead, pilot request, payment,
+or revenue unless separate funnel evidence appears.

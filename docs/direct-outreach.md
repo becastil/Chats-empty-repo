@@ -167,6 +167,26 @@ approval dates, and the explicit contact field while naming the manual follow-up
 due date. That date makes send timing inferable, so keep the receipt private.
 Repo Scout sends nothing and schedules no automatic message.
 
+On the due date, after a human sends the one allowed follow-up, record it:
+
+```bash
+repo-scout-outreach outreach-private/outreach-ledger.csv \
+  --as-of "$(date +%F)" \
+  --record-follow-up prospect-001 \
+  --followed-up-on "$(date +%F)" \
+  --confirm-follow-up-sent
+```
+
+`--record-follow-up` selects the contacted alias with the earliest due date,
+requires an explicit send date and confirmation that a human already sent it,
+and rejects early, future, or out-of-order records. It retains `approved_on`
+and `contacted_on`, changes only `status`, `followed_up_on`, and
+`next_action_on`, then clears the next action so a second follow-up is not
+scheduled. Invalid state or write failure leaves the file unchanged. Its
+receipt omits explicit approval, contact, and follow-up fields; keep it private
+because it includes the alias and `as_of` context. Repo Scout sends nothing and
+schedules no additional message.
+
 The command requires at least three recognized fit signals and one secure
 source link for each, accepts only `prospect-NNN` aliases, caps the batch at 10,
 schedules a contacted prospect's single follow-up exactly seven days later,

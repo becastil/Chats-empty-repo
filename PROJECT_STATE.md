@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 78 of 1,000, with 922 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 79 of 1,000, with 921 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -148,6 +148,10 @@ The delivery goal is 1,000 meaningful commits. This update is commit 78 of 1,000
   alias, an explicit send date, and confirmation that a human already sent it.
 - Approval-date retention and automatic calculation of the exact seven-day
   next action without sending or scheduling an automatic message.
+- Guarded `--record-follow-up` recording for the earliest due contacted alias
+  after a human confirms the one allowed follow-up was already sent.
+- Early, future, out-of-order, and repeated follow-up prevention with retained
+  approval/contact evidence and no remaining next action.
 - Public `v0.3.34` release of strict schema-5 outreach operations in the wheel
   and source archive alongside the portable CLI, checksums, and provenance.
 - Five personalized, qualified outreach drafts prepared from narrow
@@ -207,8 +211,9 @@ Human-review the five private, evidence-backed drafts, record each decision with
 the guarded `--approve-next` action, and send them one at a time through their
 published business channels. Immediately record each human send with guarded
 `--record-contact`, which retains approval and calculates the exact seven-day
-follow-up before the next message. No outreach has been approved or attempted
-yet, and drafts are not leads or revenue. Do not add another acquisition asset
-or paid-policy feature before five real attempts.
+follow-up before the next message. When due, send that one follow-up manually
+and close its cadence through guarded `--record-follow-up`. No outreach has
+been approved or attempted yet, and drafts are not leads or revenue. Do not add
+another acquisition asset or paid-policy feature before five real attempts.
 Release, pilot, repository-traffic, and outreach-draft baselines are recorded;
 refresh them only at a deliberate review point or meaningful funnel change.

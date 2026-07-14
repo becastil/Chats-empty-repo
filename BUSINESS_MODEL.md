@@ -241,6 +241,15 @@ the receipt stays private. The tool does not deliver the message or an automatic
 follow-up. A recorded contact enters outreach-attempt operations, but still is
 not a lead, pilot request, payment, or revenue.
 
+After a human sends the one allowed follow-up on or after day seven, guarded
+`--record-follow-up` records the earliest due contacted alias. It retains the
+approval and initial-contact evidence, atomically changes only status,
+follow-up date, and next action, then clears that next action so no second
+follow-up is scheduled. Early, future, and out-of-order records are rejected.
+The alias-only receipt remains private, and the tool sends nothing. A follow-up
+is still outreach operations, not a new prospect, lead, pilot request, payment,
+or revenue event.
+
 Rollout bundles carry a stable, non-sensitive metadata contract so a pilot lead
 can summarize bundle-reported readiness, policy failures, violations, worktree
 state, and attention across repositories without sending source code to Repo

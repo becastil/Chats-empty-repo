@@ -18,6 +18,7 @@ SCHEMA_VERSION = 5
 REVIEW_SCHEMA_VERSION = 1
 APPROVAL_SCHEMA_VERSION = 1
 CONTACT_SCHEMA_VERSION = 1
+FOLLOW_UP_SCHEMA_VERSION = 1
 MAX_PROSPECTS = 10
 FOLLOW_UP_DAYS = 7
 MAX_FOLLOW_UPS = 1
@@ -206,6 +207,64 @@ def record_next_outreach_contact(
         "action_note": (
             "The human-confirmed send was recorded atomically. Repo Scout "
             "sent nothing and scheduled no automatic follow-up."
+        ),
+    }
+
+
+def record_next_outreach_follow_up(
+    path: Path,
+    *,
+    prospect_id: str,
+    followed_up_on: date,
+    send_confirmed: bool,
+    as_of: date | None = None,
+) -> dict[str, Any]:
+    report_date = as_of or date.today()
+    if type(report_date) is not date:
+        raise OutreachInputError("as-of must be a date")
+    if type(followed_up_on) is not date:
+        raise OutreachInputError("followed-up-on must be a date")
+    if send_confirmed is not True:
+        raise OutreachInputError(
+            "--record-follow-up requires --confirm-follow-up-sent after a "
+            "human sends the one allowed follow-up"
+        )
+    if not PROSPECT_ID_PATTERN.fullmatch(prospect_id):
+        raise OutreachInputError("prospect_id must match prospect-NNN")
+
+    rows = _load_outreach_rows(path)
+    build_outreach_report(rows, as_of=report_date)
+    next_contacted = _next_contacted_row(rows)
+    if next_contacted is None:
+        raise OutreachInputError("no contacted prospects await a follow-up record")
+    if next_contacted["prospect_id"] != prospect_id:
+        raise OutreachInputError(
+            f"next contacted prospect is {next_contacted['prospect_id']} "
+            f"due {next_contacted['next_action_on']}; record it first"
+        )
+
+    updated_rows = [dict(row) for row in rows]
+    for row in updated_rows:
+        if (row.get("prospect_id") or "").strip() == prospect_id:
+            row["status"] = "followed-up"
+            row["followed_up_on"] = followed_up_on.isoformat()
+            row["next_action_on"] = ""
+            break
+
+    build_outreach_report(updated_rows, as_of=report_date)
+    _write_outreach_rows(path, updated_rows)
+    return {
+        "schema_version": FOLLOW_UP_SCHEMA_VERSION,
+        "as_of": report_date.isoformat(),
+        "private_output": True,
+        "human_follow_up_confirmed": True,
+        "follow_up": {
+            "prospect_id": prospect_id,
+            "status": "followed-up",
+        },
+        "action_note": (
+            "The human-confirmed follow-up was recorded atomically. Repo "
+            "Scout sent nothing and scheduled no additional message."
         ),
     }
 
@@ -520,6 +579,20 @@ def _next_status_row(
     return matching_rows[0] if matching_rows else None
 
 
+def _next_contacted_row(
+    rows: list[dict[str, str | None]],
+) -> dict[str, str] | None:
+    contacted_rows = sorted(
+        (
+            {field: (raw_row.get(field) or "").strip() for field in LEDGER_FIELDS}
+            for raw_row in rows
+            if (raw_row.get("status") or "").strip() == "contacted"
+        ),
+        key=lambda row: (row["next_action_on"], row["prospect_id"]),
+    )
+    return contacted_rows[0] if contacted_rows else None
+
+
 def format_outreach_report(report: dict[str, Any]) -> str:
     summary = report["summary"]
     experiment = report["experiment"]
@@ -608,7 +681,26 @@ def format_outreach_contact(contact_report: dict[str, Any]) -> str:
         f"Boundary: {contact_report['action_note']}",
         (
             "Next: if there is no reply or opt-out, follow up manually on the "
-            "due date."
+            "due date, then run "
+            f"--record-follow-up {contact['prospect_id']} with --followed-up-on "
+            "and --confirm-follow-up-sent."
+        ),
+    ]
+    return "\n".join(lines)
+
+
+def format_outreach_follow_up(follow_up_report: dict[str, Any]) -> str:
+    follow_up = follow_up_report["follow_up"]
+    lines = [
+        "Repo Scout outreach follow-up record",
+        f"As of: {follow_up_report['as_of']}",
+        f"Prospect alias: {follow_up['prospect_id']}",
+        f"Status: {follow_up['status']}",
+        "Private ledger updated atomically.",
+        f"Boundary: {follow_up_report['action_note']}",
+        (
+            "Next: wait for a reply and stop immediately after an opt-out or "
+            "not-interested response."
         ),
     ]
     return "\n".join(lines)
@@ -619,7 +711,7 @@ def build_parser() -> argparse.ArgumentParser:
         prog="repo-scout-outreach",
         description=(
             "Validate a private outreach ledger, review drafts, record human "
-            "approvals and sent contacts, and report bounded follow-ups."
+            "approvals, contacts, and follow-ups, and report bounded activity."
         ),
     )
     parser.add_argument("ledger", type=Path, help="Path to the private outreach CSV.")
@@ -655,6 +747,14 @@ def build_parser() -> argparse.ArgumentParser:
             "message and its seven-day follow-up."
         ),
     )
+    action_group.add_argument(
+        "--record-follow-up",
+        metavar="PROSPECT_ID",
+        help=(
+            "After a human sends it, record the one allowed follow-up for "
+            "the earliest due contacted prospect."
+        ),
+    )
     parser.add_argument(
         "--approved-on",
         type=_date_argument,
@@ -684,6 +784,20 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--followed-up-on",
+        type=_date_argument,
+        metavar="YYYY-MM-DD",
+        help="Human follow-up send date. Required with --record-follow-up.",
+    )
+    parser.add_argument(
+        "--confirm-follow-up-sent",
+        action="store_true",
+        help=(
+            "Confirm a human already sent the one allowed follow-up. "
+            "Required with --record-follow-up."
+        ),
+    )
+    parser.add_argument(
         "--format",
         choices=("text", "json"),
         default="text",
@@ -695,11 +809,21 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+    approval_options = args.approved_on is not None or args.confirm_reviewed
+    contact_options = args.contacted_on is not None or args.confirm_sent
+    follow_up_options = (
+        args.followed_up_on is not None or args.confirm_follow_up_sent
+    )
     try:
         if args.approve_next is not None:
-            if args.contacted_on is not None or args.confirm_sent:
+            if contact_options:
                 raise OutreachInputError(
                     "--contacted-on and --confirm-sent require --record-contact"
+                )
+            if follow_up_options:
+                raise OutreachInputError(
+                    "--followed-up-on and --confirm-follow-up-sent require "
+                    "--record-follow-up"
                 )
             if args.approved_on is None:
                 raise OutreachInputError(
@@ -713,9 +837,14 @@ def main(argv: Sequence[str] | None = None) -> int:
                 as_of=args.as_of,
             )
         elif args.record_contact is not None:
-            if args.approved_on is not None or args.confirm_reviewed:
+            if approval_options:
                 raise OutreachInputError(
                     "--approved-on and --confirm-reviewed require --approve-next"
+                )
+            if follow_up_options:
+                raise OutreachInputError(
+                    "--followed-up-on and --confirm-follow-up-sent require "
+                    "--record-follow-up"
                 )
             if args.contacted_on is None:
                 raise OutreachInputError(
@@ -728,13 +857,38 @@ def main(argv: Sequence[str] | None = None) -> int:
                 send_confirmed=args.confirm_sent,
                 as_of=args.as_of,
             )
-        elif args.approved_on is not None or args.confirm_reviewed:
+        elif args.record_follow_up is not None:
+            if approval_options:
+                raise OutreachInputError(
+                    "--approved-on and --confirm-reviewed require --approve-next"
+                )
+            if contact_options:
+                raise OutreachInputError(
+                    "--contacted-on and --confirm-sent require --record-contact"
+                )
+            if args.followed_up_on is None:
+                raise OutreachInputError(
+                    "--record-follow-up requires --followed-up-on YYYY-MM-DD"
+                )
+            report = record_next_outreach_follow_up(
+                args.ledger,
+                prospect_id=args.record_follow_up,
+                followed_up_on=args.followed_up_on,
+                send_confirmed=args.confirm_follow_up_sent,
+                as_of=args.as_of,
+            )
+        elif approval_options:
             raise OutreachInputError(
                 "--approved-on and --confirm-reviewed require --approve-next"
             )
-        elif args.contacted_on is not None or args.confirm_sent:
+        elif contact_options:
             raise OutreachInputError(
                 "--contacted-on and --confirm-sent require --record-contact"
+            )
+        elif follow_up_options:
+            raise OutreachInputError(
+                "--followed-up-on and --confirm-follow-up-sent require "
+                "--record-follow-up"
             )
         elif args.review_next:
             report = load_next_outreach_review(args.ledger, as_of=args.as_of)
@@ -746,6 +900,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.format == "json":
         print(json.dumps(report, indent=2, sort_keys=True))
+    elif args.record_follow_up is not None:
+        print(format_outreach_follow_up(report))
     elif args.record_contact is not None:
         print(format_outreach_contact(report))
     elif args.approve_next is not None:

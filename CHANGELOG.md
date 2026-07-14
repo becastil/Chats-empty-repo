@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added guarded `repo-scout-outreach --record-follow-up` recording for the
+  earliest due contacted alias after a human confirms the one allowed follow-up.
+- Rejected early, future, and out-of-order follow-up records while retaining
+  approval and initial-contact evidence through an atomic ledger replacement.
+- Cleared the completed row's next action to prevent a second follow-up, with an
+  alias-only private receipt and no automated delivery or scheduling.
 - Added guarded `repo-scout-outreach --record-contact` recording for the exact
   next human-approved alias after a human confirms the message was already sent.
 - Retained private approval evidence while atomically changing only status,
