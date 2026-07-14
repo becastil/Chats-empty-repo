@@ -739,3 +739,16 @@ standard free text, and reject a primary delta that does not equal portable plus
 wheel movement without emitting a report. The synthetic join validates the
 installed commercial decision aid; it does not establish reach, attribution,
 demand, payment, or revenue in the live funnel.
+
+## 2026-07-14: Derive Release Reach Before Joining It
+
+The installed commercial smoke previously supplied `repo-scout-growth` with a
+hand-built schema-2 distribution report. That proved growth validation but
+skipped the raw release parser, artifact-contract audit, and baseline comparison
+that create the evidence in practice. Future releases now run baseline and
+current synthetic GitHub release exports through the built wheel's
+`repo-scout-distribution` command, require one complete release with no
+warnings, and pass its signed portable and wheel movement unchanged into the
+growth review. Duplicate asset names must fail without output. Request counts
+remain synthetic and non-unique; this test establishes packaged evidence-chain
+integrity, not users, demand, attribution, payment, or revenue.

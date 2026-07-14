@@ -151,16 +151,82 @@ def verify_pilot_funnel(
         checked.append("operator-text")
 
         pilot_report = Path(tmp) / "pilot-report.json"
+        baseline_release_export = Path(tmp) / "baseline-releases.json"
+        current_release_export = Path(tmp) / "current-releases.json"
+        baseline_distribution_report = Path(tmp) / "baseline-distribution.json"
         distribution_report = Path(tmp) / "distribution-report.json"
         pilot_report.write_text(
             json.dumps(report, indent=2, sort_keys=True),
             encoding="utf-8",
         )
-        distribution = _distribution_report()
+        baseline_release_export.write_text(
+            json.dumps(_release_export(portable=3, wheel=5), indent=2),
+            encoding="utf-8",
+        )
+        current_release_export.write_text(
+            json.dumps(_release_export(portable=5, wheel=9), indent=2),
+            encoding="utf-8",
+        )
+        baseline_distribution = _distribution_json_report(
+            python_command,
+            baseline_release_export,
+            baseline=None,
+            environment=environment,
+        )
+        baseline_distribution_report.write_text(
+            json.dumps(baseline_distribution, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+        distribution = _distribution_json_report(
+            python_command,
+            current_release_export,
+            baseline=baseline_distribution_report,
+            environment=environment,
+        )
         distribution_report.write_text(
             json.dumps(distribution, indent=2, sort_keys=True),
             encoding="utf-8",
         )
+        _require(
+            distribution.get("schema_version") == 2,
+            "distribution schema changed",
+        )
+        distribution_summary = distribution.get("summary", {})
+        _require(
+            distribution_summary.get("complete_releases") == 1,
+            "release artifact contract was not complete",
+        )
+        _require(
+            distribution_summary.get("warning_count") == 0,
+            "valid release evidence emitted warnings",
+        )
+        _require(
+            distribution.get("latest", {}).get("contract", {}).get("complete")
+            is True,
+            "latest release artifact contract changed",
+        )
+        distribution_change = distribution.get("change", {})
+        _require(
+            (
+                distribution_change.get("primary_artifact_downloads_delta"),
+                distribution_change.get("portable_downloads_delta"),
+                distribution_change.get("wheel_downloads_delta"),
+            )
+            == (6, 2, 4),
+            "installed distribution movement changed",
+        )
+        distribution_note = distribution.get("measurement_note", "")
+        _require(
+            "CI jobs" in distribution_note
+            and "not unique installs" in distribution_note,
+            "distribution report lost its request-count boundary",
+        )
+        _require(
+            "pilot requests, or revenue" in distribution_note,
+            "distribution report lost its commercial boundary",
+        )
+        checked.append("distribution-evidence")
+
         growth = _growth_report(
             python_command,
             distribution_report,
@@ -258,6 +324,31 @@ def verify_pilot_funnel(
         )
         checked.append("invalid-growth-rejected")
 
+        current_release_export.write_text(
+            json.dumps(
+                _release_export(portable=5, wheel=9, duplicate_manifest=True),
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        invalid_distribution = _run_distribution(
+            python_command,
+            current_release_export,
+            baseline=baseline_distribution_report,
+            output_format="json",
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(
+            not invalid_distribution.stdout,
+            "invalid release evidence emitted a distribution report",
+        )
+        _require(
+            "duplicate asset name: SHA256SUMS" in invalid_distribution.stderr,
+            "invalid release evidence did not produce its controlled error",
+        )
+        checked.append("invalid-distribution-rejected")
+
         issue_export.write_text("{}\n", encoding="utf-8")
         invalid = _run(
             python_command,
@@ -275,23 +366,33 @@ def verify_pilot_funnel(
     return tuple(checked)
 
 
-def _distribution_report() -> dict[str, Any]:
-    return {
-        "schema_version": 2,
-        "summary": {"warning_count": 0},
-        "change": {
-            "baseline_schema_version": 2,
-            "primary_artifact_downloads_delta": 6,
-            "portable_downloads_delta": 2,
-            "wheel_downloads_delta": 4,
-            "source_downloads_delta": 0,
-            "manifest_downloads_delta": 0,
-            "unknown_downloads_delta": 0,
-            "new_releases": [],
-            "removed_releases": [],
+def _release_export(
+    *,
+    portable: int,
+    wheel: int,
+    duplicate_manifest: bool = False,
+) -> list[dict[str, Any]]:
+    assets = [
+        {"name": "repo-scout-0.3.34.pyz", "download_count": portable},
+        {
+            "name": "repo_scout-0.3.34-py3-none-any.whl",
+            "download_count": wheel,
         },
-        "warnings": [],
-    }
+        {"name": "repo_scout-0.3.34.tar.gz", "download_count": 1},
+        {"name": "SHA256SUMS", "download_count": 1},
+    ]
+    if duplicate_manifest:
+        assets.append({"name": "SHA256SUMS", "download_count": 1})
+    return [
+        {
+            "tag_name": "v0.3.34",
+            "draft": False,
+            "prerelease": False,
+            "published_at": "2026-07-13T00:00:00Z",
+            "html_url": "https://example.invalid/releases/v0.3.34",
+            "assets": assets,
+        }
+    ]
 
 
 def _issue(
@@ -371,6 +472,30 @@ def _growth_report(
     return report
 
 
+def _distribution_json_report(
+    python: str,
+    release_export: Path,
+    *,
+    baseline: Path | None,
+    environment: Mapping[str, str] | None,
+) -> dict[str, Any]:
+    completed = _run_distribution(
+        python,
+        release_export,
+        baseline=baseline,
+        output_format="json",
+        environment=environment,
+        expected_exit_code=0,
+    )
+    try:
+        report = json.loads(completed.stdout)
+    except json.JSONDecodeError as exc:
+        raise SmokeTestError("distribution command did not emit valid JSON") from exc
+    if not isinstance(report, dict):
+        raise SmokeTestError("distribution command emitted a non-object report")
+    return report
+
+
 def _run(
     python: str,
     issue_export: Path,
@@ -395,9 +520,45 @@ def _run(
         env=dict(environment) if environment is not None else None,
     )
     if completed.returncode != expected_exit_code:
-        detail = completed.stderr.strip() or completed.stdout.strip() or "no output"
+        detail = (
+            completed.stderr.strip() or completed.stdout.strip() or "no output"
+        )
         raise SmokeTestError(
             f"pilot command exited {completed.returncode}; "
+            f"expected {expected_exit_code}: {detail}"
+        )
+    return completed
+
+
+def _run_distribution(
+    python: str,
+    release_export: Path,
+    *,
+    baseline: Path | None,
+    output_format: str,
+    environment: Mapping[str, str] | None,
+    expected_exit_code: int,
+) -> subprocess.CompletedProcess[str]:
+    command = [
+        python,
+        "-m",
+        "repo_scout.distribution",
+        str(release_export),
+        "--format",
+        output_format,
+    ]
+    if baseline is not None:
+        command.extend(("--baseline", str(baseline)))
+    completed = subprocess.run(
+        command,
+        capture_output=True,
+        text=True,
+        env=dict(environment) if environment is not None else None,
+    )
+    if completed.returncode != expected_exit_code:
+        detail = completed.stderr.strip() or completed.stdout.strip() or "no output"
+        raise SmokeTestError(
+            f"distribution command exited {completed.returncode}; "
             f"expected {expected_exit_code}: {detail}"
         )
     return completed

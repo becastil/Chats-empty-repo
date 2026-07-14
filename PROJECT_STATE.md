@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 83 of 1,000, with 917 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 84 of 1,000, with 916 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -92,9 +92,11 @@ The delivery goal is 1,000 meaningful commits. This update is commit 83 of 1,000
 - Dependency-free weekly growth reviews that join signed distribution movement to attributed pilot, offer, and booked-revenue evidence.
 - Deterministic commercial bottlenecks from missing measurement through acquisition, qualification, offer, payment, pilot target, retention, and validation.
 - Explicit refusal to calculate download-to-lead conversion rates from non-unique artifact requests.
-- Release-blocking installed-wheel proof that signed reach movement joins to
-  schema-7 qualification, attribution, $299 revenue, and the open pilot target
-  without inventing conversion rates or accepting inconsistent deltas.
+- Release-blocking installed-wheel proof that raw GitHub release exports become
+  a complete schema-2 baseline comparison before signed reach movement joins to
+  schema-7 qualification, attribution, $299 revenue, and the open pilot target.
+- Controlled rejection of duplicate release assets and inconsistent growth
+  deltas without emitting reports or inventing conversion rates.
 - A refreshed schema-2 distribution, schema-7 pilot, and joined growth baseline
   generated from public evidence on 2026-07-13.
 - Baseline contract tests reconciling every release channel while preserving zero pilot and revenue truth.

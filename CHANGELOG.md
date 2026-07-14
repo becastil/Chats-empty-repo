@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Replaced the hand-built reach delta in the installed commercial smoke test
+  with baseline and current raw GitHub release exports processed by
+  `repo-scout-distribution` from the built wheel.
+- Proved the packaged artifact contract, signed `+6` primary request movement,
+  and request-not-customer measurement boundary before joining growth evidence.
+- Made duplicate release assets fail without a report alongside the existing
+  inconsistent primary-versus-channel growth-delta rejection.
 - Extended the installed commercial-reporting smoke test through
   `repo-scout-growth` with signed synthetic distribution movement.
 - Proved packaged reach, qualification, attribution, one $299 booking, and the
