@@ -777,3 +777,14 @@ all four harnesses, which execute `repo-scout`, `repo-scout-policy`,
 tests keep module mode, and every harness rejects missing or non-executable
 commands before creating fixtures. This closes one packaging-risk class as a
 single coherent change; it does not add a feature or create commercial evidence.
+
+## 2026-07-14: Make Installed Version Identity Observable
+
+Paid rollout support needs a quick, non-destructive way to determine which Repo
+Scout package a developer or CI job is actually running. All seven wheel entry
+points and the portable zipapp now support `--version` with the stable
+`COMMAND VERSION` format from the package's single `__version__` value. The
+release workflow compares every output to the semantic version tag before
+attestation, preventing mixed or stale entry-point metadata from publishing
+silently. This is a diagnostic and distribution contract, not provenance by
+itself and not evidence of activation, demand, payment, or revenue.

@@ -20,6 +20,7 @@ from .scanner import (
     ScanLimitExceeded,
     scan_project,
 )
+from .version import add_version_argument
 
 
 OUTPUT_ERROR_EXIT_CODE = 4
@@ -32,6 +33,7 @@ def build_parser() -> argparse.ArgumentParser:
         prog="repo-scout",
         description="Summarize local repository state for reviews and handoffs.",
     )
+    add_version_argument(parser)
     parser.add_argument(
         "path",
         nargs="?",

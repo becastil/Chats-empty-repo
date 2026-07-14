@@ -7,6 +7,8 @@ import re
 import sys
 from typing import Any, Sequence, TextIO
 
+from .version import add_version_argument
+
 
 SCHEMA_VERSION = 2
 SUPPORTED_BASELINE_SCHEMA_VERSIONS = {1, SCHEMA_VERSION}
@@ -185,6 +187,7 @@ def build_parser() -> argparse.ArgumentParser:
         prog="repo-scout-distribution",
         description="Summarize GitHub release artifact requests from exported JSON.",
     )
+    add_version_argument(parser)
     parser.add_argument(
         "input",
         nargs="?",

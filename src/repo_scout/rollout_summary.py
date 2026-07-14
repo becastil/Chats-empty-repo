@@ -5,6 +5,8 @@ import json
 import sys
 from typing import Any, Sequence
 
+from .version import add_version_argument
+
 from .rollout import (
     RolloutEvidenceError,
     load_rollout_metadata,
@@ -225,6 +227,7 @@ def build_parser() -> argparse.ArgumentParser:
         prog="repo-scout-rollout",
         description="Summarize reported readiness from rollout evidence bundles.",
     )
+    add_version_argument(parser)
     parser.add_argument(
         "evidence",
         nargs="+",

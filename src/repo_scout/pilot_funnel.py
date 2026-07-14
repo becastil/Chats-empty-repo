@@ -9,6 +9,8 @@ import re
 import sys
 from typing import Any, Sequence, TextIO
 
+from .version import add_version_argument
+
 
 SCHEMA_VERSION = 7
 DEFAULT_PILOT_PRICE_USD = 299
@@ -666,6 +668,7 @@ def build_parser() -> argparse.ArgumentParser:
         prog="repo-scout-pilot",
         description="Summarize Repo Scout founding-pilot issues from GitHub JSON.",
     )
+    add_version_argument(parser)
     parser.add_argument(
         "input",
         nargs="?",

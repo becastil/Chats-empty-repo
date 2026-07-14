@@ -6,6 +6,8 @@ from pathlib import Path
 import sys
 from typing import Any, Sequence
 
+from .version import add_version_argument
+
 from .pilot_funnel import DECISION_CRITERION_KEYS
 
 
@@ -334,6 +336,7 @@ def build_parser() -> argparse.ArgumentParser:
             "Review distribution movement beside attributed pilot revenue evidence."
         ),
     )
+    add_version_argument(parser)
     parser.add_argument(
         "distribution_report",
         type=Path,

@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after completing installed-command release coverage: 86 / 1,000 (8.6%).
-- Remaining after completing installed-command release coverage: 914 commits.
+- Progress after adding observable installed version identity: 87 / 1,000 (8.7%).
+- Remaining after adding observable installed version identity: 913 commits.
 
 ## Commit Standard
 

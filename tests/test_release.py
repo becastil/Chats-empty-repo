@@ -339,6 +339,14 @@ class ZipappDistributionTests(unittest.TestCase):
                 any("__pycache__" in name or ".egg-info/" in name for name in names)
             )
 
+            version = subprocess.run(
+                [sys.executable, str(artifact), "--version"],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(version.returncode, 0, version.stderr)
+            self.assertEqual(version.stdout, "repo-scout 0.3.34\n")
+
             target = Path(tmp) / "target"
             target.mkdir()
             subprocess.run(
@@ -391,6 +399,22 @@ class ReleaseWorkflowTests(unittest.TestCase):
         self.assertIn("python -m build --no-isolation --sdist --wheel", workflow)
         self.assertIn("python scripts/build_zipapp.py --dist dist", workflow)
         self.assertIn("subject-checksums: dist/SHA256SUMS", workflow)
+        self.assertIn('version="${GITHUB_REF_NAME#v}"', workflow)
+        self.assertIn(
+            '"$RUNNER_TEMP/repo-scout-release/bin/$command" --version',
+            workflow,
+        )
+        self.assertIn('test "$actual" = "$command $version"', workflow)
+        for command in (
+            "repo-scout",
+            "repo-scout-distribution",
+            "repo-scout-growth",
+            "repo-scout-outreach",
+            "repo-scout-pilot",
+            "repo-scout-policy",
+            "repo-scout-rollout",
+        ):
+            self.assertIn(f"            {command}", workflow)
         self.assertIn(
             '"$RUNNER_TEMP/repo-scout-release/bin/repo-scout-distribution" --help',
             workflow,
@@ -445,6 +469,10 @@ class ReleaseWorkflowTests(unittest.TestCase):
             workflow.index("- name: Attest release provenance"),
         )
         self.assertIn('python "dist/repo-scout-${version}.pyz" --help', workflow)
+        self.assertIn(
+            'python "dist/repo-scout-${version}.pyz" --version',
+            workflow,
+        )
         self.assertIn("dist/repo-scout-*.pyz", workflow)
         self.assertIn('gh release create "$GITHUB_REF_NAME"', workflow)
         self.assertIn("--verify-tag", workflow)

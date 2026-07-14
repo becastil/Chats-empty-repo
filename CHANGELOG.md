@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added a consistent `--version` flag to every public Repo Scout command and the
+  portable zipapp for support and CI diagnostics.
+- Required all seven built-wheel commands and the zipapp to report the exact
+  tagged package version before release provenance attestation.
+- Added one shared version-argument implementation and contract coverage for
+  every parser, installed entry point, and portable distribution path.
 - Completed installed-entry-point release coverage by routing policy activation,
   main policy enforcement, guarded outreach, and rollout aggregation through
   the built wheel's public commands.

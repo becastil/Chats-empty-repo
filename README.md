@@ -39,6 +39,7 @@ key:
 
 ```bash
 curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.34/repo-scout-0.3.34.pyz -o /tmp/repo-scout.pyz
+python3 /tmp/repo-scout.pyz --version
 python3 /tmp/repo-scout.pyz --languages .
 ```
 
@@ -52,6 +53,9 @@ need the `repo-scout-distribution`, `repo-scout-growth`, `repo-scout-policy`,
 python3 -m pip install https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.34/repo_scout-0.3.34-py3-none-any.whl
 repo-scout --languages .
 ```
+
+Every installed Repo Scout command supports `--version`, so local and CI logs
+can confirm the exact package identity without running a scan or reading source.
 
 Machine-readable output is available too:
 

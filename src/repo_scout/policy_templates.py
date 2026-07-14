@@ -11,6 +11,8 @@ import sys
 from tempfile import NamedTemporaryFile
 from typing import Any, Sequence
 
+from .version import add_version_argument
+
 from .policy import PolicyError, load_policy, parse_policy, policy_fingerprint
 
 
@@ -368,6 +370,7 @@ def build_parser() -> argparse.ArgumentParser:
         prog="repo-scout-policy",
         description="Discover and initialize Repo Scout policy templates.",
     )
+    add_version_argument(parser)
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     list_parser = subparsers.add_parser(

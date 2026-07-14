@@ -56,6 +56,18 @@ jobs:
         run: |
           python -m venv "$RUNNER_TEMP/repo-scout-release"
           "$RUNNER_TEMP/repo-scout-release/bin/python" -m pip install --no-deps dist/*.whl
+          version="${GITHUB_REF_NAME#v}"
+          for command in \
+            repo-scout \
+            repo-scout-distribution \
+            repo-scout-growth \
+            repo-scout-outreach \
+            repo-scout-pilot \
+            repo-scout-policy \
+            repo-scout-rollout; do
+            actual="$("$RUNNER_TEMP/repo-scout-release/bin/$command" --version)"
+            test "$actual" = "$command $version"
+          done
           "$RUNNER_TEMP/repo-scout-release/bin/repo-scout" --help
           "$RUNNER_TEMP/repo-scout-release/bin/repo-scout-distribution" --help
           "$RUNNER_TEMP/repo-scout-release/bin/repo-scout-growth" --help
@@ -79,6 +91,7 @@ jobs:
       - name: Smoke test the portable zipapp
         run: |
           version="${GITHUB_REF_NAME#v}"
+          test "$(python "dist/repo-scout-${version}.pyz" --version)" = "repo-scout $version"
           python "dist/repo-scout-${version}.pyz" --help
           python "dist/repo-scout-${version}.pyz" --format json . > "$RUNNER_TEMP/zipapp-snapshot.json"
 

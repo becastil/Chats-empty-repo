@@ -444,6 +444,14 @@ or non-executable. Source tests retain direct module execution for speed. This
 proves packaging routes customer commands to tested behavior; it does not prove
 customer activation, outreach attempts, pilot demand, or revenue.
 
+Every wheel command and the portable zipapp also exposes the same standard
+`--version` identity. Tagged releases compare each installed command's output to
+the tag before provenance attestation, giving pilot operators and support logs a
+fast way to diagnose stale or mixed installations without scanning a repository
+or inspecting package metadata. Version output proves installed package
+identity only; it does not prove artifact authenticity, policy activation,
+customer usage, or revenue, which retain their separate evidence contracts.
+
 Schema-2 growth reviews also expose ordered schema-6+ purchase-criterion outcomes
 and reconcile every criterion aggregate to the same source-reported deals and
 revenue. Schema-5 reports mark criterion evidence unavailable instead of zero.

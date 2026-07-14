@@ -11,6 +11,8 @@ import stat
 import sys
 from tempfile import NamedTemporaryFile
 from typing import Any, Sequence
+
+from .version import add_version_argument
 from urllib.parse import urlsplit
 
 
@@ -714,6 +716,7 @@ def build_parser() -> argparse.ArgumentParser:
             "approvals, contacts, and follow-ups, and report bounded activity."
         ),
     )
+    add_version_argument(parser)
     parser.add_argument("ledger", type=Path, help="Path to the private outreach CSV.")
     parser.add_argument(
         "--as-of",
