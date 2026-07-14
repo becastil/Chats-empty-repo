@@ -800,3 +800,14 @@ portable, website, install-documentation, and release-test versions advance
 together. Customer CI pins deliberately remain on independently verified
 `v0.3.34` until the new release exists and its exact digest and provenance can
 be measured. Publication is distribution evidence, not adoption or revenue.
+
+## 2026-07-14: Advance Both Policy Gates To Verified v0.3.35
+
+The public `v0.3.35` wheel now has an independently measured SHA-256 digest and
+has been reconciled with every release asset, the checksum manifest, semantic
+tag, exact source commit, signer workflow, GitHub-hosted provenance, and hosted
+release run. A clean no-dependency install reports `0.3.35` through every
+command and passes the policy-activation and guarded-outreach lifecycle checks.
+The preflighted pin updater therefore advances the dogfood gate, copy-ready
+customer gate, and their test contract together. This removes a known version
+gap from paid-pilot onboarding; it does not prove activation, demand, or revenue.

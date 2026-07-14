@@ -62,7 +62,7 @@ This is useful free CI enforcement; the paid work remains agreeing on the
 right rules and rolling the same reviewed policy across uneven repositories.
 Versions 1 and 2 remain readable so verified CI upgrades can be staged safely.
 The dogfood and copy-ready gates now install the independently verified
-`v0.3.34` wheel, so v4 policies can run locally and in CI
+`v0.3.35` wheel, so v4 policies can run locally and in CI
 without source checkout, mutable package resolution, or a team-managed secret.
 Maintainer pin upgrades now preflight and update the dogfood workflow,
 copy-ready customer example, and contract test as one reviewed change, reducing
@@ -215,11 +215,12 @@ Public `v0.3.35` packages the guarded approval, contact, and one-follow-up
 operations added after `v0.3.34`, along with complete installed-entry-point
 behavioral checks and consistent command and zipapp version identity. Its
 release boundary blocks publication unless the paid-workflow commands compose
-through the built wheel and report the semantic tag exactly. Customer CI
-examples remain on independently verified `v0.3.34` until the new wheel digest,
-source commit, manifest, signer workflow, and provenance are measured after
-publication. Releasing tested operations improves distribution readiness; it
-does not approve drafts, create attempts, validate demand, or book revenue.
+through the built wheel and report the semantic tag exactly. Both customer and
+dogfood CI gates now pin its independently measured wheel digest, exact source
+commit, checksum manifest, signer workflow, and GitHub-hosted provenance after
+separate installed policy-activation and guarded-outreach checks. This improves
+paid-pilot distribution readiness; it does not approve drafts, create attempts,
+validate demand, or book revenue.
 
 The first five personalized outreach drafts now exist in the ignored private
 workspace. Sixteen fit links were reviewed against narrow, company-controlled

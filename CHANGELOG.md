@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Independently verified and pinned the `v0.3.35` wheel, source commit
+  `d095f2f9db4991e7c9f69d6f939b8bdf9a40964f`, and SHA-256
+  `c3730e78d55d04385062931f6f2f3c5ba022120c8fc43a5117db9e06f109a650` in both CI gates.
+- Confirmed all release assets against the checksum manifest, semantic tag,
+  signer workflow, provenance, and GitHub-hosted runner before changing pins.
+- Installed the public wheel without dependencies and proved policy activation,
+  command-version identity, and the guarded outreach lifecycle before advancing
+  the copy-ready customer workflow.
+
 ## 0.3.35 - 2026-07-14
 
 - Added a consistent `--version` flag to every public Repo Scout command and the
