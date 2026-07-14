@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Extended the installed commercial-reporting smoke test through
+  `repo-scout-growth` with signed synthetic distribution movement.
+- Proved packaged reach, qualification, attribution, one $299 booking, and the
+  open $897 pilot target reconcile to the `pilot_target` bottleneck.
+- Preserved the no-conversion-rate and paid-stage revenue boundaries, and made
+  inconsistent primary-versus-channel deltas release-blocking.
 - Added an installed-wheel cross-repository rollout smoke test to releases.
 - Proved matching policy fingerprints, complete commit coverage, and one ready
   plus one remediation-required repository survive packaged aggregation.

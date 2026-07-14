@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after smoke testing installed-wheel rollout summaries: 82 / 1,000 (8.2%).
-- Remaining after smoke testing installed-wheel rollout summaries: 918 commits.
+- Progress after smoke testing installed-wheel growth reviews: 83 / 1,000 (8.3%).
+- Remaining after smoke testing installed-wheel growth reviews: 917 commits.
 
 ## Commit Standard
 

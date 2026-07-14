@@ -176,6 +176,9 @@ class ReleaseManifestTests(unittest.TestCase):
                 "commercial-totals",
                 "qualified-segmentation",
                 "operator-text",
+                "joined-growth-review",
+                "growth-boundaries",
+                "invalid-growth-rejected",
                 "invalid-export-rejected",
             ),
         )

@@ -17,7 +17,7 @@ PRIVATE_STANDARD = "Require private service ownership evidence."
 
 
 class SmokeTestError(RuntimeError):
-    """Raised when installed pilot reporting violates its release contract."""
+    """Raised when installed commercial reporting violates its release contract."""
 
 
 def verify_pilot_funnel(
@@ -150,6 +150,114 @@ def verify_pilot_funnel(
         )
         checked.append("operator-text")
 
+        pilot_report = Path(tmp) / "pilot-report.json"
+        distribution_report = Path(tmp) / "distribution-report.json"
+        pilot_report.write_text(
+            json.dumps(report, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+        distribution = _distribution_report()
+        distribution_report.write_text(
+            json.dumps(distribution, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+        growth = _growth_report(
+            python_command,
+            distribution_report,
+            pilot_report,
+            environment=environment,
+        )
+        growth_summary = growth.get("summary", {})
+        for field, expected in (
+            ("tracked_pilot_requests", 2),
+            ("attributed_pilot_requests", 2),
+            ("qualified_pilots", 2),
+            ("offered_pilots", 2),
+            ("booked_pilots", 1),
+            ("booked_revenue_usd", PILOT_PRICE_USD),
+            ("target_revenue_usd", TARGET_REVENUE_USD),
+            ("target_profile_requests", 2),
+        ):
+            _require(
+                growth_summary.get(field) == expected,
+                f"growth summary {field} changed",
+            )
+        change = growth.get("distribution_change", {})
+        _require(
+            (
+                change.get("primary_artifact_downloads_delta"),
+                change.get("portable_downloads_delta"),
+                change.get("wheel_downloads_delta"),
+            )
+            == (6, 2, 4),
+            "growth reach movement changed",
+        )
+        _require(
+            growth.get("bottleneck", {}).get("stage") == "pilot_target",
+            "growth bottleneck changed",
+        )
+        _require(not growth.get("warnings"), "valid growth evidence emitted warnings")
+        measurement_note = growth.get("measurement_note", "")
+        _require(
+            "not unique-user or conversion-rate denominators" in measurement_note,
+            "growth report lost its conversion-rate boundary",
+        )
+        _require(
+            "Only paid pilot stages count as revenue" in measurement_note,
+            "growth report lost its revenue boundary",
+        )
+        _require(
+            PRIVATE_STANDARD not in json.dumps(growth, sort_keys=True),
+            "repository-standard free text leaked into growth output",
+        )
+        checked.append("joined-growth-review")
+
+        growth_text = _run_growth(
+            python_command,
+            distribution_report,
+            pilot_report,
+            output_format="text",
+            environment=environment,
+            expected_exit_code=0,
+        ).stdout
+        for expected_line in (
+            "Reach movement: +6 primary / +2 portable / +4 wheel",
+            "Pilot funnel: 2 requests / 2 attributed / 2 qualified / "
+            "2 offered / 1 booked",
+            "Revenue: $299 booked / $897 target",
+            "Qualification scope: 2 complete / 2 target / 0 review / "
+            "0 subset required",
+            "Bottleneck: pilot_target",
+            "Warnings:\n  none",
+        ):
+            _require(expected_line in growth_text, "operator growth text changed")
+        _require(
+            PRIVATE_STANDARD not in growth_text,
+            "repository-standard free text leaked into growth text",
+        )
+        checked.append("growth-boundaries")
+
+        distribution["change"]["primary_artifact_downloads_delta"] = 7
+        distribution_report.write_text(
+            json.dumps(distribution, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+        invalid_growth = _run_growth(
+            python_command,
+            distribution_report,
+            pilot_report,
+            output_format="json",
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(not invalid_growth.stdout, "invalid growth evidence emitted a report")
+        _require(
+            "primary delta does not match portable and wheel"
+            in invalid_growth.stderr,
+            "invalid reach evidence did not produce its controlled error",
+        )
+        checked.append("invalid-growth-rejected")
+
         issue_export.write_text("{}\n", encoding="utf-8")
         invalid = _run(
             python_command,
@@ -165,6 +273,25 @@ def verify_pilot_funnel(
         checked.append("invalid-export-rejected")
 
     return tuple(checked)
+
+
+def _distribution_report() -> dict[str, Any]:
+    return {
+        "schema_version": 2,
+        "summary": {"warning_count": 0},
+        "change": {
+            "baseline_schema_version": 2,
+            "primary_artifact_downloads_delta": 6,
+            "portable_downloads_delta": 2,
+            "wheel_downloads_delta": 4,
+            "source_downloads_delta": 0,
+            "manifest_downloads_delta": 0,
+            "unknown_downloads_delta": 0,
+            "new_releases": [],
+            "removed_releases": [],
+        },
+        "warnings": [],
+    }
 
 
 def _issue(
@@ -220,6 +347,30 @@ def _json_report(
     return report
 
 
+def _growth_report(
+    python: str,
+    distribution_report: Path,
+    pilot_report: Path,
+    *,
+    environment: Mapping[str, str] | None,
+) -> dict[str, Any]:
+    completed = _run_growth(
+        python,
+        distribution_report,
+        pilot_report,
+        output_format="json",
+        environment=environment,
+        expected_exit_code=0,
+    )
+    try:
+        report = json.loads(completed.stdout)
+    except json.JSONDecodeError as exc:
+        raise SmokeTestError("growth command did not emit valid JSON") from exc
+    if not isinstance(report, dict):
+        raise SmokeTestError("growth command emitted a non-object report")
+    return report
+
+
 def _run(
     python: str,
     issue_export: Path,
@@ -252,6 +403,38 @@ def _run(
     return completed
 
 
+def _run_growth(
+    python: str,
+    distribution_report: Path,
+    pilot_report: Path,
+    *,
+    output_format: str,
+    environment: Mapping[str, str] | None,
+    expected_exit_code: int,
+) -> subprocess.CompletedProcess[str]:
+    completed = subprocess.run(
+        [
+            python,
+            "-m",
+            "repo_scout.growth",
+            str(distribution_report),
+            str(pilot_report),
+            "--format",
+            output_format,
+        ],
+        capture_output=True,
+        text=True,
+        env=dict(environment) if environment is not None else None,
+    )
+    if completed.returncode != expected_exit_code:
+        detail = completed.stderr.strip() or completed.stdout.strip() or "no output"
+        raise SmokeTestError(
+            f"growth command exited {completed.returncode}; "
+            f"expected {expected_exit_code}: {detail}"
+        )
+    return completed
+
+
 def _require(condition: bool, message: str) -> None:
     if not condition:
         raise SmokeTestError(message)
@@ -259,7 +442,7 @@ def _require(condition: bool, message: str) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Smoke test the installed Repo Scout pilot funnel."
+        description="Smoke test installed Repo Scout pilot and growth reporting."
     )
     parser.add_argument("--python", default=sys.executable)
     return parser
@@ -270,9 +453,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         checked = verify_pilot_funnel(args.python, environment=os.environ)
     except SmokeTestError as exc:
-        print(f"pilot funnel smoke test failed: {exc}", file=sys.stderr)
+        print(f"commercial reporting smoke test failed: {exc}", file=sys.stderr)
         return 1
-    print("pilot funnel smoke test passed: " + ", ".join(checked))
+    print("commercial reporting smoke test passed: " + ", ".join(checked))
     return 0
 
 

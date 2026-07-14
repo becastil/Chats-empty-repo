@@ -724,3 +724,18 @@ identity coverage remain accurate, explicit detail opt-in exposes the expected
 records, and duplicate repository IDs fail without a summary. This strengthens
 the existing paid workflow without creating another policy feature, customer,
 usage event, or revenue claim.
+
+## 2026-07-14: Join Reach And Revenue Evidence Before Release
+
+The wheel's distribution, pilot, and growth commands previously started in the
+release environment, but only pilot accounting had a behavioral commercial
+test. The installed pilot smoke harness now persists its synthetic schema-7
+report, combines it with a valid schema-2 distribution delta, and runs
+`repo-scout-growth` before provenance attestation. The joined review must retain
+two attributed target-profile requests, two offers, one $299 booking, the $897
+target, and the `pilot_target` bottleneck. It must also state that artifact
+requests are not unique-user or conversion-rate denominators, omit repository
+standard free text, and reject a primary delta that does not equal portable plus
+wheel movement without emitting a report. The synthetic join validates the
+installed commercial decision aid; it does not establish reach, attribution,
+demand, payment, or revenue in the live funnel.

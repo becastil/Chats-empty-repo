@@ -420,6 +420,15 @@ Because release requests are neither unique people nor attributable sessions,
 the review never computes a download-to-lead conversion rate or assigns request
 movement to a discovery source.
 
+The installed commercial smoke test now feeds its synthetic schema-7 pilot
+report and a signed six-request distribution delta into `repo-scout-growth`
+before release attestation. It requires two attributed target-profile requests,
+one $299 booking, the open $897 pilot target, and the `pilot_target` bottleneck
+to reconcile while retaining the no-conversion-rate measurement note. A primary
+delta that does not equal portable plus wheel movement must fail without a
+report. These fixtures prove packaged joining and validation, not adoption,
+attribution, demand, or revenue.
+
 Schema-2 growth reviews also expose ordered schema-6+ purchase-criterion outcomes
 and reconcile every criterion aggregate to the same source-reported deals and
 revenue. Schema-5 reports mark criterion evidence unavailable instead of zero.
