@@ -834,3 +834,15 @@ maintainer verification materially confound them. The refreshed pilot and
 schema-5 outreach baselines still show zero pilot requests, approvals, attempts,
 and revenue, so the joined growth report keeps acquisition as the bottleneck.
 This checkpoint measures reach without relabeling automation as adoption.
+
+## 2026-07-14: Assemble One Explicit Private Human Review Bundle
+
+Evidence links alone do not let a reviewer confirm the intended recipient,
+observation, price language, local-code boundary, or opt-out text. The operator
+still has to cross-reference a separate notes file before approval. The review
+command now accepts `--include-private-draft DRAFTS_MD`, parses only exact
+`## prospect-NNN` sections within a 128 KiB bound, and includes only the section
+matching the deterministic next alias. Ambiguous, malformed, empty, oversized,
+or missing selected sections fail without editing the ledger. Combined with the
+evidence opt-in, this creates one clearly private decision bundle while keeping
+default output redacted and all judgment, approval, and sending human-controlled.

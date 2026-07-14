@@ -10,20 +10,21 @@ import re
 import stat
 import sys
 from tempfile import NamedTemporaryFile
-from typing import Any, Sequence
+from typing import Any, Mapping, Sequence
 
 from .version import add_version_argument
 from urllib.parse import urlsplit
 
 
 SCHEMA_VERSION = 5
-REVIEW_SCHEMA_VERSION = 2
+REVIEW_SCHEMA_VERSION = 3
 APPROVAL_SCHEMA_VERSION = 1
 CONTACT_SCHEMA_VERSION = 1
 FOLLOW_UP_SCHEMA_VERSION = 1
 MAX_PROSPECTS = 10
 FOLLOW_UP_DAYS = 7
 MAX_FOLLOW_UPS = 1
+MAX_PRIVATE_DRAFT_BYTES = 128 * 1024
 LEDGER_FIELDS = (
     "prospect_id",
     "fit_signals",
@@ -63,6 +64,7 @@ NO_NEXT_ACTION_STATUSES = {
     "do-not-contact",
 }
 PROSPECT_ID_PATTERN = re.compile(r"prospect-[0-9]{3}\Z")
+PRIVATE_DRAFT_HEADING_PATTERN = re.compile(r"## (prospect-[0-9]{3})\Z")
 HUMAN_REVIEW_CHECKS = (
     "Confirm the public observation is accurate and current.",
     "Confirm the recipient and published business channel are appropriate.",
@@ -89,6 +91,7 @@ def load_next_outreach_review(
     *,
     as_of: date | None = None,
     include_private_evidence: bool = False,
+    private_drafts_path: Path | None = None,
 ) -> dict[str, Any]:
     report_date = as_of or date.today()
     if type(report_date) is not date:
@@ -98,6 +101,11 @@ def load_next_outreach_review(
         _load_outreach_rows(path),
         as_of=report_date,
         include_private_evidence=include_private_evidence,
+        private_drafts=(
+            _load_private_drafts(private_drafts_path)
+            if private_drafts_path is not None
+            else None
+        ),
     )
 
 
@@ -337,6 +345,67 @@ def _write_outreach_rows(path: Path, rows: list[dict[str, str]]) -> None:
         raise OutreachInputError("cannot update outreach ledger safely") from exc
 
 
+def _load_private_drafts(path: Path) -> dict[str, str]:
+    try:
+        if path.stat().st_size > MAX_PRIVATE_DRAFT_BYTES:
+            raise OutreachInputError(
+                f"private draft notes exceed {MAX_PRIVATE_DRAFT_BYTES} bytes"
+            )
+        text = path.read_text(encoding="utf-8")
+    except OutreachInputError:
+        raise
+    except (OSError, UnicodeError) as exc:
+        raise OutreachInputError(f"cannot read private draft notes: {exc}") from exc
+
+    if any(
+        (ord(character) < 32 and character not in "\n\r\t")
+        or ord(character) == 127
+        for character in text
+    ):
+        raise OutreachInputError(
+            "private draft notes cannot contain control characters"
+        )
+
+    drafts: dict[str, str] = {}
+    current_id: str | None = None
+    current_lines: list[str] = []
+
+    def finish_section() -> None:
+        if current_id is None:
+            return
+        content = "\n".join(current_lines).strip()
+        if not content:
+            raise OutreachInputError(
+                f"private draft section {current_id} cannot be empty"
+            )
+        drafts[current_id] = content
+
+    for line_number, line in enumerate(text.splitlines(), start=1):
+        if line.startswith("## "):
+            match = PRIVATE_DRAFT_HEADING_PATTERN.fullmatch(line)
+            if match is None:
+                raise OutreachInputError(
+                    f"private draft notes line {line_number}: section heading "
+                    "must be ## prospect-NNN"
+                )
+            finish_section()
+            current_id = match.group(1)
+            if current_id in drafts:
+                raise OutreachInputError(
+                    f"private draft notes contain duplicate section: {current_id}"
+                )
+            current_lines = []
+        elif current_id is not None:
+            current_lines.append(line)
+    finish_section()
+
+    if not drafts:
+        raise OutreachInputError(
+            "private draft notes must contain at least one ## prospect-NNN section"
+        )
+    return drafts
+
+
 def build_outreach_report(
     rows: list[dict[str, str | None]], *, as_of: date
 ) -> dict[str, Any]:
@@ -550,11 +619,13 @@ def build_next_outreach_review(
     *,
     as_of: date,
     include_private_evidence: bool = False,
+    private_drafts: Mapping[str, str] | None = None,
 ) -> dict[str, Any]:
     build_outreach_report(rows, as_of=as_of)
     draft = _next_status_row(rows, "drafted")
     review = None
     private_evidence_included = include_private_evidence and draft is not None
+    private_draft_included = private_drafts is not None and draft is not None
     if draft is not None:
         private_evidence = []
         if private_evidence_included:
@@ -572,22 +643,42 @@ def build_next_outreach_review(
         }
         if private_evidence_included:
             review["private_evidence"] = private_evidence
+        if private_draft_included:
+            private_draft = private_drafts.get(draft["prospect_id"])
+            if not isinstance(private_draft, str) or not private_draft.strip():
+                raise OutreachInputError(
+                    "private draft notes are missing the selected section: "
+                    f"{draft['prospect_id']}"
+                )
+            review["private_draft"] = private_draft.strip()
     return {
         "schema_version": REVIEW_SCHEMA_VERSION,
         "as_of": as_of.isoformat(),
         "human_review_required": True,
         "private_output": True,
         "private_evidence_included": private_evidence_included,
+        "private_draft_included": private_draft_included,
         "review": review,
         "action_note": (
             "This checklist does not approve, modify, or send outreach. "
-            + (
-                "Private evidence links are included only for human review."
-                if private_evidence_included
-                else "Private evidence links remain redacted."
+            + _private_review_disclosure_note(
+                evidence_included=private_evidence_included,
+                draft_included=private_draft_included,
             )
         ),
     }
+
+
+def _private_review_disclosure_note(
+    *, evidence_included: bool, draft_included: bool
+) -> str:
+    if evidence_included and draft_included:
+        return "Private evidence links and draft notes are included for human review."
+    if evidence_included:
+        return "Private evidence links are included only for human review."
+    if draft_included:
+        return "Private draft notes are included only for human review."
+    return "Private evidence links and draft notes remain redacted."
 
 
 def _next_status_row(
@@ -674,6 +765,14 @@ def format_next_outreach_review(review_report: dict[str, Any]) -> str:
                     if review_report["private_evidence_included"]
                     else []
                 ),
+                *(
+                    [
+                        "Private draft notes (do not commit or share):",
+                        review["private_draft"],
+                    ]
+                    if review_report["private_draft_included"]
+                    else []
+                ),
                 "Human checks:",
                 *(f"- [ ] {check}" for check in review["checks"]),
                 (
@@ -683,11 +782,16 @@ def format_next_outreach_review(review_report: dict[str, Any]) -> str:
                 ),
             ]
         )
-    privacy_description = (
-        "evidence-bearing review"
-        if review_report["private_evidence_included"]
-        else "alias-only checklist"
-    )
+    if review_report["private_evidence_included"] and review_report[
+        "private_draft_included"
+    ]:
+        privacy_description = "evidence-and-draft review"
+    elif review_report["private_evidence_included"]:
+        privacy_description = "evidence-bearing review"
+    elif review_report["private_draft_included"]:
+        privacy_description = "draft-bearing review"
+    else:
+        privacy_description = "alias-only checklist"
     lines.append(
         f"Privacy: Keep this {privacy_description} in the private workspace."
     )
@@ -856,6 +960,15 @@ def build_parser() -> argparse.ArgumentParser:
             "evidence links. Never use for committed output."
         ),
     )
+    parser.add_argument(
+        "--include-private-draft",
+        type=Path,
+        metavar="DRAFTS_MD",
+        help=(
+            "With --review-next, include the selected ## prospect-NNN "
+            "section from bounded private Markdown notes."
+        ),
+    )
     return parser
 
 
@@ -871,6 +984,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.include_private_evidence and not args.review_next:
             raise OutreachInputError(
                 "--include-private-evidence requires --review-next"
+            )
+        if args.include_private_draft is not None and not args.review_next:
+            raise OutreachInputError(
+                "--include-private-draft requires --review-next"
             )
         if args.approve_next is not None:
             if contact_options:
@@ -952,6 +1069,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 args.ledger,
                 as_of=args.as_of,
                 include_private_evidence=args.include_private_evidence,
+                private_drafts_path=args.include_private_draft,
             )
         else:
             report = load_outreach_report(args.ledger, as_of=args.as_of)

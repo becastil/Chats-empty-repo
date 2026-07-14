@@ -123,20 +123,26 @@ must inspect the private evidence and saved draft before using the guarded
 approval action. The checklist is private operator material because it names a
 ledger alias; do not commit it as a measurement baseline.
 
-To inspect the selected draft's qualification links without opening or parsing
-the CSV manually, request them explicitly in the same private review session:
+To inspect the selected draft and its qualification links without manually
+cross-referencing the CSV and notes file, request both explicitly in the same
+private review session:
 
 ```bash
 repo-scout-outreach outreach-private/outreach-ledger.csv \
-  --as-of "$(date +%F)" --review-next --include-private-evidence
+  --as-of "$(date +%F)" --review-next \
+  --include-private-evidence \
+  --include-private-draft outreach-private/drafts.md
 ```
 
-The opt-in output maps each declared fit signal to its private HTTPS source and
-marks that evidence was included. Keep it in the ignored workspace and do not
-redirect it into committed reports, logs, issue comments, or CI artifacts.
-Without the flag, review output remains redacted. Showing evidence still does
-not verify a claim, approve a draft, or send a message; the human must inspect
-the saved draft, open each source, and complete every displayed check.
+The notes file uses one exact `## prospect-NNN` heading per draft. The opt-in
+output selects only the section matching the next ledger alias, maps every
+declared fit signal to its private HTTPS source, and marks both disclosures.
+Duplicate, malformed, empty, oversized, or missing selected sections fail
+without changing the ledger. Keep this output in the ignored workspace and do
+not redirect it into committed reports, logs, issue comments, or CI artifacts.
+Without the flags, review output remains redacted. Showing the bundle still does
+not verify a claim, approve a draft, or send a message; the human must read the
+draft, open each source, and complete every displayed check.
 
 After a human completes every displayed check, record that decision for the
 same alias:

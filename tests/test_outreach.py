@@ -197,16 +197,18 @@ class OutreachReportTests(unittest.TestCase):
 
         report = build_next_outreach_review(rows, as_of=date(2026, 7, 13))
 
-        self.assertEqual(report["schema_version"], 2)
+        self.assertEqual(report["schema_version"], 3)
         self.assertTrue(report["human_review_required"])
         self.assertTrue(report["private_output"])
         self.assertFalse(report["private_evidence_included"])
+        self.assertFalse(report["private_draft_included"])
         self.assertEqual(report["review"]["prospect_id"], "prospect-001")
         self.assertEqual(report["review"]["channel"], "published-business")
         self.assertEqual(report["review"]["fit_signals"], 3)
         self.assertEqual(report["review"]["fit_evidence_links"], 3)
         self.assertEqual(len(report["review"]["checks"]), 5)
         self.assertNotIn("private_evidence", report["review"])
+        self.assertNotIn("private_draft", report["review"])
         serialized = json.dumps(report)
         self.assertNotIn("evidence.example", serialized)
         self.assertNotIn("approved_on", serialized)
@@ -235,6 +237,7 @@ class OutreachReportTests(unittest.TestCase):
 
         self.assertTrue(report["private_output"])
         self.assertTrue(report["private_evidence_included"])
+        self.assertFalse(report["private_draft_included"])
         self.assertEqual(
             report["review"]["private_evidence"],
             [
@@ -260,6 +263,46 @@ class OutreachReportTests(unittest.TestCase):
         )
         self.assertIn("evidence-bearing review", text)
         self.assertIn("does not approve, modify, or send", text)
+
+    def test_review_next_can_include_only_the_selected_private_draft(self) -> None:
+        rows = [
+            _row(
+                prospect_id="prospect-002",
+                status="drafted",
+                contacted_on="",
+                next_action_on="",
+                approved_on="",
+            ),
+            _row(
+                prospect_id="prospect-001",
+                status="drafted",
+                contacted_on="",
+                next_action_on="",
+                approved_on="",
+            ),
+        ]
+
+        report = build_next_outreach_review(
+            rows,
+            as_of=date(2026, 7, 13),
+            private_drafts={
+                "prospect-001": "Recipient: first@example.test\n\nSelected message",
+                "prospect-002": "Recipient: second@example.test\n\nOther message",
+            },
+        )
+
+        self.assertTrue(report["private_draft_included"])
+        self.assertFalse(report["private_evidence_included"])
+        self.assertEqual(
+            report["review"]["private_draft"],
+            "Recipient: first@example.test\n\nSelected message",
+        )
+        serialized = json.dumps(report)
+        self.assertNotIn("second@example.test", serialized)
+        text = format_next_outreach_review(report)
+        self.assertIn("Private draft notes (do not commit or share):", text)
+        self.assertIn("Selected message", text)
+        self.assertIn("draft-bearing review", text)
 
     def test_review_next_cli_does_not_modify_the_private_ledger(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -298,7 +341,113 @@ class OutreachReportTests(unittest.TestCase):
             self.assertEqual(report["review"]["prospect_id"], "prospect-001")
             self.assertIn("does not approve", report["action_note"])
 
-    def test_private_evidence_flag_requires_review_next(self) -> None:
+    def test_review_next_cli_builds_a_read_only_private_review_bundle(self) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            notes = Path(tmp) / "drafts.md"
+            row = _row(
+                status="drafted",
+                contacted_on="",
+                next_action_on="",
+                approved_on="",
+            )
+            _write_ledger(ledger, [row])
+            notes.write_text(
+                "# Private drafts\n\n"
+                "## prospect-002\n\nOther private message\n\n"
+                "## prospect-001\n\nSelected private message\n",
+                encoding="utf-8",
+            )
+            before = ledger.read_bytes()
+            stdout = io.StringIO()
+
+            with redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--review-next",
+                        "--include-private-evidence",
+                        "--include-private-draft",
+                        str(notes),
+                        "--format",
+                        "json",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(ledger.read_bytes(), before)
+            report = json.loads(stdout.getvalue())
+            self.assertTrue(report["private_evidence_included"])
+            self.assertTrue(report["private_draft_included"])
+            self.assertEqual(
+                report["review"]["private_draft"], "Selected private message"
+            )
+            self.assertNotIn("Other private message", stdout.getvalue())
+
+    def test_private_draft_notes_reject_missing_or_ambiguous_sections(self) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            notes = Path(tmp) / "drafts.md"
+            _write_ledger(
+                ledger,
+                [
+                    _row(
+                        status="drafted",
+                        contacted_on="",
+                        next_action_on="",
+                        approved_on="",
+                    )
+                ],
+            )
+            cases = (
+                (
+                    "## prospect-002\n\nOther private message\n",
+                    "missing the selected section: prospect-001",
+                ),
+                (
+                    "## prospect-001\n\nFirst\n\n## prospect-001\n\nSecond\n",
+                    "duplicate section: prospect-001",
+                ),
+                (
+                    "## recipient details\n\nPrivate message\n",
+                    "section heading must be ## prospect-NNN",
+                ),
+                (
+                    "## prospect-001\n\n",
+                    "private draft section prospect-001 cannot be empty",
+                ),
+                (
+                    "x" * (128 * 1024 + 1),
+                    "private draft notes exceed 131072 bytes",
+                ),
+                (
+                    "## prospect-001\n\nPrivate\x1b[31m message\n",
+                    "private draft notes cannot contain control characters",
+                ),
+            )
+
+            for content, expected in cases:
+                with self.subTest(expected=expected):
+                    notes.write_text(content, encoding="utf-8")
+                    stderr = io.StringIO()
+                    with redirect_stderr(stderr):
+                        exit_code = main(
+                            [
+                                str(ledger),
+                                "--as-of",
+                                "2026-07-13",
+                                "--review-next",
+                                "--include-private-draft",
+                                str(notes),
+                            ]
+                        )
+                    self.assertEqual(exit_code, 2)
+                    self.assertIn(expected, stderr.getvalue())
+                    self.assertNotIn("Private message", stderr.getvalue())
+
+    def test_private_review_flags_require_review_next(self) -> None:
         with TemporaryDirectory() as tmp:
             ledger = Path(tmp) / "ledger.csv"
             _write_ledger(
@@ -314,21 +463,30 @@ class OutreachReportTests(unittest.TestCase):
             )
             stderr = io.StringIO()
 
-            with redirect_stderr(stderr):
-                exit_code = main(
-                    [
-                        str(ledger),
-                        "--as-of",
-                        "2026-07-13",
-                        "--include-private-evidence",
-                    ]
-                )
-
-            self.assertEqual(exit_code, 2)
-            self.assertIn(
-                "--include-private-evidence requires --review-next",
-                stderr.getvalue(),
+            cases = (
+                (
+                    ["--include-private-evidence"],
+                    "--include-private-evidence requires --review-next",
+                ),
+                (
+                    ["--include-private-draft", str(Path(tmp) / "drafts.md")],
+                    "--include-private-draft requires --review-next",
+                ),
             )
+            for arguments, expected in cases:
+                with self.subTest(expected=expected):
+                    stderr = io.StringIO()
+                    with redirect_stderr(stderr):
+                        exit_code = main(
+                            [
+                                str(ledger),
+                                "--as-of",
+                                "2026-07-13",
+                                *arguments,
+                            ]
+                        )
+                    self.assertEqual(exit_code, 2)
+                    self.assertIn(expected, stderr.getvalue())
 
     def test_review_next_reports_when_no_drafts_are_waiting(self) -> None:
         report = build_next_outreach_review(
@@ -346,6 +504,7 @@ class OutreachReportTests(unittest.TestCase):
 
         self.assertIsNone(report["review"])
         self.assertFalse(report["private_evidence_included"])
+        self.assertFalse(report["private_draft_included"])
         self.assertIn(
             "No drafts are awaiting human review.",
             format_next_outreach_review(report),

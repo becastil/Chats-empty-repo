@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added `--include-private-draft DRAFTS_MD` as an explicit `--review-next`
+  opt-in that selects only the next alias's bounded Markdown section.
+- Rejected duplicate, malformed, empty, oversized, and missing selected draft
+  sections without modifying the private ledger or exposing other messages.
+- Extended the release smoke test through one combined private draft-and-evidence
+  review bundle while preserving redacted default output and human-only approval.
 - Refreshed the warning-free distribution, pilot, growth, and aggregate outreach
   baselines at the first verified `v0.3.35` post-release checkpoint.
 - Recorded 31 additional primary artifact requests across three new complete

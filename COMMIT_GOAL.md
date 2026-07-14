@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after the v0.3.35 commercial evidence checkpoint: 91 / 1,000 (9.1%).
-- Remaining after the v0.3.35 commercial evidence checkpoint: 909 commits.
+- Progress after adding a complete private review bundle: 92 / 1,000 (9.2%).
+- Remaining after adding a complete private review bundle: 908 commits.
 
 ## Commit Standard
 

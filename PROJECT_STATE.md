@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 91 of 1,000, with 909 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 92 of 1,000, with 908 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -162,8 +162,12 @@ The delivery goal is 1,000 meaningful commits. This update is commit 91 of 1,000
   text, approval dates, recipient details, or public-baseline eligibility.
 - An explicit private-evidence review opt-in that maps the selected draft's fit
   signals to source links while leaving default review output redacted.
-- Release-smoke coverage proving the opt-in exposes only the requested links,
-  marks the disclosure as private, and never mutates the outreach ledger.
+- An explicit bounded private-draft opt-in that selects only the next alias's
+  `## prospect-NNN` Markdown section for the same human review.
+- Duplicate, malformed, empty, oversized, and missing selected private-draft
+  section rejection without modifying the outreach ledger.
+- Release-smoke coverage proving the opt-ins expose only the selected evidence
+  and draft, mark both disclosures as private, and never mutate the ledger.
 - Guarded `--approve-next` recording that requires the exact next alias, an
   explicit review date, and confirmation that a human completed every check.
 - Full-ledger preflight and postflight validation plus permission-preserving,
@@ -234,15 +238,15 @@ python3 scripts/audit_pilot_labels.py --repo becastil/Chats-empty-repo
 
 ## Next Small Task
 
-Human-review the five private, evidence-backed drafts, using
-`--review-next --include-private-evidence` when the source links are needed,
-record each decision with the guarded `--approve-next` action, and send them one
-at a time through their published business channels. Immediately record each
-human send with guarded `--record-contact`, which retains approval and
-calculates the exact seven-day follow-up before the next message. When due, send
-that one follow-up manually and close its cadence through guarded
-`--record-follow-up`. No outreach has been approved or attempted yet, and drafts
-are not leads or revenue. Do not add another acquisition asset or paid-policy
-feature before five real attempts.
+Human-review the five private, evidence-backed drafts, using `--review-next`
+with `--include-private-evidence` and `--include-private-draft` for a complete
+private bundle, record each decision with the guarded `--approve-next` action,
+and send them one at a time through their published business channels.
+Immediately record each human send with guarded `--record-contact`, which
+retains approval and calculates the exact seven-day follow-up before the next
+message. When due, send that one follow-up manually and close its cadence
+through guarded `--record-follow-up`. No outreach has been approved or attempted
+yet, and drafts are not leads or revenue. Do not add another acquisition asset
+or paid-policy feature before five real attempts.
 Release, pilot, repository-traffic, and outreach-draft baselines are recorded;
 refresh them only at a deliberate review point or meaningful funnel change.

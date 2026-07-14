@@ -58,6 +58,13 @@ def verify_outreach_lifecycle(
         _write_ledger(ledger, draft)
         ledger.chmod(0o600)
         draft_bytes = ledger.read_bytes()
+        private_drafts = Path(tmp) / "drafts.md"
+        private_drafts.write_text(
+            "# Private drafts\n\n"
+            "## prospect-002\n\nOther private message\n\n"
+            f"## {draft['prospect_id']}\n\nSelected private message\n",
+            encoding="utf-8",
+        )
 
         review = _json_command(
             outreach_command,
@@ -87,7 +94,12 @@ def verify_outreach_lifecycle(
             outreach_command,
             ledger,
             as_of="2026-07-02",
-            arguments=("--review-next", "--include-private-evidence"),
+            arguments=(
+                "--review-next",
+                "--include-private-evidence",
+                "--include-private-draft",
+                str(private_drafts),
+            ),
             environment=environment,
         )
         _require(
@@ -97,6 +109,10 @@ def verify_outreach_lifecycle(
         _require(
             evidence_review.get("private_evidence_included") is True,
             "private evidence review did not mark its disclosure",
+        )
+        _require(
+            evidence_review.get("private_draft_included") is True,
+            "private draft review did not mark its disclosure",
         )
         disclosed_evidence = evidence_review.get("review", {}).get(
             "private_evidence", ()
@@ -115,7 +131,16 @@ def verify_outreach_lifecycle(
             },
             "private evidence review disclosed unexpected links",
         )
-        checked.append("private-evidence-reviewed")
+        private_draft = evidence_review.get("review", {}).get("private_draft")
+        _require(
+            private_draft == "Selected private message",
+            "private review did not select the synthetic draft notes",
+        )
+        _require(
+            "Other private message" not in json.dumps(evidence_review),
+            "private review exposed a different prospect's draft notes",
+        )
+        checked.append("private-review-bundle")
 
         unconfirmed = _run(
             outreach_command,

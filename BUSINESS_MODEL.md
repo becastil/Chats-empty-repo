@@ -243,6 +243,12 @@ links without editing the ledger. Default output remains redacted, while the
 opt-in output is clearly private and excluded from committed reports and CI
 artifacts. This removes manual CSV parsing from the human decision without
 turning a link into verification, approval, contact, demand, or revenue.
+The companion `--include-private-draft` opt-in reads a bounded private Markdown
+file and selects only the exact `## prospect-NNN` section matching that review.
+Together the flags put the recipient, message, and qualification sources in one
+private checklist while rejecting ambiguous or missing sections. This removes
+file-hopping from the decision but does not let Repo Scout judge, approve, send,
+or count the message as demand or revenue.
 
 After a human completes those checks, guarded `--approve-next` can record the
 decision without hand-editing CSV. It requires the exact next alias, an explicit
