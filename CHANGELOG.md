@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Independently verified and pinned the `v0.3.39` wheel, source commit
+  `86886448f86dbfdc04f03248cc8017a81e688dbe`, and SHA-256
+  `9fe9317b0e479e6b874d68c35511785308b373fff10367a76dc3006b5a667e36`
+  in both CI gates.
+- Reconciled every release artifact with its manifest, semantic tag, signer
+  workflow, provenance, successful release job, and hosted runner.
+- Installed the public wheel without dependencies and proved all command
+  versions, policy activation, guarded no-send outreach, commercial reporting,
+  and rollout aggregation through the packaged entry points.
+
 ## 0.3.39 - 2026-07-15
 
 - Added a guarded human no-send decision for the deterministic next outreach

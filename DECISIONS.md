@@ -1056,3 +1056,19 @@ evidence. Customer and dogfood CI remain pinned to independently verified
 `v0.3.38` until the new artifacts are published and separately reconciled. This
 release distributes a safer acquisition decision; it does not make that human
 decision, contact a prospect, validate demand, or book revenue.
+
+## 2026-07-15: Advance Both Policy Gates To Verified v0.3.39
+
+The public `v0.3.39` wheel independently measures to SHA-256
+`9fe9317b0e479e6b874d68c35511785308b373fff10367a76dc3006b5a667e36`
+and its annotated tag resolves to source commit
+`86886448f86dbfdc04f03248cc8017a81e688dbe` on `main`. All three
+distributable artifacts match the manifest and their GitHub attestations. The
+release job used the pinned signer workflow and hosted `ubuntu-24.04` runner,
+and completed successfully. A clean no-dependency wheel install reports
+`0.3.39` through all seven commands and passes policy activation, guarded
+no-send outreach, commercial reporting, and rollout aggregation through the
+packaged entry points. The preflighted updater therefore moves the dogfood
+workflow, customer example, and contract test together. This distributes the
+human no-send decision through customer CI; it does not prove customer
+activation, human review, contact attempts, demand, or revenue.
