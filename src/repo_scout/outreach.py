@@ -18,9 +18,10 @@ from .version import add_version_argument
 from urllib.parse import urlsplit
 
 
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 REVIEW_SCHEMA_VERSION = 3
 APPROVAL_SCHEMA_VERSION = 1
+DECLINE_SCHEMA_VERSION = 1
 CONTACT_SCHEMA_VERSION = 1
 FOLLOW_UP_SCHEMA_VERSION = 1
 MAX_PROSPECTS = 10
@@ -49,6 +50,7 @@ CHANNELS = ("warm-intro", "published-business")
 STATUSES = (
     "researched",
     "drafted",
+    "review-declined",
     "approved",
     "contacted",
     "followed-up",
@@ -57,8 +59,9 @@ STATUSES = (
     "not-a-fit",
     "do-not-contact",
 )
-PRE_CONTACT_STATUSES = {"researched", "drafted", "approved"}
+PRE_CONTACT_STATUSES = {"researched", "drafted", "review-declined", "approved"}
 NO_NEXT_ACTION_STATUSES = {
+    "review-declined",
     "followed-up",
     "replied",
     "pilot-requested",
@@ -169,6 +172,60 @@ def approve_next_outreach_draft(
         "action_note": (
             "Human approval was recorded atomically. No outreach was sent, "
             "and no contact or follow-up date was created."
+        ),
+    }
+
+
+def decline_next_outreach_draft(
+    path: Path,
+    *,
+    prospect_id: str,
+    decline_confirmed: bool,
+    as_of: date | None = None,
+) -> dict[str, Any]:
+    report_date = as_of or date.today()
+    if type(report_date) is not date:
+        raise OutreachInputError("as-of must be a date")
+    if decline_confirmed is not True:
+        raise OutreachInputError(
+            "--decline-next requires --confirm-not-send after a human decides "
+            "the draft must not be sent"
+        )
+    if not PROSPECT_ID_PATTERN.fullmatch(prospect_id):
+        raise OutreachInputError("prospect_id must match prospect-NNN")
+
+    _require_private_live_path(path, label="outreach ledger")
+    rows = _load_outreach_rows(path)
+    build_outreach_report(rows, as_of=report_date)
+    next_draft = _next_status_row(rows, "drafted")
+    if next_draft is None:
+        raise OutreachInputError("no drafted prospects await a review decision")
+    if next_draft["prospect_id"] != prospect_id:
+        raise OutreachInputError(
+            f"next drafted prospect is {next_draft['prospect_id']}; "
+            "review and decide it first"
+        )
+
+    updated_rows = [dict(row) for row in rows]
+    for row in updated_rows:
+        if (row.get("prospect_id") or "").strip() == prospect_id:
+            row["status"] = "review-declined"
+            break
+
+    build_outreach_report(updated_rows, as_of=report_date)
+    _write_outreach_rows(path, updated_rows)
+    return {
+        "schema_version": DECLINE_SCHEMA_VERSION,
+        "as_of": report_date.isoformat(),
+        "private_output": True,
+        "human_no_send_confirmed": True,
+        "decline": {
+            "prospect_id": prospect_id,
+            "status": "review-declined",
+        },
+        "action_note": (
+            "The human no-send decision was recorded atomically. No outreach "
+            "was approved or sent, and no contact or follow-up date was created."
         ),
     }
 
@@ -612,7 +669,10 @@ def build_outreach_report(
                 raise OutreachInputError(
                     f"row {row_number}: {status} prospects cannot have contact dates"
                 )
-            if status in {"drafted", "approved"} and channel not in CHANNELS:
+            if (
+                status in {"drafted", "review-declined", "approved"}
+                and channel not in CHANNELS
+            ):
                 raise OutreachInputError(
                     f"row {row_number}: {status} prospects require a permitted channel"
                 )
@@ -630,7 +690,7 @@ def build_outreach_report(
                     f"row {row_number}: contacted_on cannot be after as-of"
                 )
 
-        if status in {"researched", "drafted"}:
+        if status in {"researched", "drafted", "review-declined"}:
             if approved_on is not None:
                 raise OutreachInputError(
                     f"row {row_number}: {status} prospects cannot have approved_on"
@@ -693,7 +753,11 @@ def build_outreach_report(
     attempted = len(rows) - sum(
         status_counts[status] for status in PRE_CONTACT_STATUSES
     )
-    closed = status_counts["not-a-fit"] + status_counts["do-not-contact"]
+    closed = (
+        status_counts["review-declined"]
+        + status_counts["not-a-fit"]
+        + status_counts["do-not-contact"]
+    )
     return {
         "schema_version": SCHEMA_VERSION,
         "as_of": as_of.isoformat(),
@@ -708,6 +772,7 @@ def build_outreach_report(
             "attempted_prospects": attempted,
             "researched": status_counts["researched"],
             "drafted": status_counts["drafted"],
+            "review_declined": status_counts["review-declined"],
             "approved": status_counts["approved"],
             "contacted": status_counts["contacted"],
             "followed_up": status_counts["followed-up"],
@@ -853,6 +918,7 @@ def format_outreach_report(report: dict[str, Any]) -> str:
         f"Prospects: {summary['prospects']} / {experiment['max_prospects']}",
         f"Qualification links: {summary['fit_evidence_links']}",
         f"Drafts awaiting review: {summary['drafted']}",
+        f"Declined before contact: {summary['review_declined']}",
         f"Approved to send: {summary['approved']}",
         f"Attempted prospects: {summary['attempted_prospects']}",
         f"Due follow-ups: {summary['due_followups']}",
@@ -911,7 +977,8 @@ def format_next_outreach_review(
                 ),
                 "Human checks:",
                 *(f"- [ ] {check}" for check in review["checks"]),
-                "Next command after a human completes every check:",
+                "After human review, choose exactly one decision:",
+                "Approve for manual sending:",
                 _format_outreach_command(
                     ledger,
                     "--as-of",
@@ -921,6 +988,15 @@ def format_next_outreach_review(
                     "--approved-on",
                     review_report["as_of"],
                     "--confirm-reviewed",
+                ),
+                "Decline without sending:",
+                _format_outreach_command(
+                    ledger,
+                    "--as-of",
+                    review_report["as_of"],
+                    "--decline-next",
+                    review["prospect_id"],
+                    "--confirm-not-send",
                 ),
             ]
         )
@@ -962,6 +1038,28 @@ def format_outreach_approval(
             "--contacted-on",
             approval_report["as_of"],
             "--confirm-sent",
+        ),
+    ]
+    return "\n".join(lines)
+
+
+def format_outreach_decline(
+    decline_report: dict[str, Any], *, ledger: Path
+) -> str:
+    decline = decline_report["decline"]
+    lines = [
+        "Repo Scout outreach review decline",
+        f"As of: {decline_report['as_of']}",
+        f"Prospect alias: {decline['prospect_id']}",
+        f"Status: {decline['status']}",
+        "Private ledger updated atomically.",
+        f"Boundary: {decline_report['action_note']}",
+        "Next: review the next drafted prospect:",
+        _format_outreach_command(
+            ledger,
+            "--as-of",
+            decline_report["as_of"],
+            "--review-next",
         ),
     ]
     return "\n".join(lines)
@@ -1025,7 +1123,8 @@ def build_parser() -> argparse.ArgumentParser:
         prog="repo-scout-outreach",
         description=(
             "Validate a private outreach ledger, review drafts, record human "
-            "approvals, contacts, and follow-ups, and report bounded activity."
+            "review decisions, contacts, and follow-ups, and report bounded "
+            "activity."
         ),
     )
     add_version_argument(parser)
@@ -1052,6 +1151,14 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "Record human approval for the next reviewed draft without "
             "sending outreach."
+        ),
+    )
+    action_group.add_argument(
+        "--decline-next",
+        metavar="PROSPECT_ID",
+        help=(
+            "Record a human decision not to send the next reviewed draft, "
+            "without creating contact activity."
         ),
     )
     action_group.add_argument(
@@ -1082,6 +1189,14 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "Confirm a human completed every --review-next check. Required "
             "with --approve-next."
+        ),
+    )
+    parser.add_argument(
+        "--confirm-not-send",
+        action="store_true",
+        help=(
+            "Confirm a human decided the selected draft must not be sent. "
+            "Required with --decline-next."
         ),
     )
     parser.add_argument(
@@ -1142,6 +1257,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     approval_options = args.approved_on is not None or args.confirm_reviewed
+    decline_options = args.confirm_not_send
     contact_options = args.contacted_on is not None or args.confirm_sent
     follow_up_options = (
         args.followed_up_on is not None or args.confirm_follow_up_sent
@@ -1156,6 +1272,10 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "--include-private-draft requires --review-next"
             )
         if args.approve_next is not None:
+            if decline_options:
+                raise OutreachInputError(
+                    "--confirm-not-send requires --decline-next"
+                )
             if contact_options:
                 raise OutreachInputError(
                     "--contacted-on and --confirm-sent require --record-contact"
@@ -1176,7 +1296,31 @@ def main(argv: Sequence[str] | None = None) -> int:
                 review_confirmed=args.confirm_reviewed,
                 as_of=args.as_of,
             )
+        elif args.decline_next is not None:
+            if approval_options:
+                raise OutreachInputError(
+                    "--approved-on and --confirm-reviewed require --approve-next"
+                )
+            if contact_options:
+                raise OutreachInputError(
+                    "--contacted-on and --confirm-sent require --record-contact"
+                )
+            if follow_up_options:
+                raise OutreachInputError(
+                    "--followed-up-on and --confirm-follow-up-sent require "
+                    "--record-follow-up"
+                )
+            report = decline_next_outreach_draft(
+                args.ledger,
+                prospect_id=args.decline_next,
+                decline_confirmed=args.confirm_not_send,
+                as_of=args.as_of,
+            )
         elif args.record_contact is not None:
+            if decline_options:
+                raise OutreachInputError(
+                    "--confirm-not-send requires --decline-next"
+                )
             if approval_options:
                 raise OutreachInputError(
                     "--approved-on and --confirm-reviewed require --approve-next"
@@ -1198,6 +1342,10 @@ def main(argv: Sequence[str] | None = None) -> int:
                 as_of=args.as_of,
             )
         elif args.record_follow_up is not None:
+            if decline_options:
+                raise OutreachInputError(
+                    "--confirm-not-send requires --decline-next"
+                )
             if approval_options:
                 raise OutreachInputError(
                     "--approved-on and --confirm-reviewed require --approve-next"
@@ -1221,6 +1369,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             raise OutreachInputError(
                 "--approved-on and --confirm-reviewed require --approve-next"
             )
+        elif decline_options:
+            raise OutreachInputError("--confirm-not-send requires --decline-next")
         elif contact_options:
             raise OutreachInputError(
                 "--contacted-on and --confirm-sent require --record-contact"
@@ -1251,6 +1401,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(format_outreach_contact(report, ledger=args.ledger))
     elif args.approve_next is not None:
         print(format_outreach_approval(report, ledger=args.ledger))
+    elif args.decline_next is not None:
+        print(format_outreach_decline(report, ledger=args.ledger))
     elif args.review_next:
         print(format_next_outreach_review(report, ledger=args.ledger))
     else:

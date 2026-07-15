@@ -138,6 +138,76 @@ def verify_outreach_lifecycle(
         )
         checked.append("copy-ready-handoffs")
 
+        decline_ledger = Path(tmp) / "decline ledger.csv"
+        decline_draft = _row(
+            contacted_on="",
+            status="drafted",
+            next_action_on="",
+            approved_on="",
+        )
+        _write_ledger(decline_ledger, decline_draft)
+        decline_ledger.chmod(0o600)
+        decline_review = _run_arguments(
+            outreach_command,
+            (
+                "--as-of",
+                "2026-07-01",
+                "--review-next",
+                "--",
+                str(decline_ledger),
+            ),
+            environment=environment,
+        )
+        decline_arguments = _handoff_arguments(
+            decline_review.stdout,
+            action="--decline-next",
+            ledger=decline_ledger,
+        )
+        _require(
+            "--confirm-not-send" in decline_arguments,
+            "decline handoff omitted human no-send confirmation",
+        )
+        decline_receipt = _run_arguments(
+            outreach_command,
+            decline_arguments,
+            environment=environment,
+        )
+        _handoff_arguments(
+            decline_receipt.stdout,
+            action="--review-next",
+            ledger=decline_ledger,
+        )
+        declined_row = _read_row(decline_ledger)
+        _require(
+            declined_row["status"] == "review-declined",
+            "human no-send decision was not saved",
+        )
+        _require(
+            not declined_row["approved_on"]
+            and not declined_row["contacted_on"]
+            and not declined_row["followed_up_on"]
+            and not declined_row["next_action_on"],
+            "human no-send decision created outreach activity",
+        )
+        declined_report = _report(
+            outreach_command,
+            decline_ledger,
+            as_of="2026-07-01",
+            environment=environment,
+        )
+        declined_summary = declined_report.get("summary", {})
+        _require(
+            declined_report.get("schema_version") == 6,
+            "outreach schema changed",
+        )
+        _require(
+            declined_summary.get("review_declined") == 1
+            and declined_summary.get("closed") == 1
+            and declined_summary.get("attempted_prospects") == 0,
+            "human no-send decision inflated outreach activity",
+        )
+        checked.append("draft-declined-without-contact")
+
         ledger = Path(tmp) / "outreach-ledger.csv"
         draft = _row(
             contacted_on="",
@@ -328,7 +398,7 @@ def verify_outreach_lifecycle(
             as_of="2026-07-02",
             environment=environment,
         )
-        _require(approved_report.get("schema_version") == 5, "schema changed")
+        _require(approved_report.get("schema_version") == 6, "schema changed")
         _require(
             approved_report.get("experiment", {}).get("human_approval_required")
             is True,
@@ -711,14 +781,21 @@ def _handoff_arguments(
     action: str,
     ledger: Path,
 ) -> tuple[str, ...]:
-    commands = [
-        line for line in output.splitlines() if line.startswith("repo-scout-outreach ")
-    ]
-    _require(len(commands) == 1, f"{action} handoff command was not emitted once")
-    try:
-        parsed = shlex.split(commands[0])
-    except ValueError as exc:
-        raise SmokeTestError(f"{action} handoff is not valid shell syntax") from exc
+    parsed_commands: list[list[str]] = []
+    for line in output.splitlines():
+        if not line.startswith("repo-scout-outreach "):
+            continue
+        try:
+            parsed = shlex.split(line)
+        except ValueError as exc:
+            raise SmokeTestError(f"{action} handoff is not valid shell syntax") from exc
+        if action in parsed:
+            parsed_commands.append(parsed)
+    _require(
+        len(parsed_commands) == 1,
+        f"{action} handoff command was not emitted once",
+    )
+    parsed = parsed_commands[0]
     _require(parsed[0] == "repo-scout-outreach", "handoff command name changed")
     _require(action in parsed, f"handoff command omitted {action}")
     _require(

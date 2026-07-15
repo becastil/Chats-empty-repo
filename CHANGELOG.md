@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added a guarded human no-send decision for the deterministic next outreach
+  draft, atomically moving only its status to `review-declined`.
+- Counted review-declined drafts as closed before contact rather than attempts,
+  while requiring the same private path, permission, validation, and exact-alias
+  boundaries as approval.
+- Emitted copy-ready approve and decline choices from text review output and
+  made the installed-command release smoke execute the negative branch.
 - Refreshed the warning-free commercial evidence checkpoint after the verified
   `v0.3.38` release and CI rollout.
 - Recorded 21 additional primary artifact requests: 5 on `v0.3.38`, 12 on

@@ -153,6 +153,7 @@ class ReleaseManifestTests(unittest.TestCase):
             (
                 "permissive-ledger-rejected",
                 "copy-ready-handoffs",
+                "draft-declined-without-contact",
                 "draft-reviewed",
                 "draft-ledger-drift-rejected",
                 "private-review-bundle",

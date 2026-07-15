@@ -180,16 +180,24 @@ requires human review. Strict CSV parsing also rejects malformed quoting and
 any row with missing or extra cells, so a shifted private date or status cannot
 silently disappear from the operating record.
 
+Outreach schema 6 adds `review-declined` as a pre-contact terminal decision.
+The guarded decline command requires the deterministic next draft and explicit
+human no-send confirmation, then atomically changes only its status. It leaves
+approval and contact dates blank, counts the row as closed rather than
+attempted, and advances the review queue without requiring a hand-edited CSV.
+This preserves negative human judgment instead of nudging every reviewed draft
+toward approval, and it creates no lead, demand, or revenue evidence.
+
 Future tagged releases must exercise the complete guarded lifecycle through the
-installed wheel before provenance attestation. Starting from one synthetic
-draft, the release check requests the private human checklist, rejects an
-unconfirmed approval without changing the file, records confirmed approval and
-contact, calculates the exact seven-day follow-up, closes that one follow-up,
-and refuses a duplicate without changing the file. It also proves permission
-retention, one attempted-prospect accounting, private-field omission, and
-bounded missing-approval and extra-cell errors. Temporary synthetic rows are
-used, so the check sends nothing and creates no prospect, demand, or revenue
-evidence.
+installed wheel before provenance attestation. One synthetic draft follows the
+copy-ready no-send command and proves a closed review with zero attempts. A
+second requests the private human checklist, rejects an unconfirmed approval
+without changing the file, records confirmed approval and contact, calculates
+the exact seven-day follow-up, closes that one follow-up, and refuses a duplicate
+without changing the file. The check also proves permission retention,
+attempted-prospect accounting, private-field omission, and bounded
+missing-approval and extra-cell errors. Temporary synthetic rows are used, so
+the check sends nothing and creates no prospect, demand, or revenue evidence.
 
 The same verified `v0.3.34` distribution now carries outreach schema 5 and
 pilot qualification schema 7, so operator workflows and customer CI examples
@@ -296,6 +304,14 @@ pilot request, or revenue event. Private text output carries each selected
 alias, date, confirmation flag, and shell-quoted ledger path into a complete
 next command. This removes manual command reconstruction without completing a
 review, sending a message, or treating operator activity as demand.
+
+When the human instead decides a draft must not be sent, guarded
+`--decline-next` requires the exact same next alias and an explicit no-send
+confirmation. It atomically changes only status to `review-declined`, preserves
+the private file boundary, emits the next review command, and records no action
+date. The aggregate report counts this as closed before contact and never as an
+attempt. This keeps the acquisition queue moving without converting negative
+review judgment into an approval or a false outreach event.
 
 After a human sends that approved message, guarded `--record-contact` records
 the exact next approved alias with an explicit send date and confirmation flag.

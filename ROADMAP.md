@@ -7,12 +7,12 @@
 
 ## Near Term
 
-- Human-review the five prepared, publicly qualified drafts, mark each
-  `approved` with its review date through guarded `--approve-next`, and send
-  them one at a time; record each human send through guarded `--record-contact`,
-  then record the one human-sent, day-seven follow-up through guarded
-  `--record-follow-up`. Do not add another acquisition asset before those
-  attempts.
+- Human-review the five prepared, publicly qualified drafts. Record each human
+  decision through guarded `--approve-next` or `--decline-next`, send only
+  approved messages one at a time, record each human send through guarded
+  `--record-contact`, then record the one human-sent, day-seven follow-up through
+  guarded `--record-follow-up`. Do not add another acquisition asset before
+  executing this bounded review queue.
 - Collect the first three public pilot requests, work the prioritized sales queue, and compare readiness and purchase criteria by source.
 - Add a private pilot contact path after public intake validates demand.
 

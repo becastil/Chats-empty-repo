@@ -25,6 +25,7 @@ from repo_scout.outreach import (  # noqa: E402
     build_outreach_report,
     format_next_outreach_review,
     format_outreach_contact,
+    format_outreach_decline,
     format_outreach_follow_up,
     format_outreach_report,
     load_outreach_report,
@@ -129,22 +130,33 @@ class OutreachReportTests(unittest.TestCase):
                 next_action_on="",
                 approved_on="2026-07-01",
             ),
+            _row(
+                prospect_id="prospect-009",
+                status="review-declined",
+                contacted_on="",
+                followed_up_on="",
+                next_action_on="",
+                approved_on="",
+            ),
         ]
 
         report = build_outreach_report(rows, as_of=date(2026, 7, 10))
 
-        self.assertEqual(report["schema_version"], 5)
+        self.assertEqual(report["schema_version"], 6)
         self.assertTrue(report["experiment"]["human_approval_required"])
-        self.assertEqual(report["summary"]["prospects"], 8)
+        self.assertEqual(report["summary"]["prospects"], 9)
         self.assertEqual(report["summary"]["attempted_prospects"], 5)
         self.assertEqual(report["summary"]["drafted"], 1)
+        self.assertEqual(report["summary"]["review_declined"], 1)
         self.assertEqual(report["summary"]["approved"], 1)
-        self.assertEqual(report["summary"]["fit_evidence_links"], 24)
+        self.assertEqual(report["summary"]["closed"], 2)
+        self.assertEqual(report["summary"]["fit_evidence_links"], 27)
         self.assertIn(
             "Drafts awaiting review: 1", format_outreach_report(report)
         )
         self.assertIn("Approved to send: 1", format_outreach_report(report))
-        self.assertIn("Qualification links: 24", format_outreach_report(report))
+        self.assertIn("Declined before contact: 1", format_outreach_report(report))
+        self.assertIn("Qualification links: 27", format_outreach_report(report))
         self.assertEqual(report["summary"]["due_followups"], 1)
         self.assertEqual(report["summary"]["pilot_requested"], 1)
         self.assertEqual(
@@ -226,6 +238,9 @@ class OutreachReportTests(unittest.TestCase):
         self.assertEqual(text.count("- [ ]"), 5)
         self.assertIn("Keep this alias-only checklist in the private workspace", text)
         self.assertIn("does not approve, modify, or send", text)
+        self.assertIn("After human review, choose exactly one decision", text)
+        self.assertIn("--approve-next prospect-001", text)
+        self.assertIn("--decline-next prospect-001 --confirm-not-send", text)
 
     def test_review_next_can_explicitly_include_private_evidence(self) -> None:
         rows = [
@@ -415,6 +430,14 @@ class OutreachReportTests(unittest.TestCase):
                         "--approved-on",
                         "2026-07-13",
                         "--confirm-reviewed",
+                    ],
+                ),
+                (
+                    "decline",
+                    [
+                        "--decline-next",
+                        "prospect-001",
+                        "--confirm-not-send",
                     ],
                 ),
                 (
@@ -886,6 +909,150 @@ class OutreachReportTests(unittest.TestCase):
             self.assertNotIn("evidence.example", json.dumps(receipt))
             self.assertIn("No outreach was sent", receipt["action_note"])
             self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
+
+    def test_decline_next_closes_without_contact_and_advances_queue(self) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            original_rows = [
+                _row(
+                    prospect_id="prospect-002",
+                    status="drafted",
+                    contacted_on="",
+                    next_action_on="",
+                    approved_on="",
+                ),
+                _row(
+                    prospect_id="prospect-001",
+                    status="drafted",
+                    contacted_on="",
+                    next_action_on="",
+                    approved_on="",
+                ),
+            ]
+            _write_ledger(ledger, original_rows)
+            stdout = io.StringIO()
+
+            with redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--decline-next",
+                        "prospect-001",
+                        "--confirm-not-send",
+                        "--format",
+                        "json",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(ledger.stat().st_mode & 0o777, 0o600)
+            with ledger.open(newline="", encoding="utf-8") as ledger_file:
+                rows = list(csv.DictReader(ledger_file))
+            original_by_id = {row["prospect_id"]: row for row in original_rows}
+            rows_by_id = {row["prospect_id"]: row for row in rows}
+            declined = rows_by_id["prospect-001"]
+            changed_fields = {
+                field
+                for field in LEDGER_FIELDS
+                if declined[field] != original_by_id["prospect-001"][field]
+            }
+            self.assertEqual(changed_fields, {"status"})
+            self.assertEqual(declined["status"], "review-declined")
+            self.assertEqual(
+                rows_by_id["prospect-002"], original_by_id["prospect-002"]
+            )
+
+            report = load_outreach_report(ledger, as_of=date(2026, 7, 13))
+            self.assertEqual(report["schema_version"], 6)
+            self.assertEqual(report["summary"]["review_declined"], 1)
+            self.assertEqual(report["summary"]["closed"], 1)
+            self.assertEqual(report["summary"]["attempted_prospects"], 0)
+            review = build_next_outreach_review(rows, as_of=date(2026, 7, 13))
+            self.assertEqual(review["review"]["prospect_id"], "prospect-002")
+
+            receipt = json.loads(stdout.getvalue())
+            self.assertTrue(receipt["private_output"])
+            self.assertTrue(receipt["human_no_send_confirmed"])
+            self.assertEqual(receipt["decline"]["status"], "review-declined")
+            self.assertNotIn("approved_on", json.dumps(receipt))
+            self.assertNotIn("contacted_on", json.dumps(receipt))
+            self.assertNotIn("evidence.example", json.dumps(receipt))
+            self.assertIn("No outreach was approved or sent", receipt["action_note"])
+            decline_text = format_outreach_decline(receipt, ledger=ledger)
+            self.assertIn("--review-next", decline_text)
+            self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
+
+    def test_decline_next_rejects_unsafe_transitions_without_mutation(self) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            rows = [
+                _row(
+                    prospect_id="prospect-002",
+                    status="drafted",
+                    contacted_on="",
+                    next_action_on="",
+                    approved_on="",
+                ),
+                _row(
+                    prospect_id="prospect-001",
+                    status="drafted",
+                    contacted_on="",
+                    next_action_on="",
+                    approved_on="",
+                ),
+            ]
+            cases = (
+                (
+                    ["--decline-next", "prospect-001"],
+                    "requires --confirm-not-send",
+                ),
+                (
+                    [
+                        "--decline-next",
+                        "prospect-002",
+                        "--confirm-not-send",
+                    ],
+                    "next drafted prospect is prospect-001",
+                ),
+                (
+                    [
+                        "--decline-next",
+                        "prospect-001",
+                        "--confirm-not-send",
+                        "--approved-on",
+                        "2026-07-12",
+                    ],
+                    "--approved-on and --confirm-reviewed require --approve-next",
+                ),
+                (
+                    ["--confirm-not-send"],
+                    "--confirm-not-send requires --decline-next",
+                ),
+            )
+
+            for arguments, message in cases:
+                with self.subTest(message=message):
+                    _write_ledger(ledger, rows)
+                    before = ledger.read_bytes()
+                    stderr = io.StringIO()
+                    with redirect_stderr(stderr):
+                        exit_code = main(
+                            [
+                                str(ledger),
+                                "--as-of",
+                                "2026-07-13",
+                                *arguments,
+                            ]
+                        )
+
+                    self.assertEqual(exit_code, 2)
+                    self.assertIn(message, stderr.getvalue())
+                    self.assertEqual(ledger.read_bytes(), before)
+                    self.assertEqual(
+                        list(Path(tmp).glob(".ledger.csv.*.tmp")), []
+                    )
 
     def test_approve_next_rejects_unsafe_transitions_without_mutation(self) -> None:
         with TemporaryDirectory() as tmp:

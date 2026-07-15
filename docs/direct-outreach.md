@@ -93,7 +93,7 @@ this public repository.
 
 Separate fit-signal keys with semicolons. Use `warm-intro` or
 `published-business` as the channel. Allowed statuses are `researched`,
-`drafted`, `approved`, `contacted`, `followed-up`, `replied`,
+`drafted`, `review-declined`, `approved`, `contacted`, `followed-up`, `replied`,
 `pilot-requested`, `not-a-fit`, and `do-not-contact`. Use `drafted` only after a
 personalized message has been saved for review through a permitted channel.
 Change it to `approved` only after a human confirms that the public observation
@@ -101,9 +101,11 @@ is accurate and current, the recipient and published business channel are
 appropriate, and the message accurately states the price, scope, local-code
 boundary, and a clear opt-out promising no further contact. Record that calendar
 date in `approved_on`.
-Drafted rows cannot have an approval date. Approved rows require one but still
-have no contact or follow-up dates. Neither status counts as attempted
-outreach.
+Drafted and review-declined rows cannot have an approval date. Approved rows
+require one but still have no contact or follow-up dates. None of those three
+statuses counts as attempted outreach. A review-declined row is closed before
+contact and must retain blank approval, contact, follow-up, and next-action
+dates.
 
 Map every declared signal to the source reviewed for that claim in
 `fit_evidence`, using semicolon-separated `signal=https://...` entries. For
@@ -135,12 +137,11 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
 This mode prints five unchecked criteria plus only the alias, permitted channel,
 and qualification counts. It does not expose evidence URLs or draft text, does
 not edit the ledger, and does not approve or send a message. The human reviewer
-must inspect the private evidence and saved draft before using the guarded
-approval action. The checklist is private operator material because it names a
-ledger alias; do not commit it as a measurement baseline. Text mode ends with a
-complete, shell-quoted approval command for the selected alias, current
-`as_of` date, and supplied ledger path. Run it only after completing every
-displayed check.
+must inspect the private evidence and saved draft before using a guarded review
+decision. The checklist is private operator material because it names a ledger
+alias; do not commit it as a measurement baseline. Text mode ends with complete,
+shell-quoted commands to approve or decline the selected alias using the current
+`as_of` date and supplied ledger path. Choose exactly one after human review.
 
 To inspect the selected draft and its qualification links without manually
 cross-referencing the CSV and notes file, request both explicitly in the same
@@ -156,9 +157,10 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
 The notes file uses one exact `## prospect-NNN` heading per draft. Before
 showing anything, the opt-in requires a section for every ledger row still in
 `drafted` status and rejects any section whose alias is absent from the ledger.
-Sections for approved or contacted aliases may remain as private history. The
-output then selects only the section matching the next ledger alias, maps every
-declared fit signal to its private HTTPS source, and marks both disclosures.
+Sections for review-declined, approved, or contacted aliases may remain as
+private history. The output then selects only the section matching the next
+ledger alias, maps every declared fit signal to its private HTTPS source, and
+marks both disclosures.
 Duplicate, malformed, empty, oversized, missing, or unknown sections fail
 without changing the ledger or exposing message text. Keep this output in the
 ignored workspace and do not redirect it into committed reports, logs, issue
@@ -166,6 +168,26 @@ comments, or CI artifacts.
 Without the flags, review output remains redacted. Showing the bundle still does
 not verify a claim, approve a draft, or send a message; the human must read the
 draft, open each source, and complete every displayed check.
+
+If a human decides the selected draft must not be sent, close it without
+creating contact activity:
+
+```bash
+repo-scout-outreach outreach-private/outreach-ledger.csv \
+  --as-of "$(date +%F)" \
+  --decline-next prospect-001 \
+  --confirm-not-send
+```
+
+`--decline-next` requires the lowest drafted alias selected by `--review-next`
+and explicit confirmation of the human no-send decision. It validates the
+complete ledger before and after the transition, preserves file permissions,
+and atomically changes only `status` to `review-declined`. Missing confirmation,
+out-of-order aliases, invalid ledger state, or write failures leave the file
+unchanged. The private receipt contains no evidence URL or persisted decision
+date and ends with a complete command for reviewing the next draft. This status
+counts as closed but never as attempted outreach; it does not approve, send,
+schedule, or record contact.
 
 After a human completes every displayed check, record that decision for the
 same alias:

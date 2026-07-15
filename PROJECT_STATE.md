@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 105 of 1,000, with 895 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 106 of 1,000, with 894 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -188,6 +188,10 @@ The delivery goal is 1,000 meaningful commits. This update is commit 105 of 1,00
   draft review with complete note-to-ledger identity preflight.
 - Guarded `--approve-next` recording that requires the exact next alias, an
   explicit review date, and confirmation that a human completed every check.
+- Schema-6 pre-contact `review-declined` decisions that close an unsuitable
+  draft without approval, contact dates, or attempted-prospect inflation.
+- Guarded `--decline-next` recording that requires the exact next alias and an
+  explicit human no-send confirmation before atomically changing only status.
 - Full-ledger preflight and postflight validation plus permission-preserving,
   atomic approval writes that never create contact or follow-up dates.
 - Guarded `--record-contact` recording that requires the exact next approved
@@ -265,8 +269,9 @@ python3 scripts/audit_pilot_labels.py --repo becastil/Chats-empty-repo
 
 Human-review the five private, evidence-backed drafts, using `--review-next`
 with `--include-private-evidence` and `--include-private-draft` for a complete
-private bundle, record each decision with the guarded `--approve-next` action,
-and send them one at a time through their published business channels.
+private bundle. Record each decision with guarded `--approve-next` or
+`--decline-next`, and send only approved drafts one at a time through their
+published business channels.
 Immediately record each human send with guarded `--record-contact`, which
 retains approval and calculates the exact seven-day follow-up before the next
 message. When due, send that one follow-up manually and close its cadence

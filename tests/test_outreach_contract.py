@@ -13,6 +13,7 @@ LEDGER_TEMPLATE = ROOT / "examples" / "outreach-ledger.csv"
 class DirectOutreachContractTests(unittest.TestCase):
     def test_playbook_preserves_offer_source_and_bounded_cadence(self) -> None:
         playbook = PLAYBOOK.read_text(encoding="utf-8")
+        normalized_playbook = " ".join(playbook.split())
 
         self.assertIn("$299, 90-day pilot", playbook)
         self.assertIn("up to 10 projects", playbook)
@@ -30,9 +31,15 @@ class DirectOutreachContractTests(unittest.TestCase):
             "If this is not relevant, say so and I will not follow up.",
             " ".join(initial_message.split()),
         )
-        self.assertIn("Drafted rows cannot have an approval date", playbook)
-        self.assertIn("Approved rows require one", playbook)
-        self.assertIn("Neither status counts as attempted", playbook)
+        self.assertIn(
+            "Drafted and review-declined rows cannot have an approval date",
+            normalized_playbook,
+        )
+        self.assertIn("Approved rows require one", normalized_playbook)
+        self.assertIn(
+            "None of those three statuses counts as attempted",
+            normalized_playbook,
+        )
         self.assertIn(
             "Keep `approved_on` on every later status",
             " ".join(playbook.split()),
@@ -46,6 +53,15 @@ class DirectOutreachContractTests(unittest.TestCase):
         self.assertIn("does not edit the ledger", " ".join(playbook.split()))
         self.assertIn("--approve-next", playbook)
         self.assertIn("--confirm-reviewed", playbook)
+        self.assertIn("--decline-next", playbook)
+        self.assertIn("--confirm-not-send", playbook)
+        self.assertIn(
+            "atomically changes only `status` to `review-declined`", playbook
+        )
+        self.assertIn(
+            "counts as closed but never as attempted outreach",
+            normalized_playbook,
+        )
         self.assertIn(
             "atomically changes only `status` and `approved_on`", playbook
         )

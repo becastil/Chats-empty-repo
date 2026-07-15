@@ -1026,3 +1026,20 @@ operational distribution proof rather than buyer demand. Public pilot evidence
 and the aggregate outreach baseline still show zero pilot requests, attempts,
 and revenue. Acquisition therefore remains the commercial bottleneck, and
 human-reviewed outreach remains the next action.
+
+## 2026-07-15: Make A Human No-Send Review Decision First-Class
+
+The deterministic outreach queue previously offered only `--approve-next`.
+When a human found a weak observation, inappropriate recipient, unsuitable
+channel, inaccurate offer, or deficient opt-out, the safe choice was to stop;
+the next draft remained blocked unless the operator hand-edited CSV outside the
+guarded workflow. Outreach schema 6 therefore adds `review-declined` as a
+pre-contact terminal state and `--decline-next` as its only automated
+transition. The command requires the exact next drafted alias and explicit
+`--confirm-not-send`, validates private path and ledger state before and after,
+preserves permissions, and atomically changes only status. Review output offers
+approve and decline commands side by side, while the decline receipt advances
+to the next review. A declined draft counts as closed but never attempted and
+has no approval, contact, follow-up, or next-action date. This removes pressure
+toward approval and makes negative review evidence operable; it does not review
+a real draft, send outreach, create a pilot request, or book revenue.
