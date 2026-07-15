@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.38 - 2026-07-15
+
 - Refused live outreach review, approval, contact, and follow-up actions on
   POSIX when a private ledger, draft file, or immediate parent directory grants
   group or world access.

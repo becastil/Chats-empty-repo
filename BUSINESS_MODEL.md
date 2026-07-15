@@ -240,6 +240,14 @@ through the installed wheel. This makes the distributed operator path match the
 five prepared drafts; it does not approve a draft, contact a prospect, or
 validate demand.
 
+Public `v0.3.38` packages the private execution boundary added after that
+release: live in-repository paths must be ignored and untracked, POSIX files and
+parent directories must remain owner-only, and private text handoffs carry
+complete shell-quoted commands through the guarded lifecycle. The installed
+wheel smoke rejects permissive paths without mutation and executes every emitted
+handoff. This distributes a safer acquisition workflow; it does not review or
+send the five drafts and does not establish demand or revenue.
+
 The first five personalized outreach drafts now exist in the ignored private
 workspace. Sixteen fit links were reviewed against narrow, company-controlled
 public evidence because no Sales Intelligence or CRM provider is connected.

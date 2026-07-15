@@ -980,3 +980,19 @@ before continuing through a correctly protected synthetic workflow. The real
 ignored workspace already satisfies the enforced modes, so this hardens the
 five prepared attempts without approving or sending them and without creating
 demand or revenue evidence.
+
+## 2026-07-15: Release The Private Outreach Execution Boundary
+
+Four commits after `v0.3.37` form one narrow distribution set: independent
+pinning of that release plus three operator-safety changes. Live paths inside a
+repository must be ignored and untracked, review and mutation receipts emit
+complete shell-quoted next commands, and POSIX live files and immediate parent
+directories must remain owner-only. Version `0.3.38` advances package, runtime,
+website, installation, and release-test identities together so those protections
+are available from an attested wheel rather than only a source checkout. The
+installed lifecycle smoke rejects a permissive ledger without mutation and then
+executes every emitted command through one bounded follow-up.
+Customer and dogfood CI remain pinned to independently verified `v0.3.37` until
+the new artifacts are published and separately reconciled. This release makes
+the prepared workflow distributable; it does not perform human review, contact
+a prospect, create a pilot request, or book revenue.
