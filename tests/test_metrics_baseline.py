@@ -57,13 +57,13 @@ class MetricsBaselineTests(unittest.TestCase):
         self.assertEqual(summary["stable_releases"], len(releases))
         self.assertEqual(summary["complete_releases"], len(releases))
         self.assertTrue(all(release["contract"]["complete"] for release in releases))
-        self.assertEqual(report["latest"]["tag"], "v0.3.39")
-        self.assertEqual(summary["stable_releases"], 43)
-        self.assertEqual(summary["primary_artifact_downloads"], 147)
-        self.assertEqual(summary["portable_downloads"], 18)
-        self.assertEqual(summary["wheel_downloads"], 129)
-        self.assertEqual(summary["source_downloads"], 21)
-        self.assertEqual(summary["manifest_downloads"], 120)
+        self.assertEqual(report["latest"]["tag"], "v0.3.40")
+        self.assertEqual(summary["stable_releases"], 44)
+        self.assertEqual(summary["primary_artifact_downloads"], 153)
+        self.assertEqual(summary["portable_downloads"], 19)
+        self.assertEqual(summary["wheel_downloads"], 134)
+        self.assertEqual(summary["source_downloads"], 22)
+        self.assertEqual(summary["manifest_downloads"], 125)
         self.assertEqual(summary["unknown_downloads"], 0)
         self.assertEqual(
             summary["primary_artifact_downloads"],
@@ -103,7 +103,7 @@ class MetricsBaselineTests(unittest.TestCase):
             growth["distribution_change"],
             {
                 "manifest_downloads_delta": 5,
-                "new_releases": ["v0.3.39"],
+                "new_releases": ["v0.3.40"],
                 "portable_downloads_delta": 1,
                 "primary_artifact_downloads_delta": 6,
                 "removed_releases": [],

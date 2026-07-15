@@ -2,7 +2,7 @@
 
 These generated reports preserve public or privacy-safe starting points for
 future commercial comparisons. Distribution, pilot, and growth reports were
-refreshed on 2026-07-15 at 16:00 UTC. The outreach draft report was captured on
+refreshed on 2026-07-15 at 20:00 UTC. The outreach draft report was captured on
 2026-07-14, and the traffic report was captured on 2026-07-12 at 19:22 UTC,
 from:
 
@@ -14,12 +14,12 @@ from:
 
 ## Current Readout
 
-- 43 stable releases, all satisfying their version-aware artifact contracts.
-- 147 cumulative primary artifact requests: 18 portable and 129 wheel.
-- 120 manifest requests, 21 source requests, and 0 unknown requests.
+- 44 stable releases, all satisfying their version-aware artifact contracts.
+- 153 cumulative primary artifact requests: 19 portable and 134 wheel.
+- 125 manifest requests, 22 source requests, and 0 unknown requests.
 - 6 additional primary artifact requests since the prior checkpoint: 1
-  portable and 5 wheel. The new `v0.3.39` release accounts for 3 requests,
-  while `v0.3.38` gained 3 wheel requests.
+  portable and 5 wheel. The new `v0.3.40` release accounts for 3 requests,
+  while `v0.3.39` gained 3 wheel requests.
 - 0 tracked pilot requests, 0 booked pilots, and $0 booked revenue.
 - 0 evidence warnings in the distribution, pilot, and joined growth reports.
 - 5 qualified outreach drafts backed by 16 fit-evidence links, with 0 approvals,

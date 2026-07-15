@@ -1127,3 +1127,17 @@ points. The preflighted updater therefore moves the dogfood workflow, customer
 example, and contract test together. This makes the truthful terminal review
 receipt available through customer CI; it does not prove customer activation,
 human review, contact attempts, demand, or revenue.
+
+## 2026-07-15: Record The Verified v0.3.40 Distribution Checkpoint
+
+The independently pinned `v0.3.40` release and its rollout through both policy
+gates create a deliberate comparison boundary after the verified `v0.3.39`
+checkpoint. Public release records now reconcile 44 complete releases and 153
+cumulative primary artifact requests, a signed increase of 6. The new
+`v0.3.40` release accounts for 3 requests, while `v0.3.39` gained 3 wheel
+requests. Release publication, independent verification, pinning, and CI
+activity materially confound this movement, so it is operational distribution
+proof rather than buyer demand. Public pilot evidence and the aggregate
+outreach baseline still show zero pilot requests, attempts, and revenue.
+Acquisition therefore remains the commercial bottleneck, and human-reviewed
+outreach remains the next action.
