@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.36 - 2026-07-14
+
 - Preflighted private draft notes against the complete outreach ledger before
   review, requiring coverage for every drafted alias and rejecting unknown ones.
 - Preserved notes for approved or contacted aliases as private history while

@@ -856,3 +856,16 @@ absent from the ledger. Notes for aliases that progressed may remain as private
 history. The check runs after full ledger and bounded-note validation, exposes
 no message text on failure, and never edits either file. This guards the human
 decision input without approving, sending, or creating commercial evidence.
+
+## 2026-07-14: Release The Complete Private Review Boundary
+
+Five commits after `v0.3.35` form one narrow distribution set: independent
+pinning of that release, explicit qualification-evidence review, a refreshed
+commercial checkpoint, bounded private draft inclusion, and note-to-ledger
+identity preflight. Version `0.3.36` packages the immediate human decision path
+so it can run from a checksum- and provenance-backed wheel instead of a source
+checkout. Package, runtime, website, installation, and release-test identities
+advance together. Customer CI remains pinned to independently verified
+`v0.3.35` until the new artifact is published and separately measured. A
+release makes the workflow available; it is not an approval, attempt, lead, or
+sale.

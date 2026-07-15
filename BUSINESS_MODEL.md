@@ -222,6 +222,14 @@ separate installed policy-activation and guarded-outreach checks. This improves
 paid-pilot distribution readiness; it does not approve drafts, create attempts,
 validate demand, or book revenue.
 
+Public `v0.3.36` packages the complete private human-review bundle needed before
+those guarded operations: explicit evidence links, bounded selected draft text,
+and full note-to-ledger identity preflight. The installed-wheel release smoke
+proves default output stays redacted, disclosed material is selected and marked
+private, drift fails without message leakage, and the ledger remains unchanged.
+This removes source-checkout dependence from the immediate outreach decision;
+it still does not make the judgment, approve, send, or create revenue evidence.
+
 The first five personalized outreach drafts now exist in the ignored private
 workspace. Sixteen fit links were reviewed against narrow, company-controlled
 public evidence because no Sales Intelligence or CRM provider is connected.
