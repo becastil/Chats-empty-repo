@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after advancing CI to verified v0.3.37: 99 / 1,000 (9.9%).
-- Remaining after advancing CI to verified v0.3.37: 901 commits.
+- Progress after enforcing the private outreach boundary: 100 / 1,000 (10.0%).
+- Remaining after enforcing the private outreach boundary: 900 commits.
 
 ## Commit Standard
 

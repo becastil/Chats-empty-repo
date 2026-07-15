@@ -71,11 +71,22 @@ Bennett
 
 ## Private Ledger
 
-Copy `examples/outreach-ledger.csv` into
-`outreach-private/outreach-ledger.csv`. The destination directory is ignored by
-Git. Use an alias such as `prospect-001`; do not store names, email addresses,
-message bodies, source code, or confidential company details in this public
-repository.
+Create the private workspace with owner-only directory and file permissions:
+
+```bash
+install -d -m 700 outreach-private
+install -m 600 examples/outreach-ledger.csv \
+  outreach-private/outreach-ledger.csv
+touch outreach-private/drafts.md
+chmod 600 outreach-private/drafts.md
+```
+
+The destination directory is ignored by Git. Live review, approval, contact,
+and follow-up actions refuse any in-repository ledger or draft file that is
+tracked, not ignored, or a symbolic link. The counts-only audit remains
+available for the empty tracked example. Use an alias such as `prospect-001`;
+do not store names, email addresses, message bodies, source code, or
+confidential company details in this public repository.
 
 Separate fit-signal keys with semicolons. Use `warm-intro` or
 `published-business` as the channel. Allowed statuses are `researched`,

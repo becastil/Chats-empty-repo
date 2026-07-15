@@ -96,7 +96,13 @@ class DirectOutreachContractTests(unittest.TestCase):
         gitignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
         self.assertIn("/outreach-private/", gitignore)
         playbook = PLAYBOOK.read_text(encoding="utf-8")
-        self.assertIn("do not store names, email addresses", playbook)
+        normalized_playbook = " ".join(playbook.split())
+        self.assertIn("do not store names, email addresses", normalized_playbook)
+        self.assertIn("install -d -m 700 outreach-private", playbook)
+        self.assertIn(
+            "install -m 600 examples/outreach-ledger.csv", playbook
+        )
+        self.assertIn("chmod 600 outreach-private/drafts.md", playbook)
 
 
 if __name__ == "__main__":

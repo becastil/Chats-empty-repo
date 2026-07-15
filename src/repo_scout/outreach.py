@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import re
 import stat
+import subprocess
 import sys
 from tempfile import NamedTemporaryFile
 from typing import Any, Mapping, Sequence
@@ -97,6 +98,10 @@ def load_next_outreach_review(
     if type(report_date) is not date:
         raise OutreachInputError("as-of must be a date")
 
+    _require_private_git_path(path, label="outreach ledger")
+    if private_drafts_path is not None:
+        _require_private_git_path(private_drafts_path, label="private draft notes")
+
     return build_next_outreach_review(
         _load_outreach_rows(path),
         as_of=report_date,
@@ -130,6 +135,7 @@ def approve_next_outreach_draft(
     if not PROSPECT_ID_PATTERN.fullmatch(prospect_id):
         raise OutreachInputError("prospect_id must match prospect-NNN")
 
+    _require_private_git_path(path, label="outreach ledger")
     rows = _load_outreach_rows(path)
     build_outreach_report(rows, as_of=report_date)
     next_draft = _next_status_row(rows, "drafted")
@@ -187,6 +193,7 @@ def record_next_outreach_contact(
     if not PROSPECT_ID_PATTERN.fullmatch(prospect_id):
         raise OutreachInputError("prospect_id must match prospect-NNN")
 
+    _require_private_git_path(path, label="outreach ledger")
     rows = _load_outreach_rows(path)
     build_outreach_report(rows, as_of=report_date)
     next_approved = _next_status_row(rows, "approved")
@@ -247,6 +254,7 @@ def record_next_outreach_follow_up(
     if not PROSPECT_ID_PATTERN.fullmatch(prospect_id):
         raise OutreachInputError("prospect_id must match prospect-NNN")
 
+    _require_private_git_path(path, label="outreach ledger")
     rows = _load_outreach_rows(path)
     build_outreach_report(rows, as_of=report_date)
     next_contacted = _next_contacted_row(rows)
@@ -282,6 +290,72 @@ def record_next_outreach_follow_up(
             "Scout sent nothing and scheduled no additional message."
         ),
     }
+
+
+def _require_private_git_path(path: Path, *, label: str) -> None:
+    protected_path = path.parent.resolve() / path.name
+    if protected_path.is_symlink():
+        raise OutreachInputError(
+            f"{label} must not be a symbolic link for live outreach actions"
+        )
+    try:
+        worktree = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(protected_path.parent),
+                "rev-parse",
+                "--show-toplevel",
+            ],
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+        )
+    except OSError:
+        return
+    if worktree.returncode != 0:
+        return
+
+    worktree_root = Path(worktree.stdout.strip()).resolve()
+    try:
+        relative_path = protected_path.relative_to(worktree_root).as_posix()
+    except ValueError:
+        return
+
+    tracked = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(worktree_root),
+            "ls-files",
+            "--error-unmatch",
+            "--",
+            relative_path,
+        ],
+        check=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    ignored = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(worktree_root),
+            "check-ignore",
+            "--quiet",
+            "--",
+            relative_path,
+        ],
+        check=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    if tracked.returncode == 0 or ignored.returncode != 0:
+        raise OutreachInputError(
+            f"{label} inside a Git worktree must be ignored and untracked "
+            "before live outreach actions"
+        )
 
 
 def _load_outreach_rows(path: Path) -> list[dict[str, str]]:

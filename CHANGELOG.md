@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Refused live outreach review, approval, contact, and follow-up actions when
+  an in-repository ledger or draft file is tracked, not ignored, or symlinked.
+- Kept counts-only template audits available while proving ignored, untracked
+  private bundles still pass review without modifying the ledger.
+- Made new outreach workspaces owner-only with `700` directory and `600` file
+  setup instructions and regression coverage.
 - Independently verified and pinned the `v0.3.37` wheel, source commit
   `d0fd199894b2c7a1ea0b3097a122e37399990568`, and SHA-256
   `b241330e0614cb4759bf764d353cf46871f6957a01f78541f65a9a73bd3b9864`

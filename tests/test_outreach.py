@@ -6,6 +6,7 @@ from datetime import date
 import io
 import json
 from pathlib import Path
+import subprocess
 import sys
 from tempfile import TemporaryDirectory
 import tomllib
@@ -375,6 +376,167 @@ class OutreachReportTests(unittest.TestCase):
             report = json.loads(stdout.getvalue())
             self.assertEqual(report["review"]["prospect_id"], "prospect-001")
             self.assertIn("does not approve", report["action_note"])
+
+    def test_live_actions_require_ignored_untracked_git_paths(self) -> None:
+        with TemporaryDirectory() as tmp:
+            repository = Path(tmp)
+            subprocess.run(
+                ["git", "init", "--quiet", str(repository)],
+                check=True,
+            )
+            row = _row(
+                status="drafted",
+                contacted_on="",
+                next_action_on="",
+                approved_on="",
+            )
+            unignored_ledger = repository / "candidate.csv"
+            tracked_ledger = repository / "tracked.csv"
+            _write_ledger(unignored_ledger, [row])
+            _write_ledger(tracked_ledger, [row])
+            subprocess.run(
+                ["git", "-C", str(repository), "add", "tracked.csv"],
+                check=True,
+            )
+
+            live_actions = (
+                ("review", ["--review-next"]),
+                (
+                    "approval",
+                    [
+                        "--approve-next",
+                        "prospect-001",
+                        "--approved-on",
+                        "2026-07-13",
+                        "--confirm-reviewed",
+                    ],
+                ),
+                (
+                    "contact",
+                    [
+                        "--record-contact",
+                        "prospect-001",
+                        "--contacted-on",
+                        "2026-07-13",
+                        "--confirm-sent",
+                    ],
+                ),
+                (
+                    "follow-up",
+                    [
+                        "--record-follow-up",
+                        "prospect-001",
+                        "--followed-up-on",
+                        "2026-07-13",
+                        "--confirm-follow-up-sent",
+                    ],
+                ),
+            )
+            for action, arguments in live_actions:
+                with self.subTest(path="unignored", action=action):
+                    stderr = io.StringIO()
+                    with redirect_stderr(stderr):
+                        exit_code = main(
+                            [
+                                str(unignored_ledger),
+                                "--as-of",
+                                "2026-07-13",
+                                *arguments,
+                            ]
+                        )
+                    self.assertEqual(exit_code, 2)
+                    self.assertIn(
+                        "must be ignored and untracked before live outreach actions",
+                        stderr.getvalue(),
+                    )
+
+            stderr = io.StringIO()
+            with redirect_stderr(stderr):
+                exit_code = main(
+                    [
+                        str(tracked_ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--review-next",
+                    ]
+                )
+            self.assertEqual(exit_code, 2)
+            self.assertIn(
+                "must be ignored and untracked before live outreach actions",
+                stderr.getvalue(),
+            )
+
+            private_directory = repository / "outreach-private"
+            private_directory.mkdir(mode=0o700)
+            (repository / ".gitignore").write_text(
+                "/outreach-private/\n", encoding="utf-8"
+            )
+            private_ledger = private_directory / "outreach-ledger.csv"
+            private_notes = private_directory / "drafts.md"
+            _write_ledger(private_ledger, [row])
+            private_notes.write_text(
+                "## prospect-001\n\nSelected private message\n",
+                encoding="utf-8",
+            )
+            linked_ledger = private_directory / "linked-ledger.csv"
+            linked_ledger.symlink_to(unignored_ledger)
+            stderr = io.StringIO()
+            with redirect_stderr(stderr):
+                exit_code = main(
+                    [
+                        str(linked_ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--review-next",
+                    ]
+                )
+            self.assertEqual(exit_code, 2)
+            self.assertIn("must not be a symbolic link", stderr.getvalue())
+
+            unignored_notes = repository / "drafts.md"
+            unignored_notes.write_text(
+                "## prospect-001\n\nSelected private message\n",
+                encoding="utf-8",
+            )
+            stderr = io.StringIO()
+            with redirect_stderr(stderr):
+                exit_code = main(
+                    [
+                        str(private_ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--review-next",
+                        "--include-private-draft",
+                        str(unignored_notes),
+                    ]
+                )
+            self.assertEqual(exit_code, 2)
+            self.assertIn(
+                "private draft notes inside a Git worktree must be ignored",
+                stderr.getvalue(),
+            )
+
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        str(private_ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--review-next",
+                        "--include-private-draft",
+                        str(private_notes),
+                        "--format",
+                        "json",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            report = json.loads(stdout.getvalue())
+            self.assertEqual(report["review"]["prospect_id"], "prospect-001")
+            self.assertEqual(
+                report["review"]["private_draft"], "Selected private message"
+            )
 
     def test_review_next_cli_builds_a_read_only_private_review_bundle(self) -> None:
         with TemporaryDirectory() as tmp:

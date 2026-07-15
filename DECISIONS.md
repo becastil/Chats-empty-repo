@@ -936,3 +936,18 @@ exact no-further-contact review check. The preflighted updater therefore moves
 the dogfood workflow, customer example, and contract test together. This makes
 the distributed trust safeguard available in customer CI; it does not prove
 customer activation, outreach attempts, demand, or revenue.
+
+## 2026-07-14: Refuse Live Outreach From Commit-Eligible Files
+
+Git ignore was documented as the privacy boundary for the first outreach batch,
+but the CLI would review or mutate any supplied path, including a tracked ledger
+or an unignored file that could enter a later commit. Live review, approval,
+contact, and follow-up operations now inspect in-repository ledger and draft
+paths before reading private material. A tracked or merely untracked path is
+rejected, as is a symlink that could redirect the read; an ignored, untracked
+private path is accepted. Counts-only auditing remains available for the empty
+tracked example. New workspaces use owner-only
+`700` directory and `600` file modes, and the existing ignored workspace was
+tightened to those modes without changing its contents. This protects the
+execution path for the five prepared drafts; it does not record human approval,
+contact a prospect, create a pilot request, or change revenue evidence.
