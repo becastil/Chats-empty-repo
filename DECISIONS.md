@@ -884,3 +884,16 @@ the private review lifecycle. The preflighted updater therefore advances the
 dogfood workflow, customer example, and contract test together. This closes the
 source-checkout gap for outreach review; it does not prove customer activation,
 demand, or revenue.
+
+## 2026-07-14: Record The First Verified v0.3.36 Distribution Checkpoint
+
+The independently pinned `v0.3.36` release and its rollout through both policy
+gates create a deliberate measurement boundary after the verified `v0.3.35`
+checkpoint. Public release records now reconcile 40 complete releases and 120
+cumulative primary artifact requests, a signed increase of 11. The new release
+accounts for 7 requests, while `v0.3.35` gained 4 wheel requests. Publication,
+independent verification, pinning, and CI activity materially confound all of
+this movement, so it is operational distribution proof rather than buyer
+demand. Public pilot evidence and the aggregate outreach baseline still show
+zero pilot requests, attempts, and revenue. Acquisition therefore remains the
+commercial bottleneck, and human-reviewed outreach remains the next action.
