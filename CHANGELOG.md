@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Refreshed the warning-free commercial evidence checkpoint after the verified
+  `v0.3.39` release and CI rollout.
+- Recorded 6 additional primary artifact requests: 3 on `v0.3.39` and 3 later
+  `v0.3.38` wheel requests, all materially confounded by Repo Scout's own
+  release, verification, and policy-gate activity.
+- Preserved zero pilot requests, zero outreach attempts, and $0 booked revenue,
+  with acquisition still identified as the commercial bottleneck.
 - Independently verified and pinned the `v0.3.39` wheel, source commit
   `86886448f86dbfdc04f03248cc8017a81e688dbe`, and SHA-256
   `9fe9317b0e479e6b874d68c35511785308b373fff10367a76dc3006b5a667e36`

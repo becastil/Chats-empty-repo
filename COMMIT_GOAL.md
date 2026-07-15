@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after advancing CI to verified v0.3.39: 108 / 1,000 (10.8%).
-- Remaining after advancing CI to verified v0.3.39: 892 commits.
+- Progress after the verified v0.3.39 distribution checkpoint: 109 / 1,000 (10.9%).
+- Remaining after the verified v0.3.39 distribution checkpoint: 891 commits.
 
 ## Commit Standard
 
