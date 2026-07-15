@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Independently verified and pinned the `v0.3.41` wheel, source commit
+  `7fa869310fe1dc1f07cff13a7768f36e4654ce22`, and SHA-256
+  `4f6ef0dd1b996b5c0a35c53b4be7e528a53a4548c80dc1333fc7d8010822281e`
+  in both CI gates.
+- Reconciled all four release assets with the manifest, annotated tag, signer
+  workflow, provenance, successful release job, and GitHub-hosted runner.
+- Installed the public wheel without dependencies and proved all command
+  versions, policy activation, guarded outreach outcomes, commercial reporting,
+  and rollout aggregation through the packaged entry points.
+
 ## 0.3.41 - 2026-07-15
 
 - Added guarded `repo-scout-outreach --record-outcome` recording for exact

@@ -1167,3 +1167,19 @@ contact history. Customer and dogfood CI remain pinned to independently
 verified `v0.3.40` until the new artifacts are published and separately
 reconciled. This distributes truthful response recording; it does not contact a
 prospect, create public pilot intake, prove willingness to pay, or book revenue.
+
+## 2026-07-15: Advance Both Policy Gates To Verified v0.3.41
+
+The public `v0.3.41` wheel independently measures to SHA-256
+`4f6ef0dd1b996b5c0a35c53b4be7e528a53a4548c80dc1333fc7d8010822281e`
+and its annotated tag resolves to source commit
+`7fa869310fe1dc1f07cff13a7768f36e4654ce22` on `main`. All four release
+assets match the manifest, and all three distributable artifacts pass strict
+provenance checks for the tag, source commit, pinned signer workflow, and
+GitHub-hosted runner. The successful release job used `ubuntu-24.04`. A clean
+no-dependency wheel install reports `0.3.41` through all seven commands and
+passes policy activation, guarded outreach outcomes, commercial reporting, and
+rollout aggregation through packaged entry points. The preflighted updater
+therefore moves the dogfood workflow, customer example, and contract test
+together. This distributes observed-response recording through customer CI; it
+does not prove customer activation, outreach, demand, or revenue.
