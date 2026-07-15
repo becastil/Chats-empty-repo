@@ -99,9 +99,9 @@ def load_next_outreach_review(
     if type(report_date) is not date:
         raise OutreachInputError("as-of must be a date")
 
-    _require_private_git_path(path, label="outreach ledger")
+    _require_private_live_path(path, label="outreach ledger")
     if private_drafts_path is not None:
-        _require_private_git_path(private_drafts_path, label="private draft notes")
+        _require_private_live_path(private_drafts_path, label="private draft notes")
 
     return build_next_outreach_review(
         _load_outreach_rows(path),
@@ -136,7 +136,7 @@ def approve_next_outreach_draft(
     if not PROSPECT_ID_PATTERN.fullmatch(prospect_id):
         raise OutreachInputError("prospect_id must match prospect-NNN")
 
-    _require_private_git_path(path, label="outreach ledger")
+    _require_private_live_path(path, label="outreach ledger")
     rows = _load_outreach_rows(path)
     build_outreach_report(rows, as_of=report_date)
     next_draft = _next_status_row(rows, "drafted")
@@ -194,7 +194,7 @@ def record_next_outreach_contact(
     if not PROSPECT_ID_PATTERN.fullmatch(prospect_id):
         raise OutreachInputError("prospect_id must match prospect-NNN")
 
-    _require_private_git_path(path, label="outreach ledger")
+    _require_private_live_path(path, label="outreach ledger")
     rows = _load_outreach_rows(path)
     build_outreach_report(rows, as_of=report_date)
     next_approved = _next_status_row(rows, "approved")
@@ -255,7 +255,7 @@ def record_next_outreach_follow_up(
     if not PROSPECT_ID_PATTERN.fullmatch(prospect_id):
         raise OutreachInputError("prospect_id must match prospect-NNN")
 
-    _require_private_git_path(path, label="outreach ledger")
+    _require_private_live_path(path, label="outreach ledger")
     rows = _load_outreach_rows(path)
     build_outreach_report(rows, as_of=report_date)
     next_contacted = _next_contacted_row(rows)
@@ -293,12 +293,13 @@ def record_next_outreach_follow_up(
     }
 
 
-def _require_private_git_path(path: Path, *, label: str) -> None:
+def _require_private_live_path(path: Path, *, label: str) -> None:
     protected_path = path.parent.resolve() / path.name
     if protected_path.is_symlink():
         raise OutreachInputError(
             f"{label} must not be a symbolic link for live outreach actions"
         )
+    _require_owner_only_permissions(protected_path, label=label)
     try:
         worktree = subprocess.run(
             [
@@ -356,6 +357,42 @@ def _require_private_git_path(path: Path, *, label: str) -> None:
         raise OutreachInputError(
             f"{label} inside a Git worktree must be ignored and untracked "
             "before live outreach actions"
+        )
+
+
+def _require_owner_only_permissions(path: Path, *, label: str) -> None:
+    if os.name != "posix":
+        return
+
+    try:
+        path_stat = path.stat()
+    except FileNotFoundError:
+        return
+    except OSError as exc:
+        raise OutreachInputError(
+            f"cannot inspect {label} permissions: {exc}"
+        ) from exc
+
+    if not stat.S_ISREG(path_stat.st_mode):
+        raise OutreachInputError(
+            f"{label} must be a regular file for live outreach actions"
+        )
+    if path_stat.st_mode & (stat.S_IRWXG | stat.S_IRWXO):
+        raise OutreachInputError(
+            f"{label} must use owner-only file permissions (chmod 600) "
+            "before live outreach actions"
+        )
+
+    try:
+        parent_stat = path.parent.stat()
+    except OSError as exc:
+        raise OutreachInputError(
+            f"cannot inspect {label} parent permissions: {exc}"
+        ) from exc
+    if parent_stat.st_mode & (stat.S_IRWXG | stat.S_IRWXO):
+        raise OutreachInputError(
+            f"{label} parent directory must use owner-only permissions "
+            "(chmod 700) before live outreach actions"
         )
 
 

@@ -60,6 +60,25 @@ def verify_outreach_lifecycle(
             approved_on="",
         )
         _write_ledger(handoff_ledger, handoff_draft)
+        handoff_ledger.chmod(0o640)
+        handoff_bytes = handoff_ledger.read_bytes()
+        permissive_handoff = _run(
+            outreach_command,
+            handoff_ledger,
+            as_of="2026-07-01",
+            arguments=("--review-next",),
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(
+            "chmod 600" in permissive_handoff.stderr,
+            "permissive private ledger did not produce its controlled error",
+        )
+        _require(
+            handoff_ledger.read_bytes() == handoff_bytes,
+            "permission rejection modified the private ledger",
+        )
+        checked.append("permissive-ledger-rejected")
         handoff_ledger.chmod(0o600)
 
         handoff_review = _run_arguments(
@@ -136,6 +155,7 @@ def verify_outreach_lifecycle(
             f"## {draft['prospect_id']}\n\nSelected private message\n",
             encoding="utf-8",
         )
+        private_drafts.chmod(0o600)
 
         review = _json_command(
             outreach_command,

@@ -244,10 +244,12 @@ The first five personalized outreach drafts now exist in the ignored private
 workspace. Sixteen fit links were reviewed against narrow, company-controlled
 public evidence because no Sales Intelligence or CRM provider is connected.
 Live review and mutation now reject any in-repository ledger or draft file that
-is tracked, not ignored, or symlinked, and the documented workspace uses owner-only
-directory and file permissions. Counts-only validation of the empty public
-template remains available. This reduces accidental prospect-data disclosure;
-it does not approve a draft, create an attempt, or establish demand.
+is tracked, not ignored, or symlinked, and the documented workspace uses
+owner-only directory and file permissions. POSIX live actions enforce that
+boundary by rejecting group/world-accessible files and immediate parent
+directories before reading private material. Counts-only validation of the
+empty public template remains available. This reduces accidental prospect-data
+disclosure; it does not approve a draft, create an attempt, or establish demand.
 The committed schema-3 baseline contains only aggregate counts. All five remain
 `drafted`: approved messages, attempted outreach, replies, pilot requests, and
 revenue are still zero until a human reviews and sends each message through its

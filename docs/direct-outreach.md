@@ -83,10 +83,13 @@ chmod 600 outreach-private/drafts.md
 
 The destination directory is ignored by Git. Live review, approval, contact,
 and follow-up actions refuse any in-repository ledger or draft file that is
-tracked, not ignored, or a symbolic link. The counts-only audit remains
-available for the empty tracked example. Use an alias such as `prospect-001`;
-do not store names, email addresses, message bodies, source code, or
-confidential company details in this public repository.
+tracked, not ignored, or a symbolic link. On POSIX systems, those actions also
+refuse a ledger or draft file with group/world permissions, or one stored in a
+group/world-accessible parent directory; use `600` for files and `700` for the
+workspace. The counts-only audit remains available for the empty tracked
+example. Use an alias such as `prospect-001`; do not store names, email
+addresses, message bodies, source code, or confidential company details in
+this public repository.
 
 Separate fit-signal keys with semicolons. Use `warm-intro` or
 `published-business` as the channel. Allowed statuses are `researched`,

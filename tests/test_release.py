@@ -151,6 +151,7 @@ class ReleaseManifestTests(unittest.TestCase):
         self.assertEqual(
             checked,
             (
+                "permissive-ledger-rejected",
                 "copy-ready-handoffs",
                 "draft-reviewed",
                 "draft-ledger-drift-rejected",

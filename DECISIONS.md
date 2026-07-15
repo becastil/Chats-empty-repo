@@ -965,3 +965,18 @@ including a path with spaces. JSON receipts remain path-free, and every
 approval, initial send, and follow-up still requires an explicit human action
 and confirmation. This reduces execution errors for the prepared acquisition
 test without creating an attempt, lead, pilot request, payment, or revenue.
+
+## 2026-07-15: Enforce The Documented Private File Modes
+
+The outreach playbook created its ignored workspace with `700` directory and
+`600` file modes, but live commands only enforced Git and symlink boundaries.
+On POSIX, every live review or mutation now rejects a ledger or draft file with
+group/world permission bits and rejects an immediate parent directory with the
+same exposure before reading private content. Missing paths retain their
+existing controlled read errors, non-POSIX platforms retain the Git boundary,
+and counts-only audits remain available for the tracked public template. The
+installed lifecycle smoke proves a permissive ledger fails without mutation
+before continuing through a correctly protected synthetic workflow. The real
+ignored workspace already satisfies the enforced modes, so this hardens the
+five prepared attempts without approving or sending them and without creating
+demand or revenue evidence.

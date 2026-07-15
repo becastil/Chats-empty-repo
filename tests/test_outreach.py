@@ -5,6 +5,7 @@ import csv
 from datetime import date
 import io
 import json
+import os
 from pathlib import Path
 import shlex
 import subprocess
@@ -65,6 +66,8 @@ def _write_ledger(path: Path, rows: list[dict[str, str]]) -> None:
         )
         writer.writeheader()
         writer.writerows(rows)
+    if os.name == "posix":
+        path.chmod(0o600)
 
 
 class OutreachReportTests(unittest.TestCase):
@@ -357,6 +360,8 @@ class OutreachReportTests(unittest.TestCase):
                 + "\n",
                 encoding="utf-8",
             )
+            if os.name == "posix":
+                ledger.chmod(0o600)
             before = ledger.read_bytes()
             stdout = io.StringIO()
 
@@ -479,6 +484,58 @@ class OutreachReportTests(unittest.TestCase):
                 "## prospect-001\n\nSelected private message\n",
                 encoding="utf-8",
             )
+            if os.name == "posix":
+                private_notes.chmod(0o600)
+
+                private_ledger.chmod(0o640)
+                before = private_ledger.read_bytes()
+                stderr = io.StringIO()
+                with redirect_stderr(stderr):
+                    exit_code = main(
+                        [
+                            str(private_ledger),
+                            "--as-of",
+                            "2026-07-13",
+                            "--review-next",
+                        ]
+                    )
+                self.assertEqual(exit_code, 2)
+                self.assertEqual(private_ledger.read_bytes(), before)
+                self.assertIn("chmod 600", stderr.getvalue())
+                private_ledger.chmod(0o600)
+
+                private_directory.chmod(0o750)
+                stderr = io.StringIO()
+                with redirect_stderr(stderr):
+                    exit_code = main(
+                        [
+                            str(private_ledger),
+                            "--as-of",
+                            "2026-07-13",
+                            "--review-next",
+                        ]
+                    )
+                self.assertEqual(exit_code, 2)
+                self.assertIn("chmod 700", stderr.getvalue())
+                private_directory.chmod(0o700)
+
+                private_notes.chmod(0o644)
+                stderr = io.StringIO()
+                with redirect_stderr(stderr):
+                    exit_code = main(
+                        [
+                            str(private_ledger),
+                            "--as-of",
+                            "2026-07-13",
+                            "--review-next",
+                            "--include-private-draft",
+                            str(private_notes),
+                        ]
+                    )
+                self.assertEqual(exit_code, 2)
+                self.assertIn("chmod 600", stderr.getvalue())
+                private_notes.chmod(0o600)
+
             linked_ledger = private_directory / "linked-ledger.csv"
             linked_ledger.symlink_to(unignored_ledger)
             stderr = io.StringIO()
@@ -499,6 +556,8 @@ class OutreachReportTests(unittest.TestCase):
                 "## prospect-001\n\nSelected private message\n",
                 encoding="utf-8",
             )
+            if os.name == "posix":
+                unignored_notes.chmod(0o600)
             stderr = io.StringIO()
             with redirect_stderr(stderr):
                 exit_code = main(
@@ -555,6 +614,8 @@ class OutreachReportTests(unittest.TestCase):
                 "## prospect-001\n\nSelected private message\n",
                 encoding="utf-8",
             )
+            if os.name == "posix":
+                notes.chmod(0o600)
             before = ledger.read_bytes()
             stdout = io.StringIO()
 
@@ -627,6 +688,8 @@ class OutreachReportTests(unittest.TestCase):
             for content, expected in cases:
                 with self.subTest(expected=expected):
                     notes.write_text(content, encoding="utf-8")
+                    if os.name == "posix":
+                        notes.chmod(0o600)
                     stderr = io.StringIO()
                     with redirect_stderr(stderr):
                         exit_code = main(
@@ -663,6 +726,8 @@ class OutreachReportTests(unittest.TestCase):
                 "## prospect-999\n\nUnknown private message\n",
                 encoding="utf-8",
             )
+            if os.name == "posix":
+                notes.chmod(0o600)
             before = ledger.read_bytes()
             stderr = io.StringIO()
 
@@ -1692,6 +1757,8 @@ class OutreachReportTests(unittest.TestCase):
                 + "\n",
                 encoding="utf-8",
             )
+            if os.name == "posix":
+                ledger.chmod(0o644)
             stdout = io.StringIO()
             with redirect_stdout(stdout):
                 exit_code = main(

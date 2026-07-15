@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Refused live outreach review, approval, contact, and follow-up actions on
+  POSIX when a private ledger, draft file, or immediate parent directory grants
+  group or world access.
+- Kept counts-only audits available for public templates while proving
+  permissive private ledgers fail without mutation through the installed
+  command lifecycle.
 - Emitted complete shell-quoted commands from private outreach review,
   approval, and contact text output, carrying the exact alias, action date,
   confirmation flag, and ledger path into the next human-controlled step.
