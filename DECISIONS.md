@@ -1086,3 +1086,15 @@ proof rather than buyer demand. Public pilot evidence and the aggregate
 outreach baseline still show zero pilot requests, attempts, and revenue.
 Acquisition therefore remains the commercial bottleneck, and human-reviewed
 outreach remains the next action.
+
+## 2026-07-15: Terminate Completed Review Queues Truthfully
+
+The guarded decline path always emitted a `--review-next` handoff, even after a
+human declined the only remaining draft. That command could not change state,
+but it falsely implied that the bounded queue still contained work. Decline
+receipt schema 2 therefore adds only a privacy-safe remaining-draft count. Text
+output emits the next review command while the count is positive and reports a
+completed queue without a command at zero. The installed lifecycle smoke now
+uses the one-draft terminal branch. This removes a misleading acquisition
+handoff without reviewing a real draft, exposing a prospect, sending outreach,
+creating a pilot request, or booking revenue.

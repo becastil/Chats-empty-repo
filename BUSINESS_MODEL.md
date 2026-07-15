@@ -316,10 +316,12 @@ review, sending a message, or treating operator activity as demand.
 When the human instead decides a draft must not be sent, guarded
 `--decline-next` requires the exact same next alias and an explicit no-send
 confirmation. It atomically changes only status to `review-declined`, preserves
-the private file boundary, emits the next review command, and records no action
-date. The aggregate report counts this as closed before contact and never as an
-attempt. This keeps the acquisition queue moving without converting negative
-review judgment into an approval or a false outreach event.
+the private file boundary, reports the privacy-safe remaining-draft count, and
+records no action date. It emits the next review command only while another
+draft remains and ends truthfully when the bounded queue reaches zero. The
+aggregate report counts this as closed before contact and never as an attempt.
+This keeps the acquisition queue moving without converting negative review
+judgment into an approval or a false outreach event.
 
 After a human sends that approved message, guarded `--record-contact` records
 the exact next approved alias with an explicit send date and confirmation flag.

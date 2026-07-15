@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after the verified v0.3.39 distribution checkpoint: 109 / 1,000 (10.9%).
-- Remaining after the verified v0.3.39 distribution checkpoint: 891 commits.
+- Progress after terminating completed review queues truthfully: 110 / 1,000 (11.0%).
+- Remaining after terminating completed review queues truthfully: 890 commits.
 
 ## Commit Standard
 

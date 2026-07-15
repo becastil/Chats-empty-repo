@@ -973,16 +973,53 @@ class OutreachReportTests(unittest.TestCase):
             self.assertEqual(review["review"]["prospect_id"], "prospect-002")
 
             receipt = json.loads(stdout.getvalue())
+            self.assertEqual(receipt["schema_version"], 2)
             self.assertTrue(receipt["private_output"])
             self.assertTrue(receipt["human_no_send_confirmed"])
+            self.assertEqual(receipt["queue"], {"drafts_remaining": 1})
             self.assertEqual(receipt["decline"]["status"], "review-declined")
             self.assertNotIn("approved_on", json.dumps(receipt))
             self.assertNotIn("contacted_on", json.dumps(receipt))
             self.assertNotIn("evidence.example", json.dumps(receipt))
             self.assertIn("No outreach was approved or sent", receipt["action_note"])
             decline_text = format_outreach_decline(receipt, ledger=ledger)
+            self.assertIn("Drafts remaining: 1", decline_text)
             self.assertIn("--review-next", decline_text)
             self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
+
+    def test_decline_final_draft_ends_the_review_queue(self) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            _write_ledger(
+                ledger,
+                [
+                    _row(
+                        status="drafted",
+                        contacted_on="",
+                        next_action_on="",
+                        approved_on="",
+                    )
+                ],
+            )
+            stdout = io.StringIO()
+
+            with redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--decline-next",
+                        "prospect-001",
+                        "--confirm-not-send",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            text = stdout.getvalue()
+            self.assertIn("Drafts remaining: 0", text)
+            self.assertIn("Review queue complete", text)
+            self.assertNotIn("--review-next", text)
 
     def test_decline_next_rejects_unsafe_transitions_without_mutation(self) -> None:
         with TemporaryDirectory() as tmp:

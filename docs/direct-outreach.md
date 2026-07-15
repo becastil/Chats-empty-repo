@@ -185,9 +185,11 @@ complete ledger before and after the transition, preserves file permissions,
 and atomically changes only `status` to `review-declined`. Missing confirmation,
 out-of-order aliases, invalid ledger state, or write failures leave the file
 unchanged. The private receipt contains no evidence URL or persisted decision
-date and ends with a complete command for reviewing the next draft. This status
-counts as closed but never as attempted outreach; it does not approve, send,
-schedule, or record contact.
+date and reports only the number of drafts remaining. While that count is
+positive, it ends with a complete command for reviewing the next draft; at zero,
+it reports that the bounded review queue is complete and emits no dead handoff.
+This status counts as closed but never as attempted outreach; it does not
+approve, send, schedule, or record contact.
 
 After a human completes every displayed check, record that decision for the
 same alias:

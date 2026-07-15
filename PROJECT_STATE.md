@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 109 of 1,000, with 891 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 110 of 1,000, with 890 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -192,6 +192,8 @@ The delivery goal is 1,000 meaningful commits. This update is commit 109 of 1,00
   draft without approval, contact dates, or attempted-prospect inflation.
 - Guarded `--decline-next` recording that requires the exact next alias and an
   explicit human no-send confirmation before atomically changing only status.
+- Schema-2 decline receipts that report the privacy-safe remaining-draft count,
+  advance only nonempty queues, and terminate cleanly when no draft remains.
 - Full-ledger preflight and postflight validation plus permission-preserving,
   atomic approval writes that never create contact or follow-up dates.
 - Guarded `--record-contact` recording that requires the exact next approved

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Made guarded decline receipts report the privacy-safe number of drafts still
+  awaiting review and stop emitting a nonexistent next-review command at zero.
+- Advanced the decline receipt to schema 2 and made the installed lifecycle
+  smoke prove the one-draft review queue terminates truthfully.
 - Refreshed the warning-free commercial evidence checkpoint after the verified
   `v0.3.39` release and CI rollout.
 - Recorded 6 additional primary artifact requests: 3 on `v0.3.39` and 3 later

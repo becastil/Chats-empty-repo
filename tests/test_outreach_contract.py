@@ -62,6 +62,8 @@ class DirectOutreachContractTests(unittest.TestCase):
             "counts as closed but never as attempted outreach",
             normalized_playbook,
         )
+        self.assertIn("number of drafts remaining", normalized_playbook)
+        self.assertIn("emits no dead handoff", normalized_playbook)
         self.assertIn(
             "atomically changes only `status` and `approved_on`", playbook
         )

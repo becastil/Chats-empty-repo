@@ -21,7 +21,7 @@ from urllib.parse import urlsplit
 SCHEMA_VERSION = 6
 REVIEW_SCHEMA_VERSION = 3
 APPROVAL_SCHEMA_VERSION = 1
-DECLINE_SCHEMA_VERSION = 1
+DECLINE_SCHEMA_VERSION = 2
 CONTACT_SCHEMA_VERSION = 1
 FOLLOW_UP_SCHEMA_VERSION = 1
 MAX_PROSPECTS = 10
@@ -212,13 +212,16 @@ def decline_next_outreach_draft(
             row["status"] = "review-declined"
             break
 
-    build_outreach_report(updated_rows, as_of=report_date)
+    updated_report = build_outreach_report(updated_rows, as_of=report_date)
     _write_outreach_rows(path, updated_rows)
     return {
         "schema_version": DECLINE_SCHEMA_VERSION,
         "as_of": report_date.isoformat(),
         "private_output": True,
         "human_no_send_confirmed": True,
+        "queue": {
+            "drafts_remaining": updated_report["summary"]["drafted"],
+        },
         "decline": {
             "prospect_id": prospect_id,
             "status": "review-declined",
@@ -1047,6 +1050,7 @@ def format_outreach_decline(
     decline_report: dict[str, Any], *, ledger: Path
 ) -> str:
     decline = decline_report["decline"]
+    drafts_remaining = decline_report["queue"]["drafts_remaining"]
     lines = [
         "Repo Scout outreach review decline",
         f"As of: {decline_report['as_of']}",
@@ -1054,14 +1058,24 @@ def format_outreach_decline(
         f"Status: {decline['status']}",
         "Private ledger updated atomically.",
         f"Boundary: {decline_report['action_note']}",
-        "Next: review the next drafted prospect:",
-        _format_outreach_command(
-            ledger,
-            "--as-of",
-            decline_report["as_of"],
-            "--review-next",
-        ),
+        f"Drafts remaining: {drafts_remaining}",
     ]
+    if drafts_remaining:
+        lines.extend(
+            [
+                "Next: review the next drafted prospect:",
+                _format_outreach_command(
+                    ledger,
+                    "--as-of",
+                    decline_report["as_of"],
+                    "--review-next",
+                ),
+            ]
+        )
+    else:
+        lines.append(
+            "Review queue complete: no drafted prospects remain for human review."
+        )
     return "\n".join(lines)
 
 

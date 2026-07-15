@@ -172,10 +172,11 @@ def verify_outreach_lifecycle(
             decline_arguments,
             environment=environment,
         )
-        _handoff_arguments(
-            decline_receipt.stdout,
-            action="--review-next",
-            ledger=decline_ledger,
+        _require(
+            "Drafts remaining: 0" in decline_receipt.stdout
+            and "Review queue complete" in decline_receipt.stdout
+            and "--review-next" not in decline_receipt.stdout,
+            "final decline emitted a nonexistent next-review handoff",
         )
         declined_row = _read_row(decline_ledger)
         _require(
