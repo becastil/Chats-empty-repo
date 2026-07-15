@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.40 - 2026-07-15
+
 - Made guarded decline receipts report the privacy-safe number of drafts still
   awaiting review and stop emitting a nonexistent next-review command at zero.
 - Advanced the decline receipt to schema 2 and made the installed lifecycle

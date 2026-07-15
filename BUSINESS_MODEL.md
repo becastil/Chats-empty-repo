@@ -264,6 +264,13 @@ contact dates, or attempted-prospect inflation. This makes negative review
 decisions usable from the distributed operator path; it does not make a real
 decision, contact a prospect, establish demand, or book revenue.
 
+Public `v0.3.40` packages truthful terminal receipts for that no-send branch.
+Decline schema 2 reports only the remaining draft count, advances nonempty
+queues, and emits no review command when the bounded queue reaches zero. The
+installed lifecycle smoke proves the one-draft terminal path. This removes a
+misleading operator handoff; it does not make a review decision, contact a
+prospect, establish demand, or book revenue.
+
 The first five personalized outreach drafts now exist in the ignored private
 workspace. Sixteen fit links were reviewed against narrow, company-controlled
 public evidence because no Sales Intelligence or CRM provider is connected.

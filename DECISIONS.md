@@ -1098,3 +1098,16 @@ completed queue without a command at zero. The installed lifecycle smoke now
 uses the one-draft terminal branch. This removes a misleading acquisition
 handoff without reviewing a real draft, exposing a prospect, sending outreach,
 creating a pilot request, or booking revenue.
+
+## 2026-07-15: Release Truthful Terminal Review Receipts
+
+The prepared acquisition workflow should not require a source checkout to end
+a review queue accurately. Version `0.3.40` advances package, runtime, website,
+installation, fixture, and release-test identities together so decline receipt
+schema 2 and its terminal text behavior are available from attested artifacts.
+The installed lifecycle smoke declines its only synthetic draft and proves the
+receipt reports zero remaining drafts without emitting `--review-next`.
+Customer and dogfood CI remain pinned to independently verified `v0.3.39` until
+the new artifacts are published and separately reconciled. This distributes an
+honest operator handoff; it does not review a real draft, contact a prospect,
+validate demand, or book revenue.

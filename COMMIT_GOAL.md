@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after terminating completed review queues truthfully: 110 / 1,000 (11.0%).
-- Remaining after terminating completed review queues truthfully: 890 commits.
+- Progress after preparing the v0.3.40 terminal-receipt release: 111 / 1,000 (11.1%).
+- Remaining after preparing the v0.3.40 terminal-receipt release: 889 commits.
 
 ## Commit Standard
 
