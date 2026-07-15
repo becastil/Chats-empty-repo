@@ -11,8 +11,9 @@
   decision through guarded `--approve-next` or `--decline-next`, send only
   approved messages one at a time, record each human send through guarded
   `--record-contact`, then record the one human-sent, day-seven follow-up through
-  guarded `--record-follow-up`. Do not add another acquisition asset before
-  executing this bounded review queue.
+  guarded `--record-follow-up`. Record any human-observed reply, pilot request,
+  rejection, or opt-out through guarded `--record-outcome`. Do not add another
+  acquisition asset before executing this bounded review queue.
 - Collect the first three public pilot requests, work the prioritized sales queue, and compare readiness and purchase criteria by source.
 - Add a private pilot contact path after public intake validates demand.
 

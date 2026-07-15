@@ -259,6 +259,31 @@ receipt omits explicit approval, contact, and follow-up fields; keep it private
 because it includes the alias and `as_of` context. Repo Scout sends nothing and
 schedules no additional message.
 
+When a human observes a reply, pilot request, rejection, or opt-out after the
+initial contact or follow-up, stop the cadence without hand-editing the ledger:
+
+```bash
+repo-scout-outreach outreach-private/outreach-ledger.csv \
+  --as-of "$(date +%F)" \
+  --record-outcome prospect-001 \
+  --outcome pilot-requested \
+  --confirm-outcome-observed
+```
+
+`--record-outcome` accepts an exact contacted or followed-up alias because
+responses can arrive out of send order. Supported outcomes are `replied`,
+`pilot-requested`, `not-a-fit`, and `do-not-contact`; a generic `replied` row
+may later move to one of the three specific outcomes after a human observes it.
+The guarded action requires explicit confirmation, validates the complete
+ledger before and after the transition, preserves approval, contact, and
+follow-up history, and atomically changes only `status` while clearing
+`next_action_on`. Invalid aliases, pre-contact rows, duplicate or terminal
+outcomes, unrelated action flags, and write failures leave the ledger unchanged.
+The private receipt omits evidence and action dates. Repo Scout sends nothing
+and schedules no further message. A private `pilot-requested` status is an
+operator signal only; ask the prospect to submit the public pilot intake before
+counting demand, payment, or revenue.
+
 The command requires at least three recognized fit signals and one secure
 source link for each, accepts only `prospect-NNN` aliases, caps the batch at 10,
 schedules a contacted prospect's single follow-up exactly seven days later,

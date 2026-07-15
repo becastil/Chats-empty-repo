@@ -358,6 +358,23 @@ The action selects the earliest due contact, rejects an early or future send,
 retains approval and initial-contact evidence, and clears `next_action_on` so no
 second follow-up is scheduled. Repo Scout still sends nothing.
 
+When a human observes a reply or stop condition, record the exact alias and
+outcome without hand-editing the private ledger:
+
+```bash
+repo-scout-outreach outreach-private/outreach-ledger.csv \
+  --as-of "$(date +%F)" \
+  --record-outcome prospect-001 \
+  --outcome pilot-requested \
+  --confirm-outcome-observed
+```
+
+The guarded action accepts `replied`, `pilot-requested`, `not-a-fit`, or
+`do-not-contact` after contact, preserves approval and send history, and clears
+any pending follow-up. It sends nothing. Private outreach outcomes remain
+operator evidence; only public pilot intake and paid funnel stages count as
+demand or revenue.
+
 The reporter enforces the 10-prospect experiment, three-signal qualification,
 one private HTTPS evidence link per signal, permitted contact channels, one
 seven-day follow-up, and opt-out stop states. Schema-3 reports separate

@@ -85,6 +85,16 @@ class DirectOutreachContractTests(unittest.TestCase):
         self.assertIn(
             "second follow-up is not scheduled", " ".join(playbook.split())
         )
+        self.assertIn("--record-outcome", playbook)
+        self.assertIn("--confirm-outcome-observed", playbook)
+        self.assertIn(
+            "atomically changes only `status` while clearing `next_action_on`",
+            normalized_playbook,
+        )
+        self.assertIn(
+            "public pilot intake before counting demand, payment, or revenue",
+            normalized_playbook,
+        )
         self.assertIn("Stop immediately after an opt-out", playbook)
         self.assertIn("reply, page visit, or release request", playbook)
         self.assertIn("do not count", playbook.lower())

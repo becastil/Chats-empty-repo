@@ -1141,3 +1141,17 @@ proof rather than buyer demand. Public pilot evidence and the aggregate
 outreach baseline still show zero pilot requests, attempts, and revenue.
 Acquisition therefore remains the commercial bottleneck, and human-reviewed
 outreach remains the next action.
+
+## 2026-07-15: Guard Post-Contact Outcome Recording
+
+Responses can arrive in a different order from initial sends, so outcome
+recording selects an exact private alias rather than imposing the deterministic
+send or follow-up queue. `--record-outcome` accepts `replied`,
+`pilot-requested`, `not-a-fit`, or `do-not-contact` only from contacted,
+followed-up, or generic-reply states and requires explicit human-observation
+confirmation. It validates the full ledger before and after, preserves
+approval, contact, and follow-up history, atomically clears `next_action_on`,
+and leaves rejected actions mutation-free. A generic reply may later become a
+specific pilot request, rejection, or opt-out. Receipts remain private and omit
+dates and evidence. A private pilot-requested status does not enter the public
+pilot funnel or book revenue; it prompts the operator to request public intake.

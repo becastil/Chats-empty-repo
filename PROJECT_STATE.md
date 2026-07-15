@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 113 of 1,000, with 887 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 114 of 1,000, with 886 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -204,6 +204,11 @@ The delivery goal is 1,000 meaningful commits. This update is commit 113 of 1,00
   after a human confirms the one allowed follow-up was already sent.
 - Early, future, out-of-order, and repeated follow-up prevention with retained
   approval/contact evidence and no remaining next action.
+- Guarded exact-alias outcome recording after contact or follow-up for replies,
+  pilot requests, rejections, and opt-outs, with human-observation confirmation,
+  preserved contact history, and no remaining follow-up action.
+- Safe refinement of generic replies into specific terminal outcomes without
+  converting private outreach status into public demand or revenue evidence.
 - Complete shell-quoted private text handoffs from review through approval,
   contact, and exact-due-date follow-up recording, with installed-command proof
   that emitted commands preserve aliases, dates, confirmation flags, and ledger

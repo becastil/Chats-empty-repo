@@ -581,6 +581,88 @@ def verify_outreach_lifecycle(
         )
         checked.append("duplicate-follow-up-rejected")
 
+        unconfirmed_outcome = _run(
+            outreach_command,
+            ledger,
+            as_of="2026-07-11",
+            arguments=(
+                "--record-outcome",
+                draft["prospect_id"],
+                "--outcome",
+                "pilot-requested",
+            ),
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(
+            "requires --confirm-outcome-observed" in unconfirmed_outcome.stderr,
+            "unconfirmed outcome did not produce its controlled error",
+        )
+        _require(
+            ledger.read_bytes() == followed_bytes,
+            "unconfirmed outcome modified the ledger",
+        )
+        checked.append("unconfirmed-outcome-rejected")
+
+        outcome = _json_command(
+            outreach_command,
+            ledger,
+            as_of="2026-07-11",
+            arguments=(
+                "--record-outcome",
+                draft["prospect_id"],
+                "--outcome",
+                "pilot-requested",
+                "--confirm-outcome-observed",
+            ),
+            environment=environment,
+        )
+        _require(
+            outcome.get("human_outcome_confirmed") is True,
+            "outcome confirmation is missing",
+        )
+        _require(
+            outcome.get("outcome", {}).get("status") == "pilot-requested",
+            "pilot-requested outcome was not recorded",
+        )
+        _require_private_values_absent(
+            outcome,
+            (
+                "2026-07-01",
+                "2026-07-03",
+                "2026-07-10",
+                "https://evidence.example",
+            ),
+            context="outcome receipt",
+        )
+        outcome_row = _read_row(ledger)
+        _require(
+            outcome_row["status"] == "pilot-requested"
+            and not outcome_row["next_action_on"],
+            "outcome did not stop the follow-up cadence",
+        )
+        _require(
+            outcome_row["approved_on"] == "2026-07-01"
+            and outcome_row["contacted_on"] == "2026-07-03"
+            and outcome_row["followed_up_on"] == "2026-07-10",
+            "outcome discarded approval or contact history",
+        )
+        outcome_report = _report(
+            outreach_command,
+            ledger,
+            as_of="2026-07-11",
+            environment=environment,
+        )
+        _require(
+            outcome_report.get("summary", {}).get("pilot_requested") == 1,
+            "pilot-requested outcome was not counted",
+        )
+        _require(
+            outcome_report.get("summary", {}).get("attempted_prospects") == 1,
+            "outcome inflated the attempted-prospect count",
+        )
+        checked.append("pilot-outcome-recorded")
+
         _write_ledger(ledger, _row(approved_on=""))
         missing_approval = _run(
             outreach_command,

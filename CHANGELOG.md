@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added guarded `repo-scout-outreach --record-outcome` recording for exact
+  contacted aliases after a human observes a reply, pilot request, rejection,
+  or opt-out.
+- Allowed asynchronous outcomes after initial contact or follow-up, plus later
+  refinement of a generic reply, while atomically preserving contact history
+  and clearing any pending follow-up.
+- Made unconfirmed and invalid outcome transitions mutation-free and extended
+  the release smoke through a private pilot-requested outcome without treating
+  it as public demand or revenue evidence.
 - Refreshed the warning-free commercial evidence checkpoint after the verified
   `v0.3.40` release and CI rollout.
 - Recorded 6 additional primary artifact requests: 3 on `v0.3.40` and 3 later

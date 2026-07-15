@@ -350,6 +350,16 @@ or revenue event. The contact receipt's next command uses the calculated due
 date for both reporting and follow-up recording, avoiding calendar drift while
 leaving the actual send and confirmation under human control.
 
+When a response or stop condition arrives, guarded `--record-outcome` records
+the exact alias because replies can arrive out of send order. It accepts
+`replied`, `pilot-requested`, `not-a-fit`, or `do-not-contact` only after contact,
+requires explicit confirmation that a human observed the outcome, preserves
+approval and contact history, and clears any pending follow-up. A generic reply
+may later be refined to a specific terminal outcome. The action sends nothing
+and schedules nothing. Private `pilot-requested` is an operator signal, not a
+public funnel event; the prospect must still submit pilot intake, and only paid
+stages count as revenue.
+
 Rollout bundles carry a stable, non-sensitive metadata contract so a pilot lead
 can summarize bundle-reported readiness, policy failures, violations, worktree
 state, and attention across repositories without sending source code to Repo

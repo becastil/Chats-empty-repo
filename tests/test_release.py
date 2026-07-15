@@ -162,6 +162,8 @@ class ReleaseManifestTests(unittest.TestCase):
                 "contact-recorded",
                 "follow-up-recorded",
                 "duplicate-follow-up-rejected",
+                "unconfirmed-outcome-rejected",
+                "pilot-outcome-recorded",
                 "missing-approval-rejected",
                 "extra-column-rejected",
             ),
