@@ -1012,3 +1012,17 @@ entry points. The preflighted updater therefore moves the dogfood workflow,
 customer example, and contract test together. This distributes the private
 outreach execution boundary through customer CI; it does not prove customer
 activation, human approval, contact attempts, demand, or revenue.
+
+## 2026-07-15: Record The First Verified v0.3.38 Distribution Checkpoint
+
+The independently pinned `v0.3.38` release and its rollout through both policy
+gates create a deliberate measurement boundary after the verified `v0.3.36`
+checkpoint. Public release records now reconcile 42 complete releases and 141
+cumulative primary artifact requests, a signed increase of 21. Releases
+`v0.3.38` and `v0.3.37` account for 5 and 12 requests respectively, while
+`v0.3.36` gained 4 wheel requests. Publication, independent verification,
+pinning, and CI activity materially confound all of this movement, so it is
+operational distribution proof rather than buyer demand. Public pilot evidence
+and the aggregate outreach baseline still show zero pilot requests, attempts,
+and revenue. Acquisition therefore remains the commercial bottleneck, and
+human-reviewed outreach remains the next action.
