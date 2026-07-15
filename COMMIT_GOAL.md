@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after guarded outreach outcome recording: 114 / 1,000 (11.4%).
-- Remaining after guarded outreach outcome recording: 886 commits.
+- Progress after preparing the v0.3.41 outcome release: 115 / 1,000 (11.5%).
+- Remaining after preparing the v0.3.41 outcome release: 885 commits.
 
 ## Commit Standard
 

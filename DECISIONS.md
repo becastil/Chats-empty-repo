@@ -1155,3 +1155,15 @@ and leaves rejected actions mutation-free. A generic reply may later become a
 specific pilot request, rejection, or opt-out. Receipts remain private and omit
 dates and evidence. A private pilot-requested status does not enter the public
 pilot funnel or book revenue; it prompts the operator to request public intake.
+
+## 2026-07-15: Release Guarded Outreach Outcomes
+
+The observed-response branch should work from an attested install instead of a
+maintainer checkout. Version `0.3.41` advances package, runtime, website,
+installation, fixture, and release-test identities together. Its installed
+lifecycle smoke proves missing human confirmation cannot mutate the ledger and
+then records one synthetic private pilot request while preserving approval and
+contact history. Customer and dogfood CI remain pinned to independently
+verified `v0.3.40` until the new artifacts are published and separately
+reconciled. This distributes truthful response recording; it does not contact a
+prospect, create public pilot intake, prove willingness to pay, or book revenue.

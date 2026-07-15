@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.41 - 2026-07-15
+
 - Added guarded `repo-scout-outreach --record-outcome` recording for exact
   contacted aliases after a human observes a reply, pilot request, rejection,
   or opt-out.

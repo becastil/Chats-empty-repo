@@ -271,6 +271,13 @@ installed lifecycle smoke proves the one-draft terminal path. This removes a
 misleading operator handoff; it does not make a review decision, contact a
 prospect, establish demand, or book revenue.
 
+Public `v0.3.41` packages guarded observed-outcome recording after contact or
+follow-up. The installed lifecycle smoke proves an unconfirmed write cannot
+change the private ledger, then records one synthetic `pilot-requested` outcome
+through the installed command while retaining prior contact evidence. This
+closes the operator feedback loop without inflating the public funnel: a private
+outcome is not demand until public intake and is not revenue until payment.
+
 The first five personalized outreach drafts now exist in the ignored private
 workspace. Sixteen fit links were reviewed against narrow, company-controlled
 public evidence because no Sales Intelligence or CRM provider is connected.
