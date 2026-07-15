@@ -1043,3 +1043,16 @@ to the next review. A declined draft counts as closed but never attempted and
 has no approval, contact, follow-up, or next-action date. This removes pressure
 toward approval and makes negative review evidence operable; it does not review
 a real draft, send outreach, create a pilot request, or book revenue.
+
+## 2026-07-15: Release The Guarded No-Send Decision
+
+The schema-6 `review-declined` transition is operationally useful only when the
+operator can install the same guarded command that the source suite exercises.
+Version `0.3.39` advances package, runtime, website, installation, fixture, and
+release-test identities together. Its installed outreach smoke executes the
+negative review branch and proves a human-confirmed decline closes an unsuitable
+draft without creating approval, contact, follow-up, next-action, or attempt
+evidence. Customer and dogfood CI remain pinned to independently verified
+`v0.3.38` until the new artifacts are published and separately reconciled. This
+release distributes a safer acquisition decision; it does not make that human
+decision, contact a prospect, validate demand, or book revenue.

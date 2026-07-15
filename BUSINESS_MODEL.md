@@ -256,6 +256,14 @@ wheel smoke rejects permissive paths without mutation and executes every emitted
 handoff. This distributes a safer acquisition workflow; it does not review or
 send the five drafts and does not establish demand or revenue.
 
+Public `v0.3.39` packages the guarded human no-send branch for the outreach
+queue. An unsuitable draft can now move to `review-declined` only after exact
+alias matching, private-ledger validation, and explicit human confirmation;
+the installed smoke proves that decision closes the draft without approval,
+contact dates, or attempted-prospect inflation. This makes negative review
+decisions usable from the distributed operator path; it does not make a real
+decision, contact a prospect, establish demand, or book revenue.
+
 The first five personalized outreach drafts now exist in the ignored private
 workspace. Sixteen fit links were reviewed against narrow, company-controlled
 public evidence because no Sales Intelligence or CRM provider is connected.

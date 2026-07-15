@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after adding guarded outreach decline decisions: 106 / 1,000 (10.6%).
-- Remaining after adding guarded outreach decline decisions: 894 commits.
+- Progress after preparing the v0.3.39 no-send release: 107 / 1,000 (10.7%).
+- Remaining after preparing the v0.3.39 no-send release: 893 commits.
 
 ## Commit Standard
 

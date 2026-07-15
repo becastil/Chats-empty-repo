@@ -19,7 +19,7 @@ The shortest path downloads one executable Python file and does not modify the
 Python environment:
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.38/repo-scout-0.3.38.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.39/repo-scout-0.3.39.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 ```
 
@@ -28,12 +28,12 @@ wheel when the distribution, policy-template, rollout-summary, pilot-funnel, or
 maintainer outreach-audit commands are also needed:
 
 ```bash
-gh release download v0.3.38 \
+gh release download v0.3.39 \
   --repo becastil/Chats-empty-repo \
   --pattern "repo_scout-*" \
   --pattern "repo-scout-*.pyz" \
   --pattern SHA256SUMS
-python3 -m pip install ./repo_scout-0.3.38-py3-none-any.whl
+python3 -m pip install ./repo_scout-0.3.39-py3-none-any.whl
 ```
 
 Repo Scout requires Python 3.11 or newer and has no runtime dependencies.
@@ -45,11 +45,11 @@ files:
 
 ```bash
 shasum -a 256 -c SHA256SUMS
-gh attestation verify repo-scout-0.3.38.pyz \
+gh attestation verify repo-scout-0.3.39.pyz \
   --repo becastil/Chats-empty-repo
-gh attestation verify repo_scout-0.3.38-py3-none-any.whl \
+gh attestation verify repo_scout-0.3.39-py3-none-any.whl \
   --repo becastil/Chats-empty-repo
-gh attestation verify repo_scout-0.3.38.tar.gz \
+gh attestation verify repo_scout-0.3.39.tar.gz \
   --repo becastil/Chats-empty-repo
 ```
 

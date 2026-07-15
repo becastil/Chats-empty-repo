@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.39 - 2026-07-15
+
 - Added a guarded human no-send decision for the deterministic next outreach
   draft, atomically moving only its status to `review-declined`.
 - Counted review-declined drafts as closed before contact rather than attempts,

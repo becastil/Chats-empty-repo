@@ -79,7 +79,7 @@ ROLLOUT_SMOKE_SPEC.loader.exec_module(smoke_test_rollout_summary)
 
 class ReleaseManifestTests(unittest.TestCase):
     def test_current_project_versions_match(self) -> None:
-        self.assertEqual(prepare_release.load_project_version(ROOT), "0.3.38")
+        self.assertEqual(prepare_release.load_project_version(ROOT), "0.3.39")
 
     def test_public_distribution_metadata_and_quick_start_match_release(self) -> None:
         with (ROOT / "pyproject.toml").open("rb") as project_file:
@@ -327,7 +327,7 @@ class ZipappDistributionTests(unittest.TestCase):
 
             artifact = build_zipapp.build_zipapp(ROOT, dist)
 
-            self.assertEqual(artifact.name, "repo-scout-0.3.38.pyz")
+            self.assertEqual(artifact.name, "repo-scout-0.3.39.pyz")
             self.assertTrue(artifact.is_file())
             self.assertTrue(artifact.stat().st_mode & 0o100)
             with zipfile.ZipFile(artifact) as archive:
@@ -350,7 +350,7 @@ class ZipappDistributionTests(unittest.TestCase):
                 text=True,
             )
             self.assertEqual(version.returncode, 0, version.stderr)
-            self.assertEqual(version.stdout, "repo-scout 0.3.38\n")
+            self.assertEqual(version.stdout, "repo-scout 0.3.39\n")
 
             target = Path(tmp) / "target"
             target.mkdir()
