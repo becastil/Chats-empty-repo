@@ -1111,3 +1111,19 @@ Customer and dogfood CI remain pinned to independently verified `v0.3.39` until
 the new artifacts are published and separately reconciled. This distributes an
 honest operator handoff; it does not review a real draft, contact a prospect,
 validate demand, or book revenue.
+
+## 2026-07-15: Advance Both Policy Gates To Verified v0.3.40
+
+The public `v0.3.40` wheel independently measures to SHA-256
+`d973eb08d7209bc14630482c86d7b34d3805e38ed7e25b9b54daab7afa0f9241`
+and its annotated tag resolves to source commit
+`9a8db84a5ebe640eb33634279845bb58e4aa900f` on `main`. All three
+distributable artifacts match the manifest and their GitHub attestations. The
+release job used the pinned signer workflow with self-hosted runners denied and
+completed successfully. A clean no-dependency wheel install reports `0.3.40`
+through all seven commands and passes policy activation, guarded outreach,
+commercial reporting, and rollout aggregation through the packaged entry
+points. The preflighted updater therefore moves the dogfood workflow, customer
+example, and contract test together. This makes the truthful terminal review
+receipt available through customer CI; it does not prove customer activation,
+human review, contact attempts, demand, or revenue.

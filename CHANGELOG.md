@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Independently verified and pinned the `v0.3.40` wheel, source commit
+  `9a8db84a5ebe640eb33634279845bb58e4aa900f`, and SHA-256
+  `d973eb08d7209bc14630482c86d7b34d3805e38ed7e25b9b54daab7afa0f9241`
+  in both CI gates.
+- Reconciled every release artifact with its manifest, semantic tag, signer
+  workflow, provenance, successful release job, and hosted-runner constraint.
+- Installed the public wheel without dependencies and proved all command
+  versions, policy activation, guarded outreach, commercial reporting, and
+  rollout aggregation through the packaged entry points.
+
 ## 0.3.40 - 2026-07-15
 
 - Made guarded decline receipts report the privacy-safe number of drafts still
