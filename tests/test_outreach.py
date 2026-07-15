@@ -6,6 +6,7 @@ from datetime import date
 import io
 import json
 from pathlib import Path
+import shlex
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
@@ -218,7 +219,7 @@ class OutreachReportTests(unittest.TestCase):
         self.assertNotIn("evidence.example", serialized)
         self.assertNotIn("approved_on", serialized)
         self.assertNotIn("2026-07-11", serialized)
-        text = format_next_outreach_review(report)
+        text = format_next_outreach_review(report, ledger=Path("ledger.csv"))
         self.assertEqual(text.count("- [ ]"), 5)
         self.assertIn("Keep this alias-only checklist in the private workspace", text)
         self.assertIn("does not approve, modify, or send", text)
@@ -260,7 +261,7 @@ class OutreachReportTests(unittest.TestCase):
                 },
             ],
         )
-        text = format_next_outreach_review(report)
+        text = format_next_outreach_review(report, ledger=Path("ledger.csv"))
         self.assertIn("Private evidence (do not commit or share):", text)
         self.assertIn(
             "- agent_use: https://evidence.example/agents",
@@ -304,7 +305,7 @@ class OutreachReportTests(unittest.TestCase):
         )
         serialized = json.dumps(report)
         self.assertNotIn("second@example.test", serialized)
-        text = format_next_outreach_review(report)
+        text = format_next_outreach_review(report, ledger=Path("ledger.csv"))
         self.assertIn("Private draft notes (do not commit or share):", text)
         self.assertIn("Selected message", text)
         self.assertIn("draft-bearing review", text)
@@ -745,7 +746,7 @@ class OutreachReportTests(unittest.TestCase):
         self.assertFalse(report["private_draft_included"])
         self.assertIn(
             "No drafts are awaiting human review.",
-            format_next_outreach_review(report),
+            format_next_outreach_review(report, ledger=Path("ledger.csv")),
         )
 
     def test_approve_next_records_review_without_contact_or_private_data(self) -> None:
@@ -1030,10 +1031,54 @@ class OutreachReportTests(unittest.TestCase):
             self.assertNotIn("2026-07-12", serialized)
             self.assertNotIn("evidence.example", serialized)
             self.assertIn("Repo Scout sent nothing", receipt["action_note"])
-            text = format_outreach_contact(receipt)
+            text = format_outreach_contact(receipt, ledger=ledger)
             self.assertIn("Manual follow-up due: 2026-07-19", text)
             self.assertIn("follow up manually", text)
             self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
+
+    def test_text_handoffs_emit_executable_lifecycle_commands(self) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "private ledger.csv"
+            _write_ledger(
+                ledger,
+                [
+                    _row(
+                        status="drafted",
+                        contacted_on="",
+                        next_action_on="",
+                        approved_on="",
+                    )
+                ],
+            )
+
+            def run(arguments: list[str]) -> str:
+                stdout = io.StringIO()
+                with redirect_stdout(stdout):
+                    self.assertEqual(main(arguments), 0)
+                return stdout.getvalue()
+
+            def next_command(output: str) -> list[str]:
+                command = next(
+                    line
+                    for line in output.splitlines()
+                    if line.startswith("repo-scout-outreach ")
+                )
+                parsed = shlex.split(command)
+                self.assertEqual(parsed[0], "repo-scout-outreach")
+                self.assertEqual(parsed[-2:], ["--", str(ledger)])
+                return parsed[1:]
+
+            review_output = run(
+                [str(ledger), "--as-of", "2026-07-01", "--review-next"]
+            )
+            approval_output = run(next_command(review_output))
+            contact_output = run(next_command(approval_output))
+            follow_up_output = run(next_command(contact_output))
+
+            self.assertNotIn("repo-scout-outreach ", follow_up_output)
+            report = load_outreach_report(ledger, as_of=date(2026, 7, 8))
+            self.assertEqual(report["summary"]["followed_up"], 1)
+            self.assertEqual(report["summary"]["attempted_prospects"], 1)
 
     def test_record_contact_rejects_unsafe_transitions_without_mutation(self) -> None:
         with TemporaryDirectory() as tmp:

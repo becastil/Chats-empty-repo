@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Emitted complete shell-quoted commands from private outreach review,
+  approval, and contact text output, carrying the exact alias, action date,
+  confirmation flag, and ledger path into the next human-controlled step.
+- Executed those emitted commands through the complete installed-command
+  lifecycle, including a ledger path with spaces and the exact follow-up due
+  date, while retaining all existing JSON privacy checks.
 - Refused live outreach review, approval, contact, and follow-up actions when
   an in-repository ledger or draft file is tracked, not ignored, or symlinked.
 - Kept counts-only template audits available while proving ignored, untracked

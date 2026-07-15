@@ -951,3 +951,17 @@ tracked example. New workspaces use owner-only
 tightened to those modes without changing its contents. This protects the
 execution path for the five prepared drafts; it does not record human approval,
 contact a prospect, create a pilot request, or change revenue evidence.
+
+## 2026-07-15: Make Human-Controlled Outreach Handoffs Executable
+
+Private text receipts previously named the next outreach action but left the
+operator to reconstruct its executable command, dates, alias, and ledger path.
+Review, approval, and contact output now emits one complete shell-quoted command
+for the next guarded transition. Each handoff carries the selected alias,
+required confirmation flag, supplied private ledger path, and relevant action
+date; contact uses the calculated follow-up due date exactly. A release smoke
+test executes the printed commands through a complete installed lifecycle,
+including a path with spaces. JSON receipts remain path-free, and every
+approval, initial send, and follow-up still requires an explicit human action
+and confirmation. This reduces execution errors for the prepared acquisition
+test without creating an attempt, lead, pilot request, payment, or revenue.

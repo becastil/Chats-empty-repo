@@ -282,7 +282,10 @@ review date, and a confirmation flag; validates all rows before and after; and
 atomically preserves file permissions while changing only status and approval
 date. The receipt excludes evidence and review dates. Approval still sends
 nothing, creates no contact or follow-up date, and is not an attempt, lead,
-pilot request, or revenue event.
+pilot request, or revenue event. Private text output carries each selected
+alias, date, confirmation flag, and shell-quoted ledger path into a complete
+next command. This removes manual command reconstruction without completing a
+review, sending a message, or treating operator activity as demand.
 
 After a human sends that approved message, guarded `--record-contact` records
 the exact next approved alias with an explicit send date and confirmation flag.
@@ -300,7 +303,9 @@ follow-up date, and next action, then clears that next action so no second
 follow-up is scheduled. Early, future, and out-of-order records are rejected.
 The alias-only receipt remains private, and the tool sends nothing. A follow-up
 is still outreach operations, not a new prospect, lead, pilot request, payment,
-or revenue event.
+or revenue event. The contact receipt's next command uses the calculated due
+date for both reporting and follow-up recording, avoiding calendar drift while
+leaving the actual send and confirmation under human control.
 
 Rollout bundles carry a stable, non-sensitive metadata contract so a pilot lead
 can summarize bundle-reported readiness, policy failures, violations, worktree

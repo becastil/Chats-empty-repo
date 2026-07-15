@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shlex
 import stat
 import subprocess
 import sys
@@ -835,7 +836,9 @@ def format_outreach_report(report: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def format_next_outreach_review(review_report: dict[str, Any]) -> str:
+def format_next_outreach_review(
+    review_report: dict[str, Any], *, ledger: Path
+) -> str:
     review = review_report["review"]
     lines = ["Repo Scout next outreach review", f"As of: {review_report['as_of']}"]
     if review is None:
@@ -871,10 +874,16 @@ def format_next_outreach_review(review_report: dict[str, Any]) -> str:
                 ),
                 "Human checks:",
                 *(f"- [ ] {check}" for check in review["checks"]),
-                (
-                    "Next: after a human completes every check, run "
-                    f"--approve-next {review['prospect_id']} with --approved-on "
-                    "and --confirm-reviewed."
+                "Next command after a human completes every check:",
+                _format_outreach_command(
+                    ledger,
+                    "--as-of",
+                    review_report["as_of"],
+                    "--approve-next",
+                    review["prospect_id"],
+                    "--approved-on",
+                    review_report["as_of"],
+                    "--confirm-reviewed",
                 ),
             ]
         )
@@ -895,7 +904,9 @@ def format_next_outreach_review(review_report: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def format_outreach_approval(approval_report: dict[str, Any]) -> str:
+def format_outreach_approval(
+    approval_report: dict[str, Any], *, ledger: Path
+) -> str:
     approval = approval_report["approval"]
     lines = [
         "Repo Scout outreach approval",
@@ -904,16 +915,24 @@ def format_outreach_approval(approval_report: dict[str, Any]) -> str:
         f"Status: {approval['status']}",
         "Private ledger updated atomically.",
         f"Boundary: {approval_report['action_note']}",
-        (
-            "Next: send this one message manually, then run "
-            f"--record-contact {approval['prospect_id']} with --contacted-on "
-            "and --confirm-sent."
+        "Next: send this one message manually, then record that send:",
+        _format_outreach_command(
+            ledger,
+            "--as-of",
+            approval_report["as_of"],
+            "--record-contact",
+            approval["prospect_id"],
+            "--contacted-on",
+            approval_report["as_of"],
+            "--confirm-sent",
         ),
     ]
     return "\n".join(lines)
 
 
-def format_outreach_contact(contact_report: dict[str, Any]) -> str:
+def format_outreach_contact(
+    contact_report: dict[str, Any], *, ledger: Path
+) -> str:
     contact = contact_report["contact"]
     lines = [
         "Repo Scout outreach contact record",
@@ -925,12 +944,26 @@ def format_outreach_contact(contact_report: dict[str, Any]) -> str:
         f"Boundary: {contact_report['action_note']}",
         (
             "Next: if there is no reply or opt-out, follow up manually on the "
-            "due date, then run "
-            f"--record-follow-up {contact['prospect_id']} with --followed-up-on "
-            "and --confirm-follow-up-sent."
+            "due date, then record it:"
+        ),
+        _format_outreach_command(
+            ledger,
+            "--as-of",
+            contact["follow_up_due"],
+            "--record-follow-up",
+            contact["prospect_id"],
+            "--followed-up-on",
+            contact["follow_up_due"],
+            "--confirm-follow-up-sent",
         ),
     ]
     return "\n".join(lines)
+
+
+def _format_outreach_command(ledger: Path, *arguments: str) -> str:
+    return shlex.join(
+        ["repo-scout-outreach", *arguments, "--", str(ledger)]
+    )
 
 
 def format_outreach_follow_up(follow_up_report: dict[str, Any]) -> str:
@@ -1178,11 +1211,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     elif args.record_follow_up is not None:
         print(format_outreach_follow_up(report))
     elif args.record_contact is not None:
-        print(format_outreach_contact(report))
+        print(format_outreach_contact(report, ledger=args.ledger))
     elif args.approve_next is not None:
-        print(format_outreach_approval(report))
+        print(format_outreach_approval(report, ledger=args.ledger))
     elif args.review_next:
-        print(format_next_outreach_review(report))
+        print(format_next_outreach_review(report, ledger=args.ledger))
     else:
         print(format_outreach_report(report))
     return 0

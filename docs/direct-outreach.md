@@ -134,7 +134,10 @@ and qualification counts. It does not expose evidence URLs or draft text, does
 not edit the ledger, and does not approve or send a message. The human reviewer
 must inspect the private evidence and saved draft before using the guarded
 approval action. The checklist is private operator material because it names a
-ledger alias; do not commit it as a measurement baseline.
+ledger alias; do not commit it as a measurement baseline. Text mode ends with a
+complete, shell-quoted approval command for the selected alias, current
+`as_of` date, and supplied ledger path. Run it only after completing every
+displayed check.
 
 To inspect the selected draft and its qualification links without manually
 cross-referencing the CSV and notes file, request both explicitly in the same
@@ -179,7 +182,8 @@ atomically changes only `status` and `approved_on`. Missing confirmation,
 out-of-order aliases, future dates, or invalid ledger state leave the file
 unchanged. The private receipt omits evidence URLs and the review date. This
 action records a human decision; it does not send outreach or create a contact
-or follow-up date.
+or follow-up date. Its text receipt ends with a complete command for recording
+the manual send, using the same alias, `as_of` date, and private ledger path.
 
 After review, the aggregate `Approved to send` count must include the selected
 row before contact; the report still does not reveal its alias. A human must
@@ -203,7 +207,10 @@ out-of-order aliases, dates before approval, future dates, invalid ledger state,
 or write failures leave the file unchanged. The private receipt omits evidence,
 approval dates, and the explicit contact field while naming the manual follow-up
 due date. That date makes send timing inferable, so keep the receipt private.
-Repo Scout sends nothing and schedules no automatic message.
+Repo Scout sends nothing and schedules no automatic message. The text receipt
+ends with a complete follow-up recording command whose `as_of` and
+`followed-up-on` values are the exact due date; run it only after the human
+follow-up has actually been sent.
 
 On the due date, after a human sends the one allowed follow-up, record it:
 

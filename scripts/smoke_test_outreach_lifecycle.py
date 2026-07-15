@@ -5,6 +5,7 @@ import csv
 import json
 import os
 from pathlib import Path
+import shlex
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
@@ -51,6 +52,73 @@ def verify_outreach_lifecycle(
     checked: list[str] = []
 
     with TemporaryDirectory() as tmp:
+        handoff_ledger = Path(tmp) / "handoff ledger.csv"
+        handoff_draft = _row(
+            contacted_on="",
+            status="drafted",
+            next_action_on="",
+            approved_on="",
+        )
+        _write_ledger(handoff_ledger, handoff_draft)
+        handoff_ledger.chmod(0o600)
+
+        handoff_review = _run_arguments(
+            outreach_command,
+            (
+                "--as-of",
+                "2026-07-01",
+                "--review-next",
+                "--",
+                str(handoff_ledger),
+            ),
+            environment=environment,
+        )
+        approval_arguments = _handoff_arguments(
+            handoff_review.stdout,
+            action="--approve-next",
+            ledger=handoff_ledger,
+        )
+        handoff_approval = _run_arguments(
+            outreach_command,
+            approval_arguments,
+            environment=environment,
+        )
+        contact_arguments = _handoff_arguments(
+            handoff_approval.stdout,
+            action="--record-contact",
+            ledger=handoff_ledger,
+        )
+        handoff_contact = _run_arguments(
+            outreach_command,
+            contact_arguments,
+            environment=environment,
+        )
+        follow_up_arguments = _handoff_arguments(
+            handoff_contact.stdout,
+            action="--record-follow-up",
+            ledger=handoff_ledger,
+        )
+        _require(
+            "2026-07-08" in follow_up_arguments,
+            "contact handoff did not preserve the exact follow-up due date",
+        )
+        handoff_follow_up = _run_arguments(
+            outreach_command,
+            follow_up_arguments,
+            environment=environment,
+        )
+        _require(
+            "repo-scout-outreach " not in handoff_follow_up.stdout,
+            "completed follow-up emitted another action command",
+        )
+        handoff_row = _read_row(handoff_ledger)
+        _require(
+            handoff_row["status"] == "followed-up"
+            and handoff_row["followed_up_on"] == "2026-07-08",
+            "copy-ready handoffs did not complete the synthetic lifecycle",
+        )
+        checked.append("copy-ready-handoffs")
+
         ledger = Path(tmp) / "outreach-ledger.csv"
         draft = _row(
             contacted_on="",
@@ -595,6 +663,49 @@ def _run(
             f"expected {expected_exit_code}: {detail}"
         )
     return completed
+
+
+def _run_arguments(
+    command: Sequence[str],
+    arguments: Sequence[str],
+    *,
+    environment: Mapping[str, str] | None,
+) -> subprocess.CompletedProcess[str]:
+    completed = subprocess.run(
+        [*command, *arguments],
+        capture_output=True,
+        text=True,
+        env=dict(environment) if environment is not None else None,
+    )
+    if completed.returncode != 0:
+        detail = completed.stderr.strip() or completed.stdout.strip() or "no output"
+        raise SmokeTestError(
+            f"outreach handoff exited {completed.returncode}: {detail}"
+        )
+    return completed
+
+
+def _handoff_arguments(
+    output: str,
+    *,
+    action: str,
+    ledger: Path,
+) -> tuple[str, ...]:
+    commands = [
+        line for line in output.splitlines() if line.startswith("repo-scout-outreach ")
+    ]
+    _require(len(commands) == 1, f"{action} handoff command was not emitted once")
+    try:
+        parsed = shlex.split(commands[0])
+    except ValueError as exc:
+        raise SmokeTestError(f"{action} handoff is not valid shell syntax") from exc
+    _require(parsed[0] == "repo-scout-outreach", "handoff command name changed")
+    _require(action in parsed, f"handoff command omitted {action}")
+    _require(
+        parsed[-2:] == ["--", str(ledger)],
+        "handoff command did not preserve the private ledger path",
+    )
+    return tuple(parsed[1:])
 
 
 def _require_private_values_absent(

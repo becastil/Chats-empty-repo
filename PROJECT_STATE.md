@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 100 of 1,000, with 900 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 101 of 1,000, with 899 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -195,6 +195,10 @@ The delivery goal is 1,000 meaningful commits. This update is commit 100 of 1,00
   after a human confirms the one allowed follow-up was already sent.
 - Early, future, out-of-order, and repeated follow-up prevention with retained
   approval/contact evidence and no remaining next action.
+- Complete shell-quoted private text handoffs from review through approval,
+  contact, and exact-due-date follow-up recording, with installed-command proof
+  that emitted commands preserve aliases, dates, confirmation flags, and ledger
+  paths containing spaces.
 - Public `v0.3.34` release of strict schema-5 outreach operations in the wheel
   and source archive alongside the portable CLI, checksums, and provenance.
 - `v0.3.35` patch-release boundary for guarded outreach operations, complete

@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after enforcing the private outreach boundary: 100 / 1,000 (10.0%).
-- Remaining after enforcing the private outreach boundary: 900 commits.
+- Progress after making outreach handoffs executable: 101 / 1,000 (10.1%).
+- Remaining after making outreach handoffs executable: 899 commits.
 
 ## Commit Standard
 
