@@ -49,7 +49,8 @@ Repo Scout is a free local scanner plus a $299, 90-day pilot that helps a softwa
 The team workflow is here:
 https://repo-scout.becastil.chatgpt.site/?source=outreach#why-teams-buy
 
-Would a 15-minute fit check be useful, or is repository standardization not a priority right now?
+Would a 15-minute fit check be useful? If this is not relevant, say so and I
+will not follow up.
 
 Bennett
 ```
@@ -84,7 +85,8 @@ personalized message has been saved for review through a permitted channel.
 Change it to `approved` only after a human confirms that the public observation
 is accurate and current, the recipient and published business channel are
 appropriate, and the message accurately states the price, scope, local-code
-boundary, and opt-out behavior. Record that calendar date in `approved_on`.
+boundary, and a clear opt-out promising no further contact. Record that calendar
+date in `approved_on`.
 Drafted rows cannot have an approval date. Approved rows require one but still
 have no contact or follow-up dates. Neither status counts as attempted
 outreach.

@@ -207,6 +207,10 @@ class OutreachReportTests(unittest.TestCase):
         self.assertEqual(report["review"]["fit_signals"], 3)
         self.assertEqual(report["review"]["fit_evidence_links"], 3)
         self.assertEqual(len(report["review"]["checks"]), 5)
+        self.assertIn(
+            "Confirm the message gives a clear opt-out and promises no further contact.",
+            report["review"]["checks"],
+        )
         self.assertNotIn("private_evidence", report["review"])
         self.assertNotIn("private_draft", report["review"])
         serialized = json.dumps(report)

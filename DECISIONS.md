@@ -897,3 +897,15 @@ this movement, so it is operational distribution proof rather than buyer
 demand. Public pilot evidence and the aggregate outreach baseline still show
 zero pilot requests, attempts, and revenue. Acquisition therefore remains the
 commercial bottleneck, and human-reviewed outreach remains the next action.
+
+## 2026-07-14: Make The Initial Outreach Opt-Out Explicit
+
+The first-message template previously asked whether repository standardization
+was not a priority, which left the stop condition implied while the review
+checklist required appropriate opt-out behavior. Initial messages now say that
+a recipient can decline and receive no further contact. Silence still permits
+only the one bounded seven-day follow-up, and any decline remains a terminal
+stop. The same wording is present in all five ignored private drafts, while the
+review checklist now names the no-further-contact promise directly. This change
+improves trust in the live acquisition test without automating approval,
+sending, or revenue evidence.

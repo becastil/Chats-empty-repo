@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 96 of 1,000, with 904 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 97 of 1,000, with 903 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -138,6 +138,8 @@ The delivery goal is 1,000 meaningful commits. This update is commit 96 of 1,000
 - A copy-ready direct-outreach playbook with an exact $299 offer, source route, qualification filter, and bounded follow-up cadence.
 - A header-only private outreach ledger template with an ignored working directory and no committed prospect data.
 - Tested anti-spam, opt-out, false-urgency, and revenue-evidence boundaries for the first 10-prospect batch.
+- An explicit initial-message opt-out promising no further contact, mirrored in
+  all five private drafts and the human review checklist.
 - A dependency-free `repo-scout-outreach` auditor for private, alias-only campaign ledgers.
 - Strict three-signal qualification, permitted-channel, 10-prospect, seven-day follow-up, and terminal-stop validation.
 - Aggregate outreach activity and due-alias reporting that remains explicitly separate from lead and revenue evidence.

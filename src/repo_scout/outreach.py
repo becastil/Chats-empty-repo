@@ -70,7 +70,7 @@ HUMAN_REVIEW_CHECKS = (
     "Confirm the recipient and published business channel are appropriate.",
     "Confirm the message states the $299 price and 90-day scope accurately.",
     "Confirm the message states that source code stays local.",
-    "Confirm the message includes appropriate opt-out behavior.",
+    "Confirm the message gives a clear opt-out and promises no further contact.",
 )
 
 

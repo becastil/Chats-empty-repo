@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Made the initial direct-outreach template and all five private drafts state a
+  clear opt-out that ends further contact.
+- Tightened the human review checklist and regression contract so a vague
+  decline prompt cannot silently replace that promise.
 - Refreshed the warning-free commercial evidence checkpoint after the verified
   `v0.3.36` release and CI rollout.
 - Recorded 11 additional primary artifact requests: 7 on the new release and 4

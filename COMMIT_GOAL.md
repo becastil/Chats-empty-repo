@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after the first verified v0.3.36 distribution checkpoint: 96 / 1,000 (9.6%).
-- Remaining after the first verified v0.3.36 distribution checkpoint: 904 commits.
+- Progress after making the initial outreach opt-out explicit: 97 / 1,000 (9.7%).
+- Remaining after making the initial outreach opt-out explicit: 903 commits.
 
 ## Commit Standard
 

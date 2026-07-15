@@ -157,6 +157,9 @@ message and at most one follow-up. Contact uses warm introductions or clearly
 published business addresses, never scraped personal data or sales pitches in
 GitHub collaboration channels. The private outreach ledger records attempts
 and replies, but only pilot intake and paid labels enter the revenue funnel.
+Every initial message now gives the recipient a clear way to decline and
+promises no further contact after that response; silence permits only the one
+bounded follow-up already disclosed by the experiment.
 The local outreach auditor enforces the 10-prospect boundary, three-signal
 qualification, alias-only records, permitted channels, one seven-day follow-up,
 and terminal stop states. It sends nothing and exposes no recipient details;

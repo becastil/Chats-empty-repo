@@ -20,6 +20,16 @@ class DirectOutreachContractTests(unittest.TestCase):
         self.assertIn("?source=outreach#why-teams-buy", playbook)
         self.assertIn("Contact 10 qualified prospects", playbook)
         self.assertIn("at most one follow-up after seven days", playbook)
+        _, initial_heading, initial_tail = playbook.partition("## Initial Message")
+        initial_message, follow_heading, _ = initial_tail.partition(
+            "## One Follow-Up"
+        )
+        self.assertTrue(initial_heading)
+        self.assertTrue(follow_heading)
+        self.assertIn(
+            "If this is not relevant, say so and I will not follow up.",
+            " ".join(initial_message.split()),
+        )
         self.assertIn("Drafted rows cannot have an approval date", playbook)
         self.assertIn("Approved rows require one", playbook)
         self.assertIn("Neither status counts as attempted", playbook)
