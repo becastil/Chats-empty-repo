@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Independently verified and pinned the `v0.3.37` wheel, source commit
+  `d0fd199894b2c7a1ea0b3097a122e37399990568`, and SHA-256
+  `b241330e0614cb4759bf764d353cf46871f6957a01f78541f65a9a73bd3b9864`
+  in both CI gates.
+- Reconciled every release artifact with its manifest, semantic tag, signer
+  workflow, provenance, successful release job, and hosted runner.
+- Installed the public wheel without dependencies and proved all command
+  versions, policy activation, and the exact outreach opt-out review check.
+
 ## 0.3.37 - 2026-07-14
 
 - Made the initial direct-outreach template and all five private drafts state a

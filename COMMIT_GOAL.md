@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after preparing the v0.3.37 opt-out release: 98 / 1,000 (9.8%).
-- Remaining after preparing the v0.3.37 opt-out release: 902 commits.
+- Progress after advancing CI to verified v0.3.37: 99 / 1,000 (9.9%).
+- Remaining after advancing CI to verified v0.3.37: 901 commits.
 
 ## Commit Standard
 

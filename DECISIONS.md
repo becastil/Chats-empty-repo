@@ -921,3 +921,18 @@ through follow-up lifecycle.
 Customer CI remains pinned to independently verified `v0.3.36` until the new
 artifacts are published and separately verified. This release distributes a
 trust safeguard; it is not an approval, contact attempt, lead, or sale.
+
+## 2026-07-14: Advance Both Policy Gates To Verified v0.3.37
+
+The public `v0.3.37` wheel independently measures to SHA-256
+`b241330e0614cb4759bf764d353cf46871f6957a01f78541f65a9a73bd3b9864`
+and its annotated tag resolves to source commit
+`d0fd199894b2c7a1ea0b3097a122e37399990568` on `main`. All three
+distributable artifacts match the manifest and their GitHub attestations. The
+release job used the pinned signer workflow and hosted `ubuntu-24.04` runner,
+and completed successfully. A clean no-dependency wheel install reports
+`0.3.37` through all seven commands, passes policy activation, and exposes the
+exact no-further-contact review check. The preflighted updater therefore moves
+the dogfood workflow, customer example, and contract test together. This makes
+the distributed trust safeguard available in customer CI; it does not prove
+customer activation, outreach attempts, demand, or revenue.
