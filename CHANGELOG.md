@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Independently verified and pinned the `v0.3.36` wheel, source commit
+  `f4f4d33fd19ce8287298bfef38458d3328fff3ad`, and SHA-256
+  `282cad5ee04f388c5487f87b0c99e1423a4d879ba0a4174680bb104d4e7d6e97`
+  in both CI gates.
+- Reconciled all three distributable artifacts with the checksum manifest,
+  semantic tag, signer workflow, provenance, and `ubuntu-24.04` release job.
+- Installed the public wheel without dependencies and proved all command
+  versions plus policy activation and the private outreach review lifecycle.
+
 ## 0.3.36 - 2026-07-14
 
 - Preflighted private draft notes against the complete outreach ledger before

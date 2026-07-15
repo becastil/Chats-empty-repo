@@ -61,9 +61,10 @@ Configuration errors return exit code 2; scan-limit failures return exit code
 3 and may not produce evidence because no scan completed.
 
 The workflow grants only `contents: read` and `attestations: read`, disables
-persisted checkout credentials, and pins every external action by commit. It downloads the exact
-Repo Scout `v0.3.29` wheel and `SHA256SUMS` from the public GitHub Release using
-the runner-provided token. No team-managed secret or API key is required.
+persisted checkout credentials, and pins every external action by commit. It
+downloads the exact Repo Scout version and wheel digest declared in the
+workflow, plus `SHA256SUMS`, from the public GitHub Release using the
+runner-provided token. No team-managed secret or API key is required.
 
 Before installation, the gate verifies:
 

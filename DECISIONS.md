@@ -869,3 +869,18 @@ advance together. Customer CI remains pinned to independently verified
 `v0.3.35` until the new artifact is published and separately measured. A
 release makes the workflow available; it is not an approval, attempt, lead, or
 sale.
+
+## 2026-07-14: Advance Both Policy Gates To Verified v0.3.36
+
+The public `v0.3.36` wheel independently measures to SHA-256
+`282cad5ee04f388c5487f87b0c99e1423a4d879ba0a4174680bb104d4e7d6e97`
+and resolves through its annotated tag to source commit
+`f4f4d33fd19ce8287298bfef38458d3328fff3ad` on `main`. Each of the three
+distributable artifacts matches the manifest, and the wheel attestation matches
+the immutable tag, source digest, signer workflow, and hosted `ubuntu-24.04`
+release job while denying self-hosted runners. A clean no-dependency install
+reports `0.3.36` through all seven commands and passes policy activation plus
+the private review lifecycle. The preflighted updater therefore advances the
+dogfood workflow, customer example, and contract test together. This closes the
+source-checkout gap for outreach review; it does not prove customer activation,
+demand, or revenue.
