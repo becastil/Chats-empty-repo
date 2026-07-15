@@ -909,3 +909,15 @@ stop. The same wording is present in all five ignored private drafts, while the
 review checklist now names the no-further-contact promise directly. This change
 improves trust in the live acquisition test without automating approval,
 sending, or revenue evidence.
+
+## 2026-07-14: Release The Explicit Outreach Opt-Out
+
+The initial-message safeguard must exist in the public operator command, not
+only in source and private draft notes. Version `0.3.37` packages the explicit
+no-further-contact review check and advances package, runtime, website,
+installation, and release-test identities together. The installed-wheel smoke
+requires the exact opt-out check while proving the guarded private review
+through follow-up lifecycle.
+Customer CI remains pinned to independently verified `v0.3.36` until the new
+artifacts are published and separately verified. This release distributes a
+trust safeguard; it is not an approval, contact attempt, lead, or sale.

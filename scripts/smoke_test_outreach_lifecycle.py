@@ -28,6 +28,9 @@ EVIDENCE = (
     "multi_repo=https://evidence.example/repositories;"
     "agent_use=https://evidence.example/agents"
 )
+OPT_OUT_REVIEW_CHECK = (
+    "Confirm the message gives a clear opt-out and promises no further contact."
+)
 
 
 class SmokeTestError(RuntimeError):
@@ -82,6 +85,10 @@ def verify_outreach_lifecycle(
         _require(
             len(review.get("review", {}).get("checks", ())) == 5,
             "review checklist changed",
+        )
+        _require(
+            OPT_OUT_REVIEW_CHECK in review.get("review", {}).get("checks", ()),
+            "review checklist lost the explicit opt-out promise",
         )
         _require_private_values_absent(
             review,

@@ -233,6 +233,13 @@ private, drift fails without message leakage, and the ledger remains unchanged.
 This removes source-checkout dependence from the immediate outreach decision;
 it still does not make the judgment, approve, send, or create revenue evidence.
 
+Public `v0.3.37` packages the explicit initial-message opt-out and the matching
+human review check. The release smoke still exercises the complete private
+review, exact opt-out checklist, approval, contact, and one-follow-up lifecycle
+through the installed wheel. This makes the distributed operator path match the
+five prepared drafts; it does not approve a draft, contact a prospect, or
+validate demand.
+
 The first five personalized outreach drafts now exist in the ignored private
 workspace. Sixteen fit links were reviewed against narrow, company-controlled
 public evidence because no Sales Intelligence or CRM provider is connected.

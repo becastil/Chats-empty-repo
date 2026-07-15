@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after making the initial outreach opt-out explicit: 97 / 1,000 (9.7%).
-- Remaining after making the initial outreach opt-out explicit: 903 commits.
+- Progress after preparing the v0.3.37 opt-out release: 98 / 1,000 (9.8%).
+- Remaining after preparing the v0.3.37 opt-out release: 902 commits.
 
 ## Commit Standard
 

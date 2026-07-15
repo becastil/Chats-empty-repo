@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.37 - 2026-07-14
+
 - Made the initial direct-outreach template and all five private drafts state a
   clear opt-out that ends further contact.
 - Tightened the human review checklist and regression contract so a vague
