@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Independently verified and pinned the `v0.3.38` wheel, source commit
+  `3f074aad56670d70645c858b4f5d6f58182b33ef`, and SHA-256
+  `9775171f3d19d4a6ca75d66bc1553910c1beba9feb18cd5172c799cb01d2f5d5`
+  in both CI gates.
+- Reconciled every release artifact with its manifest, semantic tag, signer
+  workflow, provenance, successful release job, and hosted runner.
+- Installed the public wheel without dependencies and proved all command
+  versions, policy activation, guarded outreach, commercial reporting, and
+  rollout aggregation through the packaged entry points.
+
 ## 0.3.38 - 2026-07-15
 
 - Refused live outreach review, approval, contact, and follow-up actions on
