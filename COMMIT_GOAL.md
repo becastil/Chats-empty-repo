@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after synchronizing the verified CI documentation claim: 118 / 1,000 (11.8%).
-- Remaining after synchronizing the verified CI documentation claim: 882 commits.
+- Progress after adding verified-pin write rollback: 119 / 1,000 (11.9%).
+- Remaining after adding verified-pin write rollback: 881 commits.
 
 ## Commit Standard
 

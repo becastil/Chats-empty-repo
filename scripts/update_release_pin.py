@@ -7,7 +7,7 @@ from pathlib import Path
 import re
 import sys
 from tempfile import NamedTemporaryFile
-from typing import Sequence
+from typing import Iterable, Sequence
 
 
 README_PATH = Path("README.md")
@@ -48,13 +48,16 @@ def update_release_pin(root: Path, pin: ReleasePin) -> tuple[Path, ...]:
     pin.validate()
     project_root = root.expanduser().resolve()
     prepared: dict[Path, str] = {}
+    originals: dict[Path, tuple[str, int]] = {}
 
     for relative_path in TARGETS:
         target = project_root / relative_path
         try:
             content = target.read_text(encoding="utf-8")
+            mode = target.stat().st_mode
         except OSError as exc:
             raise PinUpdateError(f"could not read {relative_path}: {exc}") from exc
+        originals[target] = (content, mode)
         if relative_path == README_PATH:
             prepared[target] = _update_readme(content, pin, relative_path)
         elif relative_path == TEST_CONTRACT_PATH:
@@ -62,27 +65,80 @@ def update_release_pin(root: Path, pin: ReleasePin) -> tuple[Path, ...]:
         else:
             prepared[target] = _update_workflow(content, pin, relative_path)
 
-    temporary_paths: dict[Path, Path] = {}
+    update_paths: dict[Path, Path] = {}
+    rollback_paths: dict[Path, Path] = {}
+    replaced: list[Path] = []
     try:
         for target, content in prepared.items():
-            with NamedTemporaryFile(
-                "w",
-                encoding="utf-8",
-                dir=target.parent,
-                prefix=f".{target.name}.",
-                delete=False,
-            ) as temporary:
-                temporary.write(content)
-                temporary_paths[target] = Path(temporary.name)
-            os.chmod(temporary_paths[target], target.stat().st_mode)
-        for target, temporary_path in temporary_paths.items():
-            os.replace(temporary_path, target)
+            original, mode = originals[target]
+            update_paths[target] = _write_temporary(
+                target, content, mode, "pin-update"
+            )
+            rollback_paths[target] = _write_temporary(
+                target, original, mode, "pin-rollback"
+            )
+        for target in prepared:
+            os.replace(update_paths[target], target)
+            replaced.append(target)
     except OSError as exc:
-        for temporary_path in temporary_paths.values():
-            temporary_path.unlink(missing_ok=True)
-        raise PinUpdateError(f"could not write verified release pin: {exc}") from exc
+        rollback_failures: list[tuple[Path, Path, OSError]] = []
+        for target in reversed(replaced):
+            rollback_path = rollback_paths[target]
+            try:
+                os.replace(rollback_path, target)
+            except OSError as rollback_exc:
+                rollback_failures.append((target, rollback_path, rollback_exc))
+
+        _remove_temporaries(update_paths.values())
+        failed_rollback_paths = {path for _, path, _ in rollback_failures}
+        _remove_temporaries(
+            path
+            for path in rollback_paths.values()
+            if path not in failed_rollback_paths
+        )
+
+        message = f"could not write verified release pin: {exc}"
+        if rollback_failures:
+            recoveries = ", ".join(
+                f"{target} (original retained at {path}: {rollback_exc})"
+                for target, path, rollback_exc in rollback_failures
+            )
+            message = f"{message}; rollback incomplete for {recoveries}"
+        elif replaced:
+            message = f"{message}; rolled back {len(replaced)} updated target(s)"
+        raise PinUpdateError(message) from exc
+
+    _remove_temporaries(update_paths.values())
+    _remove_temporaries(rollback_paths.values())
 
     return TARGETS
+
+
+def _write_temporary(target: Path, content: str, mode: int, label: str) -> Path:
+    temporary_path: Path | None = None
+    try:
+        with NamedTemporaryFile(
+            "w",
+            encoding="utf-8",
+            dir=target.parent,
+            prefix=f".{target.name}.{label}.",
+            delete=False,
+        ) as temporary:
+            temporary_path = Path(temporary.name)
+            temporary.write(content)
+        assert temporary_path is not None
+        os.chmod(temporary_path, mode)
+    except OSError:
+        if temporary_path is not None:
+            temporary_path.unlink(missing_ok=True)
+        raise
+    assert temporary_path is not None
+    return temporary_path
+
+
+def _remove_temporaries(paths: Iterable[Path]) -> None:
+    for path in paths:
+        path.unlink(missing_ok=True)
 
 
 def build_parser() -> argparse.ArgumentParser:

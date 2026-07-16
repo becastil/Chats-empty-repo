@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 118 of 1,000, with 882 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 119 of 1,000, with 881 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -245,6 +245,9 @@ The delivery goal is 1,000 meaningful commits. This update is commit 118 of 1,00
 - A preflighted maintainer updater that changes the dogfood workflow, customer
   example, buyer-facing README claim, and CI pin contract together or refuses
   layout drift before writing.
+- Staged-original rollback that restores every verified-pin target already
+  replaced when a later filesystem write fails, with retained recovery evidence
+  if rollback itself cannot complete.
 - Policy v3 nested `.env` and `.env.local` patterns in every starter, dogfood policy, and copy-ready CI policy.
 - Released-wheel proof that a force-tracked nested environment file fails while preserving remediation rollout evidence.
 - Explicit exclusion of broad `*.pem` matching from defaults to avoid blocking legitimate public certificates.

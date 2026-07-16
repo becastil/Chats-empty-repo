@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -89,6 +90,89 @@ class UpdateReleasePinTests(unittest.TestCase):
                     for path in update_release_pin.TARGETS
                 },
                 before,
+            )
+
+    def test_mid_commit_failure_rolls_back_every_updated_target(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self._write_fixture(root)
+            before = {
+                path: (root / path).read_text(encoding="utf-8")
+                for path in update_release_pin.TARGETS
+            }
+            real_replace = update_release_pin.os.replace
+            replace_calls = 0
+
+            def fail_second_replace(source: Path, target: Path) -> None:
+                nonlocal replace_calls
+                replace_calls += 1
+                if replace_calls == 2:
+                    raise OSError("synthetic second replace failure")
+                real_replace(source, target)
+
+            with patch.object(
+                update_release_pin.os,
+                "replace",
+                side_effect=fail_second_replace,
+            ), self.assertRaisesRegex(
+                update_release_pin.PinUpdateError,
+                "rolled back 1 updated target",
+            ):
+                update_release_pin.update_release_pin(root, NEW_PIN)
+
+            self.assertEqual(
+                {
+                    path: (root / path).read_text(encoding="utf-8")
+                    for path in update_release_pin.TARGETS
+                },
+                before,
+            )
+            self.assertEqual(
+                [
+                    path
+                    for path in root.rglob(".*.pin-*")
+                    if path.is_file()
+                ],
+                [],
+            )
+
+    def test_rollback_failure_retains_original_for_recovery(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self._write_fixture(root)
+            first_target = root / update_release_pin.TARGETS[0]
+            original = first_target.read_text(encoding="utf-8")
+            real_replace = update_release_pin.os.replace
+            replace_calls = 0
+
+            def fail_write_and_rollback(source: Path, target: Path) -> None:
+                nonlocal replace_calls
+                replace_calls += 1
+                if replace_calls in {2, 3}:
+                    raise OSError(f"synthetic replace failure {replace_calls}")
+                real_replace(source, target)
+
+            with patch.object(
+                update_release_pin.os,
+                "replace",
+                side_effect=fail_write_and_rollback,
+            ), self.assertRaisesRegex(
+                update_release_pin.PinUpdateError,
+                "rollback incomplete.*original retained at",
+            ):
+                update_release_pin.update_release_pin(root, NEW_PIN)
+
+            recovery_paths = [
+                path
+                for path in first_target.parent.glob(
+                    f".{first_target.name}.pin-rollback.*"
+                )
+                if path.is_file()
+            ]
+            self.assertEqual(len(recovery_paths), 1)
+            self.assertEqual(
+                recovery_paths[0].read_text(encoding="utf-8"),
+                original,
             )
 
     def test_rejects_unverified_identity_shapes(self) -> None:

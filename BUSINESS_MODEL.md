@@ -67,7 +67,9 @@ without source checkout, mutable package resolution, or a team-managed secret.
 Maintainer pin upgrades now preflight and update the dogfood workflow,
 copy-ready customer example, buyer-facing README claim, and contract test as one
 reviewed change, reducing the chance that distribution trust metadata diverges
-between internal and customer activation paths.
+between internal and customer activation paths. A mid-write failure now restores
+every already-replaced target from staged originals instead of leaving internal
+and customer pins split.
 
 Policy version 3 extends custom packs beyond exact root paths. A reviewed
 pattern can protect nested service `.env` files or certificate-like filenames

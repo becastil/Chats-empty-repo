@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Made mid-commit verified-pin write failures restore every already-replaced
+  workflow, README, and contract target from staged originals.
+- Added a deterministic second-write failure test proving all target contents
+  and temporary files return to their pre-update state, plus recovery-copy
+  coverage when rollback itself fails.
 - Added the buyer-facing README release claim to the preflighted pin updater
   and CI contract so it cannot silently drift behind both customer workflows.
 - Corrected the stale copy-ready CI claim from `v0.3.29` to independently

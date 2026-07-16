@@ -1209,3 +1209,17 @@ preflights exactly one buyer-facing version claim and refuses every write when
 that layout drifts. The CI contract also reconciles the live README claim to the
 verified pin. This improves distribution credibility; it does not establish a
 customer activation, pilot request, payment, or revenue.
+
+## 2026-07-16: Roll Back Partial Verified-Pin Writes
+
+Complete preflight prevents layout drift from changing any pin target, but it
+did not protect against a filesystem failure after one `os.replace` succeeded.
+That narrow failure could leave the dogfood workflow, customer example, README
+claim, and contract constants on different verified identities. The updater now
+stages both new content and an original copy beside every target before the
+first replacement. If a later write fails, it restores replaced targets in
+reverse order and removes unused temporary files. If restoration itself fails,
+the error names the affected target and retained original path for recovery.
+A deterministic second-write failure test proves the normal rollback restores
+all four targets. This hardens paid CI distribution; it does not create an
+activation, pilot request, payment, or revenue.

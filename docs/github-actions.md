@@ -108,7 +108,10 @@ python3 scripts/update_release_pin.py \
 The updater validates all identity shapes and preflights every expected version,
 source, and wheel field before writing. Any workflow, README, or test layout
 drift stops the command without changing the other files; the normal test suite
-remains the final contract check before commit.
+remains the final contract check before commit. If a later filesystem write
+fails, the updater restores every target it already replaced from a staged
+original. A recovery copy is retained and named in the error only if that
+rollback also fails.
 
 ## Pilot Rollout
 
