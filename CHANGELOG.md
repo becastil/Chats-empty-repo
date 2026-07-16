@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Corrected the public release guide from two to three expected checksum and
+  provenance-verification results across the portable, wheel, and source
+  artifacts.
+- Added an artifact-count-derived contract test for downloaded-file, checksum,
+  and attestation-command coverage in the buyer-facing verification guide.
 - Normalized verified-pin target modes to permission bits before staging
   replacements and rollback copies.
 - Added regression coverage proving successful updates and rollback restores

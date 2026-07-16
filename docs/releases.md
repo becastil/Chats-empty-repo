@@ -40,7 +40,7 @@ Repo Scout requires Python 3.11 or newer and has no runtime dependencies.
 
 ## Verify A Release
 
-Run the checksum command from the directory containing all four downloaded
+Run the checksum command from the directory containing all 4 downloaded
 files:
 
 ```bash
@@ -53,7 +53,7 @@ gh attestation verify repo_scout-0.3.41.tar.gz \
   --repo becastil/Chats-empty-repo
 ```
 
-Both checksum lines must report `OK`, and both attestation commands must verify
+All 3 checksum lines must report `OK`, and all 3 attestation commands must verify
 against `becastil/Chats-empty-repo`. A checksum alone is not proof of origin
 because an attacker who replaces an artifact could also replace an unattested
 checksum file.

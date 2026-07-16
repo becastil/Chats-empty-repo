@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after locking verified-pin permissions: 121 / 1,000 (12.1%).
-- Remaining after locking verified-pin permissions: 879 commits.
+- Progress after reconciling release verification counts: 122 / 1,000 (12.2%).
+- Remaining after reconciling release verification counts: 878 commits.
 
 ## Commit Standard
 

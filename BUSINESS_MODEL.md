@@ -34,6 +34,11 @@ The free CLI should be good enough to adopt without a sales conversation.
 Verified GitHub releases remove source-checkout trust and installation friction
 from pilot onboarding. PyPI distribution, billing, and license enforcement stay
 deferred until paid demand justifies their operational cost.
+The public verification guide now reconciles its downloaded-file, checksum, and
+provenance-command counts to the three artifacts defined by the release builder.
+This prevents the trust instructions from understating what a buyer should
+verify; it improves distribution credibility without proving activation,
+demand, payment, or revenue.
 
 The copy-ready CI gate consumes those releases with independent digest and
 provenance checks. This makes the free activation path closer to the paid pilot

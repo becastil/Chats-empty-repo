@@ -119,6 +119,35 @@ class ReleaseManifestTests(unittest.TestCase):
         )
         self.assertNotIn("PYTHONPATH=src python3 -m repo_scout", readme)
 
+    def test_release_verification_docs_cover_every_artifact(self) -> None:
+        documentation = (ROOT / "docs" / "releases.md").read_text(
+            encoding="utf-8"
+        )
+        _, verification_heading, verification_tail = documentation.partition(
+            "## Verify A Release"
+        )
+        verification, maintainer_heading, _ = verification_tail.partition(
+            "## Maintainer Release Contract"
+        )
+        self.assertTrue(verification_heading)
+        self.assertTrue(maintainer_heading)
+
+        artifact_count = len(prepare_release.ARTIFACT_TEMPLATE)
+        normalized = " ".join(verification.split())
+        self.assertIn(
+            f"directory containing all {artifact_count + 1} downloaded files",
+            normalized,
+        )
+        self.assertEqual(
+            verification.count("gh attestation verify "),
+            artifact_count,
+        )
+        self.assertIn(
+            f"All {artifact_count} checksum lines must report `OK`, and all "
+            f"{artifact_count} attestation commands must verify",
+            normalized,
+        )
+
     def test_policy_activation_smoke_contract_passes_against_source(self) -> None:
         environment = os.environ.copy()
         environment["PYTHONPATH"] = str(ROOT / "src")

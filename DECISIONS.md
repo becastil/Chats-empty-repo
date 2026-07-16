@@ -1249,3 +1249,15 @@ four targets and removes every staging file; failure coverage also proves
 restored targets and retained originals keep their modes. This strengthens the
 verified paid CI distribution path; it does not establish activation, demand,
 payment, or revenue.
+
+## 2026-07-16: Derive Public Verification Counts From Release Artifacts
+
+The release guide listed three distributable artifacts and three attestation
+commands but concluded that "both" checksum lines and commands must pass. That
+understated the verification work for the portable, wheel, and source artifacts
+and weakened a buyer-facing trust instruction. The guide now states 4 downloaded
+files, including the manifest, 3 checksum lines, and 3 provenance commands. A
+contract test derives those counts from `ARTIFACT_TEMPLATE` and counts the
+documented commands, so changing the artifact contract requires an intentional
+documentation update. This strengthens verified distribution; it does not
+establish a customer activation, pilot request, payment, or revenue.

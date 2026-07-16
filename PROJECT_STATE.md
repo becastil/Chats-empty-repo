@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 121 of 1,000, with 879 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 122 of 1,000, with 878 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -83,6 +83,8 @@ The delivery goal is 1,000 meaningful commits. This update is commit 121 of 1,00
 - Stage-specific next actions for ready, approval-dependent, exploratory, missing, and unrecognized purchase intent.
 - Single-file, no-install zipapp distribution for the free primary CLI.
 - Release checksums, provenance attestations, and direct-execution smoke tests covering the portable artifact.
+- Artifact-count-linked release documentation proving the public verification
+  guide covers all three checksum entries and all three provenance commands.
 - Public package URLs and checkout-free website and README onboarding.
 - Dependency-free distribution reporting from exported public GitHub release records.
 - Version-aware portable, wheel, source, and checksum artifact contract audits.
