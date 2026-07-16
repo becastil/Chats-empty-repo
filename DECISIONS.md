@@ -1339,3 +1339,17 @@ rollout aggregation smoke harnesses. The preflighted updater therefore advances
 the dogfood workflow, copy-ready customer example, buyer-facing CI claim, and
 pin contract together. This strengthens the paid activation distribution path;
 it does not prove a customer install, pilot request, payment, or revenue.
+
+## 2026-07-16: Record The Verified v0.3.42 Distribution Checkpoint
+
+The independently pinned `v0.3.42` release and its rollout through both policy
+gates create a deliberate comparison boundary after the verified `v0.3.41`
+checkpoint. Public release records now reconcile 46 complete releases and 176
+cumulative primary artifact requests, a signed increase of 15. The new
+`v0.3.42` release accounts for 3 requests, while `v0.3.41` gained 12 wheel
+requests. Release publication, independent verification, pinning, and CI
+activity materially confound this movement, so it is operational distribution
+proof rather than buyer demand. Public pilot evidence and the private aggregate
+outreach audit still show zero pilot requests, approvals, attempts, and revenue.
+Acquisition therefore remains the commercial bottleneck, and human-reviewed
+outreach remains the next action.

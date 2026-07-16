@@ -57,13 +57,13 @@ class MetricsBaselineTests(unittest.TestCase):
         self.assertEqual(summary["stable_releases"], len(releases))
         self.assertEqual(summary["complete_releases"], len(releases))
         self.assertTrue(all(release["contract"]["complete"] for release in releases))
-        self.assertEqual(report["latest"]["tag"], "v0.3.41")
-        self.assertEqual(summary["stable_releases"], 45)
-        self.assertEqual(summary["primary_artifact_downloads"], 161)
-        self.assertEqual(summary["portable_downloads"], 21)
-        self.assertEqual(summary["wheel_downloads"], 140)
-        self.assertEqual(summary["source_downloads"], 24)
-        self.assertEqual(summary["manifest_downloads"], 131)
+        self.assertEqual(report["latest"]["tag"], "v0.3.42")
+        self.assertEqual(summary["stable_releases"], 46)
+        self.assertEqual(summary["primary_artifact_downloads"], 176)
+        self.assertEqual(summary["portable_downloads"], 22)
+        self.assertEqual(summary["wheel_downloads"], 154)
+        self.assertEqual(summary["source_downloads"], 25)
+        self.assertEqual(summary["manifest_downloads"], 144)
         self.assertEqual(summary["unknown_downloads"], 0)
         self.assertEqual(
             summary["primary_artifact_downloads"],
@@ -102,14 +102,14 @@ class MetricsBaselineTests(unittest.TestCase):
         self.assertEqual(
             growth["distribution_change"],
             {
-                "manifest_downloads_delta": 6,
-                "new_releases": ["v0.3.41"],
-                "portable_downloads_delta": 2,
-                "primary_artifact_downloads_delta": 8,
+                "manifest_downloads_delta": 13,
+                "new_releases": ["v0.3.42"],
+                "portable_downloads_delta": 1,
+                "primary_artifact_downloads_delta": 15,
                 "removed_releases": [],
-                "source_downloads_delta": 2,
+                "source_downloads_delta": 1,
                 "unknown_downloads_delta": 0,
-                "wheel_downloads_delta": 6,
+                "wheel_downloads_delta": 14,
             },
         )
 
