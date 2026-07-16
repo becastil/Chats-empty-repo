@@ -1323,3 +1323,19 @@ can ship through attested artifacts. Customer and dogfood CI stay pinned to
 independently verified `v0.3.41` until publication and separate reconciliation.
 This creates a release boundary, not customer activation, demand, payment, or
 revenue evidence.
+
+## 2026-07-16: Advance Both Policy Gates To Verified v0.3.42
+
+The public `v0.3.42` wheel independently measures to SHA-256
+`207931651b217dc02dfacb64886da409b5518d78c3ada702edace58ea9db1e5e` and
+resolves through annotated tag `v0.3.42` to main-branch source commit
+`6d9edda82e8a84782a3532c8772690bc0973bc7a`. The downloaded manifest verified
+the wheel, portable zipapp, and source archive. GitHub attestations verified all
+three artifacts against the repository, and release run `29535732423` used the
+pinned signer workflow on a GitHub-hosted `ubuntu-24.04` runner. A fresh
+no-dependency wheel install reported `0.3.42` from all seven public commands and
+passed the policy activation, guarded outreach, commercial reporting, and
+rollout aggregation smoke harnesses. The preflighted updater therefore advances
+the dogfood workflow, copy-ready customer example, buyer-facing CI claim, and
+pin contract together. This strengthens the paid activation distribution path;
+it does not prove a customer install, pilot request, payment, or revenue.

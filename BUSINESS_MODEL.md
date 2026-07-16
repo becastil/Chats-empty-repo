@@ -76,7 +76,7 @@ This is useful free CI enforcement; the paid work remains agreeing on the
 right rules and rolling the same reviewed policy across uneven repositories.
 Versions 1 and 2 remain readable so verified CI upgrades can be staged safely.
 The dogfood and copy-ready gates now install the independently verified
-`v0.3.41` wheel, so v4 policies can run locally and in CI
+`v0.3.42` wheel, so v4 policies can run locally and in CI
 without source checkout, mutable package resolution, or a team-managed secret.
 Maintainer pin upgrades now preflight and update the dogfood workflow,
 copy-ready customer example, buyer-facing README claim, and contract test as one
@@ -319,10 +319,15 @@ Version `0.3.42` advances the package, portable CLI, website metadata,
 verification guide, and installed commercial smoke fixture together. It
 packages verified-pin rollback and recovery reporting, release-contract
 reconciliation, and permission-preserving atomic replacement for existing team
-policies and rollout reports. Customer and dogfood CI remain pinned to
-independently verified `v0.3.41` until the new artifacts are published and
-separately reconciled. This makes existing activation safeguards distributable;
-it does not establish an install, customer usage, demand, payment, or revenue.
+policies and rollout reports. After separate public-artifact verification,
+customer and dogfood CI now pin source commit
+`6d9edda82e8a84782a3532c8772690bc0973bc7a` and wheel SHA-256
+`207931651b217dc02dfacb64886da409b5518d78c3ada702edace58ea9db1e5e`.
+The downloaded manifest, annotated tag ancestry, all three provenance
+attestations, pinned signer workflow, hosted `ubuntu-24.04` runner, seven
+installed command identities, and four commercial smoke harnesses passed before
+the pins changed. This makes existing activation safeguards distributable; it
+does not establish an install, customer usage, demand, payment, or revenue.
 
 The first five personalized outreach drafts now exist in the ignored private
 workspace. Sixteen fit links were reviewed against narrow, company-controlled

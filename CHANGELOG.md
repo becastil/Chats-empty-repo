@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Independently verified the public `v0.3.42` manifest, annotated tag, source
+  ancestry, signer workflow, GitHub-hosted runner, and provenance for all three
+  distributable artifacts.
+- Advanced the dogfood and copy-ready policy gates to the independently measured
+  `v0.3.42` wheel digest and exact release source commit.
+- Verified all seven installed commands and the four paid-workflow smoke
+  harnesses from a fresh no-dependency wheel installation before changing pins.
+
 ## 0.3.42 - 2026-07-16
 
 - Made `repo-scout --output --force` stage complete reports before atomically
