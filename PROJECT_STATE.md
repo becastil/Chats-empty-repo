@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 123 of 1,000, with 877 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 124 of 1,000, with 876 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -258,6 +258,8 @@ The delivery goal is 1,000 meaningful commits. This update is commit 123 of 1,00
 - Permission-bit normalization and regression proof that successful verified-pin
   updates, rollback restores, and retained recovery copies preserve target modes
   while completed transactions remove every staging file.
+- Truthful verified-pin cleanup errors that distinguish committed updates from
+  rolled-back writes and retain the original failure plus recovery outcome.
 - Policy v3 nested `.env` and `.env.local` patterns in every starter, dogfood policy, and copy-ready CI policy.
 - Released-wheel proof that a force-tracked nested environment file fails while preserving remediation rollout evidence.
 - Explicit exclusion of broad `*.pem` matching from defaults to avoid blocking legitimate public certificates.

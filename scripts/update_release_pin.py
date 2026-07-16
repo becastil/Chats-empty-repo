@@ -90,12 +90,14 @@ def update_release_pin(root: Path, pin: ReleasePin) -> tuple[Path, ...]:
             except OSError as rollback_exc:
                 rollback_failures.append((target, rollback_path, rollback_exc))
 
-        _remove_temporaries(update_paths.values())
+        cleanup_failures = _remove_temporaries(update_paths.values())
         failed_rollback_paths = {path for _, path, _ in rollback_failures}
-        _remove_temporaries(
-            path
-            for path in rollback_paths.values()
-            if path not in failed_rollback_paths
+        cleanup_failures.extend(
+            _remove_temporaries(
+                path
+                for path in rollback_paths.values()
+                if path not in failed_rollback_paths
+            )
         )
 
         message = f"could not write verified release pin: {exc}"
@@ -107,10 +109,17 @@ def update_release_pin(root: Path, pin: ReleasePin) -> tuple[Path, ...]:
             message = f"{message}; rollback incomplete for {recoveries}"
         elif replaced:
             message = f"{message}; rolled back {len(replaced)} updated target(s)"
+        if cleanup_failures:
+            message = f"{message}; {_cleanup_failure_message(cleanup_failures)}"
         raise PinUpdateError(message) from exc
 
-    _remove_temporaries(update_paths.values())
-    _remove_temporaries(rollback_paths.values())
+    cleanup_failures = _remove_temporaries(update_paths.values())
+    cleanup_failures.extend(_remove_temporaries(rollback_paths.values()))
+    if cleanup_failures:
+        raise PinUpdateError(
+            "verified release pin was updated, but "
+            + _cleanup_failure_message(cleanup_failures)
+        ) from cleanup_failures[0][1]
 
     return TARGETS
 
@@ -137,9 +146,19 @@ def _write_temporary(target: Path, content: str, mode: int, label: str) -> Path:
     return temporary_path
 
 
-def _remove_temporaries(paths: Iterable[Path]) -> None:
+def _remove_temporaries(paths: Iterable[Path]) -> list[tuple[Path, OSError]]:
+    failures: list[tuple[Path, OSError]] = []
     for path in paths:
-        path.unlink(missing_ok=True)
+        try:
+            path.unlink(missing_ok=True)
+        except OSError as exc:
+            failures.append((path, exc))
+    return failures
+
+
+def _cleanup_failure_message(failures: Iterable[tuple[Path, OSError]]) -> str:
+    details = ", ".join(f"{path} ({exc})" for path, exc in failures)
+    return f"temporary cleanup incomplete for {details}"
 
 
 def build_parser() -> argparse.ArgumentParser:

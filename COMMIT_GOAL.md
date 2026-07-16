@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after deriving packaged command coverage: 123 / 1,000 (12.3%).
-- Remaining after deriving packaged command coverage: 877 commits.
+- Progress after preserving verified-pin cleanup outcomes: 124 / 1,000 (12.4%).
+- Remaining after preserving verified-pin cleanup outcomes: 876 commits.
 
 ## Commit Standard
 

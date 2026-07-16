@@ -1273,3 +1273,16 @@ workflow's version loop to cover that exact set without duplicates, and derive
 the documented count from the same metadata. This strengthens the verified
 wheel and paid CI activation path; it does not establish an install, pilot
 request, payment, or revenue.
+
+## 2026-07-16: Preserve The Pin Transaction Outcome When Cleanup Fails
+
+Temporary-file deletion previously raised raw `OSError` exceptions. After a
+successful replacement set, that made a committed pin update look like an
+unspecified failure. During recovery, it could mask the original write error
+and whether replaced targets were restored. Cleanup now collects path-specific
+failures instead of raising immediately. A post-commit failure explicitly says
+the verified pin was updated, while a write failure retains its rollback or
+recovery result and appends every incomplete cleanup path. Tests inject both
+branches and prove target contents match the reported state. This makes paid CI
+distribution maintenance recoverable; it does not establish activation,
+demand, payment, or revenue.

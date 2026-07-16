@@ -85,6 +85,11 @@ retain each target's access mode, recovery copies keep the original mode, and
 completed transactions leave no staged pin or rollback files behind. This
 protects repeatable paid CI distribution maintenance; it does not demonstrate
 customer activation, demand, payment, or revenue.
+Cleanup failures now retain the transaction outcome: operators are told when
+the verified pin was already committed, while failed writes still report their
+rollback result and every retained temporary path. This avoids retry decisions
+based on a masked filesystem error without creating customer or revenue
+evidence.
 
 Policy version 3 extends custom packs beyond exact root paths. A reviewed
 pattern can protect nested service `.env` files or certificate-like filenames

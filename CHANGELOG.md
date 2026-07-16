@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Made verified-pin temporary cleanup failures report whether replacements were
+  already committed or a failed write was rolled back.
+- Preserved original write and rollback evidence when cleanup also fails, with
+  focused coverage for both post-commit and recovery paths.
 - Corrected the distribution adoption path from six to seven packaged wheel
   commands.
 - Derived release-smoke command coverage and the documented command-count

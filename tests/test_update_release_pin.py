@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 import importlib.util
 import os
 from pathlib import Path
@@ -65,6 +66,45 @@ class UpdateReleasePinTests(unittest.TestCase):
                 expected_modes,
             )
             self.assertEqual(self._staging_files(root), [])
+
+    def test_success_cleanup_failure_reports_that_update_was_committed(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self._write_fixture(root)
+            real_remove = update_release_pin._remove_temporaries
+            cleanup_calls = 0
+
+            def fail_rollback_cleanup(
+                paths: Iterable[Path],
+            ) -> list[tuple[Path, OSError]]:
+                nonlocal cleanup_calls
+                cleanup_calls += 1
+                cleanup_paths = tuple(paths)
+                if cleanup_calls == 2:
+                    return [
+                        (
+                            cleanup_paths[0],
+                            OSError("synthetic cleanup failure"),
+                        )
+                    ]
+                return real_remove(cleanup_paths)
+
+            with patch.object(
+                update_release_pin,
+                "_remove_temporaries",
+                side_effect=fail_rollback_cleanup,
+            ), self.assertRaisesRegex(
+                update_release_pin.PinUpdateError,
+                "was updated, but temporary cleanup incomplete.*"
+                "synthetic cleanup failure",
+            ):
+                update_release_pin.update_release_pin(root, NEW_PIN)
+
+            for path in update_release_pin.TARGETS:
+                self.assertIn(
+                    NEW_PIN.version,
+                    (root / path).read_text(encoding="utf-8"),
+                )
 
     def test_preflight_failure_leaves_every_target_unchanged(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -161,6 +201,51 @@ class UpdateReleasePinTests(unittest.TestCase):
                 before_modes,
             )
             self.assertEqual(self._staging_files(root), [])
+
+    def test_cleanup_failure_does_not_mask_write_or_rollback_result(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self._write_fixture(root)
+            before = {
+                path: (root / path).read_text(encoding="utf-8")
+                for path in update_release_pin.TARGETS
+            }
+            real_replace = update_release_pin.os.replace
+            replace_calls = 0
+
+            def fail_second_replace(source: Path, target: Path) -> None:
+                nonlocal replace_calls
+                replace_calls += 1
+                if replace_calls == 2:
+                    raise OSError("synthetic second replace failure")
+                real_replace(source, target)
+
+            retained = root / ".retained-pin-update"
+            with patch.object(
+                update_release_pin.os,
+                "replace",
+                side_effect=fail_second_replace,
+            ), patch.object(
+                update_release_pin,
+                "_remove_temporaries",
+                side_effect=[
+                    [(retained, OSError("synthetic cleanup failure"))],
+                    [],
+                ],
+            ), self.assertRaisesRegex(
+                update_release_pin.PinUpdateError,
+                "synthetic second replace failure.*rolled back 1 updated "
+                "target.*temporary cleanup incomplete.*synthetic cleanup failure",
+            ):
+                update_release_pin.update_release_pin(root, NEW_PIN)
+
+            self.assertEqual(
+                {
+                    path: (root / path).read_text(encoding="utf-8")
+                    for path in update_release_pin.TARGETS
+                },
+                before,
+            )
 
     def test_rollback_failure_retains_original_for_recovery(self) -> None:
         with TemporaryDirectory() as tmp:
