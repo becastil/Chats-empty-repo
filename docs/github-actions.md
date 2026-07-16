@@ -95,7 +95,8 @@ gate to pass before merging. Never update only the version tag or replace the
 digest with a mutable URL.
 
 Repo Scout maintainers can update the dogfood workflow, copy-ready example,
-and contract-test identity together after independently verifying the release:
+buyer-facing README claim, and contract-test identity together after
+independently verifying the release:
 
 ```bash
 python3 scripts/update_release_pin.py \
@@ -104,10 +105,10 @@ python3 scripts/update_release_pin.py \
   --wheel-sha256 INDEPENDENTLY_MEASURED_64_CHARACTER_DIGEST
 ```
 
-The updater validates all identity shapes and preflights exactly one version,
-source, and wheel pin in every target before writing. Any layout drift stops
-the command without changing the other files; the normal test suite remains
-the final contract check before commit.
+The updater validates all identity shapes and preflights every expected version,
+source, and wheel field before writing. Any workflow, README, or test layout
+drift stops the command without changing the other files; the normal test suite
+remains the final contract check before commit.
 
 ## Pilot Rollout
 

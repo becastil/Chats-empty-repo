@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added the buyer-facing README release claim to the preflighted pin updater
+  and CI contract so it cannot silently drift behind both customer workflows.
+- Corrected the stale copy-ready CI claim from `v0.3.29` to independently
+  verified `v0.3.41` without changing the separate current-release quick start.
 - Refreshed the warning-free commercial evidence checkpoint after the verified
   `v0.3.41` release and CI rollout.
 - Recorded 8 additional primary artifact requests: 5 on `v0.3.41` and 3 later

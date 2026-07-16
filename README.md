@@ -249,7 +249,7 @@ examples/github-actions/repo-scout-policy.toml
 ```
 
 The workflow uses read-only permissions, immutable dependency pins, job-summary
-evidence, and a downloadable schema-2 rollout bundle. It installs the `v0.3.29`
+evidence, and a downloadable schema-2 rollout bundle. It installs the `v0.3.41`
 wheel only after checking its pinned digest, release manifest, source commit,
 tag, signer workflow, and GitHub-hosted provenance. The bundle uses GitHub's
 stable `owner/repository` identity and is preserved even when policy enforcement

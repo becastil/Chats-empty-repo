@@ -10,10 +10,13 @@ from tempfile import NamedTemporaryFile
 from typing import Sequence
 
 
+README_PATH = Path("README.md")
+TEST_CONTRACT_PATH = Path("tests/test_ci_examples.py")
 TARGETS = (
     Path(".github/workflows/repo-scout-policy.yml"),
     Path("examples/github-actions/repo-scout-policy.yml"),
-    Path("tests/test_ci_examples.py"),
+    README_PATH,
+    TEST_CONTRACT_PATH,
 )
 VERSION_PATTERN = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+\Z")
 SHA_PATTERN = re.compile(r"[0-9a-f]{40}\Z")
@@ -52,11 +55,12 @@ def update_release_pin(root: Path, pin: ReleasePin) -> tuple[Path, ...]:
             content = target.read_text(encoding="utf-8")
         except OSError as exc:
             raise PinUpdateError(f"could not read {relative_path}: {exc}") from exc
-        prepared[target] = (
-            _update_test_contract(content, pin, relative_path)
-            if relative_path.name == "test_ci_examples.py"
-            else _update_workflow(content, pin, relative_path)
-        )
+        if relative_path == README_PATH:
+            prepared[target] = _update_readme(content, pin, relative_path)
+        elif relative_path == TEST_CONTRACT_PATH:
+            prepared[target] = _update_test_contract(content, pin, relative_path)
+        else:
+            prepared[target] = _update_workflow(content, pin, relative_path)
 
     temporary_paths: dict[Path, Path] = {}
     try:
@@ -161,6 +165,23 @@ def _update_test_contract(content: str, pin: ReleasePin, source: Path) -> str:
                 ")"
             ),
             "wheel SHA-256",
+        ),
+    )
+    return _apply_replacements(content, replacements, source)
+
+
+def _update_readme(content: str, pin: ReleasePin, source: Path) -> str:
+    replacements = (
+        (
+            re.compile(
+                r"(?m)^evidence, and a downloadable schema-2 rollout bundle\. "
+                r"It installs the `v[0-9]+\.[0-9]+\.[0-9]+`$"
+            ),
+            (
+                "evidence, and a downloadable schema-2 rollout bundle. "
+                f"It installs the `v{pin.version}`"
+            ),
+            "verified CI version",
         ),
     )
     return _apply_replacements(content, replacements, source)

@@ -1197,3 +1197,15 @@ proof rather than buyer demand. Public pilot evidence and the aggregate
 outreach baseline still show zero pilot requests, attempts, and revenue.
 Acquisition therefore remains the commercial bottleneck, and human-reviewed
 outreach remains the next action.
+
+## 2026-07-16: Keep The Buyer-Facing CI Version In The Guarded Pin Contract
+
+The README's copy-ready CI description still named `v0.3.29` after both policy
+gates advanced to verified `v0.3.41`. That stale claim weakens buyer trust and
+could make the customer example appear less maintained than it is. The guarded
+pin updater now treats the exact README CI sentence as a fourth preflighted target
+alongside the dogfood workflow, customer workflow, and contract constants. It
+preflights exactly one buyer-facing version claim and refuses every write when
+that layout drifts. The CI contract also reconciles the live README claim to the
+verified pin. This improves distribution credibility; it does not establish a
+customer activation, pilot request, payment, or revenue.

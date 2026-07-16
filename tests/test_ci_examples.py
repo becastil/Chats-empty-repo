@@ -108,6 +108,12 @@ class CiExampleTests(unittest.TestCase):
 
         self.assertIn("--policy examples/team-policy.toml", dogfood)
 
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn(
+            f"It installs the `v{REPO_SCOUT_VERSION}`\nwheel only after checking",
+            readme,
+        )
+
         self.assertIn("path: target", external)
         self.assertNotIn("path: repo-scout", external)
         self.assertNotIn("repository: becastil/Chats-empty-repo", external)

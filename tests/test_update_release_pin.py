@@ -23,7 +23,7 @@ NEW_PIN = update_release_pin.ReleasePin("2.0.1", "a" * 40, "b" * 64)
 
 
 class UpdateReleasePinTests(unittest.TestCase):
-    def test_updates_both_workflows_and_the_test_contract(self) -> None:
+    def test_updates_workflows_readme_and_test_contract(self) -> None:
         with TemporaryDirectory() as tmp:
             root = Path(tmp)
             self._write_fixture(root)
@@ -34,9 +34,14 @@ class UpdateReleasePinTests(unittest.TestCase):
             for path in updated:
                 content = (root / path).read_text(encoding="utf-8")
                 self.assertIn(NEW_PIN.version, content)
-                self.assertIn(NEW_PIN.source_sha, content)
-                self.assertIn(NEW_PIN.wheel_sha256, content)
                 self.assertNotIn(OLD_VERSION, content)
+                if path != update_release_pin.README_PATH:
+                    self.assertIn(NEW_PIN.source_sha, content)
+                    self.assertIn(NEW_PIN.wheel_sha256, content)
+            readme = (root / update_release_pin.README_PATH).read_text(
+                encoding="utf-8"
+            )
+            self.assertIn("Quick start remains `v9.9.9`.", readme)
 
     def test_preflight_failure_leaves_every_target_unchanged(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -51,6 +56,30 @@ class UpdateReleasePinTests(unittest.TestCase):
 
             with self.assertRaisesRegex(
                 update_release_pin.PinUpdateError, "exactly one version pin"
+            ):
+                update_release_pin.update_release_pin(root, NEW_PIN)
+
+            self.assertEqual(
+                {
+                    path: (root / path).read_text(encoding="utf-8")
+                    for path in update_release_pin.TARGETS
+                },
+                before,
+            )
+
+    def test_readme_layout_failure_leaves_every_target_unchanged(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self._write_fixture(root)
+            readme = root / update_release_pin.README_PATH
+            readme.write_text("# missing verified CI version\n", encoding="utf-8")
+            before = {
+                path: (root / path).read_text(encoding="utf-8")
+                for path in update_release_pin.TARGETS
+            }
+
+            with self.assertRaisesRegex(
+                update_release_pin.PinUpdateError, "verified CI version"
             ):
                 update_release_pin.update_release_pin(root, NEW_PIN)
 
@@ -87,7 +116,15 @@ class UpdateReleasePinTests(unittest.TestCase):
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(workflow, encoding="utf-8")
 
-        contract = root / update_release_pin.TARGETS[2]
+        readme = root / update_release_pin.README_PATH
+        readme.write_text(
+            "Quick start remains `v9.9.9`.\n"
+            "evidence, and a downloadable schema-2 rollout bundle. "
+            f"It installs the `v{OLD_VERSION}`\n",
+            encoding="utf-8",
+        )
+
+        contract = root / update_release_pin.TEST_CONTRACT_PATH
         contract.parent.mkdir(parents=True, exist_ok=True)
         contract.write_text(
             f'REPO_SCOUT_VERSION = "{OLD_VERSION}"\n'

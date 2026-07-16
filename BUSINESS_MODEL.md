@@ -65,9 +65,9 @@ The dogfood and copy-ready gates now install the independently verified
 `v0.3.41` wheel, so v4 policies can run locally and in CI
 without source checkout, mutable package resolution, or a team-managed secret.
 Maintainer pin upgrades now preflight and update the dogfood workflow,
-copy-ready customer example, and contract test as one reviewed change, reducing
-the chance that distribution trust metadata diverges between internal and
-customer activation paths.
+copy-ready customer example, buyer-facing README claim, and contract test as one
+reviewed change, reducing the chance that distribution trust metadata diverges
+between internal and customer activation paths.
 
 Policy version 3 extends custom packs beyond exact root paths. A reviewed
 pattern can protect nested service `.env` files or certificate-like filenames
