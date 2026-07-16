@@ -1297,3 +1297,15 @@ file before `os.replace`. If that permission step fails, the original policy
 and mode remain unchanged and the temporary file is removed. New targets keep
 their existing creation behavior. This protects the local and CI activation
 path; it does not establish customer usage, demand, payment, or revenue.
+
+## 2026-07-16: Preserve Existing Reports Until Forced Replacement Commits
+
+The primary CLI previously implemented `--output --force` with `write_text`,
+which truncates an existing report before the replacement content is complete.
+A write failure could therefore destroy the last handoff or rollout artifact.
+Forced replacement now writes a temporary sibling, applies the existing
+report's normalized permission bits, and commits with `os.replace` only after
+the staged content closes successfully. A failed final swap keeps the original
+bytes and mode and removes the unused temporary file. First-time report creation
+keeps its existing behavior. This protects paid rollout evidence; it does not
+establish customer activation, demand, payment, or revenue.

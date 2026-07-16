@@ -48,6 +48,11 @@ The copy-ready CI gate consumes those releases with independent digest and
 provenance checks. This makes the free activation path closer to the paid pilot
 deployment model: teams can evaluate a repeatable, auditable install before
 buying cross-repository rollout support.
+Existing handoff and rollout reports are now replaced only after a complete
+new report is staged, with the original access permissions carried into the
+atomic swap. A failed swap leaves the prior evidence unchanged. This protects
+the artifact a pilot operator may need for remediation or review; it does not
+prove customer activation, demand, payment, or revenue.
 
 ### Founding Team Pilot
 

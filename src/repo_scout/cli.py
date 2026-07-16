@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
+import stat
 import sys
+from tempfile import NamedTemporaryFile
 from typing import Any, Sequence
 
 from .comparison import SnapshotReadError, compare_snapshot_files
@@ -257,11 +260,33 @@ def _emit_report(report: str, output: str | None, force: bool) -> int:
         )
         return OUTPUT_ERROR_EXIT_CODE
 
-    try:
-        target.write_text(f"{report.rstrip()}\n", encoding="utf-8")
-    except OSError as exc:
-        print(f"repo-scout: could not write {target}: {exc}", file=sys.stderr)
-        return OUTPUT_ERROR_EXIT_CODE
+    content = f"{report.rstrip()}\n"
+    if force and target.exists():
+        temporary_path: Path | None = None
+        try:
+            target_mode = stat.S_IMODE(target.stat().st_mode)
+            with NamedTemporaryFile(
+                "w",
+                encoding="utf-8",
+                dir=target.parent,
+                prefix=f".{target.name}.",
+                delete=False,
+            ) as temporary:
+                temporary.write(content)
+                temporary_path = Path(temporary.name)
+            os.chmod(temporary_path, target_mode)
+            os.replace(temporary_path, target)
+        except OSError as exc:
+            if temporary_path is not None:
+                temporary_path.unlink(missing_ok=True)
+            print(f"repo-scout: could not write {target}: {exc}", file=sys.stderr)
+            return OUTPUT_ERROR_EXIT_CODE
+    else:
+        try:
+            target.write_text(content, encoding="utf-8")
+        except OSError as exc:
+            print(f"repo-scout: could not write {target}: {exc}", file=sys.stderr)
+            return OUTPUT_ERROR_EXIT_CODE
 
     print(f"repo-scout: wrote {target}", file=sys.stderr)
     return 0

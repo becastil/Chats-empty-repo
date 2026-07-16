@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 125 of 1,000, with 875 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 126 of 1,000, with 874 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -21,7 +21,8 @@ The delivery goal is 1,000 meaningful commits. This update is commit 125 of 1,00
 - Markdown handoff reports with summary bullets and stable file tables.
 - Attention summary for dirty Git state, missing docs, and configurable large-file thresholds.
 - Snapshot comparison for file, document, Git, and attention drift.
-- Direct report writing with overwrite protection and explicit `--force` support.
+- Direct report writing with overwrite protection plus permission-preserving,
+  mutation-free atomic `--force` replacement for existing evidence.
 - Versioned snapshot metadata with backward-compatible comparison defaults.
 - Explicit rejection of unsupported future snapshot schema versions.
 - Bounded changed-path details in snapshot comparisons.

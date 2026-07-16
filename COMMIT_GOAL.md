@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after preserving forced policy permissions: 125 / 1,000 (12.5%).
-- Remaining after preserving forced policy permissions: 875 commits.
+- Progress after preserving forced report evidence: 126 / 1,000 (12.6%).
+- Remaining after preserving forced report evidence: 874 commits.
 
 ## Commit Standard
 

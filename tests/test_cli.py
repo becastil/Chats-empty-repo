@@ -3,11 +3,14 @@ from __future__ import annotations
 from contextlib import redirect_stderr, redirect_stdout
 import io
 import json
+import os
 from pathlib import Path
+import stat
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
@@ -524,6 +527,69 @@ max_files = 10
 
             self.assertEqual(forced_exit_code, 0)
             self.assertEqual(json.loads(output.read_text(encoding="utf-8"))["root"], str(root.resolve()))
+
+    @unittest.skipUnless(
+        os.name == "posix", "POSIX permission semantics required"
+    )
+    def test_forced_report_replacement_preserves_permissions(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "README.md").write_text("# Example\n", encoding="utf-8")
+            output = root / "report.json"
+            output.write_text("old report\n", encoding="utf-8")
+            output.chmod(0o640)
+
+            with redirect_stderr(io.StringIO()):
+                exit_code = main(
+                    [
+                        "--format",
+                        "json",
+                        "--output",
+                        str(output),
+                        "--force",
+                        str(root),
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(
+                json.loads(output.read_text(encoding="utf-8"))["root"],
+                str(root.resolve()),
+            )
+            self.assertEqual(stat.S_IMODE(output.stat().st_mode), 0o640)
+
+    @unittest.skipUnless(
+        os.name == "posix", "POSIX permission semantics required"
+    )
+    def test_forced_report_replace_failure_keeps_original(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "README.md").write_text("# Example\n", encoding="utf-8")
+            output = root / "report.json"
+            output.write_text("old report\n", encoding="utf-8")
+            output.chmod(0o640)
+            stderr = io.StringIO()
+
+            with patch(
+                "repo_scout.cli.os.replace",
+                side_effect=OSError("disk full"),
+            ), redirect_stderr(stderr):
+                exit_code = main(
+                    [
+                        "--format",
+                        "json",
+                        "--output",
+                        str(output),
+                        "--force",
+                        str(root),
+                    ]
+                )
+
+            self.assertEqual(exit_code, 4)
+            self.assertIn("disk full", stderr.getvalue())
+            self.assertEqual(output.read_text(encoding="utf-8"), "old report\n")
+            self.assertEqual(stat.S_IMODE(output.stat().st_mode), 0o640)
+            self.assertEqual(list(root.glob(f".{output.name}.*")), [])
 
     def test_markdown_report_shows_custom_attention_threshold(self) -> None:
         with TemporaryDirectory() as tmp:

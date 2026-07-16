@@ -97,6 +97,9 @@ python3 /tmp/repo-scout.pyz --format markdown --output handoff.md .
 python3 /tmp/repo-scout.pyz --format markdown --output handoff.md --force .
 ```
 
+Forced replacements are atomic and preserve the existing report's access
+permissions. A failed replacement leaves the prior report unchanged.
+
 Ignore extra local files or directories without editing `.gitignore`:
 
 ```bash

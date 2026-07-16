@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Made `repo-scout --output --force` stage complete reports before atomically
+  replacing existing handoff or rollout evidence.
+- Preserved existing report permissions and kept prior report bytes unchanged
+  when the final replacement fails.
 - Preserved existing POSIX permission bits when `repo-scout-policy init --force`
   or guarded bootstrap atomically replaces a team policy.
 - Made permission-application failures leave the original policy unchanged and
