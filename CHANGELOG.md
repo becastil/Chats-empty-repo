@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Preserved existing POSIX permission bits when `repo-scout-policy init --force`
+  or guarded bootstrap atomically replaces a team policy.
+- Made permission-application failures leave the original policy unchanged and
+  remove the unused temporary file.
 - Made verified-pin temporary cleanup failures report whether replacements were
   already committed or a failed write was rolled back.
 - Preserved original write and rollback evidence when cleanup also fails, with

@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import re
+import stat
 import sys
 from tempfile import NamedTemporaryFile
 from typing import Any, Sequence
@@ -564,6 +565,9 @@ def _write_template(
     if force:
         temporary_path: Path | None = None
         try:
+            target_mode = (
+                stat.S_IMODE(target.stat().st_mode) if target.exists() else None
+            )
             with NamedTemporaryFile(
                 "w",
                 encoding="utf-8",
@@ -573,6 +577,8 @@ def _write_template(
             ) as temporary:
                 temporary.write(content)
                 temporary_path = Path(temporary.name)
+            if target_mode is not None:
+                os.chmod(temporary_path, target_mode)
             os.replace(temporary_path, target)
         except OSError as exc:
             if temporary_path is not None:

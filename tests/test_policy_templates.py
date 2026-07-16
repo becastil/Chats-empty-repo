@@ -5,6 +5,7 @@ import io
 import json
 import os
 from pathlib import Path
+import stat
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
@@ -546,6 +547,63 @@ class PolicyTemplateTests(unittest.TestCase):
                 )
             finally:
                 os.chdir(original_directory)
+
+    @unittest.skipUnless(
+        os.name == "posix", "POSIX permission semantics required"
+    )
+    def test_force_replacement_preserves_existing_permissions(self) -> None:
+        with TemporaryDirectory() as tmp:
+            target = Path(tmp) / "team-policy.toml"
+            target.write_text("old policy\n", encoding="utf-8")
+            target.chmod(0o640)
+
+            with redirect_stderr(io.StringIO()):
+                exit_code = main(
+                    [
+                        "init",
+                        "python-service",
+                        "--output",
+                        str(target),
+                        "--force",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(
+                target.read_text(encoding="utf-8"),
+                get_template("python-service"),
+            )
+            self.assertEqual(stat.S_IMODE(target.stat().st_mode), 0o640)
+
+    @unittest.skipUnless(
+        os.name == "posix", "POSIX permission semantics required"
+    )
+    def test_force_permission_failure_leaves_original_unchanged(self) -> None:
+        with TemporaryDirectory() as tmp:
+            target = Path(tmp) / "team-policy.toml"
+            target.write_text("old policy\n", encoding="utf-8")
+            target.chmod(0o640)
+            stderr = io.StringIO()
+
+            with patch(
+                "repo_scout.policy_templates.os.chmod",
+                side_effect=PermissionError("permission denied"),
+            ), redirect_stderr(stderr):
+                exit_code = main(
+                    [
+                        "init",
+                        "python-service",
+                        "--output",
+                        str(target),
+                        "--force",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 4)
+            self.assertIn("permission denied", stderr.getvalue())
+            self.assertEqual(target.read_text(encoding="utf-8"), "old policy\n")
+            self.assertEqual(stat.S_IMODE(target.stat().st_mode), 0o640)
+            self.assertEqual(list(target.parent.glob(f".{target.name}.*")), [])
 
     def test_init_reports_unsupported_and_unwritable_destinations(self) -> None:
         stderr = io.StringIO()

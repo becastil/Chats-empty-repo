@@ -1286,3 +1286,14 @@ recovery result and appends every incomplete cleanup path. Tests inject both
 branches and prove target contents match the reported state. This makes paid CI
 distribution maintenance recoverable; it does not establish activation,
 demand, payment, or revenue.
+
+## 2026-07-16: Preserve Existing Policy Permissions Across Force Replacement
+
+`repo-scout-policy init --force` and guarded bootstrap replace a completed
+temporary file atomically, but the temporary file's restrictive default mode
+previously became the team policy's new mode. Force replacement now records an
+existing target's normalized permission bits and applies them to the staged
+file before `os.replace`. If that permission step fails, the original policy
+and mode remain unchanged and the temporary file is removed. New targets keep
+their existing creation behavior. This protects the local and CI activation
+path; it does not establish customer usage, demand, payment, or revenue.

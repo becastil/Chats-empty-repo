@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after preserving verified-pin cleanup outcomes: 124 / 1,000 (12.4%).
-- Remaining after preserving verified-pin cleanup outcomes: 876 commits.
+- Progress after preserving forced policy permissions: 125 / 1,000 (12.5%).
+- Remaining after preserving forced policy permissions: 875 commits.
 
 ## Commit Standard
 

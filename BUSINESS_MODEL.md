@@ -127,6 +127,11 @@ the recommended starter with existing overwrite protection. It refuses mixed
 Node and Python repositories, where automatic policy generation would conceal
 the cross-project decisions that make the paid rollout valuable. Teams retain
 separate recommendation and initialization commands when they need review.
+Force replacement now carries an existing policy's permission bits onto the
+fully written temporary file before the atomic swap. A permission failure keeps
+the original policy and mode intact and removes the unused staging file. This
+protects shared policy access during free and paid activation; it does not prove
+customer usage, pilot demand, payment, or revenue.
 Successful automation can now retain a versioned bootstrap receipt containing
 the selected starter, destination, normalized policy version and fingerprint,
 and whether the file was created or replaced. This gives a team auditable
