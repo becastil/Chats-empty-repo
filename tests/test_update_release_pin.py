@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import importlib.util
+import os
 from pathlib import Path
+import stat
 import sys
 from tempfile import TemporaryDirectory
 import unittest
@@ -43,6 +45,26 @@ class UpdateReleasePinTests(unittest.TestCase):
                 encoding="utf-8"
             )
             self.assertIn("Quick start remains `v9.9.9`.", readme)
+
+    @unittest.skipUnless(os.name == "posix", "requires POSIX file modes")
+    def test_success_preserves_permissions_and_removes_staging_files(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self._write_fixture(root)
+            expected_modes = (0o640, 0o604, 0o644, 0o600)
+            for path, mode in zip(update_release_pin.TARGETS, expected_modes):
+                (root / path).chmod(mode)
+
+            update_release_pin.update_release_pin(root, NEW_PIN)
+
+            self.assertEqual(
+                tuple(
+                    stat.S_IMODE((root / path).stat().st_mode)
+                    for path in update_release_pin.TARGETS
+                ),
+                expected_modes,
+            )
+            self.assertEqual(self._staging_files(root), [])
 
     def test_preflight_failure_leaves_every_target_unchanged(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -100,6 +122,10 @@ class UpdateReleasePinTests(unittest.TestCase):
                 path: (root / path).read_text(encoding="utf-8")
                 for path in update_release_pin.TARGETS
             }
+            before_modes = {
+                path: stat.S_IMODE((root / path).stat().st_mode)
+                for path in update_release_pin.TARGETS
+            }
             real_replace = update_release_pin.os.replace
             replace_calls = 0
 
@@ -128,13 +154,13 @@ class UpdateReleasePinTests(unittest.TestCase):
                 before,
             )
             self.assertEqual(
-                [
-                    path
-                    for path in root.rglob(".*.pin-*")
-                    if path.is_file()
-                ],
-                [],
+                {
+                    path: stat.S_IMODE((root / path).stat().st_mode)
+                    for path in update_release_pin.TARGETS
+                },
+                before_modes,
             )
+            self.assertEqual(self._staging_files(root), [])
 
     def test_rollback_failure_retains_original_for_recovery(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -142,6 +168,7 @@ class UpdateReleasePinTests(unittest.TestCase):
             self._write_fixture(root)
             first_target = root / update_release_pin.TARGETS[0]
             original = first_target.read_text(encoding="utf-8")
+            original_mode = stat.S_IMODE(first_target.stat().st_mode)
             real_replace = update_release_pin.os.replace
             replace_calls = 0
 
@@ -173,6 +200,10 @@ class UpdateReleasePinTests(unittest.TestCase):
             self.assertEqual(
                 recovery_paths[0].read_text(encoding="utf-8"),
                 original,
+            )
+            self.assertEqual(
+                stat.S_IMODE(recovery_paths[0].stat().st_mode),
+                original_mode,
             )
 
     def test_rejects_unverified_identity_shapes(self) -> None:
@@ -217,6 +248,12 @@ class UpdateReleasePinTests(unittest.TestCase):
             f'    "{OLD_DIGEST}"\n'
             ")\n",
             encoding="utf-8",
+        )
+
+    @staticmethod
+    def _staging_files(root: Path) -> list[Path]:
+        return sorted(
+            path for path in root.rglob(".*.pin-*") if path.is_file()
         )
 
 

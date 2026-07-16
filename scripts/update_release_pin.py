@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import os
 from pathlib import Path
 import re
+import stat
 import sys
 from tempfile import NamedTemporaryFile
 from typing import Iterable, Sequence
@@ -54,7 +55,7 @@ def update_release_pin(root: Path, pin: ReleasePin) -> tuple[Path, ...]:
         target = project_root / relative_path
         try:
             content = target.read_text(encoding="utf-8")
-            mode = target.stat().st_mode
+            mode = stat.S_IMODE(target.stat().st_mode)
         except OSError as exc:
             raise PinUpdateError(f"could not read {relative_path}: {exc}") from exc
         originals[target] = (content, mode)

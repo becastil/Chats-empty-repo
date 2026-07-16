@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after reconciling the outreach schema claim: 120 / 1,000 (12.0%).
-- Remaining after reconciling the outreach schema claim: 880 commits.
+- Progress after locking verified-pin permissions: 121 / 1,000 (12.1%).
+- Remaining after locking verified-pin permissions: 879 commits.
 
 ## Commit Standard
 

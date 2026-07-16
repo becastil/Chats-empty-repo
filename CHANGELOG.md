@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Normalized verified-pin target modes to permission bits before staging
+  replacements and rollback copies.
+- Added regression coverage proving successful updates and rollback restores
+  preserve target permissions, recovery copies retain the original mode, and
+  completed transactions remove every staging file.
 - Corrected the buyer-facing outreach documentation to describe the packaged
   schema-6 approval and review-decline counts instead of calling schema 5
   unreleased.

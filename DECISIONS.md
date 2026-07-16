@@ -1236,3 +1236,16 @@ schema constant when checking the claim so the next schema change must update
 buyer-facing documentation intentionally. This improves product credibility;
 it does not review a real draft, contact a prospect, validate demand, or book
 revenue.
+
+## 2026-07-16: Preserve Verified-Pin Target Permissions Explicitly
+
+Atomic replacement writes through temporary files, so the staged file's mode
+becomes the final workflow, README, or contract mode. The updater already
+intended to carry the target mode forward, but it stored raw `st_mode` metadata
+and lacked regression proof across success, rollback, and retained recovery
+paths. It now reduces filesystem metadata to permission bits before `chmod`.
+Tests use distinct POSIX modes to prove a successful transaction preserves all
+four targets and removes every staging file; failure coverage also proves
+restored targets and retained originals keep their modes. This strengthens the
+verified paid CI distribution path; it does not establish activation, demand,
+payment, or revenue.

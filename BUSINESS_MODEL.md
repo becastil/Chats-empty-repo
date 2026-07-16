@@ -70,6 +70,12 @@ reviewed change, reducing the chance that distribution trust metadata diverges
 between internal and customer activation paths. A mid-write failure now restores
 every already-replaced target from staged originals instead of leaving internal
 and customer pins split.
+Staging now stores normalized permission bits rather than raw filesystem mode
+metadata. Regression coverage proves successful updates and rollback restores
+retain each target's access mode, recovery copies keep the original mode, and
+completed transactions leave no staged pin or rollback files behind. This
+protects repeatable paid CI distribution maintenance; it does not demonstrate
+customer activation, demand, payment, or revenue.
 
 Policy version 3 extends custom packs beyond exact root paths. A reviewed
 pattern can protect nested service `.env` files or certificate-like filenames
