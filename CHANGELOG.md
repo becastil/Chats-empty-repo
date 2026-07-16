@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Corrected the buyer-facing outreach documentation to describe the packaged
+  schema-6 approval and review-decline counts instead of calling schema 5
+  unreleased.
+- Added a runtime-linked contract test that fails when the documented outreach
+  schema drifts from `repo-scout-outreach` behavior.
 - Made mid-commit verified-pin write failures restore every already-replaced
   workflow, README, and contract target from staged originals.
 - Added a deterministic second-write failure test proving all target contents

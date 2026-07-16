@@ -1223,3 +1223,16 @@ the error names the affected target and retained original path for recovery.
 A deterministic second-write failure test proves the normal rollback restores
 all four targets. This hardens paid CI distribution; it does not create an
 activation, pilot request, payment, or revenue.
+
+## 2026-07-16: Tie The Buyer-Facing Outreach Claim To Packaged Schema 6
+
+The README still described schema-5 approval tracking as unreleased after the
+public package had advanced to schema 6 with guarded review-decline decisions.
+That made shipped controls look speculative and omitted the current distinction
+between closed no-send reviews and actual contact attempts. The README now
+describes schema-6 approval and review-decline counts, retained approval dates,
+and pre-contact attempted-count exclusions. A contract test imports the runtime
+schema constant when checking the claim so the next schema change must update
+buyer-facing documentation intentionally. This improves product credibility;
+it does not review a real draft, contact a prospect, validate demand, or book
+revenue.

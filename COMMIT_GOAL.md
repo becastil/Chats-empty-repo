@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after adding verified-pin write rollback: 119 / 1,000 (11.9%).
-- Remaining after adding verified-pin write rollback: 881 commits.
+- Progress after reconciling the outreach schema claim: 120 / 1,000 (12.0%).
+- Remaining after reconciling the outreach schema claim: 880 commits.
 
 ## Commit Standard
 

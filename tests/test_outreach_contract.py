@@ -2,15 +2,38 @@ from __future__ import annotations
 
 import csv
 from pathlib import Path
+import sys
 import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+
+from repo_scout.outreach import SCHEMA_VERSION  # noqa: E402
+
+
+README = ROOT / "README.md"
 PLAYBOOK = ROOT / "docs" / "direct-outreach.md"
 LEDGER_TEMPLATE = ROOT / "examples" / "outreach-ledger.csv"
 
 
 class DirectOutreachContractTests(unittest.TestCase):
+    def test_readme_describes_the_packaged_outreach_report_schema(self) -> None:
+        readme = README.read_text(encoding="utf-8")
+        normalized_readme = " ".join(readme.split())
+
+        self.assertNotIn("Unreleased schema-", readme)
+        self.assertIn(
+            f"Schema-{SCHEMA_VERSION} reports add explicit human-approved and "
+            "review-declined pre-send counts",
+            normalized_readme,
+        )
+        self.assertIn(
+            "A review-declined row counts as closed without becoming a contact "
+            "attempt.",
+            normalized_readme,
+        )
+
     def test_playbook_preserves_offer_source_and_bounded_cadence(self) -> None:
         playbook = PLAYBOOK.read_text(encoding="utf-8")
         normalized_playbook = " ".join(playbook.split())

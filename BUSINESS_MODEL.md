@@ -189,6 +189,11 @@ approval and contact dates blank, counts the row as closed rather than
 attempted, and advances the review queue without requiring a hand-edited CSV.
 This preserves negative human judgment instead of nudging every reviewed draft
 toward approval, and it creates no lead, demand, or revenue evidence.
+The buyer-facing README now names that packaged schema-6 behavior directly, and
+a contract test derives the documented schema number from the runtime constant.
+This prevents released review controls from being presented as future work and
+strengthens distribution credibility; it does not create a prospect action,
+pilot request, payment, or revenue.
 
 Future tagged releases must exercise the complete guarded lifecycle through the
 installed wheel before provenance attestation. One synthetic draft follows the
