@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Corrected the distribution adoption path from six to seven packaged wheel
+  commands.
+- Derived release-smoke command coverage and the documented command-count
+  contract from `[project.scripts]` package metadata.
 - Corrected the public release guide from two to three expected checksum and
   provenance-verification results across the portable, wheel, and source
   artifacts.

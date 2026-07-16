@@ -1261,3 +1261,15 @@ contract test derives those counts from `ARTIFACT_TEMPLATE` and counts the
 documented commands, so changing the artifact contract requires an intentional
 documentation update. This strengthens verified distribution; it does not
 establish a customer activation, pilot request, payment, or revenue.
+
+## 2026-07-16: Derive The Wheel Command Contract From Package Metadata
+
+The distribution adoption path still said the wheel supplied six commands after
+the package and release smoke had grown to seven. The release test also repeated
+those command names manually, so a future entry point could drift between
+package metadata, smoke coverage, and buyer-facing guidance. The guide now
+states all 7 commands. Tests read `[project.scripts]`, require the release
+workflow's version loop to cover that exact set without duplicates, and derive
+the documented count from the same metadata. This strengthens the verified
+wheel and paid CI activation path; it does not establish an install, pilot
+request, payment, or revenue.

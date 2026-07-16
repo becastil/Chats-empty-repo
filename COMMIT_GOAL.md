@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after reconciling release verification counts: 122 / 1,000 (12.2%).
-- Remaining after reconciling release verification counts: 878 commits.
+- Progress after deriving packaged command coverage: 123 / 1,000 (12.3%).
+- Remaining after deriving packaged command coverage: 877 commits.
 
 ## Commit Standard
 

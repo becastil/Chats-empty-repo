@@ -39,6 +39,10 @@ provenance-command counts to the three artifacts defined by the release builder.
 This prevents the trust instructions from understating what a buyer should
 verify; it improves distribution credibility without proving activation,
 demand, payment, or revenue.
+The wheel adoption path now reports all 7 packaged commands, and its release
+test derives complete version-smoke coverage from `[project.scripts]` instead
+of a second hardcoded command list. This keeps the paid CI activation surface
+truthful as entry points change; it does not prove customer usage or revenue.
 
 The copy-ready CI gate consumes those releases with independent digest and
 provenance checks. This makes the free activation path closer to the paid pilot

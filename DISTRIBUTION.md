@@ -10,7 +10,7 @@ product, not a release afterthought.
    release, or a referral.
 2. The developer downloads the versioned `.pyz` and gets a local snapshot
    without cloning the repository or modifying a Python environment.
-3. A team installs the provenance-attested wheel when it needs all six
+3. A team installs the provenance-attested wheel when it needs all 7
    commands or adopts the verified GitHub Actions policy gate.
 4. Cross-repository rollout evidence exposes the need for shared policy
    operations and leads to the $299 founding-team pilot.

@@ -148,6 +148,16 @@ class ReleaseManifestTests(unittest.TestCase):
             normalized,
         )
 
+    def test_distribution_path_counts_every_packaged_command(self) -> None:
+        with (ROOT / "pyproject.toml").open("rb") as project_file:
+            commands = tomllib.load(project_file)["project"]["scripts"]
+        distribution = (ROOT / "DISTRIBUTION.md").read_text(encoding="utf-8")
+
+        self.assertIn(
+            f"wheel when it needs all {len(commands)} commands",
+            " ".join(distribution.split()),
+        )
+
     def test_policy_activation_smoke_contract_passes_against_source(self) -> None:
         environment = os.environ.copy()
         environment["PYTHONPATH"] = str(ROOT / "src")
@@ -422,6 +432,10 @@ class ReleaseWorkflowTests(unittest.TestCase):
         workflow = (ROOT / ".github/workflows/release.yml").read_text(
             encoding="utf-8"
         )
+        with (ROOT / "pyproject.toml").open("rb") as project_file:
+            packaged_commands = set(
+                tomllib.load(project_file)["project"]["scripts"]
+            )
 
         self.assertIn('      - "v[0-9]+.[0-9]+.[0-9]+"', workflow)
         self.assertNotIn("workflow_dispatch", workflow)
@@ -441,16 +455,17 @@ class ReleaseWorkflowTests(unittest.TestCase):
             workflow,
         )
         self.assertIn('test "$actual" = "$command $version"', workflow)
-        for command in (
-            "repo-scout",
-            "repo-scout-distribution",
-            "repo-scout-growth",
-            "repo-scout-outreach",
-            "repo-scout-pilot",
-            "repo-scout-policy",
-            "repo-scout-rollout",
-        ):
-            self.assertIn(f"            {command}", workflow)
+        _, loop_heading, command_tail = workflow.partition(
+            "          for command in \\\n"
+        )
+        command_block, loop_end, _ = command_tail.partition("; do")
+        self.assertTrue(loop_heading)
+        self.assertTrue(loop_end)
+        smoke_commands = re.findall(
+            r"^            (repo-scout(?:-[a-z]+)*)", command_block, re.MULTILINE
+        )
+        self.assertEqual(len(smoke_commands), len(set(smoke_commands)))
+        self.assertEqual(set(smoke_commands), packaged_commands)
         self.assertIn(
             '"$RUNNER_TEMP/repo-scout-release/bin/repo-scout-distribution" --help',
             workflow,
