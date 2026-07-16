@@ -1309,3 +1309,17 @@ the staged content closes successfully. A failed final swap keeps the original
 bytes and mode and removes the unused temporary file. First-time report creation
 keeps its existing behavior. This protects paid rollout evidence; it does not
 establish customer activation, demand, payment, or revenue.
+
+## 2026-07-16: Release Distribution And Replacement Safeguards
+
+The commits after `v0.3.41` harden workflows already used for paid activation:
+verified-pin updates now preflight the buyer-facing claim, roll back partial
+writes, preserve target permissions, and retain truthful cleanup outcomes;
+release documentation and smoke coverage reconcile to the packaged artifact
+and command contracts; and forced team-policy and report replacement preserves
+existing evidence and access modes. Version `0.3.42` advances package, runtime,
+website, installation, and release-smoke identities together so those safeguards
+can ship through attested artifacts. Customer and dogfood CI stay pinned to
+independently verified `v0.3.41` until publication and separate reconciliation.
+This creates a release boundary, not customer activation, demand, payment, or
+revenue evidence.

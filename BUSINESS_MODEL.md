@@ -315,6 +315,15 @@ through the installed command while retaining prior contact evidence. This
 closes the operator feedback loop without inflating the public funnel: a private
 outcome is not demand until public intake and is not revenue until payment.
 
+Version `0.3.42` advances the package, portable CLI, website metadata,
+verification guide, and installed commercial smoke fixture together. It
+packages verified-pin rollback and recovery reporting, release-contract
+reconciliation, and permission-preserving atomic replacement for existing team
+policies and rollout reports. Customer and dogfood CI remain pinned to
+independently verified `v0.3.41` until the new artifacts are published and
+separately reconciled. This makes existing activation safeguards distributable;
+it does not establish an install, customer usage, demand, payment, or revenue.
+
 The first five personalized outreach drafts now exist in the ignored private
 workspace. Sixteen fit links were reviewed against narrow, company-controlled
 public evidence because no Sales Intelligence or CRM provider is connected.

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.42 - 2026-07-16
+
 - Made `repo-scout --output --force` stage complete reports before atomically
   replacing existing handoff or rollout evidence.
 - Preserved existing report permissions and kept prior report bytes unchanged
