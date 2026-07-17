@@ -2,7 +2,7 @@
 
 These generated reports preserve public or privacy-safe starting points for
 future commercial comparisons. Distribution, pilot, and growth reports were
-refreshed on 2026-07-16 at 23:18 UTC. The outreach draft report was captured on
+refreshed on 2026-07-17 at 22:41 UTC. The outreach draft report was captured on
 2026-07-14, and the traffic report was captured on 2026-07-17 at 18:40 UTC,
 from:
 
@@ -14,12 +14,12 @@ from:
 
 ## Current Readout
 
-- 46 stable releases, all satisfying their version-aware artifact contracts.
-- 176 cumulative primary artifact requests: 22 portable and 154 wheel.
-- 144 manifest requests, 25 source requests, and 0 unknown requests.
-- 15 additional primary artifact requests since the prior checkpoint: 1
-  portable and 14 wheel. The new `v0.3.42` release accounts for 3 requests,
-  while `v0.3.41` gained 12 wheel requests.
+- 47 stable releases, all satisfying their version-aware artifact contracts.
+- 190 cumulative primary artifact requests: 25 portable and 165 wheel.
+- 156 manifest requests, 28 source requests, and 0 unknown requests.
+- 14 additional primary artifact requests since the prior checkpoint: 3
+  portable and 11 wheel. The new `v0.3.43` release accounts for 7 requests,
+  while `v0.3.42` gained 7 wheel requests.
 - 0 tracked pilot requests, 0 booked pilots, and $0 booked revenue.
 - 0 evidence warnings in the distribution, pilot, and joined growth reports.
 - 5 qualified outreach drafts backed by 16 fit-evidence links, with 0 approvals,
@@ -29,7 +29,7 @@ from:
 
 GitHub reports cumulative asset requests, not unique people or installations.
 The wheel and manifest totals include Repo Scout's own CI and maintainer
-verification, so they are directional reach evidence only. The 15-request
+verification, so they are directional reach evidence only. The 14-request
 increase did not produce a pilot request; the joined report correctly keeps
 acquisition as the commercial bottleneck.
 The prior overlapping window contained 1 view from 1 unique viewer, 119 unique
@@ -46,7 +46,7 @@ partial rankings rather than exhaustive traffic reconciliations.
   per-channel deltas and release-set changes.
 - `pilot-baseline.json` is the schema-7 aggregate from the empty public pilot
   queue.
-- `growth-baseline.json` joins the signed 15-request movement from the prior
+- `growth-baseline.json` joins the signed 14-request movement from the prior
   distribution checkpoint with the schema-7 pilot baseline.
 - `github-traffic-baseline.json` preserves the owner-visible 14-day aggregate,
   daily series, partial top referrers, and partial popular paths without visitor

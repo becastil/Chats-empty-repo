@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Refreshed the warning-free commercial evidence checkpoint after the verified
+  `v0.3.43` release and CI rollout.
+- Recorded 14 additional primary artifact requests: 7 on `v0.3.43` and 7 later
+  `v0.3.42` wheel requests, all materially confounded by Repo Scout's own
+  release, verification, and policy-gate activity.
+- Preserved zero pilot requests, zero outreach attempts, and $0 booked revenue,
+  with human-reviewed outreach still the commercial priority.
 - Independently verified the public `v0.3.43` manifest, annotated tag, source
   ancestry, exact signer workflow, hosted runner, and provenance for all three
   distributable artifacts.

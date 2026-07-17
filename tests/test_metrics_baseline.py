@@ -90,13 +90,13 @@ class MetricsBaselineTests(unittest.TestCase):
         self.assertEqual(summary["stable_releases"], len(releases))
         self.assertEqual(summary["complete_releases"], len(releases))
         self.assertTrue(all(release["contract"]["complete"] for release in releases))
-        self.assertEqual(report["latest"]["tag"], "v0.3.42")
-        self.assertEqual(summary["stable_releases"], 46)
-        self.assertEqual(summary["primary_artifact_downloads"], 176)
-        self.assertEqual(summary["portable_downloads"], 22)
-        self.assertEqual(summary["wheel_downloads"], 154)
-        self.assertEqual(summary["source_downloads"], 25)
-        self.assertEqual(summary["manifest_downloads"], 144)
+        self.assertEqual(report["latest"]["tag"], "v0.3.43")
+        self.assertEqual(summary["stable_releases"], 47)
+        self.assertEqual(summary["primary_artifact_downloads"], 190)
+        self.assertEqual(summary["portable_downloads"], 25)
+        self.assertEqual(summary["wheel_downloads"], 165)
+        self.assertEqual(summary["source_downloads"], 28)
+        self.assertEqual(summary["manifest_downloads"], 156)
         self.assertEqual(summary["unknown_downloads"], 0)
         self.assertEqual(
             summary["primary_artifact_downloads"],
@@ -119,7 +119,7 @@ class MetricsBaselineTests(unittest.TestCase):
         growth = self._read("growth-baseline.json")
 
         self.assertEqual(pilot["schema_version"], 7)
-        self.assertEqual(pilot["follow_up"]["as_of"], "2026-07-16")
+        self.assertEqual(pilot["follow_up"]["as_of"], "2026-07-17")
         self.assertEqual(pilot["summary"]["tracked_issues"], 0)
         self.assertEqual(pilot["summary"]["booked_revenue_usd"], 0)
         self.assertEqual(pilot["summary"]["qualification_review_issues"], 0)
@@ -135,14 +135,14 @@ class MetricsBaselineTests(unittest.TestCase):
         self.assertEqual(
             growth["distribution_change"],
             {
-                "manifest_downloads_delta": 13,
-                "new_releases": ["v0.3.42"],
-                "portable_downloads_delta": 1,
-                "primary_artifact_downloads_delta": 15,
+                "manifest_downloads_delta": 12,
+                "new_releases": ["v0.3.43"],
+                "portable_downloads_delta": 3,
+                "primary_artifact_downloads_delta": 14,
                 "removed_releases": [],
-                "source_downloads_delta": 1,
+                "source_downloads_delta": 3,
                 "unknown_downloads_delta": 0,
-                "wheel_downloads_delta": 14,
+                "wheel_downloads_delta": 11,
             },
         )
 
