@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added four isolated verified-release download attempts with bounded backoff
+  to the dogfood and copy-ready policy gates after an observed GitHub REST
+  outage caused a false-negative check.
+- Added a workflow parity contract for the retry count, isolated attempt paths,
+  successful artifact promotion, and explicit terminal failure.
 - Refreshed the warning-free commercial evidence checkpoint after the verified
   `v0.3.42` release and CI rollout.
 - Recorded 15 additional primary artifact requests: 3 on `v0.3.42` and 12 later

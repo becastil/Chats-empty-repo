@@ -41,12 +41,26 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          mkdir -p "$RUNNER_TEMP/repo-scout-release"
-          gh release download "v${REPO_SCOUT_VERSION}" \
-            --repo "$REPO_SCOUT_REPOSITORY" \
-            --dir "$RUNNER_TEMP/repo-scout-release" \
-            --pattern "repo_scout-${REPO_SCOUT_VERSION}-py3-none-any.whl" \
-            --pattern SHA256SUMS
+          release_dir="$RUNNER_TEMP/repo-scout-release"
+          wheel_name="repo_scout-${REPO_SCOUT_VERSION}-py3-none-any.whl"
+          mkdir -p "$release_dir"
+          for attempt in 1 2 3 4; do
+            attempt_dir="$release_dir/attempt-$attempt"
+            mkdir -p "$attempt_dir"
+            if gh release download "v${REPO_SCOUT_VERSION}" \
+              --repo "$REPO_SCOUT_REPOSITORY" \
+              --dir "$attempt_dir" \
+              --pattern "$wheel_name" \
+              --pattern SHA256SUMS; then
+              mv "$attempt_dir/$wheel_name" "$attempt_dir/SHA256SUMS" "$release_dir/"
+              break
+            fi
+            if [[ "$attempt" -eq 4 ]]; then
+              printf 'Repo Scout release download failed after %s attempts.\n' "$attempt" >&2
+              exit 1
+            fi
+            sleep "$((attempt * 5))"
+          done
 
       - name: Verify release integrity and provenance
         env:

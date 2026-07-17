@@ -64,7 +64,9 @@ The workflow grants only `contents: read` and `attestations: read`, disables
 persisted checkout credentials, and pins every external action by commit. It
 downloads the exact Repo Scout version and wheel digest declared in the
 workflow, plus `SHA256SUMS`, from the public GitHub Release using the
-runner-provided token. No team-managed secret or API key is required.
+runner-provided token. No team-managed secret or API key is required. The
+download uses up to four isolated attempts with 5, 10, and 15-second waits so a
+brief GitHub REST failure cannot leave partial files in a later attempt.
 
 Before installation, the gate verifies:
 
@@ -79,7 +81,9 @@ Repo Scout is installed without dependencies into a virtual environment under
 `RUNNER_TEMP`. The target checkout is never used as an install location, and
 the rollout bundle is also written outside it, so enforcement does not dirty
 the repository being checked. Any download, digest, manifest, provenance, or
-install failure stops the job before the policy scan.
+install failure stops the job before the policy scan. A download that still
+fails after the fourth attempt exits explicitly instead of using stale or
+partially downloaded evidence.
 
 The bundle contains repository filenames, policy findings, a policy
 fingerprint, and the checked-out commit. GitHub job summaries and artifacts

@@ -1353,3 +1353,17 @@ proof rather than buyer demand. Public pilot evidence and the private aggregate
 outreach audit still show zero pilot requests, approvals, attempts, and revenue.
 Acquisition therefore remains the commercial bottleneck, and human-reviewed
 outreach remains the next action.
+
+## 2026-07-17: Bound Verified Release Download Retries
+
+The verified `v0.3.42` policy gate failed while GitHub reported a major REST API
+availability incident because its single `gh release download` attempt could not
+see the existing public release. The same commit passed unchanged once GitHub
+recovered, confirming an external false negative rather than artifact drift.
+Both dogfood and copy-ready workflows now make at most four attempts with 5,
+10, and 15-second waits. Every attempt uses a separate runner-temporary
+directory, and only a complete wheel-plus-manifest result moves into the trusted
+verification directory. The fourth failure exits before installation; retries
+do not weaken the pinned digest, manifest, provenance, source, signer, or hosted
+runner checks. This improves paid CI activation reliability without claiming a
+customer install, pilot request, payment, or revenue.

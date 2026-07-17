@@ -48,6 +48,12 @@ The copy-ready CI gate consumes those releases with independent digest and
 provenance checks. This makes the free activation path closer to the paid pilot
 deployment model: teams can evaluate a repeatable, auditable install before
 buying cross-repository rollout support.
+Both policy gates now isolate each release-download attempt and retry up to four
+times with bounded backoff. This directly addresses an observed GitHub REST
+outage without accepting partial files or weakening digest and provenance
+verification; persistent failures still stop before installation. It reduces
+false-negative activation friction but does not prove customer usage, demand,
+payment, or revenue.
 Existing handoff and rollout reports are now replaced only after a complete
 new report is staged, with the original access permissions carried into the
 atomic swap. A failed swap leaves the prior evidence unchanged. This protects

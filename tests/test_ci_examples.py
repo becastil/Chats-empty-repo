@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
+import textwrap
 import tomllib
 import unittest
 
@@ -118,6 +119,38 @@ class CiExampleTests(unittest.TestCase):
         self.assertNotIn("path: repo-scout", external)
         self.assertNotIn("repository: becastil/Chats-empty-repo", external)
         self.assertIn("$TARGET_ROOT/repo-scout-policy.toml", external)
+
+        download_marker = "      - name: Download pinned Repo Scout release\n"
+        verify_marker = "      - name: Verify release integrity and provenance\n"
+        dogfood_download = dogfood[
+            dogfood.index(download_marker) : dogfood.index(verify_marker)
+        ]
+        external_download = external[
+            external.index(download_marker) : external.index(verify_marker)
+        ]
+        self.assertEqual(dogfood_download, external_download)
+        self.assertEqual(dogfood_download.count("gh release download"), 1)
+        self.assertIn("for attempt in 1 2 3 4; do", dogfood_download)
+        self.assertIn(
+            'attempt_dir="$release_dir/attempt-$attempt"', dogfood_download
+        )
+        self.assertIn(
+            'mv "$attempt_dir/$wheel_name" "$attempt_dir/SHA256SUMS" '
+            '"$release_dir/"',
+            dogfood_download,
+        )
+        self.assertIn('if [[ "$attempt" -eq 4 ]]', dogfood_download)
+        self.assertIn('sleep "$((attempt * 5))"', dogfood_download)
+        download_script = textwrap.dedent(
+            dogfood_download.split("        run: |\n", 1)[1]
+        )
+        syntax_check = subprocess.run(
+            ["bash", "-n"],
+            input=download_script,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(syntax_check.returncode, 0, syntax_check.stderr)
 
     def test_example_policy_uses_the_supported_contract(self) -> None:
         policy_path = ROOT / "examples/github-actions/repo-scout-policy.toml"
