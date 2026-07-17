@@ -579,11 +579,15 @@ release, verification, pinning, and CI activity materially confound those
 counts. The same checkpoint records zero pilot requests, zero outreach attempts,
 and $0 booked revenue, so acquisition remains the honest bottleneck.
 
-The owner-visible 14-day GitHub traffic checkpoint adds one unique repository
-viewer, 119 unique cloners, and 310 clone events. That extreme clone-to-view
-gap is consistent with CI, hosting, and maintainer automation and cannot be
-presented as 119 users, installs, or qualified prospects. Together with zero
-pilot requests, it confirms that acquisition remains the honest bottleneck.
+The refreshed owner-visible 14-day GitHub traffic checkpoint ending 2026-07-16
+records 3 views from one unique repository viewer, 293 unique cloners, and 962
+clone events. Compared with the overlapping window ending 2026-07-11, views
+rose by 2 without another unique viewer while clone events rose by 652 and
+unique cloners by 174. Rolling windows are not additive. The widening
+clone-to-view gap is consistent with CI, hosting, and maintainer automation and
+cannot be presented as 293 users, installs, or qualified prospects. Together
+with zero pilot requests, it confirms that acquisition remains the honest
+bottleneck.
 
 The dependency-free `repo-scout-growth` review places those signed deltas beside
 schema-5, schema-6, or schema-7 pilot source, qualification, offer, payment, and

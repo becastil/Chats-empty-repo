@@ -1,41 +1,16 @@
 {
   "schema_version": 1,
-  "captured_at": "2026-07-12T20:24:24Z",
+  "captured_at": "2026-07-17T18:40:46Z",
   "repository": "becastil/Chats-empty-repo",
   "window": {
-    "starts_at": "2026-06-28T00:00:00Z",
-    "ends_at": "2026-07-11T00:00:00Z",
+    "starts_at": "2026-07-03T00:00:00Z",
+    "ends_at": "2026-07-16T00:00:00Z",
     "days": 14
   },
   "views": {
-    "count": 1,
+    "count": 3,
     "uniques": 1,
     "views": [
-      {
-        "timestamp": "2026-06-28T00:00:00Z",
-        "count": 0,
-        "uniques": 0
-      },
-      {
-        "timestamp": "2026-06-29T00:00:00Z",
-        "count": 0,
-        "uniques": 0
-      },
-      {
-        "timestamp": "2026-06-30T00:00:00Z",
-        "count": 0,
-        "uniques": 0
-      },
-      {
-        "timestamp": "2026-07-01T00:00:00Z",
-        "count": 0,
-        "uniques": 0
-      },
-      {
-        "timestamp": "2026-07-02T00:00:00Z",
-        "count": 0,
-        "uniques": 0
-      },
       {
         "timestamp": "2026-07-03T00:00:00Z",
         "count": 0,
@@ -80,38 +55,38 @@
         "timestamp": "2026-07-11T00:00:00Z",
         "count": 0,
         "uniques": 0
+      },
+      {
+        "timestamp": "2026-07-12T00:00:00Z",
+        "count": 2,
+        "uniques": 1
+      },
+      {
+        "timestamp": "2026-07-13T00:00:00Z",
+        "count": 0,
+        "uniques": 0
+      },
+      {
+        "timestamp": "2026-07-14T00:00:00Z",
+        "count": 0,
+        "uniques": 0
+      },
+      {
+        "timestamp": "2026-07-15T00:00:00Z",
+        "count": 0,
+        "uniques": 0
+      },
+      {
+        "timestamp": "2026-07-16T00:00:00Z",
+        "count": 0,
+        "uniques": 0
       }
     ]
   },
   "clones": {
-    "count": 310,
-    "uniques": 119,
+    "count": 962,
+    "uniques": 293,
     "clones": [
-      {
-        "timestamp": "2026-06-28T00:00:00Z",
-        "count": 0,
-        "uniques": 0
-      },
-      {
-        "timestamp": "2026-06-29T00:00:00Z",
-        "count": 0,
-        "uniques": 0
-      },
-      {
-        "timestamp": "2026-06-30T00:00:00Z",
-        "count": 0,
-        "uniques": 0
-      },
-      {
-        "timestamp": "2026-07-01T00:00:00Z",
-        "count": 0,
-        "uniques": 0
-      },
-      {
-        "timestamp": "2026-07-02T00:00:00Z",
-        "count": 0,
-        "uniques": 0
-      },
       {
         "timestamp": "2026-07-03T00:00:00Z",
         "count": 0,
@@ -156,6 +131,31 @@
         "timestamp": "2026-07-11T00:00:00Z",
         "count": 101,
         "uniques": 41
+      },
+      {
+        "timestamp": "2026-07-12T00:00:00Z",
+        "count": 120,
+        "uniques": 47
+      },
+      {
+        "timestamp": "2026-07-13T00:00:00Z",
+        "count": 115,
+        "uniques": 45
+      },
+      {
+        "timestamp": "2026-07-14T00:00:00Z",
+        "count": 129,
+        "uniques": 50
+      },
+      {
+        "timestamp": "2026-07-15T00:00:00Z",
+        "count": 184,
+        "uniques": 69
+      },
+      {
+        "timestamp": "2026-07-16T00:00:00Z",
+        "count": 104,
+        "uniques": 44
       }
     ]
   },
@@ -170,9 +170,15 @@
     {
       "path": "/becastil/Chats-empty-repo",
       "title": "Overview",
+      "count": 2,
+      "uniques": 1
+    },
+    {
+      "path": "/becastil/Chats-empty-repo/releases/tag/v0.3.29",
+      "title": "/releases/tag/v0.3.29",
       "count": 1,
       "uniques": 1
     }
   ],
-  "measurement_note": "GitHub traffic is a rolling aggregate. Unique cloners can include CI runners, hosting systems, maintainer automation, and people; they are not verified users, installs, activations, pilot requests, or revenue."
+  "measurement_note": "GitHub traffic is a rolling aggregate. Top referrers and popular paths are partial rankings and may not reconcile to all views. Unique cloners can include CI runners, hosting systems, maintainer automation, and people; they are not verified users, installs, activations, pilot requests, or revenue."
 }

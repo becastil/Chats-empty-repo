@@ -1394,3 +1394,18 @@ and terminal failure without weakening identity checks or calling GitHub. The
 customer and dogfood verification blocks are byte-identical. This improves paid
 CI activation reliability without establishing an external install, pilot
 request, payment, or revenue.
+
+## 2026-07-17: Refresh Traffic Without Treating Clones As Demand
+
+The owner-visible rolling window ending 2026-07-16 records 3 repository views
+from 1 unique viewer, 293 unique cloners, and 962 clone events. Compared with
+the overlapping checkpoint ending 2026-07-11, the raw window totals rose by 2
+views, 174 unique cloners, and 652 clone events, while unique viewers remained
+at one. The windows overlap and GitHub's popular referrer and path lists are
+partial rankings, so these differences are directional rather than additive or
+fully attributable. The baseline contract now validates a strict UTC daily
+cadence and nonnegative bounded counts without requiring partial top lists to
+reconcile every view. The widening clone-to-view gap remains consistent with
+CI, hosting, and maintainer automation. It does not establish 293 users,
+installs, pilot requests, payments, or revenue, and the five-draft human review
+queue remains the next commercial action.

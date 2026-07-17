@@ -3,7 +3,7 @@
 These generated reports preserve public or privacy-safe starting points for
 future commercial comparisons. Distribution, pilot, and growth reports were
 refreshed on 2026-07-16 at 23:18 UTC. The outreach draft report was captured on
-2026-07-14, and the traffic report was captured on 2026-07-12 at 19:22 UTC,
+2026-07-14, and the traffic report was captured on 2026-07-17 at 18:40 UTC,
 from:
 
 - GitHub's public release API for `becastil/Chats-empty-repo`.
@@ -24,17 +24,21 @@ from:
 - 0 evidence warnings in the distribution, pilot, and joined growth reports.
 - 5 qualified outreach drafts backed by 16 fit-evidence links, with 0 approvals,
   contact attempts, replies, pilot requests, or revenue claims.
-- A 14-day GitHub traffic window with 1 unique viewer, 119 unique cloners, and
-  310 clone events.
+- A 14-day GitHub traffic window with 3 views from 1 unique viewer, 293 unique
+  cloners, and 962 clone events.
 
 GitHub reports cumulative asset requests, not unique people or installations.
 The wheel and manifest totals include Repo Scout's own CI and maintainer
 verification, so they are directional reach evidence only. The 15-request
 increase did not produce a pilot request; the joined report correctly keeps
 acquisition as the commercial bottleneck.
-The gap between one viewer and 119 unique cloners is consistent with CI,
-hosting, and maintainer automation. It cannot support a claim of 119 users or
-organic visitors.
+The prior overlapping window contained 1 view from 1 unique viewer, 119 unique
+cloners, and 310 clone events. The new window adds only 2 views and no unique
+viewer while clone activity rises by 652 events and 174 unique cloners. That
+widening gap is consistent with CI, hosting, and maintainer automation and
+cannot support a claim of 293 users or organic visitors. Overlapping rolling
+windows are not additive, and GitHub's popular referrer and path lists are
+partial rankings rather than exhaustive traffic reconciliations.
 
 ## Files
 
@@ -45,7 +49,8 @@ organic visitors.
 - `growth-baseline.json` joins the signed 15-request movement from the prior
   distribution checkpoint with the schema-7 pilot baseline.
 - `github-traffic-baseline.json` preserves the owner-visible 14-day aggregate,
-  daily series, top referrers, and popular paths without visitor identities.
+  daily series, partial top referrers, and partial popular paths without visitor
+  identities.
 - `outreach-draft-baseline.json` preserves only schema-5 aggregate counts; it
   contains no prospect alias, company, contact address, draft, or source URL.
 

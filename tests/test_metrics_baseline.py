@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 import unittest
 
@@ -27,23 +27,56 @@ class MetricsBaselineTests(unittest.TestCase):
         )
         self.assertEqual(report["window"]["starts_at"], views["views"][0]["timestamp"])
         self.assertEqual(report["window"]["ends_at"], views["views"][-1]["timestamp"])
-        datetime.fromisoformat(report["captured_at"].replace("Z", "+00:00"))
+        captured_at = datetime.fromisoformat(
+            report["captured_at"].replace("Z", "+00:00")
+        )
+        timestamps = [
+            datetime.fromisoformat(day["timestamp"].replace("Z", "+00:00"))
+            for day in views["views"]
+        ]
+        self.assertEqual(captured_at.utcoffset(), timedelta(0))
+        self.assertTrue(all(day.utcoffset() == timedelta(0) for day in timestamps))
+        self.assertEqual(
+            timestamps,
+            [timestamps[0] + timedelta(days=offset) for offset in range(14)],
+        )
+        self.assertLess(timestamps[-1], captured_at)
 
         for aggregate, daily_key in ((views, "views"), (clones, "clones")):
+            self.assertIsInstance(aggregate["count"], int)
+            self.assertIsInstance(aggregate["uniques"], int)
+            self.assertGreaterEqual(aggregate["count"], 0)
+            self.assertGreaterEqual(aggregate["uniques"], 0)
             self.assertEqual(
                 aggregate["count"],
                 sum(day["count"] for day in aggregate[daily_key]),
             )
             self.assertLessEqual(aggregate["uniques"], aggregate["count"])
             for day in aggregate[daily_key]:
+                self.assertIsInstance(day["count"], int)
+                self.assertIsInstance(day["uniques"], int)
+                self.assertGreaterEqual(day["count"], 0)
+                self.assertGreaterEqual(day["uniques"], 0)
                 self.assertLessEqual(day["uniques"], day["count"])
 
+        for items in (report["referrers"], report["popular_paths"]):
+            self.assertLessEqual(sum(item["count"] for item in items), views["count"])
+            for item in items:
+                self.assertIsInstance(item["count"], int)
+                self.assertIsInstance(item["uniques"], int)
+                self.assertGreaterEqual(item["count"], 0)
+                self.assertGreaterEqual(item["uniques"], 0)
+                self.assertLessEqual(item["uniques"], item["count"])
+
         self.assertEqual(
-            sum(item["count"] for item in report["referrers"]), views["count"]
+            len(report["referrers"]),
+            len({item["referrer"] for item in report["referrers"]}),
         )
         self.assertEqual(
-            sum(item["count"] for item in report["popular_paths"]), views["count"]
+            len(report["popular_paths"]),
+            len({item["path"] for item in report["popular_paths"]}),
         )
+        self.assertIn("partial rankings", report["measurement_note"])
         self.assertIn("not verified users", report["measurement_note"])
 
     def test_distribution_baseline_reconciles_and_has_no_warnings(self) -> None:

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Refreshed the owner-visible 14-day repository traffic checkpoint to 3 views
+  from 1 unique viewer, 293 unique cloners, and 962 clone events.
+- Recorded that the overlapping-window rise of 652 clone events produced only
+  2 additional views and no additional unique viewer, preserving acquisition
+  as the commercial bottleneck instead of presenting automation as adoption.
+- Corrected the traffic contract to treat GitHub's popular referrers and paths
+  as partial rankings, with stricter UTC cadence, nonnegative-count, and
+  uniqueness validation.
 - Added four bounded provenance-verification attempts to both policy gates while
   retaining the pinned wheel, repository, source, tag, signer workflow, and
   hosted-runner requirements on every attempt.

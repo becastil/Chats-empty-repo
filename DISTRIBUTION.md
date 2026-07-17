@@ -51,10 +51,12 @@ None requires an API key or sends source code to Repo Scout.
   (1 portable and 60 wheel), and zero pilot requests or booked revenue. Repo
   Scout's CI and maintainer verification materially confound the wheel total.
   The machine-readable reports and capture contract live in `metrics/`.
-- **Traffic checkpoint:** The owner-visible 14-day window ending 2026-07-11
-  contained 1 unique viewer, 119 unique cloners, and 310 clone events. The
+- **Traffic checkpoint:** The owner-visible 14-day window ending 2026-07-16
+  contained 3 views from 1 unique viewer, 293 unique cloners, and 962 clone
+  events. Compared with the overlapping window ending 2026-07-11, views rose
+  by 2 without another unique viewer while clone events rose by 652. The
   clone-heavy mismatch is consistent with CI, hosting, and maintainer
-  automation and is not evidence of 119 users.
+  automation and is not evidence of 293 users.
 
 This experiment has no browser analytics. Release requests and site visits are
 not unique prospects, and self-reported source does not prove causation. Only

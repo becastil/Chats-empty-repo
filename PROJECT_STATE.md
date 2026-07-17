@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 132 of 1,000, with 868 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 133 of 1,000, with 867 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -122,7 +122,9 @@ The delivery goal is 1,000 meaningful commits. This update is commit 132 of 1,00
 - A warning-free signed checkpoint showing 15 additional primary artifact
   requests through the verified `v0.3.42` release, with zero pilot requests and
   revenue.
-- A 14-day owner-visible GitHub traffic baseline with reconciled daily views and clones, top referrers, popular paths, and explicit automation caveats.
+- A refreshed 14-day owner-visible GitHub traffic baseline with reconciled
+  daily views and clones, partial top referrers and paths, and explicit rolling
+  window and automation caveats.
 - Required self-reported primary purchase criteria in public pilot intake.
 - Schema-6 criterion totals for qualification, offers, booked revenue, conversion, and loss.
 - Schema-7 scope qualification from required team size, repository count, CI provider, and repository-standard answers.
