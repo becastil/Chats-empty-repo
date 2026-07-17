@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 130 of 1,000, with 870 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 131 of 1,000, with 869 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -62,6 +62,8 @@ The delivery goal is 1,000 meaningful commits. This update is commit 130 of 1,00
 - Runner-temp virtual-environment installation that leaves the protected checkout unchanged.
 - Four isolated verified-release download attempts with bounded backoff and an
   explicit terminal failure in both dogfood and copy-ready policy gates.
+- Executable injected-failure proof for retry recovery, exact waits, artifact
+  promotion, terminal attempt count, and partial-file exclusion.
 - Markdown first-repository rollout bundles generated from evaluated team-policy evidence.
 - Automated readiness checks separated from explicit, unchecked team handoff actions.
 - Rollout remediation evidence preserved before policy exit code 6.

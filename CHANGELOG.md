@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Executed the verified-release download block against a fake GitHub CLI to
+  prove third-attempt recovery, exact backoff waits, complete artifact
+  promotion, four-attempt termination, and exclusion of partial trusted files.
 - Added four isolated verified-release download attempts with bounded backoff
   to the dogfood and copy-ready policy gates after an observed GitHub REST
   outage caused a false-negative check.

@@ -54,6 +54,10 @@ outage without accepting partial files or weakening digest and provenance
 verification; persistent failures still stop before installation. It reduces
 false-negative activation friction but does not prove customer usage, demand,
 payment, or revenue.
+The CI contract executes that shell block with injected transient and terminal
+failures, proving the exact waits and trusted-file boundary without calling
+GitHub. This turns the retry claim into repeatable distribution evidence while
+retaining the same customer and revenue limits.
 Existing handoff and rollout reports are now replaced only after a complete
 new report is staged, with the original access permissions carried into the
 atomic swap. A failed swap leaves the prior evidence unchanged. This protects

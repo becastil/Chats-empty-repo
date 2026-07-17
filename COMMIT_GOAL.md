@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after hardening verified release downloads: 130 / 1,000 (13.0%).
-- Remaining after hardening verified release downloads: 870 commits.
+- Progress after proving verified download recovery: 131 / 1,000 (13.1%).
+- Remaining after proving verified download recovery: 869 commits.
 
 ## Commit Standard
 

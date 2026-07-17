@@ -152,6 +152,93 @@ class CiExampleTests(unittest.TestCase):
         )
         self.assertEqual(syntax_check.returncode, 0, syntax_check.stderr)
 
+    def test_release_download_retries_are_executable_and_bounded(self) -> None:
+        workflow = (ROOT / ".github/workflows/repo-scout-policy.yml").read_text(
+            encoding="utf-8"
+        )
+        download_marker = "      - name: Download pinned Repo Scout release\n"
+        verify_marker = "      - name: Verify release integrity and provenance\n"
+        download_step = workflow[
+            workflow.index(download_marker) : workflow.index(verify_marker)
+        ]
+        download_script = textwrap.dedent(
+            download_step.split("        run: |\n", 1)[1]
+        )
+
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            fake_bin = root / "bin"
+            fake_bin.mkdir()
+            fake_gh = fake_bin / "gh"
+            fake_gh.write_text(
+                f"#!{sys.executable}\n"
+                "import os\n"
+                "from pathlib import Path\n"
+                "import sys\n"
+                "counter = Path(os.environ['FAKE_GH_COUNTER'])\n"
+                "attempt = int(counter.read_text()) + 1 if counter.exists() else 1\n"
+                "counter.write_text(str(attempt))\n"
+                "if attempt < int(os.environ['FAKE_GH_SUCCESS_ON']):\n"
+                "    raise SystemExit(1)\n"
+                "destination = Path(sys.argv[sys.argv.index('--dir') + 1])\n"
+                "destination.mkdir(parents=True, exist_ok=True)\n"
+                "version = os.environ['REPO_SCOUT_VERSION']\n"
+                "(destination / f'repo_scout-{version}-py3-none-any.whl').write_text('wheel')\n"
+                "(destination / 'SHA256SUMS').write_text('manifest')\n",
+                encoding="utf-8",
+            )
+            fake_sleep = fake_bin / "sleep"
+            fake_sleep.write_text(
+                "#!/usr/bin/env sh\n"
+                "printf '%s\\n' \"$1\" >> \"$FAKE_SLEEP_LOG\"\n",
+                encoding="utf-8",
+            )
+            fake_gh.chmod(0o755)
+            fake_sleep.chmod(0o755)
+
+            recovered, recovered_counter, recovered_sleeps = (
+                self._run_release_download(
+                    download_script,
+                    fake_bin,
+                    root / "recovered",
+                    success_on=3,
+                )
+            )
+            recovered_release = root / "recovered/repo-scout-release"
+            self.assertEqual(recovered.returncode, 0, recovered.stderr)
+            self.assertEqual(recovered_counter, 3)
+            self.assertEqual(recovered_sleeps, ["5", "10"])
+            self.assertEqual(
+                (
+                    recovered_release
+                    / f"repo_scout-{REPO_SCOUT_VERSION}-py3-none-any.whl"
+                ).read_text(encoding="utf-8"),
+                "wheel",
+            )
+            self.assertEqual(
+                (recovered_release / "SHA256SUMS").read_text(encoding="utf-8"),
+                "manifest",
+            )
+
+            failed, failed_counter, failed_sleeps = self._run_release_download(
+                download_script,
+                fake_bin,
+                root / "failed",
+                success_on=5,
+            )
+            failed_release = root / "failed/repo-scout-release"
+            self.assertEqual(failed.returncode, 1)
+            self.assertEqual(failed_counter, 4)
+            self.assertEqual(failed_sleeps, ["5", "10", "15"])
+            self.assertIn("failed after 4 attempts", failed.stderr)
+            self.assertFalse((failed_release / "SHA256SUMS").exists())
+            self.assertFalse(
+                (
+                    failed_release
+                    / f"repo_scout-{REPO_SCOUT_VERSION}-py3-none-any.whl"
+                ).exists()
+            )
+
     def test_example_policy_uses_the_supported_contract(self) -> None:
         policy_path = ROOT / "examples/github-actions/repo-scout-policy.toml"
         with policy_path.open("rb") as policy_file:
@@ -359,6 +446,43 @@ class CiExampleTests(unittest.TestCase):
             capture_output=True,
             text=True,
         )
+
+    @staticmethod
+    def _run_release_download(
+        script: str,
+        fake_bin: Path,
+        runner_temp: Path,
+        *,
+        success_on: int,
+    ) -> tuple[subprocess.CompletedProcess[str], int, list[str]]:
+        runner_temp.mkdir()
+        counter = runner_temp / "gh-count"
+        sleep_log = runner_temp / "sleep-log"
+        environment = os.environ.copy()
+        environment.update(
+            {
+                "FAKE_GH_COUNTER": str(counter),
+                "FAKE_GH_SUCCESS_ON": str(success_on),
+                "FAKE_SLEEP_LOG": str(sleep_log),
+                "PATH": f"{fake_bin}{os.pathsep}{environment['PATH']}",
+                "REPO_SCOUT_REPOSITORY": "example/repo-scout",
+                "REPO_SCOUT_VERSION": REPO_SCOUT_VERSION,
+                "RUNNER_TEMP": str(runner_temp),
+            }
+        )
+        completed = subprocess.run(
+            ["bash", "-e"],
+            input=script,
+            env=environment,
+            capture_output=True,
+            text=True,
+        )
+        sleeps = (
+            sleep_log.read_text(encoding="utf-8").splitlines()
+            if sleep_log.exists()
+            else []
+        )
+        return completed, int(counter.read_text(encoding="utf-8")), sleeps
 
     @staticmethod
     def _commit_repository(root: Path) -> None:

@@ -1367,3 +1367,16 @@ verification directory. The fourth failure exits before installation; retries
 do not weaken the pinned digest, manifest, provenance, source, signer, or hosted
 runner checks. This improves paid CI activation reliability without claiming a
 customer install, pilot request, payment, or revenue.
+
+## 2026-07-17: Execute The Verified Download Failure Paths
+
+Text and syntax checks prove the retry loop is present and parseable, but they
+do not prove failed attempts reach the intended later branches. The CI contract
+now executes the exact dogfood download shell with temporary fake `gh` and
+`sleep` commands. One case fails twice, records 5 and 10-second waits, succeeds
+on the third isolated attempt, and promotes only the complete wheel and
+manifest. A second case fails all four attempts, records the final 15-second
+wait sequence, exits explicitly, and leaves no trusted wheel or manifest. The
+test makes no network call and the customer workflow remains byte-identical to
+the executed dogfood block. This strengthens paid CI reliability evidence; it
+does not establish an external activation, pilot request, payment, or revenue.
