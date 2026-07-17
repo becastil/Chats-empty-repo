@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Independently verified the public `v0.3.43` manifest, annotated tag, source
+  ancestry, exact signer workflow, hosted runner, and provenance for all three
+  distributable artifacts.
+- Advanced the dogfood and copy-ready policy gates to the independently measured
+  `v0.3.43` wheel digest and exact release source commit.
+- Verified all seven installed commands and the four paid-workflow smoke
+  harnesses from a fresh no-dependency wheel installation before changing pins.
+
 ## 0.3.43 - 2026-07-17
 
 - Added schema-4 content-bound SHA-256 receipts for complete private outreach

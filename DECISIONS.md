@@ -1441,3 +1441,20 @@ their measured release versions, and both policy gates remain pinned to
 independently verified `v0.3.42` until publication and separate reconciliation.
 This creates an attested distribution boundary; it does not approve or send a
 draft, prove an install, create a pilot request, or record revenue.
+
+## 2026-07-17: Advance Both Policy Gates To Verified v0.3.43
+
+The public `v0.3.43` wheel independently measures to SHA-256
+`6fdf59d039cd168fa830f1dc72b6b4627e1df6a30f52c933ccdc559643497f16` and
+resolves through annotated tag `v0.3.43` to main-branch source commit
+`e041d9d786c16bce2b645a407d3556ed4146d427`. The downloaded manifest verified
+the wheel, portable zipapp, and source archive. GitHub attestations verified all
+three artifacts against the source commit, semantic tag, release signer
+workflow, and hosted-runner restriction. Release run `29612283459` completed
+successfully. A fresh no-dependency wheel install reported `0.3.43` from all
+seven public commands and passed the policy activation, guarded outreach,
+commercial reporting, and rollout aggregation smoke harnesses. The preflighted
+updater therefore advances the dogfood workflow, copy-ready customer example,
+buyer-facing CI claim, and pin contract together. This strengthens paid
+activation distribution; it does not prove a customer install, outreach
+attempt, pilot request, payment, or revenue.

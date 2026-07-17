@@ -86,7 +86,7 @@ This is useful free CI enforcement; the paid work remains agreeing on the
 right rules and rolling the same reviewed policy across uneven repositories.
 Versions 1 and 2 remain readable so verified CI upgrades can be staged safely.
 The dogfood and copy-ready gates now install the independently verified
-`v0.3.42` wheel, so v4 policies can run locally and in CI
+`v0.3.43` wheel, so v4 policies can run locally and in CI
 without source checkout, mutable package resolution, or a team-managed secret.
 Maintainer pin upgrades now preflight and update the dogfood workflow,
 copy-ready customer example, buyer-facing README claim, and contract test as one
@@ -388,11 +388,15 @@ making Repo Scout perform the judgment.
 Version `0.3.43` advances the package, runtime, website, download guide, and
 installed-command smoke identities together so the schema-4 content receipt can
 reach the five-draft operator workflow. The same boundary ships bounded GitHub
-download and provenance recovery already exercised on main. Customer and
-dogfood policy gates remain pinned to independently verified `v0.3.42` until
-the new release is published and separately reconciled. This makes review
-safety distributable; it does not perform a review, send outreach, establish
-demand, or create revenue.
+download and provenance recovery already exercised on main. After separate
+public-artifact verification, customer and dogfood CI now pin source commit
+`e041d9d786c16bce2b645a407d3556ed4146d427` and wheel SHA-256
+`6fdf59d039cd168fa830f1dc72b6b4627e1df6a30f52c933ccdc559643497f16`.
+The downloaded manifest, annotated tag ancestry, all three provenance
+attestations, exact signer workflow, hosted-runner restriction, seven installed
+command identities, and four paid-workflow smoke harnesses passed before the
+pins changed. This makes review safety distributable; it does not perform a
+review, send outreach, establish demand, or create revenue.
 
 After a human completes those checks, guarded `--approve-next` can record the
 decision without hand-editing CSV. It requires the exact next alias, an explicit

@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after preparing the v0.3.43 review-safety release: 135 / 1,000 (13.5%).
-- Remaining after preparing the v0.3.43 review-safety release: 865 commits.
+- Progress after independently pinning the v0.3.43 release: 136 / 1,000 (13.6%).
+- Remaining after independently pinning the v0.3.43 release: 864 commits.
 
 ## Commit Standard
 
