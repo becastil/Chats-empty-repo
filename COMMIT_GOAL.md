@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after binding outreach decisions to reviewed content: 134 / 1,000 (13.4%).
-- Remaining after binding outreach decisions to reviewed content: 866 commits.
+- Progress after preparing the v0.3.43 review-safety release: 135 / 1,000 (13.5%).
+- Remaining after preparing the v0.3.43 review-safety release: 865 commits.
 
 ## Commit Standard
 

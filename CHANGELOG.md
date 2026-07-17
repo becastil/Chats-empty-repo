@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.43 - 2026-07-17
+
 - Added schema-4 content-bound SHA-256 receipts for complete private outreach
   reviews, covering the normalized ledger row, selected draft, review date, and
   five human checks.

@@ -385,6 +385,15 @@ date, or check fails without modifying the ledger or exposing the changed
 content. This binds a human decision to what was actually reviewed without
 making Repo Scout perform the judgment.
 
+Version `0.3.43` advances the package, runtime, website, download guide, and
+installed-command smoke identities together so the schema-4 content receipt can
+reach the five-draft operator workflow. The same boundary ships bounded GitHub
+download and provenance recovery already exercised on main. Customer and
+dogfood policy gates remain pinned to independently verified `v0.3.42` until
+the new release is published and separately reconciled. This makes review
+safety distributable; it does not perform a review, send outreach, establish
+demand, or create revenue.
+
 After a human completes those checks, guarded `--approve-next` can record the
 decision without hand-editing CSV. It requires the exact next alias, an explicit
 review date, and a confirmation flag; validates all rows before and after; and

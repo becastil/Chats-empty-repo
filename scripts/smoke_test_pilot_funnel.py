@@ -406,23 +406,23 @@ def _release_export(
     duplicate_manifest: bool = False,
 ) -> list[dict[str, Any]]:
     assets = [
-        {"name": "repo-scout-0.3.42.pyz", "download_count": portable},
+        {"name": "repo-scout-0.3.43.pyz", "download_count": portable},
         {
-            "name": "repo_scout-0.3.42-py3-none-any.whl",
+            "name": "repo_scout-0.3.43-py3-none-any.whl",
             "download_count": wheel,
         },
-        {"name": "repo_scout-0.3.42.tar.gz", "download_count": 1},
+        {"name": "repo_scout-0.3.43.tar.gz", "download_count": 1},
         {"name": "SHA256SUMS", "download_count": 1},
     ]
     if duplicate_manifest:
         assets.append({"name": "SHA256SUMS", "download_count": 1})
     return [
         {
-            "tag_name": "v0.3.42",
+            "tag_name": "v0.3.43",
             "draft": False,
             "prerelease": False,
             "published_at": "2026-07-13T00:00:00Z",
-            "html_url": "https://example.invalid/releases/v0.3.42",
+            "html_url": "https://example.invalid/releases/v0.3.43",
             "assets": assets,
         }
     ]

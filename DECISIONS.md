@@ -1426,3 +1426,18 @@ remain compatible, while the documented five-draft workflow uses the
 content-bound handoff. This protects the human decision boundary; it does not
 perform the review, approve a message, send outreach, create demand, or record
 revenue.
+
+## 2026-07-17: Release Content-Bound Review Safety
+
+The schema-4 review receipt is only useful to the five-draft operating queue
+when the installable `repo-scout-outreach` command contains it. Version
+`0.3.43` therefore advances package metadata, runtime identity, website
+structured data, direct download instructions, artifact-verification examples,
+and release-smoke fixtures together. The boundary also ships the bounded
+download and provenance retries added after `v0.3.42`. The release smoke
+requires the built wheel to emit a content receipt and approve a matching
+private bundle through the installed command. Historical metrics remain on
+their measured release versions, and both policy gates remain pinned to
+independently verified `v0.3.42` until publication and separate reconciliation.
+This creates an attested distribution boundary; it does not approve or send a
+draft, prove an install, create a pilot request, or record revenue.
