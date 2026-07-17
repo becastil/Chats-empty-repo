@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Standardized direct-outreach report defaults and every copy-ready lifecycle
+  command on the current UTC calendar date.
+- Added regression coverage that prevents local-midnight review, approval,
+  contact, follow-up, and outcome dates from drifting across operator timezones.
 - Refreshed the warning-free commercial evidence checkpoint after the verified
   `v0.3.43` release and CI rollout.
 - Recorded 14 additional primary artifact requests: 7 on `v0.3.43` and 7 later

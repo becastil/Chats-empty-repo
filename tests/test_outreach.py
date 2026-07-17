@@ -2452,6 +2452,32 @@ class OutreachReportTests(unittest.TestCase):
             self.assertEqual(exit_code, 2)
             self.assertIn("ledger header must be exactly", stderr.getvalue())
 
+    def test_cli_defaults_to_the_current_utc_calendar_date(self) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            _write_ledger(
+                ledger,
+                [
+                    _row(
+                        status="drafted",
+                        contacted_on="",
+                        next_action_on="",
+                        approved_on="",
+                    )
+                ],
+            )
+            stdout = io.StringIO()
+            with patch(
+                "repo_scout.outreach._utc_today",
+                return_value=date(2026, 7, 18),
+            ), redirect_stdout(stdout):
+                library_report = load_outreach_report(ledger)
+                exit_code = main([str(ledger), "--format", "json"])
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(library_report["as_of"], "2026-07-18")
+        self.assertEqual(json.loads(stdout.getvalue())["as_of"], "2026-07-18")
+
     def test_rejects_wrong_row_width_and_malformed_csv(self) -> None:
         with TemporaryDirectory() as tmp:
             ledger = Path(tmp) / "ledger.csv"

@@ -124,14 +124,14 @@ Audit the ledger before each contact session:
 
 ```bash
 repo-scout-outreach outreach-private/outreach-ledger.csv \
-  --as-of "$(date +%F)"
+  --as-of "$(date -u +%F)"
 ```
 
 Then surface one drafted alias at a time for human review:
 
 ```bash
 repo-scout-outreach outreach-private/outreach-ledger.csv \
-  --as-of "$(date +%F)" --review-next
+  --as-of "$(date -u +%F)" --review-next
 ```
 
 This mode prints five unchecked criteria plus only the alias, permitted channel,
@@ -142,6 +142,9 @@ decision. The checklist is private operator material because it names a ledger
 alias; do not commit it as a measurement baseline. Text mode ends with complete,
 shell-quoted commands to approve or decline the selected alias using the current
 `as_of` date and supplied ledger path. Choose exactly one after human review.
+Omit `--as-of` to use the current UTC calendar date. The explicit UTC date in
+these examples prevents a local-midnight boundary from changing the review
+receipt or later lifecycle dates.
 
 To inspect the selected draft and its qualification links without manually
 cross-referencing the CSV and notes file, request both explicitly in the same
@@ -149,7 +152,7 @@ private review session:
 
 ```bash
 repo-scout-outreach outreach-private/outreach-ledger.csv \
-  --as-of "$(date +%F)" --review-next \
+  --as-of "$(date -u +%F)" --review-next \
   --include-private-evidence \
   --include-private-draft outreach-private/drafts.md
 ```
@@ -177,7 +180,7 @@ creating contact activity:
 
 ```bash
 repo-scout-outreach outreach-private/outreach-ledger.csv \
-  --as-of "$(date +%F)" \
+  --as-of "$(date -u +%F)" \
   --decline-next prospect-001 \
   --confirm-not-send \
   --review-digest 'sha256:<digest-from-review-output>' \
@@ -202,9 +205,9 @@ same alias:
 
 ```bash
 repo-scout-outreach outreach-private/outreach-ledger.csv \
-  --as-of "$(date +%F)" \
+  --as-of "$(date -u +%F)" \
   --approve-next prospect-001 \
-  --approved-on "$(date +%F)" \
+  --approved-on "$(date -u +%F)" \
   --confirm-reviewed \
   --review-digest 'sha256:<digest-from-review-output>' \
   --reviewed-private-draft outreach-private/drafts.md
@@ -228,9 +231,9 @@ after the send, record it:
 
 ```bash
 repo-scout-outreach outreach-private/outreach-ledger.csv \
-  --as-of "$(date +%F)" \
+  --as-of "$(date -u +%F)" \
   --record-contact prospect-001 \
-  --contacted-on "$(date +%F)" \
+  --contacted-on "$(date -u +%F)" \
   --confirm-sent
 ```
 
@@ -252,9 +255,9 @@ On the due date, after a human sends the one allowed follow-up, record it:
 
 ```bash
 repo-scout-outreach outreach-private/outreach-ledger.csv \
-  --as-of "$(date +%F)" \
+  --as-of "$(date -u +%F)" \
   --record-follow-up prospect-001 \
-  --followed-up-on "$(date +%F)" \
+  --followed-up-on "$(date -u +%F)" \
   --confirm-follow-up-sent
 ```
 
@@ -273,7 +276,7 @@ initial contact or follow-up, stop the cadence without hand-editing the ledger:
 
 ```bash
 repo-scout-outreach outreach-private/outreach-ledger.csv \
-  --as-of "$(date +%F)" \
+  --as-of "$(date -u +%F)" \
   --record-outcome prospect-001 \
   --outcome pilot-requested \
   --confirm-outcome-observed

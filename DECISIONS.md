@@ -1472,3 +1472,16 @@ proof rather than buyer demand. Public pilot evidence and the aggregate
 outreach baseline still show zero pilot requests, attempts, and revenue.
 Acquisition therefore remains the commercial bottleneck, and human-reviewed
 outreach remains the next action.
+
+## 2026-07-17: Use UTC Dates Across The Outreach Lifecycle
+
+Direct-outreach commands previously derived review, approval, contact,
+follow-up, and outcome dates from the operator's local calendar, while the
+public pilot funnel already uses UTC. Around midnight, different operator
+timezones could therefore bind a review receipt to one day but record a guarded
+action on another, or reject an action as future-dated. The outreach CLI now
+uses the current UTC calendar date when `--as-of` is omitted, and every
+copy-ready lifecycle example passes that UTC date explicitly for both the
+report and action date. Explicit ISO dates and dates carried forward by emitted
+commands remain authoritative. This makes the private execution record
+reproducible; it does not review, approve, send, or count outreach.

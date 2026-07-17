@@ -206,6 +206,10 @@ The local outreach auditor enforces the 10-prospect boundary, three-signal
 qualification, alias-only records, permitted channels, one seven-day follow-up,
 and terminal stop states. It sends nothing and exposes no recipient details;
 its totals remain operator activity rather than commercial evidence.
+Its omitted-date default and every documented lifecycle command use the current
+UTC calendar date. This keeps a review receipt, approval, manual contact, and
+follow-up on one reproducible day convention when the operator's local date
+differs near midnight; it does not make or send any of those decisions.
 Schema-3 outreach reports separate drafts from sent attempts. Schema 5 adds an
 explicit `approved` checkpoint and requires its private approval date
 to survive every later status. Drafted and approved rows require a permitted

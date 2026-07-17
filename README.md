@@ -301,7 +301,7 @@ contact session without sending messages or exposing recipients:
 
 ```bash
 repo-scout-outreach outreach-private/outreach-ledger.csv \
-  --as-of "$(date +%F)"
+  --as-of "$(date -u +%F)"
 ```
 
 After the batch passes validation, surface one complete private checklist for
@@ -309,7 +309,7 @@ the required human review without changing the ledger or sending a message:
 
 ```bash
 repo-scout-outreach outreach-private/outreach-ledger.csv \
-  --as-of "$(date +%F)" --review-next \
+  --as-of "$(date -u +%F)" --review-next \
   --include-private-evidence \
   --include-private-draft outreach-private/drafts.md
 ```
@@ -317,15 +317,18 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
 Keep this review output private; it names the next ledger alias and includes its
 qualification sources and draft. A complete bundle emits a SHA-256 review
 receipt plus exact content-bound approval and decline commands.
+Omit `--as-of` to use the current UTC calendar date; the explicit UTC date in
+these examples keeps review receipts and later lifecycle records reproducible
+across operator timezones.
 
 After a human completes all five checks, record approval for that exact next
 alias with the exact command emitted by the review. Its shape is:
 
 ```bash
 repo-scout-outreach outreach-private/outreach-ledger.csv \
-  --as-of "$(date +%F)" \
+  --as-of "$(date -u +%F)" \
   --approve-next prospect-001 \
-  --approved-on "$(date +%F)" \
+  --approved-on "$(date -u +%F)" \
   --confirm-reviewed \
   --review-digest 'sha256:<digest-from-review-output>' \
   --reviewed-private-draft outreach-private/drafts.md
@@ -343,9 +346,9 @@ required follow-up without hand-editing the ledger:
 
 ```bash
 repo-scout-outreach outreach-private/outreach-ledger.csv \
-  --as-of "$(date +%F)" \
+  --as-of "$(date -u +%F)" \
   --record-contact prospect-001 \
-  --contacted-on "$(date +%F)" \
+  --contacted-on "$(date -u +%F)" \
   --confirm-sent
 ```
 
@@ -359,9 +362,9 @@ cadence with a guarded record:
 
 ```bash
 repo-scout-outreach outreach-private/outreach-ledger.csv \
-  --as-of "$(date +%F)" \
+  --as-of "$(date -u +%F)" \
   --record-follow-up prospect-001 \
-  --followed-up-on "$(date +%F)" \
+  --followed-up-on "$(date -u +%F)" \
   --confirm-follow-up-sent
 ```
 
@@ -374,7 +377,7 @@ outcome without hand-editing the private ledger:
 
 ```bash
 repo-scout-outreach outreach-private/outreach-ledger.csv \
-  --as-of "$(date +%F)" \
+  --as-of "$(date -u +%F)" \
   --record-outcome prospect-001 \
   --outcome pilot-requested \
   --confirm-outcome-observed

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 import csv
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from hashlib import sha256
 from hmac import compare_digest
 import json
@@ -95,7 +95,7 @@ class OutreachInputError(ValueError):
 
 
 def load_outreach_report(path: Path, *, as_of: date | None = None) -> dict[str, Any]:
-    report_date = as_of or date.today()
+    report_date = as_of or _utc_today()
     if type(report_date) is not date:
         raise OutreachInputError("as-of must be a date")
 
@@ -109,7 +109,7 @@ def load_next_outreach_review(
     include_private_evidence: bool = False,
     private_drafts_path: Path | None = None,
 ) -> dict[str, Any]:
-    report_date = as_of or date.today()
+    report_date = as_of or _utc_today()
     if type(report_date) is not date:
         raise OutreachInputError("as-of must be a date")
 
@@ -139,7 +139,7 @@ def approve_next_outreach_draft(
     reviewed_private_drafts_path: Path | None = None,
     as_of: date | None = None,
 ) -> dict[str, Any]:
-    report_date = as_of or date.today()
+    report_date = as_of or _utc_today()
     if type(report_date) is not date:
         raise OutreachInputError("as-of must be a date")
     if type(approved_on) is not date:
@@ -213,7 +213,7 @@ def decline_next_outreach_draft(
     reviewed_private_drafts_path: Path | None = None,
     as_of: date | None = None,
 ) -> dict[str, Any]:
-    report_date = as_of or date.today()
+    report_date = as_of or _utc_today()
     if type(report_date) is not date:
         raise OutreachInputError("as-of must be a date")
     if decline_confirmed is not True:
@@ -286,7 +286,7 @@ def record_next_outreach_contact(
     send_confirmed: bool,
     as_of: date | None = None,
 ) -> dict[str, Any]:
-    report_date = as_of or date.today()
+    report_date = as_of or _utc_today()
     if type(report_date) is not date:
         raise OutreachInputError("as-of must be a date")
     if type(contacted_on) is not date:
@@ -347,7 +347,7 @@ def record_next_outreach_follow_up(
     send_confirmed: bool,
     as_of: date | None = None,
 ) -> dict[str, Any]:
-    report_date = as_of or date.today()
+    report_date = as_of or _utc_today()
     if type(report_date) is not date:
         raise OutreachInputError("as-of must be a date")
     if type(followed_up_on) is not date:
@@ -406,7 +406,7 @@ def record_outreach_outcome(
     outcome_confirmed: bool,
     as_of: date | None = None,
 ) -> dict[str, Any]:
-    report_date = as_of or date.today()
+    report_date = as_of or _utc_today()
     if type(report_date) is not date:
         raise OutreachInputError("as-of must be a date")
     if outcome_confirmed is not True:
@@ -1387,9 +1387,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--as-of",
         type=_date_argument,
-        default=date.today(),
+        default=_utc_today(),
         metavar="YYYY-MM-DD",
-        help="Report date. Defaults to the local calendar date.",
+        help="Report date. Defaults to the current UTC calendar date.",
     )
     action_group = parser.add_mutually_exclusive_group()
     action_group.add_argument(
@@ -1813,6 +1813,10 @@ def _date_argument(value: str) -> date:
         return date.fromisoformat(value)
     except ValueError as exc:
         raise argparse.ArgumentTypeError("must be YYYY-MM-DD") from exc
+
+
+def _utc_today() -> date:
+    return datetime.now(timezone.utc).date()
 
 
 if __name__ == "__main__":

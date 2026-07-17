@@ -77,6 +77,9 @@ class DirectOutreachContractTests(unittest.TestCase):
         self.assertIn("Without the flags, review output remains redacted", playbook)
         self.assertIn("## prospect-NNN", playbook)
         self.assertIn("does not edit the ledger", " ".join(playbook.split()))
+        self.assertIn("current UTC calendar date", normalized_playbook)
+        self.assertIn('$(date -u +%F)', playbook)
+        self.assertNotIn('$(date +%F)', playbook)
         self.assertIn("--approve-next", playbook)
         self.assertIn("--confirm-reviewed", playbook)
         self.assertIn("--decline-next", playbook)
@@ -128,6 +131,10 @@ class DirectOutreachContractTests(unittest.TestCase):
         self.assertIn("do not count", playbook.lower())
         self.assertNotIn("limited time", playbook.lower())
         self.assertNotIn("guaranteed", playbook.lower())
+
+        readme = README.read_text(encoding="utf-8")
+        self.assertIn("current UTC calendar date", " ".join(readme.split()))
+        self.assertNotIn('$(date +%F)', readme)
 
     def test_private_ledger_template_has_no_prospect_data(self) -> None:
         with LEDGER_TEMPLATE.open(newline="", encoding="utf-8") as ledger_file:
