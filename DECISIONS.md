@@ -1409,3 +1409,20 @@ reconcile every view. The widening clone-to-view gap remains consistent with
 CI, hosting, and maintainer automation. It does not establish 293 users,
 installs, pilot requests, payments, or revenue, and the five-draft human review
 queue remains the next commercial action.
+
+## 2026-07-17: Bind Outreach Decisions To The Reviewed Content
+
+The complete private review previously emitted copy-ready approval and decline
+commands that identified the selected alias but did not bind the decision to
+the evidence and draft the human had just read. An intervening edit could
+therefore leave the alias first in the queue while changing the material being
+approved or declined. Schema-4 complete reviews now emit a SHA-256 receipt over
+the normalized selected ledger row, selected private draft, review date, and
+five displayed checks. Both generated decisions carry that receipt and the
+reviewed notes path. Before writing, Repo Scout reloads the private files,
+recomputes the receipt, and rejects stale evidence or draft content without
+mutating the ledger or printing the changed material. Direct legacy commands
+remain compatible, while the documented five-draft workflow uses the
+content-bound handoff. This protects the human decision boundary; it does not
+perform the review, approve a message, send outreach, create demand, or record
+revenue.

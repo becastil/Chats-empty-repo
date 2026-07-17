@@ -334,6 +334,14 @@ def verify_outreach_lifecycle(
             private_draft == "Selected private message",
             "private review did not select the synthetic draft notes",
         )
+        review_digest = evidence_review.get("review_digest")
+        _require(
+            isinstance(review_digest, str)
+            and review_digest.startswith("sha256:")
+            and len(review_digest) == 71
+            and all(character in "0123456789abcdef" for character in review_digest[7:]),
+            "private review did not emit a SHA-256 content receipt",
+        )
         checked.append("private-review-bundle")
 
         unconfirmed = _run(
@@ -373,6 +381,10 @@ def verify_outreach_lifecycle(
                 "--approved-on",
                 "2026-07-01",
                 "--confirm-reviewed",
+                "--review-digest",
+                review_digest,
+                "--reviewed-private-draft",
+                str(private_drafts),
             ),
             environment=environment,
         )

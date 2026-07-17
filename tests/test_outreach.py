@@ -215,7 +215,7 @@ class OutreachReportTests(unittest.TestCase):
 
         report = build_next_outreach_review(rows, as_of=date(2026, 7, 13))
 
-        self.assertEqual(report["schema_version"], 3)
+        self.assertEqual(report["schema_version"], 4)
         self.assertTrue(report["human_review_required"])
         self.assertTrue(report["private_output"])
         self.assertFalse(report["private_evidence_included"])
@@ -663,9 +663,21 @@ class OutreachReportTests(unittest.TestCase):
             report = json.loads(stdout.getvalue())
             self.assertTrue(report["private_evidence_included"])
             self.assertTrue(report["private_draft_included"])
+            self.assertRegex(report["review_digest"], r"\Asha256:[0-9a-f]{64}\Z")
             self.assertEqual(
                 report["review"]["private_draft"], "Selected private message"
             )
+            text = format_next_outreach_review(
+                report,
+                ledger=ledger,
+                private_drafts_path=notes,
+            )
+            self.assertIn(
+                f"--review-digest {report['review_digest']}",
+                text,
+            )
+            self.assertEqual(text.count("--reviewed-private-draft"), 2)
+            self.assertIn(shlex.quote(str(notes)), text)
 
     def test_private_draft_notes_reject_missing_or_ambiguous_sections(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -909,6 +921,210 @@ class OutreachReportTests(unittest.TestCase):
             self.assertNotIn("2026-07-12", json.dumps(receipt))
             self.assertNotIn("evidence.example", json.dumps(receipt))
             self.assertIn("No outreach was sent", receipt["action_note"])
+            self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
+
+    def test_content_bound_approve_rejects_an_edited_private_draft(self) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            notes = Path(tmp) / "drafts.md"
+            _write_ledger(
+                ledger,
+                [
+                    _row(
+                        status="drafted",
+                        contacted_on="",
+                        next_action_on="",
+                        approved_on="",
+                    )
+                ],
+            )
+            notes.write_text(
+                "## prospect-001\n\nReviewed private message\n",
+                encoding="utf-8",
+            )
+            if os.name == "posix":
+                notes.chmod(0o600)
+            review_stdout = io.StringIO()
+            with redirect_stdout(review_stdout):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--review-next",
+                        "--include-private-evidence",
+                        "--include-private-draft",
+                        str(notes),
+                        "--format",
+                        "json",
+                    ]
+                )
+            self.assertEqual(exit_code, 0)
+            review_digest = json.loads(review_stdout.getvalue())["review_digest"]
+
+            notes.write_text(
+                "## prospect-001\n\nEdited after human review\n",
+                encoding="utf-8",
+            )
+            if os.name == "posix":
+                notes.chmod(0o600)
+            before = ledger.read_bytes()
+            stderr = io.StringIO()
+            with redirect_stderr(stderr):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--approve-next",
+                        "prospect-001",
+                        "--approved-on",
+                        "2026-07-13",
+                        "--confirm-reviewed",
+                        "--review-digest",
+                        review_digest,
+                        "--reviewed-private-draft",
+                        str(notes),
+                    ]
+                )
+
+            self.assertEqual(exit_code, 2)
+            self.assertEqual(ledger.read_bytes(), before)
+            self.assertIn(
+                "review content changed; run --review-next again before deciding",
+                stderr.getvalue(),
+            )
+            self.assertNotIn("Edited after human review", stderr.getvalue())
+            self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
+
+    def test_content_bound_approve_accepts_the_current_private_review(self) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            notes = Path(tmp) / "drafts.md"
+            _write_ledger(
+                ledger,
+                [
+                    _row(
+                        status="drafted",
+                        contacted_on="",
+                        next_action_on="",
+                        approved_on="",
+                    )
+                ],
+            )
+            notes.write_text(
+                "## prospect-001\n\nReviewed private message\n",
+                encoding="utf-8",
+            )
+            if os.name == "posix":
+                notes.chmod(0o600)
+            review_stdout = io.StringIO()
+            with redirect_stdout(review_stdout):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--review-next",
+                        "--include-private-evidence",
+                        "--include-private-draft",
+                        str(notes),
+                        "--format",
+                        "json",
+                    ]
+                )
+            self.assertEqual(exit_code, 0)
+            review_digest = json.loads(review_stdout.getvalue())["review_digest"]
+
+            with redirect_stdout(io.StringIO()):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--approve-next",
+                        "prospect-001",
+                        "--approved-on",
+                        "2026-07-13",
+                        "--confirm-reviewed",
+                        "--review-digest",
+                        review_digest,
+                        "--reviewed-private-draft",
+                        str(notes),
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            report = load_outreach_report(ledger, as_of=date(2026, 7, 13))
+            self.assertEqual(report["summary"]["approved"], 1)
+            self.assertEqual(report["summary"]["attempted_prospects"], 0)
+
+    def test_content_bound_decline_rejects_edited_fit_evidence(self) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            notes = Path(tmp) / "drafts.md"
+            row = _row(
+                status="drafted",
+                contacted_on="",
+                next_action_on="",
+                approved_on="",
+            )
+            _write_ledger(ledger, [row])
+            notes.write_text(
+                "## prospect-001\n\nReviewed private message\n",
+                encoding="utf-8",
+            )
+            if os.name == "posix":
+                notes.chmod(0o600)
+            review_stdout = io.StringIO()
+            with redirect_stdout(review_stdout):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--review-next",
+                        "--include-private-evidence",
+                        "--include-private-draft",
+                        str(notes),
+                        "--format",
+                        "json",
+                    ]
+                )
+            self.assertEqual(exit_code, 0)
+            review_digest = json.loads(review_stdout.getvalue())["review_digest"]
+
+            changed_row = dict(row)
+            changed_row["fit_evidence"] = EVIDENCE.replace(
+                "https://evidence.example/agents",
+                "https://evidence.example/edited-agents",
+            )
+            _write_ledger(ledger, [changed_row])
+            before = ledger.read_bytes()
+            stderr = io.StringIO()
+            with redirect_stderr(stderr):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--decline-next",
+                        "prospect-001",
+                        "--confirm-not-send",
+                        "--review-digest",
+                        review_digest,
+                        "--reviewed-private-draft",
+                        str(notes),
+                    ]
+                )
+
+            self.assertEqual(exit_code, 2)
+            self.assertEqual(ledger.read_bytes(), before)
+            self.assertIn(
+                "review content changed; run --review-next again before deciding",
+                stderr.getvalue(),
+            )
+            self.assertNotIn("edited-agents", stderr.getvalue())
             self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
 
     def test_decline_next_closes_without_contact_and_advances_queue(self) -> None:

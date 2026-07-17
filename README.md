@@ -304,31 +304,39 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
   --as-of "$(date +%F)"
 ```
 
-After the batch passes validation, surface one private, alias-only checklist for
+After the batch passes validation, surface one complete private checklist for
 the required human review without changing the ledger or sending a message:
 
 ```bash
 repo-scout-outreach outreach-private/outreach-ledger.csv \
-  --as-of "$(date +%F)" --review-next
+  --as-of "$(date +%F)" --review-next \
+  --include-private-evidence \
+  --include-private-draft outreach-private/drafts.md
 ```
 
-Keep this review output private; it intentionally names the next ledger alias.
+Keep this review output private; it names the next ledger alias and includes its
+qualification sources and draft. A complete bundle emits a SHA-256 review
+receipt plus exact content-bound approval and decline commands.
 
 After a human completes all five checks, record approval for that exact next
-alias with an explicit review date:
+alias with the exact command emitted by the review. Its shape is:
 
 ```bash
 repo-scout-outreach outreach-private/outreach-ledger.csv \
   --as-of "$(date +%F)" \
   --approve-next prospect-001 \
   --approved-on "$(date +%F)" \
-  --confirm-reviewed
+  --confirm-reviewed \
+  --review-digest 'sha256:<digest-from-review-output>' \
+  --reviewed-private-draft outreach-private/drafts.md
 ```
 
 The guarded action validates the full ledger before and after the change,
 atomically records only `status=approved` and `approved_on`, and preserves the
 ledger's file permissions. It refuses an alias other than the one shown by
-`--review-next`. It does not send a message or create contact or follow-up dates.
+`--review-next`, and refuses when the reviewed row or private draft changed
+after the receipt was created. It does not send a message or create contact or
+follow-up dates.
 
 After a human actually sends that approved message, record the send and its
 required follow-up without hand-editing the ledger:

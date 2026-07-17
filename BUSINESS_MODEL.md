@@ -376,27 +376,38 @@ history for aliases that progressed. This prevents stale or mismatched private
 material from entering a decision while keeping the ledger read-only. It does
 not let Repo Scout judge, approve, send, or count the message as demand or
 revenue.
+A complete evidence-and-draft review now emits a schema-4 SHA-256 receipt over
+the normalized selected ledger row, selected private draft, review date, and
+five human checks. Its generated approve and decline commands carry that
+receipt plus the reviewed notes path. Before either mutation, Repo Scout reloads
+the private files and recomputes the receipt; a changed source, channel, draft,
+date, or check fails without modifying the ledger or exposing the changed
+content. This binds a human decision to what was actually reviewed without
+making Repo Scout perform the judgment.
 
 After a human completes those checks, guarded `--approve-next` can record the
 decision without hand-editing CSV. It requires the exact next alias, an explicit
 review date, and a confirmation flag; validates all rows before and after; and
-atomically preserves file permissions while changing only status and approval
-date. The receipt excludes evidence and review dates. Approval still sends
-nothing, creates no contact or follow-up date, and is not an attempt, lead,
-pilot request, or revenue event. Private text output carries each selected
-alias, date, confirmation flag, and shell-quoted ledger path into a complete
-next command. This removes manual command reconstruction without completing a
-review, sending a message, or treating operator activity as demand.
+revalidates the content-bound receipt when the generated complete-review
+command is used; then it atomically preserves file permissions while changing
+only status and approval date. The receipt excludes evidence and review dates.
+Approval still sends nothing, creates no contact or follow-up date, and is not
+an attempt, lead, pilot request, or revenue event. Private text output carries
+each selected alias, date, confirmation flag, review receipt, and shell-quoted
+private paths into a complete next command. This removes manual command
+reconstruction without completing a review, sending a message, or treating
+operator activity as demand.
 
 When the human instead decides a draft must not be sent, guarded
 `--decline-next` requires the exact same next alias and an explicit no-send
-confirmation. It atomically changes only status to `review-declined`, preserves
-the private file boundary, reports the privacy-safe remaining-draft count, and
-records no action date. It emits the next review command only while another
-draft remains and ends truthfully when the bounded queue reaches zero. The
-aggregate report counts this as closed before contact and never as an attempt.
-This keeps the acquisition queue moving without converting negative review
-judgment into an approval or a false outreach event.
+confirmation. The generated complete-review command revalidates the same
+content receipt before it atomically changes only status to `review-declined`,
+preserves the private file boundary, reports the privacy-safe remaining-draft
+count, and records no action date. It emits the next review command only while
+another draft remains and ends truthfully when the bounded queue reaches zero.
+The aggregate report counts this as closed before contact and never as an
+attempt. This keeps the acquisition queue moving without converting negative
+review judgment into an approval or a false outreach event.
 
 After a human sends that approved message, guarded `--record-contact` records
 the exact next approved alias with an explicit send date and confirmation flag.

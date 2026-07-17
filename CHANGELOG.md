@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added schema-4 content-bound SHA-256 receipts for complete private outreach
+  reviews, covering the normalized ledger row, selected draft, review date, and
+  five human checks.
+- Carried each receipt and reviewed notes path into generated approve and
+  decline commands, with mutation-free rejection when evidence or draft content
+  changed after human review.
+- Extended source and release-smoke coverage for matching reviews, stale
+  private drafts, stale fit evidence, private error output, and unchanged
+  ledgers.
 - Refreshed the owner-visible 14-day repository traffic checkpoint to 3 views
   from 1 unique viewer, 293 unique cloners, and 962 clone events.
 - Recorded that the overlapping-window rise of 652 clone events produced only

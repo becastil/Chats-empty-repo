@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 133 of 1,000, with 867 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 134 of 1,000, with 866 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -189,6 +189,8 @@ The delivery goal is 1,000 meaningful commits. This update is commit 133 of 1,00
 - Cross-file private review preflight requiring notes for every drafted ledger
   alias, rejecting aliases absent from the ledger, and retaining progressed
   aliases as history without exposing their messages.
+- Schema-4 content-bound private review receipts carried into generated approval
+  and decline commands, with mutation-free stale evidence and draft rejection.
 - Live outreach review and mutation preflight that rejects tracked, unignored,
   or symlinked in-repository ledgers and draft notes before reading private
   material.
@@ -314,9 +316,9 @@ python3 scripts/audit_pilot_labels.py --repo becastil/Chats-empty-repo
 
 Human-review the five private, evidence-backed drafts, using `--review-next`
 with `--include-private-evidence` and `--include-private-draft` for a complete
-private bundle. Record each decision with guarded `--approve-next` or
-`--decline-next`, and send only approved drafts one at a time through their
-published business channels.
+private bundle. Record each decision with the content-bound `--approve-next` or
+`--decline-next` command emitted by that review, and send only approved drafts
+one at a time through their published business channels.
 Immediately record each human send with guarded `--record-contact`, which
 retains approval and calculates the exact seven-day follow-up before the next
 message. When due, send that one follow-up manually and close its cadence

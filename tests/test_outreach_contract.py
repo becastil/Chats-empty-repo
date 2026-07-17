@@ -71,6 +71,9 @@ class DirectOutreachContractTests(unittest.TestCase):
         self.assertIn("--review-next", playbook)
         self.assertIn("--include-private-evidence", playbook)
         self.assertIn("--include-private-draft", playbook)
+        self.assertIn("--review-digest", playbook)
+        self.assertIn("--reviewed-private-draft", playbook)
+        self.assertIn("stale review content", normalized_playbook)
         self.assertIn("Without the flags, review output remains redacted", playbook)
         self.assertIn("## prospect-NNN", playbook)
         self.assertIn("does not edit the ledger", " ".join(playbook.split()))
@@ -79,7 +82,8 @@ class DirectOutreachContractTests(unittest.TestCase):
         self.assertIn("--decline-next", playbook)
         self.assertIn("--confirm-not-send", playbook)
         self.assertIn(
-            "atomically changes only `status` to `review-declined`", playbook
+            "atomically changes only `status` to `review-declined`",
+            normalized_playbook,
         )
         self.assertIn(
             "counts as closed but never as attempted outreach",
@@ -88,7 +92,8 @@ class DirectOutreachContractTests(unittest.TestCase):
         self.assertIn("number of drafts remaining", normalized_playbook)
         self.assertIn("emits no dead handoff", normalized_playbook)
         self.assertIn(
-            "atomically changes only `status` and `approved_on`", playbook
+            "atomically changes only `status` and `approved_on`",
+            normalized_playbook,
         )
         self.assertIn("does not send outreach", playbook)
         self.assertIn("--record-contact", playbook)

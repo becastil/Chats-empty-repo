@@ -160,7 +160,10 @@ showing anything, the opt-in requires a section for every ledger row still in
 Sections for review-declined, approved, or contacted aliases may remain as
 private history. The output then selects only the section matching the next
 ledger alias, maps every declared fit signal to its private HTTPS source, and
-marks both disclosures.
+marks both disclosures. A complete evidence-and-draft bundle also prints an
+opaque SHA-256 receipt over the normalized selected ledger row, private draft,
+review date, and five human checks. Both generated decision commands carry that
+receipt and the reviewed notes path.
 Duplicate, malformed, empty, oversized, missing, or unknown sections fail
 without changing the ledger or exposing message text. Keep this output in the
 ignored workspace and do not redirect it into committed reports, logs, issue
@@ -176,18 +179,21 @@ creating contact activity:
 repo-scout-outreach outreach-private/outreach-ledger.csv \
   --as-of "$(date +%F)" \
   --decline-next prospect-001 \
-  --confirm-not-send
+  --confirm-not-send \
+  --review-digest 'sha256:<digest-from-review-output>' \
+  --reviewed-private-draft outreach-private/drafts.md
 ```
 
 `--decline-next` requires the lowest drafted alias selected by `--review-next`
 and explicit confirmation of the human no-send decision. It validates the
 complete ledger before and after the transition, preserves file permissions,
-and atomically changes only `status` to `review-declined`. Missing confirmation,
-out-of-order aliases, invalid ledger state, or write failures leave the file
-unchanged. The private receipt contains no evidence URL or persisted decision
-date and reports only the number of drafts remaining. While that count is
-positive, it ends with a complete command for reviewing the next draft; at zero,
-it reports that the bounded review queue is complete and emits no dead handoff.
+and recomputes the content receipt. It atomically changes only `status` to
+`review-declined`. Missing confirmation, out-of-order aliases, stale review
+content, invalid ledger state, or write failures leave the file unchanged. The
+private receipt contains no evidence URL or persisted decision date and reports
+only the number of drafts remaining. While that count is positive, it ends with
+a complete command for reviewing the next draft; at zero, it reports that the
+bounded review queue is complete and emits no dead handoff.
 This status counts as closed but never as attempted outreach; it does not
 approve, send, schedule, or record contact.
 
@@ -199,18 +205,21 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
   --as-of "$(date +%F)" \
   --approve-next prospect-001 \
   --approved-on "$(date +%F)" \
-  --confirm-reviewed
+  --confirm-reviewed \
+  --review-digest 'sha256:<digest-from-review-output>' \
+  --reviewed-private-draft outreach-private/drafts.md
 ```
 
 `--approve-next` requires the lowest drafted alias selected by `--review-next`,
 an explicit review date, and the confirmation flag. It validates the complete
-ledger before and after the transition, preserves file permissions, and
-atomically changes only `status` and `approved_on`. Missing confirmation,
-out-of-order aliases, future dates, or invalid ledger state leave the file
-unchanged. The private receipt omits evidence URLs and the review date. This
-action records a human decision; it does not send outreach or create a contact
-or follow-up date. Its text receipt ends with a complete command for recording
-the manual send, using the same alias, `as_of` date, and private ledger path.
+ledger before and after the transition, recomputes the content receipt,
+preserves file permissions, and atomically changes only `status` and
+`approved_on`. Missing confirmation, out-of-order aliases, stale review
+content, future dates, or invalid ledger state leave the file unchanged. The
+private receipt omits evidence URLs and the review date. This action records a
+human decision; it does not send outreach or create a contact or follow-up
+date. Its text receipt ends with a complete command for recording the manual
+send, using the same alias, `as_of` date, and private ledger path.
 
 After review, the aggregate `Approved to send` count must include the selected
 row before contact; the report still does not reveal its alias. A human must
