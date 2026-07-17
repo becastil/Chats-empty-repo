@@ -48,16 +48,16 @@ The copy-ready CI gate consumes those releases with independent digest and
 provenance checks. This makes the free activation path closer to the paid pilot
 deployment model: teams can evaluate a repeatable, auditable install before
 buying cross-repository rollout support.
-Both policy gates now isolate each release-download attempt and retry up to four
-times with bounded backoff. This directly addresses an observed GitHub REST
-outage without accepting partial files or weakening digest and provenance
-verification; persistent failures still stop before installation. It reduces
-false-negative activation friction but does not prove customer usage, demand,
-payment, or revenue.
-The CI contract executes that shell block with injected transient and terminal
-failures, proving the exact waits and trusted-file boundary without calling
-GitHub. This turns the retry claim into repeatable distribution evidence while
-retaining the same customer and revenue limits.
+Both policy gates retry release download and provenance verification up to four
+times with bounded backoff. Download attempts remain isolated, and every
+provenance attempt retains the pinned wheel, source, tag, signer workflow, and
+hosted-runner requirements. This directly addresses an observed GitHub REST
+outage without accepting partial files or weakening artifact identity;
+persistent failures still stop before installation. It reduces false-negative
+activation friction but does not prove customer usage, demand, payment, or
+revenue. The CI contract executes both shell blocks with injected transient and
+terminal failures, proving exact waits, trusted-file promotion, recovery, and
+explicit terminal failure without calling GitHub.
 Existing handoff and rollout reports are now replaced only after a complete
 new report is staged, with the original access permissions carried into the
 atomic swap. A failed swap leaves the prior evidence unchanged. This protects

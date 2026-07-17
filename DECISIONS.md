@@ -1380,3 +1380,17 @@ wait sequence, exits explicitly, and leaves no trusted wheel or manifest. The
 test makes no network call and the customer workflow remains byte-identical to
 the executed dogfood block. This strengthens paid CI reliability evidence; it
 does not establish an external activation, pilot request, payment, or revenue.
+
+## 2026-07-17: Bound Provenance Verification Retries
+
+Release download and `gh attestation verify` both depend on GitHub REST
+availability, but only download recovery was bounded after the observed outage.
+Both policy gates now make at most four provenance attempts with 5, 10, and
+15-second waits. Every attempt repeats the exact wheel, repository, source
+commit, semantic tag, signer workflow, and hosted-runner restrictions; the
+fourth failure exits before installation. Contract tests execute the exact
+shell with fake checksum and network commands, proving third-attempt recovery
+and terminal failure without weakening identity checks or calling GitHub. The
+customer and dogfood verification blocks are byte-identical. This improves paid
+CI activation reliability without establishing an external install, pilot
+request, payment, or revenue.

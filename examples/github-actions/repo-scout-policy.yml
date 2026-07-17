@@ -73,12 +73,21 @@ jobs:
           pushd "$release_dir"
           sha256sum --check --ignore-missing --strict SHA256SUMS
           popd
-          gh attestation verify "$wheel" \
-            --repo "$REPO_SCOUT_REPOSITORY" \
-            --signer-workflow "$REPO_SCOUT_REPOSITORY/.github/workflows/release.yml" \
-            --source-ref "refs/tags/v${REPO_SCOUT_VERSION}" \
-            --source-digest "$REPO_SCOUT_SOURCE_SHA" \
-            --deny-self-hosted-runners
+          for attempt in 1 2 3 4; do
+            if gh attestation verify "$wheel" \
+              --repo "$REPO_SCOUT_REPOSITORY" \
+              --signer-workflow "$REPO_SCOUT_REPOSITORY/.github/workflows/release.yml" \
+              --source-ref "refs/tags/v${REPO_SCOUT_VERSION}" \
+              --source-digest "$REPO_SCOUT_SOURCE_SHA" \
+              --deny-self-hosted-runners; then
+              break
+            fi
+            if [[ "$attempt" -eq 4 ]]; then
+              printf 'Repo Scout provenance verification failed after %s attempts.\n' "$attempt" >&2
+              exit 1
+            fi
+            sleep "$((attempt * 5))"
+          done
 
       - name: Install verified Repo Scout release
         run: |

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added four bounded provenance-verification attempts to both policy gates while
+  retaining the pinned wheel, repository, source, tag, signer workflow, and
+  hosted-runner requirements on every attempt.
+- Executed transient and terminal provenance failures with fake network commands
+  to prove exact waits, recovery, and explicit fourth-attempt failure.
 - Executed the verified-release download block against a fake GitHub CLI to
   prove third-attempt recovery, exact backoff waits, complete artifact
   promotion, four-attempt termination, and exclusion of partial trusted files.

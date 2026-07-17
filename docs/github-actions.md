@@ -77,13 +77,17 @@ Before installation, the gate verifies:
 - The signer is this repository's `.github/workflows/release.yml` workflow.
 - The attested build used a GitHub-hosted runner.
 
+Provenance verification also uses up to four attempts with the same bounded
+backoff. Every attempt retains the exact wheel, repository, source commit, tag,
+signer workflow, and hosted-runner requirements.
+
 Repo Scout is installed without dependencies into a virtual environment under
 `RUNNER_TEMP`. The target checkout is never used as an install location, and
 the rollout bundle is also written outside it, so enforcement does not dirty
 the repository being checked. Any download, digest, manifest, provenance, or
-install failure stops the job before the policy scan. A download that still
-fails after the fourth attempt exits explicitly instead of using stale or
-partially downloaded evidence.
+install failure stops the job before the policy scan. A download or provenance
+check that still fails after its fourth attempt exits explicitly instead of
+using stale, partial, or unverified evidence.
 
 The bundle contains repository filenames, policy findings, a policy
 fingerprint, and the checked-out commit. GitHub job summaries and artifacts
