@@ -1828,3 +1828,16 @@ remains a required placeholder, and legacy alias-only declines retain their
 existing handoff. This fixes the existing five-draft execution path without
 adding a prospect, message, channel, approval, contact attempt, or revenue
 claim.
+
+## 2026-07-18: Prove Both Review Decisions Reject Commit-Window Edits
+
+Approval and decline share the locked private-notes revision guard, but the
+regression that forced an editor save after receipt verification exercised only
+approval. A future change could therefore weaken no-send decisions without
+failing the commercial workflow suite.
+
+The same test contract now runs the race through both generated decision
+shapes. Each must reject with the generic fresh-review instruction, preserve
+the private ledger byte for byte, omit the edited message from errors, and
+remove staged output. This creates no review decision or outreach event; it
+protects the evidence boundary used when a human chooses either outcome.

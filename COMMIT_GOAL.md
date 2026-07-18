@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after preserving complete decline reviews: 161 / 1,000 (16.1%).
-- Remaining after preserving complete decline reviews: 839 commits.
+- Progress after proving both decision race guards: 162 / 1,000 (16.2%).
+- Remaining after proving both decision race guards: 838 commits.
 
 ## Commit Standard
 

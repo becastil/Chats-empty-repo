@@ -1000,92 +1000,115 @@ class OutreachReportTests(unittest.TestCase):
             self.assertNotIn("Edited after human review", stderr.getvalue())
             self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
 
-    def test_content_bound_approve_rejects_private_draft_commit_race(self) -> None:
+    def test_content_bound_decisions_reject_private_draft_commit_races(
+        self,
+    ) -> None:
         import repo_scout.outreach as outreach_module
 
-        with TemporaryDirectory() as tmp:
-            ledger = Path(tmp) / "ledger.csv"
-            notes = Path(tmp) / "drafts.md"
-            _write_ledger(
-                ledger,
-                [
-                    _row(
-                        status="drafted",
-                        contacted_on="",
-                        next_action_on="",
-                        approved_on="",
-                    )
-                ],
-            )
-            notes.write_text(
-                "## prospect-001\n\nReviewed private message\n",
-                encoding="utf-8",
-            )
-            if os.name == "posix":
-                notes.chmod(0o600)
-            review = outreach_module.load_next_outreach_review(
-                ledger,
-                as_of=date(2026, 7, 13),
-                include_private_evidence=True,
-                private_drafts_path=notes,
-            )
-            before = ledger.read_bytes()
-            original_write = outreach_module._write_outreach_rows
-
-            def write_after_private_edit(
-                path: Path,
-                rows: list[dict[str, str]],
-                *,
-                expected_revision: str | None = None,
-                expected_private_draft_revision: tuple[Path, str] | None = None,
-            ) -> None:
+        cases = (
+            (
+                "approval",
+                (
+                    "--approve-next",
+                    "prospect-001",
+                    "--approved-on",
+                    "2026-07-13",
+                    "--confirm-reviewed",
+                ),
+            ),
+            (
+                "decline",
+                (
+                    "--decline-next",
+                    "prospect-001",
+                    "--confirm-not-send",
+                ),
+            ),
+        )
+        for decision, decision_arguments in cases:
+            with self.subTest(decision=decision), TemporaryDirectory() as tmp:
+                ledger = Path(tmp) / "ledger.csv"
+                notes = Path(tmp) / "drafts.md"
+                _write_ledger(
+                    ledger,
+                    [
+                        _row(
+                            status="drafted",
+                            contacted_on="",
+                            next_action_on="",
+                            approved_on="",
+                        )
+                    ],
+                )
                 notes.write_text(
-                    "## prospect-001\n\nEdited during approval\n",
+                    "## prospect-001\n\nReviewed private message\n",
                     encoding="utf-8",
                 )
-                original_write(
-                    path,
-                    rows,
-                    expected_revision=expected_revision,
-                    expected_private_draft_revision=(
-                        expected_private_draft_revision
+                if os.name == "posix":
+                    notes.chmod(0o600)
+                review = outreach_module.load_next_outreach_review(
+                    ledger,
+                    as_of=date(2026, 7, 13),
+                    include_private_evidence=True,
+                    private_drafts_path=notes,
+                )
+                before = ledger.read_bytes()
+                original_write = outreach_module._write_outreach_rows
+                edited_message = f"Edited during {decision}"
+
+                def write_after_private_edit(
+                    path: Path,
+                    rows: list[dict[str, str]],
+                    *,
+                    expected_revision: str | None = None,
+                    expected_private_draft_revision: (
+                        tuple[Path, str] | None
+                    ) = None,
+                ) -> None:
+                    notes.write_text(
+                        f"## prospect-001\n\n{edited_message}\n",
+                        encoding="utf-8",
+                    )
+                    original_write(
+                        path,
+                        rows,
+                        expected_revision=expected_revision,
+                        expected_private_draft_revision=(
+                            expected_private_draft_revision
+                        ),
+                    )
+
+                stderr = io.StringIO()
+                with (
+                    patch.object(
+                        outreach_module,
+                        "_write_outreach_rows",
+                        side_effect=write_after_private_edit,
                     ),
-                )
+                    redirect_stderr(stderr),
+                ):
+                    exit_code = main(
+                        [
+                            str(ledger),
+                            "--as-of",
+                            "2026-07-13",
+                            *decision_arguments,
+                            "--review-digest",
+                            review["review_digest"],
+                            "--reviewed-private-draft",
+                            str(notes),
+                        ]
+                    )
 
-            stderr = io.StringIO()
-            with (
-                patch.object(
-                    outreach_module,
-                    "_write_outreach_rows",
-                    side_effect=write_after_private_edit,
-                ),
-                redirect_stderr(stderr),
-            ):
-                exit_code = main(
-                    [
-                        str(ledger),
-                        "--as-of",
-                        "2026-07-13",
-                        "--approve-next",
-                        "prospect-001",
-                        "--approved-on",
-                        "2026-07-13",
-                        "--confirm-reviewed",
-                        "--review-digest",
-                        review["review_digest"],
-                        "--reviewed-private-draft",
-                        str(notes),
-                    ]
+                self.assertEqual(exit_code, 2)
+                self.assertEqual(ledger.read_bytes(), before)
+                self.assertIn(
+                    "review content changed; run --review-next again before "
+                    "deciding",
+                    stderr.getvalue(),
                 )
-
-            self.assertEqual(exit_code, 2)
-            self.assertEqual(ledger.read_bytes(), before)
-            self.assertIn(
-                "review content changed; run --review-next again before deciding",
-                stderr.getvalue(),
-            )
-            self.assertNotIn("Edited during approval", stderr.getvalue())
-            self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
+                self.assertNotIn(edited_message, stderr.getvalue())
+                self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
 
     def test_content_bound_approve_accepts_the_current_private_review(self) -> None:
         with TemporaryDirectory() as tmp:

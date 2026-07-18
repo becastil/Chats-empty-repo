@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Extended the private-notes commit-race regression from approval to both
+  content-bound review decisions.
+- Approval and decline now share proof that an edit during the locked commit
+  window preserves ledger bytes, hides changed text, and removes staged output.
 - Preserved complete private evidence-and-draft review context when a
   content-bound decline advances to another prepared prospect.
 - The next-review handoff now retains both disclosure flags and the exact

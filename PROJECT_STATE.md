@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 161 of
-1,000, with 839 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 162 of
+1,000, with 838 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -215,6 +215,8 @@ alignment take priority over commit volume.
   and decline commands, with mutation-free stale evidence and draft rejection.
 - Locked private-notes revision checks that reject edits occurring after
   content receipt verification but before approval or decline commits.
+- Symmetric approval and decline race coverage proving commit-window notes
+  edits preserve ledger evidence, hide changed text, and clean staged output.
 - Live outreach review and mutation preflight that rejects tracked, unignored,
   or symlinked in-repository ledgers and draft notes before reading private
   material.

@@ -429,7 +429,9 @@ making Repo Scout perform the judgment.
 The verified private notes revision now travels into the locked approval or
 decline commit as well. An editor save after receipt verification therefore
 forces a fresh review instead of recording a decision against content that no
-longer matches the human evidence.
+longer matches the human evidence. Symmetric regression coverage now forces
+that exact commit-window edit during both approval and decline, proving each
+branch preserves ledger bytes, hides changed text, and removes staged output.
 
 Version `0.3.43` advances the package, runtime, website, download guide, and
 installed-command smoke identities together so the schema-4 content receipt can
