@@ -88,6 +88,11 @@ record. `pilot-paid`, `pilot-active`, and `pilot-converted` remain human-applied
 business events; command output does not infer them. GitHub Actions is the only
 copy-ready gate currently shipped, so any other CI provider requires an
 explicit integration decision before payment.
+Operators can start from a blank, copy-ready delivery record with exactly 10
+repository slots, but the completed copy belongs only in the
+customer-approved private system. The template records the CI decision, five
+deliverable acceptances, first-repository acknowledgement, and closeout without
+creating a public customer-data or payment record.
 
 Policy version 2 can reject tracked or unignored sensitive paths without
 failing on properly ignored local copies. A founding-team custom pack can use

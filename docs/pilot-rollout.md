@@ -123,6 +123,9 @@ request.
 
 Use this contract only after payment is received. The public pilot issue remains
 the funnel record; keep delivery details in a customer-approved private system.
+Start from the
+[blank delivery record template](../examples/pilot-delivery-record.md), but
+complete and retain the copy only in that private system.
 Before work starts, record the 90-day start and end dates, customer owner,
 Repo Scout operator, CI provider, customer-controlled access method, agreed
 standards and exception owner, private communication and evidence location, and

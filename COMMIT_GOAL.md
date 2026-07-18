@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after defining paid-pilot delivery acceptance: 142 / 1,000 (14.2%).
-- Remaining after defining paid-pilot delivery acceptance: 858 commits.
+- Progress after adding the private pilot delivery record: 143 / 1,000 (14.3%).
+- Remaining after adding the private pilot delivery record: 857 commits.
 
 ## Commit Standard
 

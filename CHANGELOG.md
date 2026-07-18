@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added a copy-ready private paid-pilot delivery record with exactly 10
+  repository slots, an explicit CI integration choice, five acceptance
+  checklists, first-repository acknowledgement, and 90-day closeout.
+- Extended the delivery contract test to keep the blank template free of
+  customer data and preserve paid-before-active-before-converted ordering.
 - Added a tested paid-pilot delivery contract covering private scope records,
   the five $299 deliverables, shipped-command acceptance evidence, and exact
   payment, activation, and annual-conversion boundaries.

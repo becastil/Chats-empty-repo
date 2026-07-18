@@ -1547,3 +1547,19 @@ human-observed business events represented by `pilot-paid`, `pilot-active`, and
 bundle into revenue. This reduces delivery ambiguity without adding another
 acquisition channel or paid-policy feature before the five-draft outreach queue
 is executed.
+
+## 2026-07-18: Ship A Blank Private Pilot Delivery Record
+
+The delivery acceptance contract defines what a paid pilot must produce, but an
+operator still had to invent the kickoff record and could omit scope, ownership,
+CI-provider, or acknowledgement fields. A copy-ready Markdown template now
+contains exactly 10 private repository slots, one pre-payment CI integration
+choice, the five accepted deliverables, first-repository handoff evidence, and
+90-day closeout fields.
+
+The blank template contains no customer or prospect data, and its completed
+copy belongs only in a customer-approved private system. The test contract
+locks the repository limit, shipped-command references, privacy boundary, and
+human `pilot-paid` before `pilot-active` before `pilot-converted` ordering.
+This improves paid delivery readiness without creating a new acquisition asset,
+payment claim, or software feature.

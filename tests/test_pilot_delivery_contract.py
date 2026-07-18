@@ -10,6 +10,7 @@ ROLLOUT_GUIDE = ROOT / "docs" / "pilot-rollout.md"
 CI_GUIDE = ROOT / "docs" / "github-actions.md"
 BUSINESS_MODEL = ROOT / "BUSINESS_MODEL.md"
 INTAKE_FORM = ROOT / ".github" / "ISSUE_TEMPLATE" / "founding-team-pilot.yml"
+DELIVERY_TEMPLATE = ROOT / "examples" / "pilot-delivery-record.md"
 
 
 class PilotDeliveryContractTests(unittest.TestCase):
@@ -49,6 +50,73 @@ class PilotDeliveryContractTests(unittest.TestCase):
         )
         self.assertIn("record before payment", guide)
         self.assertIn("do not imply shipped provider support", guide)
+
+    def test_blank_delivery_record_is_bounded_private_and_copy_ready(self) -> None:
+        template = DELIVERY_TEMPLATE.read_text(encoding="utf-8")
+        normalized = " ".join(template.split())
+        repository_slots = [
+            line for line in template.splitlines() if line.startswith("- Repository ")
+        ]
+
+        self.assertIn("# Repo Scout Paid Pilot Delivery Record", template)
+        self.assertIn("Blank operator template", template)
+        self.assertIn("Maximum repository scope: 10", template)
+        self.assertEqual(
+            repository_slots,
+            [
+                f"- Repository {number:02d}: `[PRIVATE REPOSITORY ID]` "
+                "| Status: `In scope / Unused`"
+                for number in range(1, 11)
+            ],
+        )
+        for field in (
+            "Payment confirmed at (UTC)",
+            "Payment confirmed by",
+            "Private payment evidence reference",
+            "Pilot start date (UTC)",
+            "Pilot end date (UTC)",
+            "Customer:",
+            "Public funnel issue number",
+            "Customer owner",
+            "Repo Scout delivery owner",
+            "CI provider",
+            "Customer-controlled access method",
+            "Private communication and evidence location",
+            "Agreed policy objective",
+            "Exception owner",
+            "First repository",
+            "Repo Scout version",
+            "Exact source and artifact pin reference",
+            "First CI run result",
+            "Customer acknowledgement date (UTC)",
+            "Annual-license decision",
+            "Customer closeout acknowledgement (UTC)",
+        ):
+            self.assertIn(field, template)
+
+        self.assertIn("Record the option agreed before payment", template)
+        self.assertIn("Scope changes require dated written approval", template)
+        self.assertIn("never add an eleventh slot", template)
+        self.assertIn("GitHub Actions is the only copy-ready gate", template)
+        self.assertIn("verify-receipt bootstrap-receipt.json", template)
+        self.assertIn("`repo-scout-rollout` summary generated", template)
+        self.assertIn("## Shipped-Command Evidence", template)
+        self.assertIn("## Revenue Stage Ledger", template)
+        self.assertIn(
+            "`pilot-converted` and `pilot-lost` are not both applied",
+            template,
+        )
+        self.assertLess(
+            normalized.index("`pilot-paid` applied"),
+            normalized.index("`pilot-active` applied"),
+        )
+        self.assertLess(
+            normalized.index("`pilot-active` applied"),
+            normalized.index("`pilot-converted` applied"),
+        )
+        self.assertNotIn("https://", template)
+        self.assertNotIn("@", template)
+        self.assertNotIn("prospect-", template)
 
     def test_delivery_evidence_uses_shipped_commands(self) -> None:
         guide = ROLLOUT_GUIDE.read_text(encoding="utf-8")
@@ -102,6 +170,10 @@ class PilotDeliveryContractTests(unittest.TestCase):
         self.assertIn(
             "[paid delivery contract](pilot-rollout.md#paid-pilot-delivery-contract)",
             ci_guide,
+        )
+        self.assertIn(
+            "[blank delivery record template](../examples/pilot-delivery-record.md)",
+            guide,
         )
 
 
