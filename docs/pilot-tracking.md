@@ -28,6 +28,15 @@ Keep each earlier milestone label when a request advances:
 | `pilot-converted` | The pilot has converted to an annual team license. |
 | `pilot-lost` | The opportunity is no longer being pursued. |
 
+Use the [paid delivery contract](pilot-rollout.md#paid-pilot-delivery-contract)
+as the activation evidence boundary. Apply `pilot-active` only after
+`pilot-paid` is already present and every activation condition in that contract
+is satisfied, including customer acknowledgement of the first-repository
+handoff. Keep repository identity, access, CI evidence, payment details, and
+the acknowledgement record in the customer-approved private system or
+short-lived ignored `pilot-private/` fallback. The public issue receives only
+the cumulative label and a non-sensitive status note.
+
 `pilot-lost` can retain the milestones reached before the opportunity ended.
 Never apply both `pilot-converted` and `pilot-lost`; the reporter flags that as
 a terminal conflict. It also flags skipped milestones and unknown `pilot-*`

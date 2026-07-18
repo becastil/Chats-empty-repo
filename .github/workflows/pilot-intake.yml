@@ -3,18 +3,34 @@ name: Pilot intake contract
 on:
   pull_request:
     paths:
+      - ".gitignore"
       - ".github/ISSUE_TEMPLATE/founding-team-pilot.yml"
       - ".github/workflows/pilot-intake.yml"
+      - "BUSINESS_MODEL.md"
+      - "docs/github-actions.md"
+      - "docs/pilot-rollout.md"
+      - "docs/pilot-tracking.md"
+      - "examples/pilot-delivery-record.md"
+      - "pyproject.toml"
       - "scripts/audit_pilot_labels.py"
       - "src/repo_scout/pilot_funnel.py"
+      - "tests/test_pilot_delivery_contract.py"
       - "tests/test_pilot_label_audit.py"
   push:
     branches: [main]
     paths:
+      - ".gitignore"
       - ".github/ISSUE_TEMPLATE/founding-team-pilot.yml"
       - ".github/workflows/pilot-intake.yml"
+      - "BUSINESS_MODEL.md"
+      - "docs/github-actions.md"
+      - "docs/pilot-rollout.md"
+      - "docs/pilot-tracking.md"
+      - "examples/pilot-delivery-record.md"
+      - "pyproject.toml"
       - "scripts/audit_pilot_labels.py"
       - "src/repo_scout/pilot_funnel.py"
+      - "tests/test_pilot_delivery_contract.py"
       - "tests/test_pilot_label_audit.py"
   workflow_dispatch:
 
@@ -37,8 +53,11 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Test the intake-label contract
-        run: python -m unittest tests.test_pilot_label_audit
+      - name: Test the pilot intake and delivery contracts
+        run: >-
+          python -m unittest
+          tests.test_pilot_label_audit
+          tests.test_pilot_delivery_contract
 
       - name: Audit live pilot labels
         env:

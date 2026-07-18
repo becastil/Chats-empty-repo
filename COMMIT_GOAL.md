@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after protecting local pilot delivery records: 144 / 1,000 (14.4%).
-- Remaining after protecting local pilot delivery records: 856 commits.
+- Progress after linking pilot activation to private handoff: 145 / 1,000 (14.5%).
+- Remaining after linking pilot activation to private handoff: 855 commits.
 
 ## Commit Standard
 

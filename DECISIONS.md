@@ -1578,3 +1578,21 @@ not encryption or access control, and `git add --force` can bypass them, so the
 local workspace is only a short-lived fallback; durable completed evidence
 still belongs in the customer-approved private system. This closes a paid
 delivery privacy gap without adding acquisition behavior or claiming revenue.
+
+## 2026-07-18: Link Private Handoff To Public Pilot Activation
+
+The public funnel previously defined `pilot-active` only as a paid pilot
+running in at least one repository, while the delivery contract requires a
+reviewed policy, CI run, retained rollout bundle, remediation plan, and
+customer-acknowledged first-repository handoff. The tracking guide now requires
+every contract condition and `pilot-paid` before activation.
+
+Repository identity, access, CI evidence, payment details, and acknowledgement
+remain in the customer-approved private system or short-lived ignored fallback.
+The public issue receives only the cumulative label and a non-sensitive status
+note. Executable coverage now runs the documented local setup and proves its
+directory and completed record use `700/600` permissions. The hosted pilot gate
+runs that delivery contract whenever its implementation or documentation
+changes. This makes paid delivery and revenue tracking agree without automating
+business labels, creating an acquisition asset, or claiming a payment or
+customer.

@@ -98,6 +98,12 @@ owner-only `700/600` permissions and an explicit `git check-ignore` preflight.
 Ignore rules are not encryption or access control, so durable evidence still
 belongs in the customer-approved private system and completed records must
 never be force-added.
+The public revenue ledger crosses from `pilot-paid` to `pilot-active` only
+after every activation condition in the paid delivery contract is satisfied,
+including customer acknowledgement of the first-repository handoff in that
+private delivery record. The public issue receives the cumulative label and a
+non-sensitive status note, never the repository identity, access details, CI
+evidence, payment details, or acknowledgement record.
 
 Policy version 2 can reject tracked or unignored sensitive paths without
 failing on properly ignored local copies. A founding-team custom pack can use

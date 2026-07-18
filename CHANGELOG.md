@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Linked public `pilot-active` application to every paid delivery contract
+  condition, including the acknowledged first-repository handoff, while
+  keeping private evidence out of the public issue.
+- Added executable proof that the documented local delivery workspace commands
+  create a `700` directory and `600` completed record, with the delivery
+  contract included in the hosted pilot gate.
 - Added an ignored `pilot-private/` workspace and owner-only POSIX setup for
   short-lived completed delivery records.
 - Added executable coverage that the completed-record path is ignored while the

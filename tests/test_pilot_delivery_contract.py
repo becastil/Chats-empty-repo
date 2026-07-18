@@ -1,13 +1,18 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
+import shutil
+import stat
 import subprocess
+from tempfile import TemporaryDirectory
 import tomllib
 import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
 ROLLOUT_GUIDE = ROOT / "docs" / "pilot-rollout.md"
+PILOT_TRACKING = ROOT / "docs" / "pilot-tracking.md"
 CI_GUIDE = ROOT / "docs" / "github-actions.md"
 BUSINESS_MODEL = ROOT / "BUSINESS_MODEL.md"
 INTAKE_FORM = ROOT / ".github" / "ISSUE_TEMPLATE" / "founding-team-pilot.yml"
@@ -160,6 +165,54 @@ class PilotDeliveryContractTests(unittest.TestCase):
         self.assertEqual(ignored.returncode, 0)
         self.assertNotEqual(tracked_template.returncode, 0)
 
+    def test_local_delivery_workspace_commands_set_owner_only_modes(self) -> None:
+        if os.name != "posix" or shutil.which("install") is None:
+            self.skipTest("POSIX install command is unavailable")
+
+        guide = ROLLOUT_GUIDE.read_text(encoding="utf-8").replace("\\\n", "")
+        guide = " ".join(guide.split())
+        self.assertIn("install -d -m 700 pilot-private", guide)
+        self.assertIn(
+            "install -m 600 examples/pilot-delivery-record.md "
+            "pilot-private/delivery-record.md",
+            guide,
+        )
+
+        with TemporaryDirectory() as temporary_directory:
+            isolated_root = Path(temporary_directory)
+            isolated_examples = isolated_root / "examples"
+            isolated_examples.mkdir()
+            isolated_template = isolated_examples / "pilot-delivery-record.md"
+            shutil.copyfile(DELIVERY_TEMPLATE, isolated_template)
+
+            subprocess.run(
+                ["install", "-d", "-m", "700", "pilot-private"],
+                cwd=isolated_root,
+                check=True,
+            )
+            subprocess.run(
+                [
+                    "install",
+                    "-m",
+                    "600",
+                    "examples/pilot-delivery-record.md",
+                    "pilot-private/delivery-record.md",
+                ],
+                cwd=isolated_root,
+                check=True,
+            )
+
+            workspace = isolated_root / "pilot-private"
+            completed_record = workspace / "delivery-record.md"
+            self.assertTrue(workspace.is_dir())
+            self.assertTrue(completed_record.is_file())
+            self.assertEqual(stat.S_IMODE(workspace.stat().st_mode), 0o700)
+            self.assertEqual(stat.S_IMODE(completed_record.stat().st_mode), 0o600)
+            self.assertEqual(
+                completed_record.read_bytes(),
+                DELIVERY_TEMPLATE.read_bytes(),
+            )
+
     def test_payment_activation_and_conversion_remain_human_evidence(self) -> None:
         guide = ROLLOUT_GUIDE.read_text(encoding="utf-8")
         normalized = " ".join(guide.split())
@@ -180,6 +233,39 @@ class PilotDeliveryContractTests(unittest.TestCase):
         self.assertLess(
             normalized.index("Apply `pilot-active`"),
             normalized.index("Apply `pilot-converted`"),
+        )
+
+    def test_public_activation_label_requires_private_handoff_evidence(self) -> None:
+        tracking = " ".join(PILOT_TRACKING.read_text(encoding="utf-8").split())
+
+        self.assertIn(
+            "[paid delivery contract]"
+            "(pilot-rollout.md#paid-pilot-delivery-contract)",
+            tracking,
+        )
+        self.assertIn(
+            "Apply `pilot-active` only after `pilot-paid` is already present",
+            tracking,
+        )
+        self.assertIn(
+            "every activation condition in that contract is satisfied",
+            tracking,
+        )
+        self.assertIn(
+            "including customer acknowledgement of the first-repository "
+            "handoff",
+            tracking,
+        )
+        self.assertIn(
+            "Keep repository identity, access, CI evidence, payment details, "
+            "and the acknowledgement record in the customer-approved private "
+            "system",
+            tracking,
+        )
+        self.assertIn(
+            "The public issue receives only the cumulative label and a "
+            "non-sensitive status note",
+            tracking,
         )
 
     def test_delivery_details_stay_out_of_the_public_issue(self) -> None:
