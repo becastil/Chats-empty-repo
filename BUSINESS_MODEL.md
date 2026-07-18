@@ -530,9 +530,12 @@ the exact alias because replies can arrive out of send order. It accepts
 requires explicit confirmation that a human observed the outcome, preserves
 approval and contact history, and clears any pending follow-up. A generic reply
 may later be refined to a specific terminal outcome. The action sends nothing
-and schedules nothing. Private `pilot-requested` is an operator signal, not a
-public funnel event; the prospect must still submit pilot intake, and only paid
-stages count as revenue.
+and schedules nothing. Contact and follow-up receipts now preserve the exact
+alias and private ledger path in a shell-quoted outcome handoff. Required date
+and status placeholders stop an unchanged command before ledger access, keeping
+the operator responsible for the observed evidence. Private `pilot-requested`
+is an operator signal, not a public funnel event; the prospect must still
+submit pilot intake, and only paid stages count as revenue.
 
 Every approval, decline, contact, follow-up, and outcome write now carries the
 SHA-256 revision of the private ledger it validated. The staged replacement

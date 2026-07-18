@@ -1782,3 +1782,19 @@ holding the ledger lock and rechecks the notes' private file boundary. Any
 intervening edit emits the existing generic fresh-review instruction, leaves
 the ledger bytes unchanged, and removes the staged replacement without exposing
 private message text.
+
+## 2026-07-18: Carry Exact Outcome Handoffs
+
+Outcome recording can happen after initial contact or after follow-up and can
+arrive out of send order. Asking the operator to reconstruct a command from
+memory risks applying real response evidence to the wrong alias or private
+ledger even though every earlier lifecycle transition already emits an exact
+handoff.
+
+Contact and follow-up text receipts now emit the same shell-quoted
+`--record-outcome` command with the exact alias, private ledger path, and
+confirmation flag. Required `YYYY-MM-DD` and `OUTCOME` placeholders preserve
+the human observation step; an unchanged placeholder fails during argument
+parsing before ledger access. This adds no sending, prospect, public demand, or
+revenue evidence, and private pilot interest still requires public intake
+before it enters the funnel.

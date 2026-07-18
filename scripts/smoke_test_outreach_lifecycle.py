@@ -34,6 +34,7 @@ OPT_OUT_REVIEW_CHECK = (
     "Confirm the message gives a clear opt-out and promises no further contact."
 )
 DATE_PLACEHOLDER = "YYYY-MM-DD"
+OUTCOME_PLACEHOLDER = "OUTCOME"
 
 
 class SmokeTestError(RuntimeError):
@@ -204,13 +205,28 @@ def verify_outreach_lifecycle(
             follow_up_arguments,
             environment=environment,
         )
+        outcome_arguments = _handoff_arguments(
+            handoff_follow_up.stdout,
+            action="--record-outcome",
+            ledger=handoff_ledger,
+        )
+        outcome_arguments = _replace_outcome(
+            outcome_arguments,
+            observed_on="2026-07-11",
+            outcome="replied",
+        )
+        handoff_outcome = _run_arguments(
+            outreach_command,
+            outcome_arguments,
+            environment=environment,
+        )
         _require(
-            "repo-scout-outreach " not in handoff_follow_up.stdout,
-            "completed follow-up emitted another action command",
+            "repo-scout-outreach " not in handoff_outcome.stdout,
+            "completed outcome emitted another action command",
         )
         handoff_row = _read_row(handoff_ledger)
         _require(
-            handoff_row["status"] == "followed-up"
+            handoff_row["status"] == "replied"
             and handoff_row["contacted_on"] == "2026-07-03"
             and handoff_row["followed_up_on"] == "2026-07-10",
             "copy-ready handoffs did not complete the synthetic lifecycle",
@@ -991,6 +1007,30 @@ def _replace_event_date(
     )
     return tuple(
         event_date if value == DATE_PLACEHOLDER else value
+        for value in arguments
+    )
+
+
+def _replace_outcome(
+    arguments: Sequence[str],
+    *,
+    observed_on: str,
+    outcome: str,
+) -> tuple[str, ...]:
+    _require(
+        arguments.count(DATE_PLACEHOLDER) == 1,
+        "outcome handoff must require one actual-date placeholder",
+    )
+    _require(
+        arguments.count(OUTCOME_PLACEHOLDER) == 1,
+        "outcome handoff must require one observed-outcome placeholder",
+    )
+    return tuple(
+        observed_on
+        if value == DATE_PLACEHOLDER
+        else outcome
+        if value == OUTCOME_PLACEHOLDER
+        else value
         for value in arguments
     )
 

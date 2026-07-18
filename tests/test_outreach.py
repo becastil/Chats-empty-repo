@@ -22,6 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from repo_scout.outreach import (  # noqa: E402
     DATE_PLACEHOLDER,
     LEDGER_FIELDS,
+    OUTCOME_PLACEHOLDER,
     OutreachInputError,
     build_next_outreach_review,
     build_outreach_report,
@@ -1889,12 +1890,15 @@ class OutreachReportTests(unittest.TestCase):
                     self.assertEqual(main(arguments), 0)
                 return stdout.getvalue()
 
-            def next_command(output: str) -> list[str]:
-                command = next(
+            def command_for(output: str, action: str) -> list[str]:
+                commands = [
                     line
                     for line in output.splitlines()
                     if line.startswith("repo-scout-outreach ")
-                )
+                    and action in shlex.split(line)
+                ]
+                self.assertEqual(len(commands), 1)
+                command = commands[0]
                 parsed = shlex.split(command)
                 self.assertEqual(parsed[0], "repo-scout-outreach")
                 self.assertEqual(parsed[-2:], ["--", str(ledger)])
@@ -1910,11 +1914,13 @@ class OutreachReportTests(unittest.TestCase):
             review_output = run(
                 [str(ledger), "--as-of", "2026-07-01", "--review-next"]
             )
-            approval_command = next_command(review_output)
+            approval_command = command_for(review_output, "--approve-next")
             self.assertNotIn(DATE_PLACEHOLDER, approval_command)
             approval_output = run(approval_command)
 
-            contact_command = next_command(approval_output)
+            contact_command = command_for(
+                approval_output, "--record-contact"
+            )
             self.assertEqual(contact_command.count(DATE_PLACEHOLDER), 2)
             self.assertNotIn("2026-07-01", contact_command)
             before_contact = ledger.read_bytes()
@@ -1928,22 +1934,58 @@ class OutreachReportTests(unittest.TestCase):
                 with_event_date(contact_command, "2026-07-03")
             )
 
-            follow_up_command = next_command(contact_output)
+            contact_outcome_command = command_for(
+                contact_output, "--record-outcome"
+            )
+            self.assertEqual(contact_outcome_command.count(DATE_PLACEHOLDER), 1)
+            self.assertEqual(
+                contact_outcome_command.count(OUTCOME_PLACEHOLDER), 1
+            )
+            follow_up_command = command_for(
+                contact_output, "--record-follow-up"
+            )
             self.assertEqual(follow_up_command.count(DATE_PLACEHOLDER), 2)
             self.assertNotIn("2026-07-10", follow_up_command)
             follow_up_output = run(
                 with_event_date(follow_up_command, "2026-07-10")
             )
 
-            self.assertNotIn("repo-scout-outreach ", follow_up_output)
+            outcome_command = command_for(
+                follow_up_output, "--record-outcome"
+            )
+            self.assertEqual(outcome_command, contact_outcome_command)
+            self.assertEqual(outcome_command.count(DATE_PLACEHOLDER), 1)
+            self.assertEqual(outcome_command.count(OUTCOME_PLACEHOLDER), 1)
+            self.assertIn("--confirm-outcome-observed", outcome_command)
+            before_outcome = ledger.read_bytes()
+            with redirect_stderr(io.StringIO()), self.assertRaises(
+                SystemExit
+            ) as ctx:
+                main(outcome_command)
+            self.assertEqual(ctx.exception.code, 2)
+            self.assertEqual(ledger.read_bytes(), before_outcome)
+            outcome_output = run(
+                [
+                    (
+                        "2026-07-11"
+                        if value == DATE_PLACEHOLDER
+                        else "replied"
+                        if value == OUTCOME_PLACEHOLDER
+                        else value
+                    )
+                    for value in outcome_command
+                ]
+            )
+            self.assertNotIn("repo-scout-outreach ", outcome_output)
             report = load_outreach_report(ledger, as_of=date(2026, 7, 10))
-            self.assertEqual(report["summary"]["followed_up"], 1)
+            self.assertEqual(report["summary"]["replied"], 1)
             self.assertEqual(report["summary"]["attempted_prospects"], 1)
             with ledger.open(newline="", encoding="utf-8") as ledger_file:
                 row = next(csv.DictReader(ledger_file))
             self.assertEqual(row["approved_on"], "2026-07-01")
             self.assertEqual(row["contacted_on"], "2026-07-03")
             self.assertEqual(row["followed_up_on"], "2026-07-10")
+            self.assertEqual(row["status"], "replied")
 
     def test_record_contact_rejects_unsafe_transitions_without_mutation(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -2413,7 +2455,7 @@ class OutreachReportTests(unittest.TestCase):
             self.assertNotIn("2026-07-10", serialized)
             self.assertNotIn("evidence.example", serialized)
             self.assertIn("Repo Scout sent nothing", receipt["action_note"])
-            text = format_outreach_follow_up(receipt)
+            text = format_outreach_follow_up(receipt, ledger=ledger)
             self.assertIn("stop immediately after an opt-out", text)
             self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
 

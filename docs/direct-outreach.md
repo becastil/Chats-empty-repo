@@ -259,7 +259,8 @@ Repo Scout sends nothing and schedules no automatic message. The text receipt
 ends with a complete follow-up recording command whose `as_of` and
 `followed-up-on` values are placeholders for the actual UTC send date. The
 receipt still displays the earliest due date, and validation rejects an earlier
-follow-up.
+follow-up. It also emits an exact outcome command for a response observed before
+that due date, preserving the alias and shell-quoted private ledger path.
 
 On the due date, after a human sends the one allowed follow-up, record it:
 
@@ -279,7 +280,8 @@ and `contacted_on`, changes only `status`, `followed_up_on`, and
 scheduled. Invalid state or write failure leaves the file unchanged. Its
 receipt omits explicit approval, contact, and follow-up fields; keep it private
 because it includes the alias and `as_of` context. Repo Scout sends nothing and
-schedules no additional message.
+schedules no additional message. Its text receipt repeats the same exact outcome
+handoff so the operator does not need to reconstruct the alias or ledger path.
 
 When a human observes a reply, pilot request, rejection, or opt-out after the
 initial contact or follow-up, stop the cadence without hand-editing the ledger:
@@ -296,6 +298,10 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
 responses can arrive out of send order. Supported outcomes are `replied`,
 `pilot-requested`, `not-a-fit`, and `do-not-contact`; a generic `replied` row
 may later move to one of the three specific outcomes after a human observes it.
+Contact and follow-up text receipts emit this shell-quoted command with required
+`YYYY-MM-DD` and `OUTCOME` placeholders. Replace both with the actual UTC
+observation date and supported status; leaving either placeholder unchanged
+fails during argument parsing before the private ledger is read or modified.
 The guarded action requires explicit confirmation, validates the complete
 ledger before and after the transition, preserves approval, contact, and
 follow-up history, and atomically changes only `status` while clearing

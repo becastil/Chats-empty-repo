@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added exact, shell-quoted outcome handoffs to contact and follow-up receipts,
+  preserving the prospect alias and private ledger path.
+- Required operators to replace both observation-date and outcome placeholders;
+  unchanged handoffs fail before the private ledger is read or modified.
+- Extended installed-command lifecycle proof through a human-observed response
+  without turning private outreach evidence into public demand or revenue.
 - Carried the bounded private draft-notes revision from content receipt
   verification into the locked approval and decline commit.
 - Private notes edited during that commit window now force a fresh review while

@@ -40,6 +40,7 @@ FOLLOW_UP_DAYS = 7
 MAX_FOLLOW_UPS = 1
 MAX_PRIVATE_DRAFT_BYTES = 128 * 1024
 DATE_PLACEHOLDER = "YYYY-MM-DD"
+OUTCOME_PLACEHOLDER = "OUTCOME"
 LEDGER_FIELDS = (
     "prospect_id",
     "fit_signals",
@@ -1479,10 +1480,9 @@ def format_outreach_contact(
         "Private ledger updated atomically.",
         f"Boundary: {contact_report['action_note']}",
         (
-            "Next: record any observed response or stop condition with "
-            "--record-outcome. If none arrives, follow up manually on the due "
-            "date or later. Replace both YYYY-MM-DD placeholders with the actual "
-            "UTC follow-up send date, then record it:"
+            "If no response arrives, follow up manually on the due date or "
+            "later. Replace both YYYY-MM-DD placeholders with the actual UTC "
+            "follow-up send date, then record it:"
         ),
         _format_outreach_command(
             ledger,
@@ -1494,6 +1494,10 @@ def format_outreach_contact(
             DATE_PLACEHOLDER,
             "--confirm-follow-up-sent",
         ),
+        *_format_outreach_outcome_handoff(
+            ledger,
+            prospect_id=contact["prospect_id"],
+        ),
     ]
     return "\n".join(lines)
 
@@ -1504,7 +1508,32 @@ def _format_outreach_command(ledger: Path, *arguments: str) -> str:
     )
 
 
-def format_outreach_follow_up(follow_up_report: dict[str, Any]) -> str:
+def _format_outreach_outcome_handoff(
+    ledger: Path, *, prospect_id: str
+) -> list[str]:
+    statuses = ", ".join(OUTCOME_STATUSES)
+    return [
+        (
+            "If a human observes a response or stop condition, replace "
+            "YYYY-MM-DD with the actual UTC observation date and OUTCOME with "
+            f"one of {statuses}, then record it:"
+        ),
+        _format_outreach_command(
+            ledger,
+            "--as-of",
+            DATE_PLACEHOLDER,
+            "--record-outcome",
+            prospect_id,
+            "--outcome",
+            OUTCOME_PLACEHOLDER,
+            "--confirm-outcome-observed",
+        ),
+    ]
+
+
+def format_outreach_follow_up(
+    follow_up_report: dict[str, Any], *, ledger: Path
+) -> str:
     follow_up = follow_up_report["follow_up"]
     lines = [
         "Repo Scout outreach follow-up record",
@@ -1513,9 +1542,10 @@ def format_outreach_follow_up(follow_up_report: dict[str, Any]) -> str:
         f"Status: {follow_up['status']}",
         "Private ledger updated atomically.",
         f"Boundary: {follow_up_report['action_note']}",
-        (
-            "Next: wait for a response, record it with --record-outcome, and "
-            "stop immediately after an opt-out or not-interested response."
+        "Next: wait for a response and stop immediately after an opt-out.",
+        *_format_outreach_outcome_handoff(
+            ledger,
+            prospect_id=follow_up["prospect_id"],
         ),
     ]
     return "\n".join(lines)
@@ -1916,7 +1946,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     elif args.record_outcome is not None:
         print(format_outreach_outcome(report))
     elif args.record_follow_up is not None:
-        print(format_outreach_follow_up(report))
+        print(format_outreach_follow_up(report, ledger=args.ledger))
     elif args.record_contact is not None:
         print(format_outreach_contact(report, ledger=args.ledger))
     elif args.approve_next is not None:
