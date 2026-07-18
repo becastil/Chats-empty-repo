@@ -613,10 +613,10 @@ experiments comparable over time, but they retain the same CI and maintainer
 confounders and therefore remain directional until a buyer self-reports a source
 or enters the paid funnel.
 
-The latest 2026-07-17 UTC public checkpoint records 190 cumulative primary
-artifact requests across 47 contract-complete releases: 25 portable and 165
-wheel. That is 14 more primary requests than the prior checkpoint: 7 on the new
-`v0.3.43` release and 7 additional `v0.3.42` wheel requests. Repo Scout's own
+The latest 2026-07-18 UTC public checkpoint records 201 cumulative primary
+artifact requests across 48 contract-complete releases: 28 portable and 173
+wheel. That is 11 more primary requests than the prior checkpoint: 7 on the new
+`v0.3.44` release and 4 additional `v0.3.43` wheel requests. Repo Scout's own
 release, verification, pinning, and CI activity materially confound those
 counts. The same checkpoint records zero pilot requests, zero outreach attempts,
 and $0 booked revenue, so acquisition remains the honest bottleneck.

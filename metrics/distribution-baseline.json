@@ -3,49 +3,49 @@
   "latest": {
     "assets": [
       {
-        "download_count": 5,
+        "download_count": 4,
         "name": "SHA256SUMS"
       },
       {
         "download_count": 3,
-        "name": "repo-scout-0.3.43.pyz"
+        "name": "repo-scout-0.3.44.pyz"
       },
       {
         "download_count": 4,
-        "name": "repo_scout-0.3.43-py3-none-any.whl"
+        "name": "repo_scout-0.3.44-py3-none-any.whl"
       },
       {
         "download_count": 3,
-        "name": "repo_scout-0.3.43.tar.gz"
+        "name": "repo_scout-0.3.44.tar.gz"
       }
     ],
     "contract": {
       "complete": true,
       "expected_artifacts": [
         "SHA256SUMS",
-        "repo-scout-0.3.43.pyz",
-        "repo_scout-0.3.43-py3-none-any.whl",
-        "repo_scout-0.3.43.tar.gz"
+        "repo-scout-0.3.44.pyz",
+        "repo_scout-0.3.44-py3-none-any.whl",
+        "repo_scout-0.3.44.tar.gz"
       ],
       "missing_artifacts": [],
       "unexpected_artifacts": []
     },
     "downloads": {
-      "manifest": 5,
+      "manifest": 4,
       "portable": 3,
       "primary": 7,
       "source": 3,
-      "total": 15,
+      "total": 14,
       "unknown": 0,
       "wheel": 4
     },
-    "published_at": "2026-07-17T20:44:44Z",
-    "tag": "v0.3.43",
-    "url": "https://github.com/becastil/Chats-empty-repo/releases/tag/v0.3.43",
+    "published_at": "2026-07-18T00:51:20Z",
+    "tag": "v0.3.44",
+    "url": "https://github.com/becastil/Chats-empty-repo/releases/tag/v0.3.44",
     "version": [
       0,
       3,
-      43
+      44
     ]
   },
   "measurement_note": "GitHub asset download counts are cumulative requests and can include CI jobs, maintainer verification, and retries; they are not unique installs, active users, pilot requests, or revenue.",
@@ -53,7 +53,55 @@
     {
       "assets": [
         {
-          "download_count": 5,
+          "download_count": 4,
+          "name": "SHA256SUMS"
+        },
+        {
+          "download_count": 3,
+          "name": "repo-scout-0.3.44.pyz"
+        },
+        {
+          "download_count": 4,
+          "name": "repo_scout-0.3.44-py3-none-any.whl"
+        },
+        {
+          "download_count": 3,
+          "name": "repo_scout-0.3.44.tar.gz"
+        }
+      ],
+      "contract": {
+        "complete": true,
+        "expected_artifacts": [
+          "SHA256SUMS",
+          "repo-scout-0.3.44.pyz",
+          "repo_scout-0.3.44-py3-none-any.whl",
+          "repo_scout-0.3.44.tar.gz"
+        ],
+        "missing_artifacts": [],
+        "unexpected_artifacts": []
+      },
+      "downloads": {
+        "manifest": 4,
+        "portable": 3,
+        "primary": 7,
+        "source": 3,
+        "total": 14,
+        "unknown": 0,
+        "wheel": 4
+      },
+      "published_at": "2026-07-18T00:51:20Z",
+      "tag": "v0.3.44",
+      "url": "https://github.com/becastil/Chats-empty-repo/releases/tag/v0.3.44",
+      "version": [
+        0,
+        3,
+        44
+      ]
+    },
+    {
+      "assets": [
+        {
+          "download_count": 8,
           "name": "SHA256SUMS"
         },
         {
@@ -61,7 +109,7 @@
           "name": "repo-scout-0.3.43.pyz"
         },
         {
-          "download_count": 4,
+          "download_count": 8,
           "name": "repo_scout-0.3.43-py3-none-any.whl"
         },
         {
@@ -81,13 +129,13 @@
         "unexpected_artifacts": []
       },
       "downloads": {
-        "manifest": 5,
+        "manifest": 8,
         "portable": 3,
-        "primary": 7,
+        "primary": 11,
         "source": 3,
-        "total": 15,
+        "total": 22,
         "unknown": 0,
-        "wheel": 4
+        "wheel": 8
       },
       "published_at": "2026-07-17T20:44:44Z",
       "tag": "v0.3.43",
@@ -2274,19 +2322,19 @@
   ],
   "schema_version": 2,
   "summary": {
-    "complete_releases": 47,
+    "complete_releases": 48,
     "draft_releases": 0,
-    "input_releases": 47,
-    "manifest_downloads": 156,
-    "portable_downloads": 25,
-    "portable_primary_share_percent": 13.2,
+    "input_releases": 48,
+    "manifest_downloads": 163,
+    "portable_downloads": 28,
+    "portable_primary_share_percent": 13.9,
     "prerelease_releases": 0,
-    "primary_artifact_downloads": 190,
-    "source_downloads": 28,
-    "stable_releases": 47,
+    "primary_artifact_downloads": 201,
+    "source_downloads": 31,
+    "stable_releases": 48,
     "unknown_downloads": 0,
     "warning_count": 0,
-    "wheel_downloads": 165
+    "wheel_downloads": 173
   },
   "warnings": []
 }
