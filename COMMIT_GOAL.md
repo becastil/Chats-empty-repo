@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after preparing the v0.3.44 UTC-outreach release: 139 / 1,000 (13.9%).
-- Remaining after preparing the v0.3.44 UTC-outreach release: 861 commits.
+- Progress after advancing the verified v0.3.44 CI pins: 140 / 1,000 (14.0%).
+- Remaining after advancing the verified v0.3.44 CI pins: 860 commits.
 
 ## Commit Standard
 

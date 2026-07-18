@@ -1498,3 +1498,20 @@ current UTC date. Historical metrics and independently verified policy pins
 remain on their measured `v0.3.43` boundary until publication and separate
 verification. This distributes an execution fix; it does not perform human
 review, send outreach, prove adoption, create demand, or book revenue.
+
+## 2026-07-18: Advance Both Policy Gates To Verified v0.3.44
+
+The public `v0.3.44` wheel independently measures to SHA-256
+`1855cc8066434f2c07d998caa869e0f898511d6df996b03a03cb61df5eb10d89` and
+resolves through annotated tag `v0.3.44` to main-branch source commit
+`7012255f5b88ab01fbd84e58ccfec310a397b614`. The downloaded manifest verified
+the wheel, portable zipapp, and source archive. GitHub attestation verification
+bound the wheel to the exact source, semantic tag, release workflow, and hosted
+runner. All seven installed commands and four paid-workflow smoke harnesses
+passed from a fresh no-dependency wheel installation.
+
+The guarded release-pin updater changed the dogfood workflow, copy-ready
+workflow, buyer-facing README claim, and CI contract test together. Both policy
+gates retain exact source and wheel-digest verification before installation.
+This strengthens paid CI distribution; it does not prove a customer install,
+outreach attempt, pilot request, payment, demand, or revenue.

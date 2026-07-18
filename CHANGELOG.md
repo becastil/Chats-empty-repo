@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Independently verified the public `v0.3.44` manifest, annotated tag, source
+  ancestry, exact signer workflow, hosted runner, and wheel provenance.
+- Verified all seven installed commands and four paid-workflow smoke harnesses
+  from a fresh no-dependency `v0.3.44` wheel installation.
+- Advanced the dogfood and copy-ready policy gates to the independently measured
+  `v0.3.44` wheel digest and exact release source commit.
+- Preserved the honest commercial baseline: no customer install, demand signal,
+  outreach attempt, pilot request, payment, or revenue resulted from this work.
+
 ## 0.3.44 - 2026-07-18
 
 - Standardized direct-outreach report defaults and every copy-ready lifecycle

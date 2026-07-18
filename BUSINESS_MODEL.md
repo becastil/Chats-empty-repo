@@ -406,10 +406,15 @@ Version `0.3.44` advances the package, runtime, website, download guide, and
 installed smoke identity together so UTC outreach defaults reach the same
 operator workflow. Its wheel smoke runs the installed outreach command under a
 local timezone whose calendar date differs from UTC and requires the report to
-retain the current UTC date. Customer and dogfood policy gates remain pinned to
-independently verified `v0.3.43` until the new artifacts are published and
-separately reconciled. This removes a distribution mismatch; it does not review
-or send a draft, create a pilot request, or record revenue.
+retain the current UTC date. After separate public-artifact verification,
+customer and dogfood policy gates now pin source commit
+`7012255f5b88ab01fbd84e58ccfec310a397b614` and wheel SHA-256
+`1855cc8066434f2c07d998caa869e0f898511d6df996b03a03cb61df5eb10d89`.
+The downloaded manifest, annotated tag ancestry, wheel provenance, exact signer
+workflow, hosted-runner restriction, seven installed command identities, and
+four paid-workflow smoke harnesses passed before the pins changed. This removes
+a distribution mismatch; it does not prove a customer install, review or send
+a draft, create demand, or record revenue.
 
 After a human completes those checks, guarded `--approve-next` can record the
 decision without hand-editing CSV. It requires the exact next alias, an explicit
