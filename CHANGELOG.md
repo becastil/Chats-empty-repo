@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Fixed conflicting `pilot-converted` plus `pilot-lost` records so they no
+  longer inflate either resolved conversion or loss totals.
+- Preserved historical booked revenue for conflict records that reached
+  `pilot-paid`, while retaining their visible conflict stage and warning.
 - Extended the production audit to require the exact $299 founding-team service
   and a website-attributed link to the public pilot application.
 - Added controlled failures for missing, duplicated, mispriced, or mislinked

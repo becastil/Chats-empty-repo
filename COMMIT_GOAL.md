@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after auditing the paid pilot conversion path: 153 / 1,000 (15.3%).
-- Remaining after auditing the paid pilot conversion path: 847 commits.
+- Progress after fixing terminal conflict accounting: 154 / 1,000 (15.4%).
+- Remaining after fixing terminal conflict accounting: 846 commits.
 
 ## Commit Standard
 

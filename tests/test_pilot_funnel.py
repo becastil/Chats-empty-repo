@@ -108,8 +108,8 @@ class PilotFunnelTests(unittest.TestCase):
         self.assertEqual(report["summary"]["booked_revenue_usd"], 1196)
         self.assertEqual(report["summary"]["remaining_pilots"], 0)
         self.assertEqual(report["summary"]["target_attainment_percent"], 133.3)
-        self.assertEqual(report["summary"]["annual_conversions"], 2)
-        self.assertEqual(report["summary"]["lost_pilots"], 2)
+        self.assertEqual(report["summary"]["annual_conversions"], 1)
+        self.assertEqual(report["summary"]["lost_pilots"], 1)
         self.assertEqual(report["summary"]["stale_deals"], 2)
         self.assertEqual(report["summary"]["sales_actions"], 2)
         self.assertEqual(report["summary"]["attributed_issues"], 8)
@@ -233,8 +233,8 @@ class PilotFunnelTests(unittest.TestCase):
                 "offered_pilots": 2,
                 "booked_pilots": 2,
                 "booked_revenue_usd": 598,
-                "annual_conversions": 1,
-                "lost_pilots": 1,
+                "annual_conversions": 0,
+                "lost_pilots": 0,
             },
         )
         self.assertEqual(report["by_readiness"]["exploring"]["deals"], 2)
@@ -265,6 +265,61 @@ class PilotFunnelTests(unittest.TestCase):
             report,
             build_funnel(list(reversed(payload)), as_of=date(2026, 7, 10)),
         )
+
+    def test_terminal_conflict_is_booked_without_resolved_outcome_totals(
+        self,
+    ) -> None:
+        payload = [
+            {
+                "number": 101,
+                "title": "Paid pilot with conflicting terminal labels",
+                "url": "https://github.com/example/repo/issues/101",
+                "state": "CLOSED",
+                "updatedAt": "2026-07-10T12:00:00Z",
+                "labels": [
+                    {"name": label}
+                    for label in (
+                        "pilot-lead",
+                        "pilot-qualified",
+                        "pilot-offered",
+                        "pilot-paid",
+                        "pilot-active",
+                        "pilot-converted",
+                        "pilot-lost",
+                    )
+                ],
+                "body": (
+                    "### How did you hear about Repo Scout?\n\n"
+                    "Direct outreach\n\n"
+                    "### Purchase readiness\n\n"
+                    "Ready to purchase the $299 pilot\n\n"
+                    "### Primary purchase criterion\n\n"
+                    "Supports our required repository standards"
+                ),
+            }
+        ]
+
+        report = build_funnel(payload, as_of=date(2026, 7, 10))
+
+        self.assertEqual(report["deals"][0]["stage"], "conflict")
+        self.assertTrue(report["deals"][0]["booked"])
+        self.assertEqual(report["summary"]["booked_pilots"], 1)
+        self.assertEqual(report["summary"]["booked_revenue_usd"], 299)
+        self.assertEqual(
+            [warning["kind"] for warning in report["warnings"]],
+            ["conflicting_terminal_labels"],
+        )
+        self.assertEqual(report["summary"]["annual_conversions"], 0)
+        self.assertEqual(report["summary"]["lost_pilots"], 0)
+        for segment, key in (
+            (report["by_source"], "outreach"),
+            (report["by_readiness"], "ready"),
+            (report["by_decision_criterion"], "policy_fit"),
+        ):
+            self.assertEqual(segment[key]["booked_pilots"], 1)
+            self.assertEqual(segment[key]["booked_revenue_usd"], 299)
+            self.assertEqual(segment[key]["annual_conversions"], 0)
+            self.assertEqual(segment[key]["lost_pilots"], 0)
 
     def test_classifies_application_scope_without_exposing_standard_text(self) -> None:
         common = (

@@ -1714,3 +1714,16 @@ with the existing $299 USD limited offer at the production pilot section and at
 least one website-attributed link to the existing GitHub application form. It
 does not alter the offer, add tracking, submit intake, create a lead, or count
 as demand or revenue.
+
+## 2026-07-18: Exclude Terminal Conflicts From Resolved Outcomes
+
+An issue labeled as both `pilot-converted` and `pilot-lost` was shown at the
+conflict stage but still incremented both annual conversion and loss totals,
+including every source, readiness, and purchase-criterion segment. One
+unresolved record therefore overstated both clean commercial outcomes.
+
+Terminal conflicts now contribute to neither resolved outcome until their
+labels are corrected. A cumulative `pilot-paid` milestone still preserves the
+historical $299 booking, and the conflict stage and warning remain visible.
+This changes no customer state or revenue evidence; it makes the existing
+report distinguish booked history from unresolved terminal classification.

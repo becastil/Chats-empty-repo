@@ -377,9 +377,11 @@ def build_funnel(
 
         by_stage[stage] += 1
         is_booked = furthest_stage >= STAGE_LABELS.index("pilot-paid")
+        is_converted = has_converted and not has_lost
+        is_lost = has_lost and not has_converted
         booked_pilots += int(is_booked)
-        annual_conversions += int(has_converted)
-        lost_pilots += int(has_lost)
+        annual_conversions += int(is_converted)
+        lost_pilots += int(is_lost)
         is_qualified = furthest_stage >= STAGE_LABELS.index("pilot-qualified")
         is_offered = furthest_stage >= STAGE_LABELS.index("pilot-offered")
         for totals in (
@@ -392,8 +394,8 @@ def build_funnel(
                 is_qualified=is_qualified,
                 is_offered=is_offered,
                 is_booked=is_booked,
-                has_converted=has_converted,
-                has_lost=has_lost,
+                is_converted=is_converted,
+                is_lost=is_lost,
                 pilot_price_usd=pilot_price_usd,
             )
         deals.append(
@@ -839,8 +841,8 @@ def _record_segment_totals(
     is_qualified: bool,
     is_offered: bool,
     is_booked: bool,
-    has_converted: bool,
-    has_lost: bool,
+    is_converted: bool,
+    is_lost: bool,
     pilot_price_usd: int,
 ) -> None:
     totals["deals"] += 1
@@ -848,8 +850,8 @@ def _record_segment_totals(
     totals["offered_pilots"] += int(is_offered)
     totals["booked_pilots"] += int(is_booked)
     totals["booked_revenue_usd"] += int(is_booked) * pilot_price_usd
-    totals["annual_conversions"] += int(has_converted)
-    totals["lost_pilots"] += int(has_lost)
+    totals["annual_conversions"] += int(is_converted)
+    totals["lost_pilots"] += int(is_lost)
 
 
 def _sales_action(stage: str, readiness: str, pilot_price_usd: int) -> str:

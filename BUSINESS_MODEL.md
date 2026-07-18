@@ -588,6 +588,12 @@ targets. Qualified leads and written offers remain pipeline, not booked
 revenue. Label warnings must be resolved before totals are used in a roadmap or
 sales decision.
 
+An issue carrying both `pilot-converted` and `pilot-lost` remains a visible
+terminal conflict. It retains booked revenue when the cumulative paid milestone
+is present, but contributes to neither resolved conversion nor resolved loss
+totals until the labels are corrected. This prevents one ambiguous customer
+record from overstating both outcomes.
+
 Future tagged releases exercise that accounting contract through the installed
 wheel before provenance attestation. A temporary synthetic export proves an
 offer remains at $0, one paid pilot books exactly $299 toward the $897 target,
