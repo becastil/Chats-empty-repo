@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after rechecking outreach privacy at commit: 156 / 1,000 (15.6%).
-- Remaining after rechecking outreach privacy at commit: 844 commits.
+- Progress after fixing next-review dates: 157 / 1,000 (15.7%).
+- Remaining after fixing next-review dates: 843 commits.
 
 ## Commit Standard
 

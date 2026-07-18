@@ -1403,11 +1403,14 @@ def format_outreach_decline(
     if drafts_remaining:
         lines.extend(
             [
-                "Next: review the next drafted prospect:",
+                (
+                    "Next: replace YYYY-MM-DD with the actual UTC review date, "
+                    "then review the next drafted prospect:"
+                ),
                 _format_outreach_command(
                     ledger,
                     "--as-of",
-                    decline_report["as_of"],
+                    DATE_PLACEHOLDER,
                     "--review-next",
                 ),
             ]

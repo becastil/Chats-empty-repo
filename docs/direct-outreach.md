@@ -195,8 +195,11 @@ and recomputes the content receipt. It atomically changes only `status` to
 content, invalid ledger state, or write failures leave the file unchanged. The
 private receipt contains no evidence URL or persisted decision date and reports
 only the number of drafts remaining. While that count is positive, it ends with
-a complete command for reviewing the next draft; at zero, it reports that the
-bounded review queue is complete and emits no dead handoff.
+a command for reviewing the next draft with a `YYYY-MM-DD` placeholder. Replace
+that placeholder with the actual UTC date when the next human review begins;
+leaving it unchanged fails before the ledger is read or modified. At zero, the
+receipt reports that the bounded review queue is complete and emits no dead
+handoff.
 This status counts as closed but never as attempted outreach; it does not
 approve, send, schedule, or record contact.
 

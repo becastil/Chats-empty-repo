@@ -1754,3 +1754,16 @@ mode to the staged file. Late privacy drift stops without replacing current
 bytes, and normal cleanup removes the unused staged file. The tool does not
 silently repair the externally changed mode because that would hide evidence
 that the private boundary changed.
+
+## 2026-07-18: Require The Next Review's Actual Date
+
+A nonterminal decline receipt reused its own `as_of` date in the generated
+command for reviewing the next draft. If the operator resumed the queue later,
+that old date entered the next content-bound receipt and generated approval,
+silently backdating a separate human review.
+
+The next-review handoff now uses the same required `YYYY-MM-DD` convention as
+future contact and follow-up actions. The operator must enter the actual UTC
+review date, while an unchanged placeholder fails during argument parsing
+before the remaining private ledger is read or modified. A terminal decline
+still emits no next command.

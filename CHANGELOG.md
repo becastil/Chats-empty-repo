@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Replaced the prior decline date in next-draft review handoffs with a required
+  `YYYY-MM-DD` placeholder for the actual UTC review date.
+- Unchanged next-review placeholders now fail before reading or modifying the
+  remaining private draft queue.
 - Revalidated the private outreach ledger's file type and owner-only permissions
   inside every locked lifecycle commit.
 - Late permission drift now stops the action without replacing ledger bytes or

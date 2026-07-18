@@ -493,6 +493,9 @@ content receipt before it atomically changes only status to `review-declined`,
 preserves the private file boundary, reports the privacy-safe remaining-draft
 count, and records no action date. It emits the next review command only while
 another draft remains and ends truthfully when the bounded queue reaches zero.
+That future review command requires an actual-date placeholder instead of
+reusing the decline date, so a delayed next decision cannot silently backdate
+its content receipt or approval evidence.
 The aggregate report counts this as closed before contact and never as an
 attempt. This keeps the acquisition queue moving without converting negative
 review judgment into an approval or a false outreach event.

@@ -1204,6 +1204,28 @@ class OutreachReportTests(unittest.TestCase):
             decline_text = format_outreach_decline(receipt, ledger=ledger)
             self.assertIn("Drafts remaining: 1", decline_text)
             self.assertIn("--review-next", decline_text)
+            self.assertIn(
+                f"--as-of {DATE_PLACEHOLDER} --review-next",
+                decline_text,
+            )
+            self.assertNotIn(
+                "--as-of 2026-07-13 --review-next",
+                decline_text,
+            )
+            next_review_command = shlex.split(
+                next(
+                    line
+                    for line in decline_text.splitlines()
+                    if line.startswith("repo-scout-outreach ")
+                )
+            )[1:]
+            before_next_review = ledger.read_bytes()
+            with redirect_stderr(io.StringIO()), self.assertRaises(
+                SystemExit
+            ) as ctx:
+                main(next_review_command)
+            self.assertEqual(ctx.exception.code, 2)
+            self.assertEqual(ledger.read_bytes(), before_next_review)
             self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
 
     def test_decline_final_draft_ends_the_review_queue(self) -> None:
