@@ -90,13 +90,13 @@ class MetricsBaselineTests(unittest.TestCase):
         self.assertEqual(summary["stable_releases"], len(releases))
         self.assertEqual(summary["complete_releases"], len(releases))
         self.assertTrue(all(release["contract"]["complete"] for release in releases))
-        self.assertEqual(report["latest"]["tag"], "v0.3.44")
-        self.assertEqual(summary["stable_releases"], 48)
-        self.assertEqual(summary["primary_artifact_downloads"], 201)
-        self.assertEqual(summary["portable_downloads"], 28)
-        self.assertEqual(summary["wheel_downloads"], 173)
-        self.assertEqual(summary["source_downloads"], 31)
-        self.assertEqual(summary["manifest_downloads"], 163)
+        self.assertEqual(report["latest"]["tag"], "v0.3.45")
+        self.assertEqual(summary["stable_releases"], 49)
+        self.assertEqual(summary["primary_artifact_downloads"], 218)
+        self.assertEqual(summary["portable_downloads"], 31)
+        self.assertEqual(summary["wheel_downloads"], 187)
+        self.assertEqual(summary["source_downloads"], 34)
+        self.assertEqual(summary["manifest_downloads"], 177)
         self.assertEqual(summary["unknown_downloads"], 0)
         self.assertEqual(
             summary["primary_artifact_downloads"],
@@ -135,14 +135,14 @@ class MetricsBaselineTests(unittest.TestCase):
         self.assertEqual(
             growth["distribution_change"],
             {
-                "manifest_downloads_delta": 7,
-                "new_releases": ["v0.3.44"],
+                "manifest_downloads_delta": 14,
+                "new_releases": ["v0.3.45"],
                 "portable_downloads_delta": 3,
-                "primary_artifact_downloads_delta": 11,
+                "primary_artifact_downloads_delta": 17,
                 "removed_releases": [],
                 "source_downloads_delta": 3,
                 "unknown_downloads_delta": 0,
-                "wheel_downloads_delta": 8,
+                "wheel_downloads_delta": 14,
             },
         )
 

@@ -8,24 +8,24 @@
       },
       {
         "download_count": 3,
-        "name": "repo-scout-0.3.44.pyz"
+        "name": "repo-scout-0.3.45.pyz"
       },
       {
         "download_count": 4,
-        "name": "repo_scout-0.3.44-py3-none-any.whl"
+        "name": "repo_scout-0.3.45-py3-none-any.whl"
       },
       {
         "download_count": 3,
-        "name": "repo_scout-0.3.44.tar.gz"
+        "name": "repo_scout-0.3.45.tar.gz"
       }
     ],
     "contract": {
       "complete": true,
       "expected_artifacts": [
         "SHA256SUMS",
-        "repo-scout-0.3.44.pyz",
-        "repo_scout-0.3.44-py3-none-any.whl",
-        "repo_scout-0.3.44.tar.gz"
+        "repo-scout-0.3.45.pyz",
+        "repo_scout-0.3.45-py3-none-any.whl",
+        "repo_scout-0.3.45.tar.gz"
       ],
       "missing_artifacts": [],
       "unexpected_artifacts": []
@@ -39,13 +39,13 @@
       "unknown": 0,
       "wheel": 4
     },
-    "published_at": "2026-07-18T00:51:20Z",
-    "tag": "v0.3.44",
-    "url": "https://github.com/becastil/Chats-empty-repo/releases/tag/v0.3.44",
+    "published_at": "2026-07-18T09:51:33Z",
+    "tag": "v0.3.45",
+    "url": "https://github.com/becastil/Chats-empty-repo/releases/tag/v0.3.45",
     "version": [
       0,
       3,
-      44
+      45
     ]
   },
   "measurement_note": "GitHub asset download counts are cumulative requests and can include CI jobs, maintainer verification, and retries; they are not unique installs, active users, pilot requests, or revenue.",
@@ -58,10 +58,58 @@
         },
         {
           "download_count": 3,
-          "name": "repo-scout-0.3.44.pyz"
+          "name": "repo-scout-0.3.45.pyz"
         },
         {
           "download_count": 4,
+          "name": "repo_scout-0.3.45-py3-none-any.whl"
+        },
+        {
+          "download_count": 3,
+          "name": "repo_scout-0.3.45.tar.gz"
+        }
+      ],
+      "contract": {
+        "complete": true,
+        "expected_artifacts": [
+          "SHA256SUMS",
+          "repo-scout-0.3.45.pyz",
+          "repo_scout-0.3.45-py3-none-any.whl",
+          "repo_scout-0.3.45.tar.gz"
+        ],
+        "missing_artifacts": [],
+        "unexpected_artifacts": []
+      },
+      "downloads": {
+        "manifest": 4,
+        "portable": 3,
+        "primary": 7,
+        "source": 3,
+        "total": 14,
+        "unknown": 0,
+        "wheel": 4
+      },
+      "published_at": "2026-07-18T09:51:33Z",
+      "tag": "v0.3.45",
+      "url": "https://github.com/becastil/Chats-empty-repo/releases/tag/v0.3.45",
+      "version": [
+        0,
+        3,
+        45
+      ]
+    },
+    {
+      "assets": [
+        {
+          "download_count": 14,
+          "name": "SHA256SUMS"
+        },
+        {
+          "download_count": 3,
+          "name": "repo-scout-0.3.44.pyz"
+        },
+        {
+          "download_count": 14,
           "name": "repo_scout-0.3.44-py3-none-any.whl"
         },
         {
@@ -81,13 +129,13 @@
         "unexpected_artifacts": []
       },
       "downloads": {
-        "manifest": 4,
+        "manifest": 14,
         "portable": 3,
-        "primary": 7,
+        "primary": 17,
         "source": 3,
-        "total": 14,
+        "total": 34,
         "unknown": 0,
-        "wheel": 4
+        "wheel": 14
       },
       "published_at": "2026-07-18T00:51:20Z",
       "tag": "v0.3.44",
@@ -2322,19 +2370,19 @@
   ],
   "schema_version": 2,
   "summary": {
-    "complete_releases": 48,
+    "complete_releases": 49,
     "draft_releases": 0,
-    "input_releases": 48,
-    "manifest_downloads": 163,
-    "portable_downloads": 28,
-    "portable_primary_share_percent": 13.9,
+    "input_releases": 49,
+    "manifest_downloads": 177,
+    "portable_downloads": 31,
+    "portable_primary_share_percent": 14.2,
     "prerelease_releases": 0,
-    "primary_artifact_downloads": 201,
-    "source_downloads": 31,
-    "stable_releases": 48,
+    "primary_artifact_downloads": 218,
+    "source_downloads": 34,
+    "stable_releases": 49,
     "unknown_downloads": 0,
     "warning_count": 0,
-    "wheel_downloads": 173
+    "wheel_downloads": 187
   },
   "warnings": []
 }

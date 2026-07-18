@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after advancing the verified v0.3.45 CI pins: 149 / 1,000 (14.9%).
-- Remaining after advancing the verified v0.3.45 CI pins: 851 commits.
+- Progress after refreshing v0.3.45 commercial evidence: 150 / 1,000 (15.0%).
+- Remaining after refreshing v0.3.45 commercial evidence: 850 commits.
 
 ## Commit Standard
 
