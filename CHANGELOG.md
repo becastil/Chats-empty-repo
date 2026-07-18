@@ -2,10 +2,14 @@
 
 ## Unreleased
 
+## 0.3.44 - 2026-07-18
+
 - Standardized direct-outreach report defaults and every copy-ready lifecycle
   command on the current UTC calendar date.
 - Added regression coverage that prevents local-midnight review, approval,
   contact, follow-up, and outcome dates from drifting across operator timezones.
+- Extended the installed-command release smoke to prove the UTC default while
+  the process runs under a deliberately different local calendar date.
 - Refreshed the warning-free commercial evidence checkpoint after the verified
   `v0.3.43` release and CI rollout.
 - Recorded 14 additional primary artifact requests: 7 on `v0.3.43` and 7 later

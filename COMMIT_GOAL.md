@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after standardizing outreach lifecycle dates on UTC: 138 / 1,000 (13.8%).
-- Remaining after standardizing outreach lifecycle dates on UTC: 862 commits.
+- Progress after preparing the v0.3.44 UTC-outreach release: 139 / 1,000 (13.9%).
+- Remaining after preparing the v0.3.44 UTC-outreach release: 861 commits.
 
 ## Commit Standard
 

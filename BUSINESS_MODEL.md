@@ -402,6 +402,15 @@ command identities, and four paid-workflow smoke harnesses passed before the
 pins changed. This makes review safety distributable; it does not perform a
 review, send outreach, establish demand, or create revenue.
 
+Version `0.3.44` advances the package, runtime, website, download guide, and
+installed smoke identity together so UTC outreach defaults reach the same
+operator workflow. Its wheel smoke runs the installed outreach command under a
+local timezone whose calendar date differs from UTC and requires the report to
+retain the current UTC date. Customer and dogfood policy gates remain pinned to
+independently verified `v0.3.43` until the new artifacts are published and
+separately reconciled. This removes a distribution mismatch; it does not review
+or send a draft, create a pilot request, or record revenue.
+
 After a human completes those checks, guarded `--approve-next` can record the
 decision without hand-editing CSV. It requires the exact next alias, an explicit
 review date, and a confirmation flag; validates all rows before and after; and

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
@@ -52,6 +53,72 @@ def verify_outreach_lifecycle(
     checked: list[str] = []
 
     with TemporaryDirectory() as tmp:
+        utc_ledger = Path(tmp) / "UTC default ledger.csv"
+        _write_ledger(
+            utc_ledger,
+            _row(
+                contacted_on="",
+                status="drafted",
+                next_action_on="",
+                approved_on="",
+            ),
+        )
+        utc_before = datetime.now(timezone.utc).date().isoformat()
+        local_dates: set[str] = set()
+        utc_reports: list[dict[str, Any]] = []
+        for local_timezone in ("Etc/GMT+12", "Etc/GMT-14"):
+            non_utc_environment = (
+                dict(environment)
+                if environment is not None
+                else os.environ.copy()
+            )
+            non_utc_environment["TZ"] = local_timezone
+            local_probe = subprocess.run(
+                [
+                    python_command,
+                    "-c",
+                    "from datetime import date; print(date.today().isoformat())",
+                ],
+                capture_output=True,
+                text=True,
+                env=non_utc_environment,
+            )
+            _require(
+                local_probe.returncode == 0,
+                "could not establish a release-smoke timezone",
+            )
+            local_dates.add(local_probe.stdout.strip())
+            utc_default = _run_arguments(
+                outreach_command,
+                (str(utc_ledger), "--format", "json"),
+                environment=non_utc_environment,
+            )
+            try:
+                utc_report = json.loads(utc_default.stdout)
+            except json.JSONDecodeError as exc:
+                raise SmokeTestError(
+                    "UTC-default outreach audit did not emit valid JSON"
+                ) from exc
+            _require(
+                isinstance(utc_report, dict),
+                "UTC-default outreach audit emitted a non-object report",
+            )
+            utc_reports.append(utc_report)
+
+        utc_after = datetime.now(timezone.utc).date().isoformat()
+        _require(
+            len(local_dates) == 2,
+            "release-smoke timezones did not produce different calendar dates",
+        )
+        _require(
+            all(
+                report.get("as_of") in {utc_before, utc_after}
+                for report in utc_reports
+            ),
+            "outreach audit did not default to the current UTC calendar date",
+        )
+        checked.append("utc-date-default")
+
         handoff_ledger = Path(tmp) / "handoff ledger.csv"
         handoff_draft = _row(
             contacted_on="",

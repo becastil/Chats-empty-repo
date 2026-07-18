@@ -1485,3 +1485,16 @@ copy-ready lifecycle example passes that UTC date explicitly for both the
 report and action date. Explicit ISO dates and dates carried forward by emitted
 commands remain authoritative. This makes the private execution record
 reproducible; it does not review, approve, send, or count outreach.
+
+## 2026-07-18: Release UTC Outreach Defaults
+
+The source tree and copy-ready documentation now use UTC across the private
+outreach lifecycle, but the public `v0.3.43` wheel still defaults an omitted
+`--as-of` value to the operator's local calendar date. Version `0.3.44`
+therefore advances package, runtime, website, download, and release-smoke
+identities together. Before publication, the installed-command smoke selects a
+local timezone whose date differs from UTC and requires the audit to retain the
+current UTC date. Historical metrics and independently verified policy pins
+remain on their measured `v0.3.43` boundary until publication and separate
+verification. This distributes an execution fix; it does not perform human
+review, send outreach, prove adoption, create demand, or book revenue.
