@@ -226,6 +226,10 @@ create demand, or record revenue.
 The same check now runs daily in a read-only GitHub workflow and remains
 manually dispatchable after deployment. It receives no secrets and changes no
 release, site, customer record, or commercial evidence.
+The audit also requires exactly one $299 USD founding-team service at the
+production pilot section and at least one website-attributed link to the public
+application form. This detects a broken paid conversion path; it does not submit
+the form, create a request, or establish willingness to pay.
 
 The first direct-acquisition batch is deliberately small: 10 qualified
 engineering leads, personalized from relevant public evidence, with one initial

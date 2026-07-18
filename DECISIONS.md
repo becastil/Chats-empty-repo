@@ -1702,3 +1702,15 @@ contents access, immutable action pins, a two-minute timeout, and no secrets.
 The workflow observes the existing public buyer path and fails visibly when its
 release identity drifts. It does not deploy, repair, promote, create another
 acquisition route, change a customer record, or count as demand or revenue.
+
+## 2026-07-18: Audit The Paid Production Conversion Path
+
+The scheduled production check initially proved only the free release identity.
+Production could still omit or misprice the paid service, or remove the public
+pilot application link, while the monitor remained green.
+
+The same dependency-free audit now requires exactly one founding-team service
+with the existing $299 USD limited offer at the production pilot section and at
+least one website-attributed link to the existing GitHub application form. It
+does not alter the offer, add tracking, submit intake, create a lead, or count
+as demand or revenue.

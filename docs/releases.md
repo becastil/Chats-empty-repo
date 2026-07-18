@@ -61,16 +61,18 @@ checksum file.
 ## Audit The Production Download
 
 After publishing the site, maintainers can verify that its canonical metadata,
-free software offer, release version, and portable download URL all match the
-current project version:
+free software offer, release version, portable download URL, $299 founding-team
+service, and website-attributed pilot application link match the current
+commercial contract:
 
 ```bash
 python3 scripts/audit_production_site.py
 ```
 
 The audit reads the public HTML without changing production. A stale version,
-stale download URL, malformed structured offer, unexpected content type, or
-network failure exits nonzero instead of accepting a partial check.
+stale download URL, malformed free or paid offer, missing pilot application
+link, unexpected content type, or network failure exits nonzero instead of
+accepting a partial check.
 
 The read-only `Production site audit` workflow runs the same command once per
 day and can be dispatched manually after a deployment. It uses no repository

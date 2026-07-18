@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Extended the production audit to require the exact $299 founding-team service
+  and a website-attributed link to the public pilot application.
+- Added controlled failures for missing, duplicated, mispriced, or mislinked
+  paid pilot conversion metadata without changing the offer or funnel.
 - Added a daily, manually dispatchable production-site audit workflow with
   read-only repository access, immutable action pins, and no secrets.
 - Added a workflow contract that locks its schedule, timeout, Python runtime,

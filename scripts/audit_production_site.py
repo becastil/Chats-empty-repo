@@ -22,6 +22,7 @@ class ProductionSiteAuditError(RuntimeError):
 class _PageParser(HTMLParser):
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
+        self.anchor_urls: list[str] = []
         self.canonical_urls: list[str] = []
         self.json_ld_scripts: list[str] = []
         self._json_ld_parts: list[str] | None = None
@@ -30,6 +31,10 @@ class _PageParser(HTMLParser):
         self, tag: str, attrs: list[tuple[str, str | None]]
     ) -> None:
         attributes = dict(attrs)
+        if tag == "a":
+            href = attributes.get("href")
+            if href is not None:
+                self.anchor_urls.append(href)
         if tag == "link" and attributes.get("rel") == "canonical":
             href = attributes.get("href")
             if href is not None:
@@ -109,6 +114,7 @@ def audit_production_html(
         )
 
     applications: list[dict[str, object]] = []
+    services: list[dict[str, object]] = []
     for raw_script in parser.json_ld_scripts:
         try:
             document = json.loads(raw_script)
@@ -126,6 +132,11 @@ def audit_production_html(
             for candidate in candidates
             if isinstance(candidate, dict)
             and candidate.get("@type") == "SoftwareApplication"
+        )
+        services.extend(
+            candidate
+            for candidate in candidates
+            if isinstance(candidate, dict) and candidate.get("@type") == "Service"
         )
 
     if len(applications) != 1:
@@ -163,12 +174,64 @@ def audit_production_html(
             "free software offer must use price 0 and the current download URL"
         )
 
-    return ("canonical", "software-version", "download-url", "free-offer")
+    if len(services) != 1:
+        raise ProductionSiteAuditError(
+            "expected exactly one paid pilot Service in production JSON-LD, "
+            f"found {len(services)}"
+        )
+
+    pilot_url = f"{canonical_url}#team-pilot"
+    service = services[0]
+    if (
+        service.get("name") != "Repo Scout Founding Team Pilot"
+        or service.get("url") != pilot_url
+    ):
+        raise ProductionSiteAuditError(
+            "paid pilot Service must use the founding-team name and production "
+            f"section {pilot_url}"
+        )
+    pilot_offer = service.get("offers")
+    if not isinstance(pilot_offer, dict):
+        raise ProductionSiteAuditError("paid pilot Service must publish one offer")
+    if (
+        pilot_offer.get("price") != "299"
+        or pilot_offer.get("priceCurrency") != "USD"
+        or pilot_offer.get("availability")
+        != "https://schema.org/LimitedAvailability"
+        or pilot_offer.get("url") != pilot_url
+    ):
+        raise ProductionSiteAuditError(
+            "paid pilot offer must use $299 USD, limited availability, and the "
+            "production pilot section"
+        )
+
+    expected_application = (
+        "https://github.com/becastil/Chats-empty-repo/issues/new"
+        "?template=founding-team-pilot.yml"
+        "&discovery_source=Repo+Scout+website"
+    )
+    if expected_application not in parser.anchor_urls:
+        raise ProductionSiteAuditError(
+            "production must link to the website-attributed founding-team "
+            f"pilot application: {expected_application}"
+        )
+
+    return (
+        "canonical",
+        "software-version",
+        "download-url",
+        "free-offer",
+        "paid-service",
+        "pilot-application",
+    )
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Audit the deployed Repo Scout release and download identity."
+        description=(
+            "Audit the deployed Repo Scout release and paid pilot conversion "
+            "identity."
+        )
     )
     parser.add_argument(
         "--url",

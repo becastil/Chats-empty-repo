@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after scheduling production release auditing: 152 / 1,000 (15.2%).
-- Remaining after scheduling production release auditing: 848 commits.
+- Progress after auditing the paid pilot conversion path: 153 / 1,000 (15.3%).
+- Remaining after auditing the paid pilot conversion path: 847 commits.
 
 ## Commit Standard
 
