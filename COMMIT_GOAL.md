@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after adding guarded reply refinement: 160 / 1,000 (16.0%).
-- Remaining after adding guarded reply refinement: 840 commits.
+- Progress after preserving complete decline reviews: 161 / 1,000 (16.1%).
+- Remaining after preserving complete decline reviews: 839 commits.
 
 ## Commit Standard
 

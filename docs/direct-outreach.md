@@ -203,7 +203,10 @@ a command for reviewing the next draft with a `YYYY-MM-DD` placeholder. Replace
 that placeholder with the actual UTC date when the next human review begins;
 leaving it unchanged fails before the ledger is read or modified. At zero, the
 receipt reports that the bounded review queue is complete and emits no dead
-handoff.
+handoff. When the decline came from a complete evidence-and-draft review, the
+next command preserves both private review flags and the same shell-quoted notes
+path, so the following decision receives a fresh content-bound receipt instead
+of silently falling back to an alias-only checklist.
 This status counts as closed but never as attempted outreach; it does not
 approve, send, schedule, or record contact.
 

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Preserved complete private evidence-and-draft review context when a
+  content-bound decline advances to another prepared prospect.
+- The next-review handoff now retains both disclosure flags and the exact
+  shell-quoted notes path while requiring a fresh UTC review date.
+- Added a two-draft regression proving the emitted command produces a new
+  content-bound digest without exposing the previously declined message.
 - Added a guarded, shell-quoted refinement handoff after a generic outreach
   reply, limited to pilot request, rejection, or opt-out outcomes.
 - Required a fresh observation date and explicit terminal status while keeping

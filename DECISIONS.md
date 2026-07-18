@@ -1813,3 +1813,18 @@ and limits the stated choices to `pilot-requested`, `not-a-fit`, or
 `do-not-contact`. Terminal receipts emit no command. A private
 `pilot-requested` refinement remains an operator classification and must still
 be followed by public intake before it counts as demand or revenue.
+
+## 2026-07-18: Keep The Review Queue Content-Bound After Declines
+
+The prescribed private workflow reviews each prepared prospect with both
+private evidence and its draft notes. A nonterminal content-bound decline
+previously emitted only `--review-next`, silently downgrading the following
+prospect to an alias-only checklist and removing the digest guard from its
+generated decision commands.
+
+The decline formatter now carries the reviewed notes path into the next command
+and restores both complete-review disclosure flags. The actual UTC review date
+remains a required placeholder, and legacy alias-only declines retain their
+existing handoff. This fixes the existing five-draft execution path without
+adding a prospect, message, channel, approval, contact attempt, or revenue
+claim.

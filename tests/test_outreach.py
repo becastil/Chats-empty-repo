@@ -1217,6 +1217,122 @@ class OutreachReportTests(unittest.TestCase):
             self.assertNotIn("edited-agents", stderr.getvalue())
             self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
 
+    def test_content_bound_decline_preserves_complete_next_review(self) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "private ledger.csv"
+            notes = Path(tmp) / "private drafts.md"
+            _write_ledger(
+                ledger,
+                [
+                    _row(
+                        prospect_id="prospect-001",
+                        status="drafted",
+                        contacted_on="",
+                        next_action_on="",
+                        approved_on="",
+                    ),
+                    _row(
+                        prospect_id="prospect-002",
+                        status="drafted",
+                        contacted_on="",
+                        next_action_on="",
+                        approved_on="",
+                    ),
+                ],
+            )
+            notes.write_text(
+                "## prospect-001\n\nFirst private message\n\n"
+                "## prospect-002\n\nSecond private message\n",
+                encoding="utf-8",
+            )
+            if os.name == "posix":
+                notes.chmod(0o600)
+
+            review_stdout = io.StringIO()
+            with redirect_stdout(review_stdout):
+                self.assertEqual(
+                    main(
+                        [
+                            str(ledger),
+                            "--as-of",
+                            "2026-07-13",
+                            "--review-next",
+                            "--include-private-evidence",
+                            "--include-private-draft",
+                            str(notes),
+                            "--format",
+                            "json",
+                        ]
+                    ),
+                    0,
+                )
+            first_review = json.loads(review_stdout.getvalue())
+
+            decline_stdout = io.StringIO()
+            with redirect_stdout(decline_stdout):
+                self.assertEqual(
+                    main(
+                        [
+                            str(ledger),
+                            "--as-of",
+                            "2026-07-13",
+                            "--decline-next",
+                            "prospect-001",
+                            "--confirm-not-send",
+                            "--review-digest",
+                            first_review["review_digest"],
+                            "--reviewed-private-draft",
+                            str(notes),
+                        ]
+                    ),
+                    0,
+                )
+
+            command_line = next(
+                line
+                for line in decline_stdout.getvalue().splitlines()
+                if line.startswith("repo-scout-outreach ")
+            )
+            command = shlex.split(command_line)[1:]
+            self.assertEqual(command.count(DATE_PLACEHOLDER), 1)
+            self.assertIn("--include-private-evidence", command)
+            self.assertEqual(
+                command[command.index("--include-private-draft") + 1],
+                str(notes),
+            )
+            self.assertEqual(command[-2:], ["--", str(ledger)])
+            before_review = ledger.read_bytes()
+            with redirect_stderr(io.StringIO()), self.assertRaises(
+                SystemExit
+            ) as ctx:
+                main(command)
+            self.assertEqual(ctx.exception.code, 2)
+            self.assertEqual(ledger.read_bytes(), before_review)
+
+            next_review_stdout = io.StringIO()
+            with redirect_stdout(next_review_stdout):
+                self.assertEqual(
+                    main(
+                        [
+                            (
+                                "2026-07-14"
+                                if value == DATE_PLACEHOLDER
+                                else value
+                            )
+                            for value in command
+                        ]
+                    ),
+                    0,
+                )
+            next_review = next_review_stdout.getvalue()
+            self.assertIn("Prospect alias: prospect-002", next_review)
+            self.assertIn("Private evidence (do not commit or share):", next_review)
+            self.assertIn("Second private message", next_review)
+            self.assertNotIn("First private message", next_review)
+            self.assertIn("Content-bound review receipt: sha256:", next_review)
+            self.assertIn("--review-digest sha256:", next_review)
+            self.assertEqual(ledger.read_bytes(), before_review)
+
     def test_decline_next_closes_without_contact_and_advances_queue(self) -> None:
         with TemporaryDirectory() as tmp:
             ledger = Path(tmp) / "ledger.csv"

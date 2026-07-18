@@ -1437,7 +1437,10 @@ def format_outreach_approval(
 
 
 def format_outreach_decline(
-    decline_report: dict[str, Any], *, ledger: Path
+    decline_report: dict[str, Any],
+    *,
+    ledger: Path,
+    private_drafts_path: Path | None = None,
 ) -> str:
     decline = decline_report["decline"]
     drafts_remaining = decline_report["queue"]["drafts_remaining"]
@@ -1462,6 +1465,15 @@ def format_outreach_decline(
                     "--as-of",
                     DATE_PLACEHOLDER,
                     "--review-next",
+                    *(
+                        (
+                            "--include-private-evidence",
+                            "--include-private-draft",
+                            str(private_drafts_path),
+                        )
+                        if private_drafts_path is not None
+                        else ()
+                    ),
                 ),
             ]
         )
@@ -1969,7 +1981,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     elif args.approve_next is not None:
         print(format_outreach_approval(report, ledger=args.ledger))
     elif args.decline_next is not None:
-        print(format_outreach_decline(report, ledger=args.ledger))
+        print(
+            format_outreach_decline(
+                report,
+                ledger=args.ledger,
+                private_drafts_path=args.reviewed_private_draft,
+            )
+        )
     elif args.review_next:
         print(
             format_next_outreach_review(
