@@ -19,6 +19,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from repo_scout.outreach import (  # noqa: E402
+    DATE_PLACEHOLDER,
     LEDGER_FIELDS,
     OutreachInputError,
     build_next_outreach_review,
@@ -1522,7 +1523,7 @@ class OutreachReportTests(unittest.TestCase):
             self.assertIn("follow up manually", text)
             self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
 
-    def test_text_handoffs_emit_executable_lifecycle_commands(self) -> None:
+    def test_text_handoffs_require_actual_human_event_dates(self) -> None:
         with TemporaryDirectory() as tmp:
             ledger = Path(tmp) / "private ledger.csv"
             _write_ledger(
@@ -1554,17 +1555,50 @@ class OutreachReportTests(unittest.TestCase):
                 self.assertEqual(parsed[-2:], ["--", str(ledger)])
                 return parsed[1:]
 
+            def with_event_date(command: list[str], event_date: str) -> list[str]:
+                self.assertIn(DATE_PLACEHOLDER, command)
+                return [
+                    event_date if value == DATE_PLACEHOLDER else value
+                    for value in command
+                ]
+
             review_output = run(
                 [str(ledger), "--as-of", "2026-07-01", "--review-next"]
             )
-            approval_output = run(next_command(review_output))
-            contact_output = run(next_command(approval_output))
-            follow_up_output = run(next_command(contact_output))
+            approval_command = next_command(review_output)
+            self.assertNotIn(DATE_PLACEHOLDER, approval_command)
+            approval_output = run(approval_command)
+
+            contact_command = next_command(approval_output)
+            self.assertEqual(contact_command.count(DATE_PLACEHOLDER), 2)
+            self.assertNotIn("2026-07-01", contact_command)
+            before_contact = ledger.read_bytes()
+            with redirect_stderr(io.StringIO()), self.assertRaises(
+                SystemExit
+            ) as ctx:
+                main(contact_command)
+            self.assertEqual(ctx.exception.code, 2)
+            self.assertEqual(ledger.read_bytes(), before_contact)
+            contact_output = run(
+                with_event_date(contact_command, "2026-07-03")
+            )
+
+            follow_up_command = next_command(contact_output)
+            self.assertEqual(follow_up_command.count(DATE_PLACEHOLDER), 2)
+            self.assertNotIn("2026-07-10", follow_up_command)
+            follow_up_output = run(
+                with_event_date(follow_up_command, "2026-07-10")
+            )
 
             self.assertNotIn("repo-scout-outreach ", follow_up_output)
-            report = load_outreach_report(ledger, as_of=date(2026, 7, 8))
+            report = load_outreach_report(ledger, as_of=date(2026, 7, 10))
             self.assertEqual(report["summary"]["followed_up"], 1)
             self.assertEqual(report["summary"]["attempted_prospects"], 1)
+            with ledger.open(newline="", encoding="utf-8") as ledger_file:
+                row = next(csv.DictReader(ledger_file))
+            self.assertEqual(row["approved_on"], "2026-07-01")
+            self.assertEqual(row["contacted_on"], "2026-07-03")
+            self.assertEqual(row["followed_up_on"], "2026-07-10")
 
     def test_record_contact_rejects_unsafe_transitions_without_mutation(self) -> None:
         with TemporaryDirectory() as tmp:

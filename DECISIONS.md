@@ -1611,3 +1611,18 @@ permission guarantees apply to all five targets. The live CI contract also
 requires the commercial claim to match the pinned constant. This corrects and
 prevents factual drift in the existing paid workflow; it does not add a product
 feature, outreach asset, customer, payment, or revenue.
+
+## 2026-07-18: Require Actual Dates In Future Outreach Handoffs
+
+Approval and contact receipts previously emitted executable next commands that
+reused the approval date as the contact date and the calculated due date as the
+follow-up send date. If a human sent later, running the command unchanged
+backdated real activity and calculated the cadence from false evidence.
+
+Generated contact and follow-up commands now contain `YYYY-MM-DD` placeholders
+for both `--as-of` and the human event date. An unchanged command fails date
+parsing before the private ledger can mutate. The receipt still carries the
+exact alias, protected ledger path, confirmation flag, and follow-up due date,
+but the operator must enter the actual UTC send date. This protects outreach
+and follow-up evidence without sending a message, adding a prospect, or
+claiming demand or revenue.

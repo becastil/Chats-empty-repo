@@ -449,11 +449,14 @@ revalidates the content-bound receipt when the generated complete-review
 command is used; then it atomically preserves file permissions while changing
 only status and approval date. The receipt excludes evidence and review dates.
 Approval still sends nothing, creates no contact or follow-up date, and is not
-an attempt, lead, pilot request, or revenue event. Private text output carries
-each selected alias, date, confirmation flag, review receipt, and shell-quoted
-private paths into a complete next command. This removes manual command
-reconstruction without completing a review, sending a message, or treating
-operator activity as demand.
+an attempt, lead, pilot request, or revenue event. Private complete-review
+output carries the selected alias, review date, confirmation flag, review
+receipt, and shell-quoted private paths into a complete decision command. The
+approval receipt's contact handoff instead uses explicit date placeholders;
+requiring the operator to replace them prevents a later manual send from
+inheriting the earlier approval date. This removes manual command reconstruction
+without completing a review, sending a message, or treating operator activity
+as demand.
 
 When the human instead decides a draft must not be sent, guarded
 `--decline-next` requires the exact same next alias and an explicit no-send
@@ -482,9 +485,9 @@ follow-up date, and next action, then clears that next action so no second
 follow-up is scheduled. Early, future, and out-of-order records are rejected.
 The alias-only receipt remains private, and the tool sends nothing. A follow-up
 is still outreach operations, not a new prospect, lead, pilot request, payment,
-or revenue event. The contact receipt's next command uses the calculated due
-date for both reporting and follow-up recording, avoiding calendar drift while
-leaving the actual send and confirmation under human control.
+or revenue event. The contact receipt displays the calculated due date but uses
+date placeholders for follow-up recording, so a later human send is retained
+truthfully while validation still rejects a send before the due date.
 
 When a response or stop condition arrives, guarded `--record-outcome` records
 the exact alias because replies can arrive out of send order. It accepts

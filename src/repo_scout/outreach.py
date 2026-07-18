@@ -31,6 +31,7 @@ MAX_PROSPECTS = 10
 FOLLOW_UP_DAYS = 7
 MAX_FOLLOW_UPS = 1
 MAX_PRIVATE_DRAFT_BYTES = 128 * 1024
+DATE_PLACEHOLDER = "YYYY-MM-DD"
 LEDGER_FIELDS = (
     "prospect_id",
     "fit_signals",
@@ -1244,15 +1245,18 @@ def format_outreach_approval(
         f"Status: {approval['status']}",
         "Private ledger updated atomically.",
         f"Boundary: {approval_report['action_note']}",
-        "Next: send this one message manually, then record that send:",
+        (
+            "Next: send this one message manually. Replace both YYYY-MM-DD "
+            "placeholders with the actual UTC send date, then record that send:"
+        ),
         _format_outreach_command(
             ledger,
             "--as-of",
-            approval_report["as_of"],
+            DATE_PLACEHOLDER,
             "--record-contact",
             approval["prospect_id"],
             "--contacted-on",
-            approval_report["as_of"],
+            DATE_PLACEHOLDER,
             "--confirm-sent",
         ),
     ]
@@ -1307,16 +1311,17 @@ def format_outreach_contact(
         (
             "Next: record any observed response or stop condition with "
             "--record-outcome. If none arrives, follow up manually on the due "
-            "date, then record it:"
+            "date or later. Replace both YYYY-MM-DD placeholders with the actual "
+            "UTC follow-up send date, then record it:"
         ),
         _format_outreach_command(
             ledger,
             "--as-of",
-            contact["follow_up_due"],
+            DATE_PLACEHOLDER,
             "--record-follow-up",
             contact["prospect_id"],
             "--followed-up-on",
-            contact["follow_up_due"],
+            DATE_PLACEHOLDER,
             "--confirm-follow-up-sent",
         ),
     ]

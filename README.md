@@ -355,7 +355,9 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
 This action accepts only the next approved alias, retains `approved_on`, records
 the contact date, and sets `next_action_on` to exactly seven days later. Its
 private receipt names the manual follow-up date. Repo Scout sends no message and
-schedules no automatic follow-up.
+schedules no automatic follow-up. The generated contact-recording command uses
+date placeholders so approval and sending on different days cannot silently
+backdate the send.
 
 On that due date, after a human sends the one allowed follow-up, close the
 cadence with a guarded record:
@@ -370,7 +372,9 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
 
 The action selects the earliest due contact, rejects an early or future send,
 retains approval and initial-contact evidence, and clears `next_action_on` so no
-second follow-up is scheduled. Repo Scout still sends nothing.
+second follow-up is scheduled. The contact receipt shows the due date but leaves
+the actual follow-up send date as placeholders, preserving a later send
+truthfully. Repo Scout still sends nothing.
 
 When a human observes a reply or stop condition, record the exact alias and
 outcome without hand-editing the private ledger:

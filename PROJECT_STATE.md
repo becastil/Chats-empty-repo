@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 146 of 1,000, with 854 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 147 of 1,000, with 853 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -241,9 +241,9 @@ The delivery goal is 1,000 meaningful commits. This update is commit 146 of 1,00
 - Safe refinement of generic replies into specific terminal outcomes without
   converting private outreach status into public demand or revenue evidence.
 - Complete shell-quoted private text handoffs from review through approval,
-  contact, and exact-due-date follow-up recording, with installed-command proof
-  that emitted commands preserve aliases, dates, confirmation flags, and ledger
-  paths containing spaces.
+  contact, and follow-up recording, with required actual-send-date placeholders
+  that fail before mutation when left unchanged and preserve aliases,
+  confirmation flags, and ledger paths containing spaces.
 - `v0.3.38` patch-release boundary for ignored-path enforcement, copy-ready
   human handoffs, and POSIX owner-only permission checks through the installed
   outreach command.

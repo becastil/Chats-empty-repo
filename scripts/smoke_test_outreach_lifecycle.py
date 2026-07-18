@@ -33,6 +33,7 @@ EVIDENCE = (
 OPT_OUT_REVIEW_CHECK = (
     "Confirm the message gives a clear opt-out and promises no further contact."
 )
+DATE_PLACEHOLDER = "YYYY-MM-DD"
 
 
 class SmokeTestError(RuntimeError):
@@ -174,6 +175,11 @@ def verify_outreach_lifecycle(
             action="--record-contact",
             ledger=handoff_ledger,
         )
+        contact_arguments = _replace_event_date(
+            contact_arguments,
+            event_date="2026-07-03",
+            action="contact",
+        )
         handoff_contact = _run_arguments(
             outreach_command,
             contact_arguments,
@@ -185,8 +191,13 @@ def verify_outreach_lifecycle(
             ledger=handoff_ledger,
         )
         _require(
-            "2026-07-08" in follow_up_arguments,
-            "contact handoff did not preserve the exact follow-up due date",
+            "Manual follow-up due: 2026-07-10" in handoff_contact.stdout,
+            "contact handoff did not display the exact follow-up due date",
+        )
+        follow_up_arguments = _replace_event_date(
+            follow_up_arguments,
+            event_date="2026-07-10",
+            action="follow-up",
         )
         handoff_follow_up = _run_arguments(
             outreach_command,
@@ -200,7 +211,8 @@ def verify_outreach_lifecycle(
         handoff_row = _read_row(handoff_ledger)
         _require(
             handoff_row["status"] == "followed-up"
-            and handoff_row["followed_up_on"] == "2026-07-08",
+            and handoff_row["contacted_on"] == "2026-07-03"
+            and handoff_row["followed_up_on"] == "2026-07-10",
             "copy-ready handoffs did not complete the synthetic lifecycle",
         )
         checked.append("copy-ready-handoffs")
@@ -965,6 +977,22 @@ def _handoff_arguments(
         "handoff command did not preserve the private ledger path",
     )
     return tuple(parsed[1:])
+
+
+def _replace_event_date(
+    arguments: Sequence[str],
+    *,
+    event_date: str,
+    action: str,
+) -> tuple[str, ...]:
+    _require(
+        arguments.count(DATE_PLACEHOLDER) == 2,
+        f"{action} handoff must require two actual-date placeholders",
+    )
+    return tuple(
+        event_date if value == DATE_PLACEHOLDER else value
+        for value in arguments
+    )
 
 
 def _require_private_values_absent(

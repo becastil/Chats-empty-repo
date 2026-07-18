@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Replaced approval-date and due-date assumptions in generated contact and
+  follow-up commands with required `YYYY-MM-DD` placeholders for the actual
+  human send dates.
+- Added lifecycle coverage for approval on July 1, contact on July 3, and the
+  correctly derived July 10 follow-up, including mutation-free placeholder
+  rejection.
 - Corrected the stale commercial paid-CI claim from verified `v0.3.43` to
   `v0.3.44` and added it as a preflighted, atomic release-pin updater target.
 - Extended the live CI contract to require the README, business model, both

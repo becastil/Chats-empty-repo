@@ -222,7 +222,9 @@ content, future dates, or invalid ledger state leave the file unchanged. The
 private receipt omits evidence URLs and the review date. This action records a
 human decision; it does not send outreach or create a contact or follow-up
 date. Its text receipt ends with a complete command for recording the manual
-send, using the same alias, `as_of` date, and private ledger path.
+send, using the same alias and private ledger path with `YYYY-MM-DD`
+placeholders. Replace both placeholders with the actual UTC send date; an
+unchanged placeholder fails parsing instead of reusing the approval date.
 
 After review, the aggregate `Approved to send` count must include the selected
 row before contact; the report still does not reveal its alias. A human must
@@ -248,8 +250,9 @@ approval dates, and the explicit contact field while naming the manual follow-up
 due date. That date makes send timing inferable, so keep the receipt private.
 Repo Scout sends nothing and schedules no automatic message. The text receipt
 ends with a complete follow-up recording command whose `as_of` and
-`followed-up-on` values are the exact due date; run it only after the human
-follow-up has actually been sent.
+`followed-up-on` values are placeholders for the actual UTC send date. The
+receipt still displays the earliest due date, and validation rejects an earlier
+follow-up.
 
 On the due date, after a human sends the one allowed follow-up, record it:
 
