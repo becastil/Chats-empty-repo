@@ -1641,3 +1641,23 @@ July 10 due date to remain visible. Verified CI pins and measured distribution
 evidence stay on `v0.3.44` until publication and independent verification. This
 closes a public distribution mismatch; it does not perform human outreach,
 create a pilot request, collect payment, or claim revenue.
+
+## 2026-07-18: Advance Both Policy Gates To Verified v0.3.45
+
+The public `v0.3.45` wheel independently measures to SHA-256
+`fdf5642f3b205eb73644c96ee782b4cb34771c77dc77f9b21441e0716c76792d` and
+resolves through annotated tag `v0.3.45` to main-branch source commit
+`607745873a2262f2f7710609f02ea3b617d3db9e`. The downloaded manifest verified
+the wheel, portable zipapp, and source archive. GitHub attestations bound all
+three artifacts to the exact source, semantic tag, release workflow, and
+GitHub-hosted `ubuntu-24.04` runner. All seven installed commands and four
+paid-workflow smoke harnesses passed from a fresh no-dependency wheel
+installation.
+
+The guarded release-pin updater changed the dogfood workflow, copy-ready
+workflow, buyer-facing README and commercial claims, and CI contract test
+together. Both policy gates retain exact source and wheel-digest verification
+before installation. This strengthens paid CI distribution; it does not prove
+a customer install, outreach attempt, pilot request, payment, demand, or
+revenue. Human review and actual execution of the five prepared outreach drafts
+remain the next commercial action.

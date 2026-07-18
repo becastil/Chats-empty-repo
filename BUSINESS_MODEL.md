@@ -112,7 +112,7 @@ This is useful free CI enforcement; the paid work remains agreeing on the
 right rules and rolling the same reviewed policy across uneven repositories.
 Versions 1 and 2 remain readable so verified CI upgrades can be staged safely.
 The dogfood and copy-ready gates now install the independently verified
-`v0.3.44` wheel, so v4 policies can run locally and in CI
+`v0.3.45` wheel, so v4 policies can run locally and in CI
 without source checkout, mutable package resolution, or a team-managed secret.
 Maintainer pin upgrades now preflight and update the dogfood workflow,
 copy-ready customer example, buyer-facing README and commercial model claims,
@@ -446,10 +446,17 @@ Version `0.3.45` packages the actual-date outreach handoffs so the public wheel
 matches the documented human workflow. Its installed-command smoke approves on
 July 1, records the real send on July 3, displays the July 10 due date, and
 records the follow-up on July 10. It requires both generated future-action date
-placeholders before substituting those event dates. Verified policy pins and
-distribution baselines remain on `v0.3.44` until the new artifacts are public
-and independently reconciled. This distributes truthful private evidence
-handling; it does not review or send a draft, create demand, or record revenue.
+placeholders before substituting those event dates. After separate
+public-artifact verification, customer and dogfood policy gates now pin source
+commit `607745873a2262f2f7710609f02ea3b617d3db9e` and wheel SHA-256
+`fdf5642f3b205eb73644c96ee782b4cb34771c77dc77f9b21441e0716c76792d`.
+The downloaded manifest, annotated tag ancestry, all three provenance
+attestations, exact signer workflow, hosted-runner restriction, seven installed
+command identities, and four paid-workflow smoke harnesses passed before the
+pins changed. Distribution baselines remain on their measured `v0.3.44`
+boundary. This distributes truthful private evidence handling; it does not
+prove a customer install, review or send a draft, create demand, or record
+revenue.
 
 After a human completes those checks, guarded `--approve-next` can record the
 decision without hand-editing CSV. It requires the exact next alias, an explicit

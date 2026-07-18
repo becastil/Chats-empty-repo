@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 148 of 1,000, with 852 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 149 of 1,000, with 851 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -91,7 +91,7 @@ The delivery goal is 1,000 meaningful commits. This update is commit 148 of 1,00
 - Schema-2 rollout evidence with normalized policy fingerprints and exact Git commit IDs.
 - Backward-compatible schema-1 aggregation with explicit policy and commit identity coverage.
 - Shared-policy verification only for complete matching fingerprints across multiple repositories.
-- Copy-ready and dogfooded CI generation of schema-2 rollout bundles from the verified `v0.3.44` release.
+- Copy-ready and dogfooded CI generation of schema-2 rollout bundles from the verified `v0.3.45` release.
 - Stable GitHub `owner/repository` evidence identity with 14-day passing and remediation artifacts.
 - Required self-reported $299 purchase readiness in public pilot intake.
 - Schema-4 funnel reporting for readiness-stage, revenue, conversion, and loss outcomes.
@@ -282,7 +282,8 @@ The delivery goal is 1,000 meaningful commits. This update is commit 148 of 1,00
 - Git-aware pattern matching across all tracked or unignored paths, independent of the snapshot's 500-path detail cap.
 - Bounded pattern evidence with full match counts, 20 sorted paths per pattern, and explicit truncation state.
 - Strict wildcard, path, duplicate, required-file conflict, exact-rule overlap, and fingerprint validation for pattern rules.
-- Independently pinned `v0.3.44` wheel digest, source commit, manifest, provenance, signer workflow, and hosted-runner checks in both policy gates.
+- Independently pinned `v0.3.45` wheel digest, source commit, manifest,
+  provenance, signer workflow, and hosted-runner checks in both policy gates.
 - A preflighted maintainer updater that changes the dogfood workflow, customer
   example, buyer-facing README and commercial model claims, and CI pin contract
   together or refuses layout drift before writing.

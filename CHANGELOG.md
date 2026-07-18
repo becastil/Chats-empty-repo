@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Independently verified the public `v0.3.45` manifest, annotated tag, source
+  ancestry, exact signer workflow, hosted runner, and provenance for all three
+  distributable artifacts.
+- Verified all seven installed commands and four paid-workflow smoke harnesses
+  from a fresh no-dependency `v0.3.45` wheel installation.
+- Advanced the dogfood and copy-ready policy gates to the independently measured
+  `v0.3.45` wheel digest and exact release source commit.
+- Preserved the honest commercial baseline: no customer install, outreach
+  attempt, pilot request, payment, demand, or revenue resulted from this work.
+
 ## 0.3.45 - 2026-07-18
 
 - Replaced approval-date and due-date assumptions in generated contact and
