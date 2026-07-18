@@ -167,6 +167,10 @@ marks both disclosures. A complete evidence-and-draft bundle also prints an
 opaque SHA-256 receipt over the normalized selected ledger row, private draft,
 review date, and five human checks. Both generated decision commands carry that
 receipt and the reviewed notes path.
+Approval and decline also retain the bounded notes file revision captured while
+verifying that receipt. While holding the ledger lock, Repo Scout compares the
+current private notes to that revision; any intervening edit stops the decision,
+preserves the ledger, removes staged output, and requires a new review.
 Duplicate, malformed, empty, oversized, missing, or unknown sections fail
 without changing the ledger or exposing message text. Keep this output in the
 ignored workspace and do not redirect it into committed reports, logs, issue

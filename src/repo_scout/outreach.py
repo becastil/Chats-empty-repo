@@ -181,7 +181,7 @@ def approve_next_outreach_draft(
             f"next drafted prospect is {next_draft['prospect_id']}; "
             "review and approve it first"
         )
-    _verify_next_outreach_review(
+    private_draft_guard = _verify_next_outreach_review(
         rows,
         as_of=report_date,
         review_digest=review_digest,
@@ -200,6 +200,7 @@ def approve_next_outreach_draft(
         path,
         updated_rows,
         expected_revision=ledger_revision,
+        expected_private_draft_revision=private_draft_guard,
     )
     return {
         "schema_version": APPROVAL_SCHEMA_VERSION,
@@ -257,7 +258,7 @@ def decline_next_outreach_draft(
             f"next drafted prospect is {next_draft['prospect_id']}; "
             "review and decide it first"
         )
-    _verify_next_outreach_review(
+    private_draft_guard = _verify_next_outreach_review(
         rows,
         as_of=report_date,
         review_digest=review_digest,
@@ -275,6 +276,7 @@ def decline_next_outreach_draft(
         path,
         updated_rows,
         expected_revision=ledger_revision,
+        expected_private_draft_revision=private_draft_guard,
     )
     return {
         "schema_version": DECLINE_SCHEMA_VERSION,
@@ -699,6 +701,7 @@ def _write_outreach_rows(
     rows: list[dict[str, str]],
     *,
     expected_revision: str | None = None,
+    expected_private_draft_revision: tuple[Path, str] | None = None,
 ) -> None:
     temporary_path: Path | None = None
     try:
@@ -743,6 +746,34 @@ def _write_outreach_rows(
                     raise OutreachInputError(
                         "outreach ledger changed during this action; retry"
                     )
+            if expected_private_draft_revision is not None:
+                private_drafts_path, private_draft_revision = (
+                    expected_private_draft_revision
+                )
+                _require_owner_only_permissions(
+                    private_drafts_path,
+                    label="reviewed private draft notes",
+                )
+                try:
+                    with private_drafts_path.open("rb") as draft_file:
+                        current_private_draft = draft_file.read(
+                            MAX_PRIVATE_DRAFT_BYTES + 1
+                        )
+                except OSError as exc:
+                    raise OutreachInputError(
+                        "cannot verify reviewed private draft notes"
+                    ) from exc
+                if (
+                    len(current_private_draft) > MAX_PRIVATE_DRAFT_BYTES
+                    or not compare_digest(
+                        sha256(current_private_draft).hexdigest(),
+                        private_draft_revision,
+                    )
+                ):
+                    raise OutreachInputError(
+                        "review content changed; run --review-next again "
+                        "before deciding"
+                    )
             os.replace(temporary_path, path)
             temporary_path = None
     except OutreachInputError:
@@ -758,12 +789,21 @@ def _write_outreach_rows(
 
 
 def _load_private_drafts(path: Path) -> dict[str, str]:
+    drafts, _ = _load_private_drafts_snapshot(path)
+    return drafts
+
+
+def _load_private_drafts_snapshot(
+    path: Path,
+) -> tuple[dict[str, str], str]:
     try:
-        if path.stat().st_size > MAX_PRIVATE_DRAFT_BYTES:
+        with path.open("rb") as draft_file:
+            payload = draft_file.read(MAX_PRIVATE_DRAFT_BYTES + 1)
+        if len(payload) > MAX_PRIVATE_DRAFT_BYTES:
             raise OutreachInputError(
                 f"private draft notes exceed {MAX_PRIVATE_DRAFT_BYTES} bytes"
             )
-        text = path.read_text(encoding="utf-8")
+        text = payload.decode("utf-8")
     except OutreachInputError:
         raise
     except (OSError, UnicodeError) as exc:
@@ -815,7 +855,7 @@ def _load_private_drafts(path: Path) -> dict[str, str]:
         raise OutreachInputError(
             "private draft notes must contain at least one ## prospect-NNN section"
         )
-    return drafts
+    return drafts, sha256(payload).hexdigest()
 
 
 def build_outreach_report(
@@ -1165,14 +1205,17 @@ def _verify_next_outreach_review(
     as_of: date,
     review_digest: str | None,
     private_drafts_path: Path | None,
-) -> None:
+) -> tuple[Path, str] | None:
     if review_digest is None or private_drafts_path is None:
-        return
+        return None
+    private_drafts, private_draft_revision = _load_private_drafts_snapshot(
+        private_drafts_path
+    )
     current_review = build_next_outreach_review(
         rows,
         as_of=as_of,
         include_private_evidence=True,
-        private_drafts=_load_private_drafts(private_drafts_path),
+        private_drafts=private_drafts,
     )
     current_digest = current_review["review_digest"]
     if not isinstance(current_digest, str) or not compare_digest(
@@ -1181,6 +1224,7 @@ def _verify_next_outreach_review(
         raise OutreachInputError(
             "review content changed; run --review-next again before deciding"
         )
+    return private_drafts_path, private_draft_revision
 
 
 def _private_review_disclosure_note(

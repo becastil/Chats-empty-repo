@@ -1767,3 +1767,18 @@ future contact and follow-up actions. The operator must enter the actual UTC
 review date, while an unchanged placeholder fails during argument parsing
 before the remaining private ledger is read or modified. A terminal decline
 still emits no next command.
+
+## 2026-07-18: Guard Reviewed Notes Through Decision Commit
+
+Content-bound approval and decline reloaded the private notes and verified the
+human receipt before building a ledger transition. The ledger replacement was
+revision-checked later, but an editor save to the separate notes file in that
+window could still let the decision commit against content the receipt no
+longer represented.
+
+Receipt verification now returns the SHA-256 revision of the bounded private
+notes read. The approval or decline writer compares that revision again while
+holding the ledger lock and rechecks the notes' private file boundary. Any
+intervening edit emits the existing generic fresh-review instruction, leaves
+the ledger bytes unchanged, and removes the staged replacement without exposing
+private message text.

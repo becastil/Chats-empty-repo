@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after fixing next-review dates: 157 / 1,000 (15.7%).
-- Remaining after fixing next-review dates: 843 commits.
+- Progress after guarding reviewed draft revisions: 158 / 1,000 (15.8%).
+- Remaining after guarding reviewed draft revisions: 842 commits.
 
 ## Commit Standard
 

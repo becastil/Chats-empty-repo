@@ -426,6 +426,10 @@ the private files and recomputes the receipt; a changed source, channel, draft,
 date, or check fails without modifying the ledger or exposing the changed
 content. This binds a human decision to what was actually reviewed without
 making Repo Scout perform the judgment.
+The verified private notes revision now travels into the locked approval or
+decline commit as well. An editor save after receipt verification therefore
+forces a fresh review instead of recording a decision against content that no
+longer matches the human evidence.
 
 Version `0.3.43` advances the package, runtime, website, download guide, and
 installed-command smoke identities together so the schema-4 content receipt can

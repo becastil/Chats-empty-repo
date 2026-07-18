@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Carried the bounded private draft-notes revision from content receipt
+  verification into the locked approval and decline commit.
+- Private notes edited during that commit window now force a fresh review while
+  preserving the unmodified outreach ledger and removing staged output.
 - Replaced the prior decline date in next-draft review handoffs with a required
   `YYYY-MM-DD` placeholder for the actual UTC review date.
 - Unchanged next-review placeholders now fail before reading or modifying the
