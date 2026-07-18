@@ -305,6 +305,10 @@ replacing. A concurrent command or newer ledger revision stops with a retry
 message and leaves both the newer evidence and temporary-file boundary intact.
 The hidden lock file contains no prospect data and remains beside the ignored
 private ledger so atomic replacements cannot bypass it.
+While holding that lock, Repo Scout rechecks that the current ledger is a
+regular file and that its POSIX file and parent permissions remain owner-only.
+Late privacy drift stops the action without replacing the current bytes or
+retaining the staged file.
 
 The command requires at least three recognized fit signals and one secure
 source link for each, accepts only `prospect-NNN` aliases, caps the batch at 10,

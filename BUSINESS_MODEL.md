@@ -533,6 +533,10 @@ uses an owner-only adjacent operating-system lock, compares that revision under
 the lock, and refuses a concurrent or stale commit with a retry instruction.
 This prevents a later process from silently restoring an earlier status and
 undercounting real outreach attempts; the lock file contains no prospect data.
+The same locked commit point revalidates the live ledger's regular-file type and
+owner-only POSIX file and parent permissions. A late privacy change stops the
+mutation, preserves the current bytes, and removes the staged replacement
+instead of carrying a permissive mode into private operating evidence.
 
 Rollout bundles carry a stable, non-sensitive metadata contract so a pilot lead
 can summarize bundle-reported readiness, policy failures, violations, worktree

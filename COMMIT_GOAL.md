@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after protecting concurrent outreach evidence: 155 / 1,000 (15.5%).
-- Remaining after protecting concurrent outreach evidence: 845 commits.
+- Progress after rechecking outreach privacy at commit: 156 / 1,000 (15.6%).
+- Remaining after rechecking outreach privacy at commit: 844 commits.
 
 ## Commit Standard
 

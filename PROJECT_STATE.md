@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 155 of
-1,000, with 845 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 156 of
+1,000, with 844 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -238,6 +238,8 @@ alignment take priority over commit volume.
   atomic approval writes that never create contact or follow-up dates.
 - Revision-checked, per-ledger lifecycle locking that preserves newer outreach
   evidence when concurrent approval, contact, follow-up, or outcome writes race.
+- Locked commit-point file-type and owner-only permission revalidation that
+  rejects late private-ledger privacy drift without replacing its bytes.
 - Guarded `--record-contact` recording that requires the exact next approved
   alias, an explicit send date, and confirmation that a human already sent it.
 - Approval-date retention and automatic calculation of the exact seven-day

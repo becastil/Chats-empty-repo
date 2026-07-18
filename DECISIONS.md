@@ -1740,3 +1740,17 @@ owner-only adjacent lock serializes revision comparison and replacement without
 being swapped alongside the ledger; a busy lock or changed revision stops with
 a retry instruction. The lock contains no prospect data, failed commits remove
 their staged file, and read-only reporting remains lock-free.
+
+## 2026-07-18: Recheck Outreach Privacy At The Commit Point
+
+Live outreach actions checked owner-only file and parent permissions before
+loading the private ledger. A later permission change before staging could
+therefore be preserved by the atomic replacement even though the same mode
+would have stopped the original preflight.
+
+Every lifecycle writer now repeats the regular-file and owner-only permission
+check while holding the adjacent ledger lock, then applies only that validated
+mode to the staged file. Late privacy drift stops without replacing current
+bytes, and normal cleanup removes the unused staged file. The tool does not
+silently repair the externally changed mode because that would hide evidence
+that the private boundary changed.

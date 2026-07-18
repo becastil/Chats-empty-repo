@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Revalidated the private outreach ledger's file type and owner-only permissions
+  inside every locked lifecycle commit.
+- Late permission drift now stops the action without replacing ledger bytes or
+  leaving its staged private file behind.
 - Added per-ledger operating-system locks and SHA-256 revision checks to every
   mutating outreach lifecycle action.
 - Concurrent or stale writers now fail with a retry instruction while

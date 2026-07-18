@@ -500,10 +500,6 @@ def record_outreach_outcome(
 
 def _require_private_live_path(path: Path, *, label: str) -> None:
     protected_path = path.parent.resolve() / path.name
-    if protected_path.is_symlink():
-        raise OutreachInputError(
-            f"{label} must not be a symbolic link for live outreach actions"
-        )
     _require_owner_only_permissions(protected_path, label=label)
     try:
         worktree = subprocess.run(
@@ -565,40 +561,46 @@ def _require_private_live_path(path: Path, *, label: str) -> None:
         )
 
 
-def _require_owner_only_permissions(path: Path, *, label: str) -> None:
-    if os.name != "posix":
-        return
-
+def _require_owner_only_permissions(path: Path, *, label: str) -> int | None:
     try:
-        path_stat = path.stat()
+        path_stat = path.lstat()
     except FileNotFoundError:
-        return
+        return None
     except OSError as exc:
         raise OutreachInputError(
             f"cannot inspect {label} permissions: {exc}"
         ) from exc
 
+    if stat.S_ISLNK(path_stat.st_mode):
+        raise OutreachInputError(
+            f"{label} must not be a symbolic link for live outreach actions"
+        )
     if not stat.S_ISREG(path_stat.st_mode):
         raise OutreachInputError(
             f"{label} must be a regular file for live outreach actions"
         )
-    if path_stat.st_mode & (stat.S_IRWXG | stat.S_IRWXO):
+    if os.name == "posix" and path_stat.st_mode & (
+        stat.S_IRWXG | stat.S_IRWXO
+    ):
         raise OutreachInputError(
             f"{label} must use owner-only file permissions (chmod 600) "
             "before live outreach actions"
         )
 
-    try:
-        parent_stat = path.parent.stat()
-    except OSError as exc:
-        raise OutreachInputError(
-            f"cannot inspect {label} parent permissions: {exc}"
-        ) from exc
-    if parent_stat.st_mode & (stat.S_IRWXG | stat.S_IRWXO):
-        raise OutreachInputError(
-            f"{label} parent directory must use owner-only permissions "
-            "(chmod 700) before live outreach actions"
-        )
+    if os.name == "posix":
+        try:
+            parent_stat = path.parent.stat()
+        except OSError as exc:
+            raise OutreachInputError(
+                f"cannot inspect {label} parent permissions: {exc}"
+            ) from exc
+        if parent_stat.st_mode & (stat.S_IRWXG | stat.S_IRWXO):
+            raise OutreachInputError(
+                f"{label} parent directory must use owner-only permissions "
+                "(chmod 700) before live outreach actions"
+            )
+
+    return stat.S_IMODE(path_stat.st_mode)
 
 
 def _load_outreach_rows(path: Path) -> list[dict[str, str]]:
@@ -700,7 +702,6 @@ def _write_outreach_rows(
 ) -> None:
     temporary_path: Path | None = None
     try:
-        existing_mode = stat.S_IMODE(path.stat().st_mode)
         with NamedTemporaryFile(
             "w",
             newline="",
@@ -721,8 +722,16 @@ def _write_outreach_rows(
             writer.writerows(rows)
             ledger_file.flush()
             os.fsync(ledger_file.fileno())
-        os.chmod(temporary_path, existing_mode)
         with _outreach_ledger_lock(path):
+            existing_mode = _require_owner_only_permissions(
+                path,
+                label="outreach ledger",
+            )
+            if existing_mode is None:
+                raise OutreachInputError(
+                    "cannot verify the current outreach ledger permissions"
+                )
+            os.chmod(temporary_path, existing_mode)
             if expected_revision is not None:
                 try:
                     current_revision = sha256(path.read_bytes()).hexdigest()

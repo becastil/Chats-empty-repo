@@ -1610,6 +1610,69 @@ class OutreachReportTests(unittest.TestCase):
                 ["contacted", "contacted"],
             )
 
+    def test_lifecycle_write_rejects_permission_drift_after_preflight(
+        self,
+    ) -> None:
+        if os.name != "posix":
+            self.skipTest("owner-only outreach permissions are POSIX-specific")
+
+        import repo_scout.outreach as outreach_module
+
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "private-ledger.csv"
+            _write_ledger(
+                ledger,
+                [
+                    _row(
+                        status="drafted",
+                        contacted_on="",
+                        next_action_on="",
+                        approved_on="",
+                    )
+                ],
+            )
+            before = ledger.read_bytes()
+            original_write = outreach_module._write_outreach_rows
+
+            def write_after_permission_drift(
+                path: Path,
+                rows: list[dict[str, str]],
+                *,
+                expected_revision: str | None = None,
+            ) -> None:
+                path.chmod(0o640)
+                original_write(
+                    path,
+                    rows,
+                    expected_revision=expected_revision,
+                )
+
+            with (
+                patch.object(
+                    outreach_module,
+                    "_write_outreach_rows",
+                    side_effect=write_after_permission_drift,
+                ),
+                self.assertRaisesRegex(
+                    OutreachInputError,
+                    "must use owner-only file permissions",
+                ),
+            ):
+                outreach_module.approve_next_outreach_draft(
+                    ledger,
+                    prospect_id="prospect-001",
+                    approved_on=date(2026, 7, 13),
+                    review_confirmed=True,
+                    as_of=date(2026, 7, 13),
+                )
+
+            self.assertEqual(ledger.read_bytes(), before)
+            self.assertEqual(ledger.stat().st_mode & 0o777, 0o640)
+            self.assertEqual(
+                list(Path(tmp).glob(".private-ledger.csv.*.tmp")),
+                [],
+            )
+
     def test_record_contact_tracks_human_send_and_exact_follow_up(self) -> None:
         with TemporaryDirectory() as tmp:
             ledger = Path(tmp) / "ledger.csv"
