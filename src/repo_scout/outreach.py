@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
 import csv
 from datetime import date, datetime, timedelta, timezone
+import errno
 from hashlib import sha256
 from hmac import compare_digest
+import io
 import json
 import os
 from pathlib import Path
@@ -14,10 +17,15 @@ import stat
 import subprocess
 import sys
 from tempfile import NamedTemporaryFile
-from typing import Any, Mapping, Sequence
+from typing import Any, Iterator, Mapping, Sequence
 
 from .version import add_version_argument
 from urllib.parse import urlsplit
+
+if os.name == "posix":
+    import fcntl
+elif os.name == "nt":
+    import msvcrt
 
 
 SCHEMA_VERSION = 6
@@ -163,7 +171,7 @@ def approve_next_outreach_draft(
             reviewed_private_drafts_path,
             label="reviewed private draft notes",
         )
-    rows = _load_outreach_rows(path)
+    rows, ledger_revision = _load_outreach_snapshot(path)
     build_outreach_report(rows, as_of=report_date)
     next_draft = _next_status_row(rows, "drafted")
     if next_draft is None:
@@ -188,7 +196,11 @@ def approve_next_outreach_draft(
             break
 
     build_outreach_report(updated_rows, as_of=report_date)
-    _write_outreach_rows(path, updated_rows)
+    _write_outreach_rows(
+        path,
+        updated_rows,
+        expected_revision=ledger_revision,
+    )
     return {
         "schema_version": APPROVAL_SCHEMA_VERSION,
         "as_of": report_date.isoformat(),
@@ -235,7 +247,7 @@ def decline_next_outreach_draft(
             reviewed_private_drafts_path,
             label="reviewed private draft notes",
         )
-    rows = _load_outreach_rows(path)
+    rows, ledger_revision = _load_outreach_snapshot(path)
     build_outreach_report(rows, as_of=report_date)
     next_draft = _next_status_row(rows, "drafted")
     if next_draft is None:
@@ -259,7 +271,11 @@ def decline_next_outreach_draft(
             break
 
     updated_report = build_outreach_report(updated_rows, as_of=report_date)
-    _write_outreach_rows(path, updated_rows)
+    _write_outreach_rows(
+        path,
+        updated_rows,
+        expected_revision=ledger_revision,
+    )
     return {
         "schema_version": DECLINE_SCHEMA_VERSION,
         "as_of": report_date.isoformat(),
@@ -301,7 +317,7 @@ def record_next_outreach_contact(
         raise OutreachInputError("prospect_id must match prospect-NNN")
 
     _require_private_live_path(path, label="outreach ledger")
-    rows = _load_outreach_rows(path)
+    rows, ledger_revision = _load_outreach_snapshot(path)
     build_outreach_report(rows, as_of=report_date)
     next_approved = _next_status_row(rows, "approved")
     if next_approved is None:
@@ -322,7 +338,11 @@ def record_next_outreach_contact(
             break
 
     build_outreach_report(updated_rows, as_of=report_date)
-    _write_outreach_rows(path, updated_rows)
+    _write_outreach_rows(
+        path,
+        updated_rows,
+        expected_revision=ledger_revision,
+    )
     return {
         "schema_version": CONTACT_SCHEMA_VERSION,
         "as_of": report_date.isoformat(),
@@ -362,7 +382,7 @@ def record_next_outreach_follow_up(
         raise OutreachInputError("prospect_id must match prospect-NNN")
 
     _require_private_live_path(path, label="outreach ledger")
-    rows = _load_outreach_rows(path)
+    rows, ledger_revision = _load_outreach_snapshot(path)
     build_outreach_report(rows, as_of=report_date)
     next_contacted = _next_contacted_row(rows)
     if next_contacted is None:
@@ -382,7 +402,11 @@ def record_next_outreach_follow_up(
             break
 
     build_outreach_report(updated_rows, as_of=report_date)
-    _write_outreach_rows(path, updated_rows)
+    _write_outreach_rows(
+        path,
+        updated_rows,
+        expected_revision=ledger_revision,
+    )
     return {
         "schema_version": FOLLOW_UP_SCHEMA_VERSION,
         "as_of": report_date.isoformat(),
@@ -423,7 +447,7 @@ def record_outreach_outcome(
         )
 
     _require_private_live_path(path, label="outreach ledger")
-    rows = _load_outreach_rows(path)
+    rows, ledger_revision = _load_outreach_snapshot(path)
     build_outreach_report(rows, as_of=report_date)
     selected = next(
         (
@@ -452,7 +476,11 @@ def record_outreach_outcome(
             break
 
     build_outreach_report(updated_rows, as_of=report_date)
-    _write_outreach_rows(path, updated_rows)
+    _write_outreach_rows(
+        path,
+        updated_rows,
+        expected_revision=ledger_revision,
+    )
     return {
         "schema_version": OUTCOME_SCHEMA_VERSION,
         "as_of": report_date.isoformat(),
@@ -574,8 +602,17 @@ def _require_owner_only_permissions(path: Path, *, label: str) -> None:
 
 
 def _load_outreach_rows(path: Path) -> list[dict[str, str]]:
+    rows, _ = _load_outreach_snapshot(path)
+    return rows
+
+
+def _load_outreach_snapshot(
+    path: Path,
+) -> tuple[list[dict[str, str]], str]:
     try:
-        with path.open(newline="", encoding="utf-8") as ledger_file:
+        payload = path.read_bytes()
+        text = payload.decode("utf-8")
+        with io.StringIO(text, newline="") as ledger_file:
             reader = csv.reader(ledger_file, strict=True)
             header = next(reader, [])
             if tuple(header) != LEDGER_FIELDS:
@@ -596,10 +633,71 @@ def _load_outreach_rows(path: Path) -> list[dict[str, str]]:
     except (OSError, UnicodeError) as exc:
         raise OutreachInputError(f"cannot read outreach ledger: {exc}") from exc
 
-    return rows
+    return rows, sha256(payload).hexdigest()
 
 
-def _write_outreach_rows(path: Path, rows: list[dict[str, str]]) -> None:
+@contextmanager
+def _outreach_ledger_lock(path: Path) -> Iterator[Path]:
+    lock_path = path.with_name(f".{path.name}.lock")
+    flags = os.O_RDWR | os.O_CREAT
+    flags |= getattr(os, "O_CLOEXEC", 0)
+    flags |= getattr(os, "O_NOFOLLOW", 0)
+    try:
+        descriptor = os.open(lock_path, flags, 0o600)
+    except OSError as exc:
+        raise OutreachInputError(
+            "cannot open the private outreach ledger lock safely"
+        ) from exc
+
+    try:
+        lock_stat = os.fstat(descriptor)
+        if not stat.S_ISREG(lock_stat.st_mode):
+            raise OutreachInputError(
+                "private outreach ledger lock must be a regular file"
+            )
+        if lock_stat.st_mode & (stat.S_IRWXG | stat.S_IRWXO):
+            raise OutreachInputError(
+                "private outreach ledger lock must use owner-only permissions "
+                "(chmod 600)"
+            )
+
+        try:
+            if os.name == "posix":
+                fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            elif os.name == "nt":
+                if lock_stat.st_size == 0:
+                    os.write(descriptor, b"\0")
+                    os.fsync(descriptor)
+                os.lseek(descriptor, 0, os.SEEK_SET)
+                msvcrt.locking(descriptor, msvcrt.LK_NBLCK, 1)
+            else:
+                raise OutreachInputError(
+                    "outreach ledger locking is unsupported on this platform"
+                )
+        except OSError as exc:
+            if exc.errno in {
+                errno.EACCES,
+                errno.EAGAIN,
+                errno.EWOULDBLOCK,
+            }:
+                raise OutreachInputError(
+                    "another outreach action is updating this ledger; retry"
+                ) from exc
+            raise OutreachInputError(
+                "cannot lock the private outreach ledger safely"
+            ) from exc
+
+        yield lock_path
+    finally:
+        os.close(descriptor)
+
+
+def _write_outreach_rows(
+    path: Path,
+    rows: list[dict[str, str]],
+    *,
+    expected_revision: str | None = None,
+) -> None:
     temporary_path: Path | None = None
     try:
         existing_mode = stat.S_IMODE(path.stat().st_mode)
@@ -624,14 +722,30 @@ def _write_outreach_rows(path: Path, rows: list[dict[str, str]]) -> None:
             ledger_file.flush()
             os.fsync(ledger_file.fileno())
         os.chmod(temporary_path, existing_mode)
-        os.replace(temporary_path, path)
+        with _outreach_ledger_lock(path):
+            if expected_revision is not None:
+                try:
+                    current_revision = sha256(path.read_bytes()).hexdigest()
+                except (OSError, UnicodeError) as exc:
+                    raise OutreachInputError(
+                        "cannot verify the current outreach ledger revision"
+                    ) from exc
+                if not compare_digest(current_revision, expected_revision):
+                    raise OutreachInputError(
+                        "outreach ledger changed during this action; retry"
+                    )
+            os.replace(temporary_path, path)
+            temporary_path = None
+    except OutreachInputError:
+        raise
     except (csv.Error, OSError, UnicodeError, ValueError) as exc:
+        raise OutreachInputError("cannot update outreach ledger safely") from exc
+    finally:
         if temporary_path is not None:
             try:
                 temporary_path.unlink(missing_ok=True)
             except OSError:
                 pass
-        raise OutreachInputError("cannot update outreach ledger safely") from exc
 
 
 def _load_private_drafts(path: Path) -> dict[str, str]:

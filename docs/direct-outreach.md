@@ -299,6 +299,13 @@ and schedules no further message. A private `pilot-requested` status is an
 operator signal only; ask the prospect to submit the public pilot intake before
 counting demand, payment, or revenue.
 
+Every lifecycle mutation records the exact ledger revision it validated, stages
+the replacement, then acquires an owner-only adjacent lock before comparing and
+replacing. A concurrent command or newer ledger revision stops with a retry
+message and leaves both the newer evidence and temporary-file boundary intact.
+The hidden lock file contains no prospect data and remains beside the ignored
+private ledger so atomic replacements cannot bypass it.
+
 The command requires at least three recognized fit signals and one secure
 source link for each, accepts only `prospect-NNN` aliases, caps the batch at 10,
 schedules a contacted prospect's single follow-up exactly seven days later,

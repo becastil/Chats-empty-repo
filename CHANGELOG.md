@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added per-ledger operating-system locks and SHA-256 revision checks to every
+  mutating outreach lifecycle action.
+- Concurrent or stale writers now fail with a retry instruction while
+  preserving the newer private ledger, its permissions, and truthful attempt
+  counts.
 - Fixed conflicting `pilot-converted` plus `pilot-lost` records so they no
   longer inflate either resolved conversion or loss totals.
 - Preserved historical booked revenue for conflict records that reached

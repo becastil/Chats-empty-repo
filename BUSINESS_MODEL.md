@@ -527,6 +527,13 @@ and schedules nothing. Private `pilot-requested` is an operator signal, not a
 public funnel event; the prospect must still submit pilot intake, and only paid
 stages count as revenue.
 
+Every approval, decline, contact, follow-up, and outcome write now carries the
+SHA-256 revision of the private ledger it validated. The staged replacement
+uses an owner-only adjacent operating-system lock, compares that revision under
+the lock, and refuses a concurrent or stale commit with a retry instruction.
+This prevents a later process from silently restoring an earlier status and
+undercounting real outreach attempts; the lock file contains no prospect data.
+
 Rollout bundles carry a stable, non-sensitive metadata contract so a pilot lead
 can summarize bundle-reported readiness, policy failures, violations, worktree
 state, and attention across repositories without sending source code to Repo

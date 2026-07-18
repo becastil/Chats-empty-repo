@@ -1727,3 +1727,16 @@ labels are corrected. A cumulative `pilot-paid` milestone still preserves the
 historical $299 booking, and the conflict stage and warning remain visible.
 This changes no customer state or revenue evidence; it makes the existing
 report distinguish booked history from unresolved terminal classification.
+
+## 2026-07-18: Reject Stale Outreach Lifecycle Commits
+
+Atomic file replacement protected each individual outreach write but did not
+make the read, validation, and later replacement one transaction. Two valid
+processes could read the same private ledger, then a stale process could replace
+a newer lifecycle state and undercount real contact evidence.
+
+Each mutation now retains the SHA-256 revision it validated. A persistent,
+owner-only adjacent lock serializes revision comparison and replacement without
+being swapped alongside the ledger; a busy lock or changed revision stops with
+a retry instruction. The lock contains no prospect data, failed commits remove
+their staged file, and read-only reporting remains lock-free.

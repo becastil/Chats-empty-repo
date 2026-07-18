@@ -11,6 +11,7 @@ import shlex
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
+import time
 import tomllib
 import unittest
 from unittest.mock import patch
@@ -1440,6 +1441,174 @@ class OutreachReportTests(unittest.TestCase):
             self.assertIn("cannot update outreach ledger safely", stderr.getvalue())
             self.assertEqual(ledger.read_bytes(), before)
             self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
+
+    def test_lifecycle_lock_rejects_concurrent_approval_then_allows_retry(
+        self,
+    ) -> None:
+        from repo_scout.outreach import _outreach_ledger_lock
+
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "private-ledger.csv"
+            _write_ledger(
+                ledger,
+                [
+                    _row(
+                        status="drafted",
+                        contacted_on="",
+                        next_action_on="",
+                        approved_on="",
+                    )
+                ],
+            )
+            before = ledger.read_bytes()
+            environment = os.environ.copy()
+            environment["PYTHONPATH"] = str(ROOT / "src")
+            command = [
+                sys.executable,
+                "-m",
+                "repo_scout.outreach",
+                str(ledger),
+                "--as-of",
+                "2026-07-13",
+                "--approve-next",
+                "prospect-001",
+                "--approved-on",
+                "2026-07-12",
+                "--confirm-reviewed",
+            ]
+
+            with _outreach_ledger_lock(ledger):
+                lock_files = [
+                    path
+                    for path in ledger.parent.iterdir()
+                    if path != ledger and path.name.startswith(".") and path.is_file()
+                ]
+                self.assertEqual(len(lock_files), 1)
+                lock_file = lock_files[0]
+                if os.name == "posix":
+                    self.assertEqual(lock_file.stat().st_mode & 0o777, 0o600)
+                lock_bytes = lock_file.read_bytes()
+                self.assertNotEqual(lock_bytes, before)
+                self.assertNotIn(b"prospect-001", lock_bytes)
+                self.assertNotIn(b"evidence.example", lock_bytes)
+
+                started = time.monotonic()
+                blocked = subprocess.run(
+                    command,
+                    cwd=ROOT,
+                    env=environment,
+                    capture_output=True,
+                    text=True,
+                    timeout=2,
+                    check=False,
+                )
+                elapsed = time.monotonic() - started
+
+                self.assertLess(elapsed, 1.5)
+                self.assertEqual(blocked.returncode, 2)
+                self.assertRegex(
+                    f"{blocked.stdout}\n{blocked.stderr}".lower(),
+                    r"retry|another (?:outreach )?action",
+                )
+                self.assertEqual(ledger.read_bytes(), before)
+
+            completed = subprocess.run(
+                command,
+                cwd=ROOT,
+                env=environment,
+                capture_output=True,
+                text=True,
+                timeout=2,
+                check=False,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            with ledger.open(newline="", encoding="utf-8") as ledger_file:
+                approved = next(csv.DictReader(ledger_file))
+            self.assertEqual(approved["status"], "approved")
+            self.assertEqual(approved["approved_on"], "2026-07-12")
+
+    def test_stale_lifecycle_writer_preserves_newer_attempt_evidence(self) -> None:
+        import repo_scout.outreach as outreach_module
+
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "private-ledger.csv"
+            _write_ledger(
+                ledger,
+                [
+                    _row(
+                        status="approved",
+                        contacted_on="",
+                        next_action_on="",
+                    ),
+                    _row(
+                        prospect_id="prospect-002",
+                        status="approved",
+                        contacted_on="",
+                        next_action_on="",
+                    ),
+                ],
+            )
+            original_write = outreach_module._write_outreach_rows
+            interleaved = False
+
+            def write_after_newer_actions(
+                path: Path,
+                rows: list[dict[str, str]],
+                *,
+                expected_revision: str | None = None,
+            ) -> None:
+                nonlocal interleaved
+                if not interleaved:
+                    interleaved = True
+                    current_rows, current_revision = (
+                        outreach_module._load_outreach_snapshot(path)
+                    )
+                    for row in current_rows:
+                        row["status"] = "contacted"
+                        row["contacted_on"] = "2026-07-13"
+                        row["next_action_on"] = "2026-07-20"
+                    original_write(
+                        path,
+                        current_rows,
+                        expected_revision=current_revision,
+                    )
+                original_write(
+                    path,
+                    rows,
+                    expected_revision=expected_revision,
+                )
+
+            with (
+                patch.object(
+                    outreach_module,
+                    "_write_outreach_rows",
+                    side_effect=write_after_newer_actions,
+                ),
+                self.assertRaisesRegex(
+                    OutreachInputError,
+                    "ledger changed during this action; retry",
+                ),
+            ):
+                outreach_module.record_next_outreach_contact(
+                    ledger,
+                    prospect_id="prospect-001",
+                    contacted_on=date(2026, 7, 13),
+                    send_confirmed=True,
+                    as_of=date(2026, 7, 13),
+                )
+
+            report = load_outreach_report(
+                ledger,
+                as_of=date(2026, 7, 13),
+            )
+            self.assertEqual(report["summary"]["attempted_prospects"], 2)
+            with ledger.open(newline="", encoding="utf-8") as ledger_file:
+                rows = list(csv.DictReader(ledger_file))
+            self.assertEqual(
+                [row["status"] for row in rows],
+                ["contacted", "contacted"],
+            )
 
     def test_record_contact_tracks_human_send_and_exact_follow_up(self) -> None:
         with TemporaryDirectory() as tmp:

@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after fixing terminal conflict accounting: 154 / 1,000 (15.4%).
-- Remaining after fixing terminal conflict accounting: 846 commits.
+- Progress after protecting concurrent outreach evidence: 155 / 1,000 (15.5%).
+- Remaining after protecting concurrent outreach evidence: 845 commits.
 
 ## Commit Standard
 
