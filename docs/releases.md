@@ -58,6 +58,20 @@ against `becastil/Chats-empty-repo`. A checksum alone is not proof of origin
 because an attacker who replaces an artifact could also replace an unattested
 checksum file.
 
+## Audit The Production Download
+
+After publishing the site, maintainers can verify that its canonical metadata,
+free software offer, release version, and portable download URL all match the
+current project version:
+
+```bash
+python3 scripts/audit_production_site.py
+```
+
+The audit reads the public HTML without changing production. A stale version,
+stale download URL, malformed structured offer, unexpected content type, or
+network failure exits nonzero instead of accepting a partial check.
+
 ## Maintainer Release Contract
 
 The release workflow runs only for `vMAJOR.MINOR.PATCH` tags. It rejects a tag

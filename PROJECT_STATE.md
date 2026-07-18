@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 150 of 1,000, with 850 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 151 of 1,000, with 849 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -61,6 +61,8 @@ The delivery goal is 1,000 meaningful commits. This update is commit 150 of 1,00
 - Follow-up data-quality warnings for missing, future, and closed pre-payment records.
 - Host-derived Open Graph and X metadata with a product-specific social preview.
 - Sites hosting metadata and a Cloudflare Workers-compatible production build.
+- A dependency-free production audit that reconciles canonical metadata, the
+  free structured offer, project release version, and portable download URL.
 - Tag-driven wheel and source releases with strict version alignment and exact artifact validation.
 - Hash-locked release build tooling, deterministic SHA-256 manifests, and clean-environment command smoke tests.
 - GitHub build-provenance attestations and immutable-action release automation.

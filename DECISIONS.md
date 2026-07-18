@@ -1678,3 +1678,16 @@ requests, attempts, and revenue. Acquisition therefore remains the commercial
 bottleneck, and human-reviewed outreach remains the next action. No additional
 acquisition asset or paid-policy feature is justified before that five-draft
 queue is executed.
+
+## 2026-07-18: Audit Production Release Identity Before Promotion
+
+The public Sites deployment still advertised `v0.3.44` after the repository,
+public release, and verified CI gates advanced to `v0.3.45`. Local render tests
+proved the source was correct but could not detect that production lag.
+
+A dependency-free maintainer audit now fetches the deployed HTML and requires
+one canonical URL plus one JSON-LD `SoftwareApplication` whose version, portable
+download, and free offer match `project.version`. Network, content-type,
+malformed-data, stale-version, and stale-download failures stop explicitly.
+This maintains the existing public path and adds no campaign route, policy
+feature, customer action, demand, or revenue evidence.

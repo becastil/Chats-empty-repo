@@ -218,6 +218,11 @@ pilot is a separate $299 `Service` with the same duration, repository limit,
 audience, and local-code boundary shown to visitors. No review or rating data
 is published because none has been earned. Search presentation remains outside
 the revenue ledger until a buyer submits intake and reaches a paid stage.
+The maintainer production audit now fails when the deployed canonical metadata,
+free software offer, release version, or portable download URL drifts from the
+current project version. This protects the existing buyer path from sending a
+visitor to an obsolete artifact; it does not add a campaign, prove a visit,
+create demand, or record revenue.
 
 The first direct-acquisition batch is deliberately small: 10 qualified
 engineering leads, personalized from relevant public evidence, with one initial

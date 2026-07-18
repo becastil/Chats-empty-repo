@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added a dependency-free production-site audit for canonical metadata, the
+  current free software offer, release version, and portable download URL.
+- Added controlled failures for stale versions, stale downloads, malformed
+  structured offers, unexpected content types, and unavailable production.
+- Documented the read-only post-deployment check without adding a new campaign
+  route, product feature, or demand claim.
 - Refreshed the warning-free commercial evidence checkpoint after the verified
   `v0.3.45` release and CI rollout.
 - Recorded 17 additional primary artifact requests: 7 on `v0.3.45` and 10 later
