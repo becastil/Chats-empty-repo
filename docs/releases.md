@@ -72,6 +72,10 @@ The audit reads the public HTML without changing production. A stale version,
 stale download URL, malformed structured offer, unexpected content type, or
 network failure exits nonzero instead of accepting a partial check.
 
+The read-only `Production site audit` workflow runs the same command once per
+day and can be dispatched manually after a deployment. It uses no repository
+secrets and does not change the site, a release, or any commercial evidence.
+
 ## Maintainer Release Contract
 
 The release workflow runs only for `vMAJOR.MINOR.PATCH` tags. It rejects a tag

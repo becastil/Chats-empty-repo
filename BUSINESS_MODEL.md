@@ -223,6 +223,9 @@ free software offer, release version, or portable download URL drifts from the
 current project version. This protects the existing buyer path from sending a
 visitor to an obsolete artifact; it does not add a campaign, prove a visit,
 create demand, or record revenue.
+The same check now runs daily in a read-only GitHub workflow and remains
+manually dispatchable after deployment. It receives no secrets and changes no
+release, site, customer record, or commercial evidence.
 
 The first direct-acquisition batch is deliberately small: 10 qualified
 engineering leads, personalized from relevant public evidence, with one initial

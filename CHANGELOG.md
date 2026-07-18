@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added a daily, manually dispatchable production-site audit workflow with
+  read-only repository access, immutable action pins, and no secrets.
+- Added a workflow contract that locks its schedule, timeout, Python runtime,
+  exact audit command, and least-privilege boundary.
 - Added a dependency-free production-site audit for canonical metadata, the
   current free software offer, release version, and portable download URL.
 - Added controlled failures for stale versions, stale downloads, malformed

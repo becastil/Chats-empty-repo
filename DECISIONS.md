@@ -1691,3 +1691,14 @@ download, and free offer match `project.version`. Network, content-type,
 malformed-data, stale-version, and stale-download failures stop explicitly.
 This maintains the existing public path and adds no campaign route, policy
 feature, customer action, demand, or revenue evidence.
+
+## 2026-07-18: Schedule The Production Release Audit
+
+The production release audit detected a real stale deployment, but a manual
+command still depended on maintainer memory. A daily and manually dispatchable
+GitHub workflow now runs that exact dependency-free check with read-only
+contents access, immutable action pins, a two-minute timeout, and no secrets.
+
+The workflow observes the existing public buyer path and fails visibly when its
+release identity drifts. It does not deploy, repair, promote, create another
+acquisition route, change a customer record, or count as demand or revenue.
