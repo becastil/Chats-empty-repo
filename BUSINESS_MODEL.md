@@ -533,9 +533,11 @@ may later be refined to a specific terminal outcome. The action sends nothing
 and schedules nothing. Contact and follow-up receipts now preserve the exact
 alias and private ledger path in a shell-quoted outcome handoff. Required date
 and status placeholders stop an unchanged command before ledger access, keeping
-the operator responsible for the observed evidence. Private `pilot-requested`
-is an operator signal, not a public funnel event; the prospect must still
-submit pilot intake, and only paid stages count as revenue.
+the operator responsible for the observed evidence. A generic reply receipt
+similarly carries one exact refinement handoff limited to `pilot-requested`,
+`not-a-fit`, or `do-not-contact`; terminal outcomes emit no next command.
+Private `pilot-requested` is an operator signal, not a public funnel event; the
+prospect must still submit pilot intake, and only paid stages count as revenue.
 
 Every approval, decline, contact, follow-up, and outcome write now carries the
 SHA-256 revision of the private ledger it validated. The staged replacement

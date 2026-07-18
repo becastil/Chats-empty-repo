@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after adding guarded outcome handoffs: 159 / 1,000 (15.9%).
-- Remaining after adding guarded outcome handoffs: 841 commits.
+- Progress after adding guarded reply refinement: 160 / 1,000 (16.0%).
+- Remaining after adding guarded reply refinement: 840 commits.
 
 ## Commit Standard
 

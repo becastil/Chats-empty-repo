@@ -87,6 +87,11 @@ OUTCOME_STATUSES = (
     "not-a-fit",
     "do-not-contact",
 )
+REFINED_OUTCOME_STATUSES = (
+    "pilot-requested",
+    "not-a-fit",
+    "do-not-contact",
+)
 OUTCOME_SOURCE_STATUSES = {"contacted", "followed-up", "replied"}
 PROSPECT_ID_PATTERN = re.compile(r"prospect-[0-9]{3}\Z")
 PRIVATE_DRAFT_HEADING_PATTERN = re.compile(r"## (prospect-[0-9]{3})\Z")
@@ -1509,14 +1514,17 @@ def _format_outreach_command(ledger: Path, *arguments: str) -> str:
 
 
 def _format_outreach_outcome_handoff(
-    ledger: Path, *, prospect_id: str
+    ledger: Path,
+    *,
+    prospect_id: str,
+    statuses: Sequence[str] = OUTCOME_STATUSES,
 ) -> list[str]:
-    statuses = ", ".join(OUTCOME_STATUSES)
+    status_list = ", ".join(statuses)
     return [
         (
             "If a human observes a response or stop condition, replace "
             "YYYY-MM-DD with the actual UTC observation date and OUTCOME with "
-            f"one of {statuses}, then record it:"
+            f"one of {status_list}, then record it:"
         ),
         _format_outreach_command(
             ledger,
@@ -1551,12 +1559,20 @@ def format_outreach_follow_up(
     return "\n".join(lines)
 
 
-def format_outreach_outcome(outcome_report: dict[str, Any]) -> str:
+def format_outreach_outcome(
+    outcome_report: dict[str, Any], *, ledger: Path
+) -> str:
     outcome = outcome_report["outcome"]
+    handoff: list[str] = []
     if outcome["status"] == "replied":
         next_step = (
             "Next: assess the reply, then record a more specific outcome only "
             "after a human observes it."
+        )
+        handoff = _format_outreach_outcome_handoff(
+            ledger,
+            prospect_id=outcome["prospect_id"],
+            statuses=REFINED_OUTCOME_STATUSES,
         )
     elif outcome["status"] == "pilot-requested":
         next_step = (
@@ -1574,6 +1590,7 @@ def format_outreach_outcome(outcome_report: dict[str, Any]) -> str:
         "Private ledger updated atomically.",
         f"Boundary: {outcome_report['action_note']}",
         next_step,
+        *handoff,
     ]
     return "\n".join(lines)
 
@@ -1944,7 +1961,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.format == "json":
         print(json.dumps(report, indent=2, sort_keys=True))
     elif args.record_outcome is not None:
-        print(format_outreach_outcome(report))
+        print(format_outreach_outcome(report, ledger=args.ledger))
     elif args.record_follow_up is not None:
         print(format_outreach_follow_up(report, ledger=args.ledger))
     elif args.record_contact is not None:

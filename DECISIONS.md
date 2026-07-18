@@ -1798,3 +1798,18 @@ the human observation step; an unchanged placeholder fails during argument
 parsing before ledger access. This adds no sending, prospect, public demand, or
 revenue evidence, and private pilot interest still requires public intake
 before it enters the funnel.
+
+## 2026-07-18: Carry Generic Replies To One Specific Outcome
+
+A generic `replied` status intentionally closes the follow-up cadence before
+the operator has classified the response. Its receipt previously described a
+later refinement but discarded the exact alias and private ledger path, making
+the only supported two-step outcome path less reliable than initial outcome
+recording.
+
+Only generic reply receipts now emit another shell-quoted outcome command. The
+handoff keeps the alias and ledger path, requires a fresh UTC observation date,
+and limits the stated choices to `pilot-requested`, `not-a-fit`, or
+`do-not-contact`. Terminal receipts emit no command. A private
+`pilot-requested` refinement remains an operator classification and must still
+be followed by public intake before it counts as demand or revenue.

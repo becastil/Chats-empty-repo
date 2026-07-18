@@ -302,6 +302,10 @@ Contact and follow-up text receipts emit this shell-quoted command with required
 `YYYY-MM-DD` and `OUTCOME` placeholders. Replace both with the actual UTC
 observation date and supported status; leaving either placeholder unchanged
 fails during argument parsing before the private ledger is read or modified.
+The generic `replied` receipt emits one final guarded handoff for exactly
+`pilot-requested`, `not-a-fit`, or `do-not-contact`, retaining the same alias
+and ledger path while requiring a fresh observation date. Terminal outcome
+receipts emit no further action command.
 The guarded action requires explicit confirmation, validates the complete
 ledger before and after the transition, preserves approval, contact, and
 follow-up history, and atomically changes only `status` while clearing

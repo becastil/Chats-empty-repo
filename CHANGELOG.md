@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added a guarded, shell-quoted refinement handoff after a generic outreach
+  reply, limited to pilot request, rejection, or opt-out outcomes.
+- Required a fresh observation date and explicit terminal status while keeping
+  terminal outcome receipts free of another action command.
+- Extended installed-command lifecycle proof from generic reply through private
+  pilot classification without treating it as public demand or revenue.
 - Added exact, shell-quoted outcome handoffs to contact and follow-up receipts,
   preserving the prospect alias and private ledger path.
 - Required operators to replace both observation-date and outcome placeholders;

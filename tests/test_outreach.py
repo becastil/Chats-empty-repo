@@ -1976,16 +1976,45 @@ class OutreachReportTests(unittest.TestCase):
                     for value in outcome_command
                 ]
             )
-            self.assertNotIn("repo-scout-outreach ", outcome_output)
-            report = load_outreach_report(ledger, as_of=date(2026, 7, 10))
-            self.assertEqual(report["summary"]["replied"], 1)
+            self.assertIn(
+                "one of pilot-requested, not-a-fit, do-not-contact",
+                outcome_output,
+            )
+            self.assertNotIn("one of replied", outcome_output)
+            refinement_command = command_for(
+                outcome_output, "--record-outcome"
+            )
+            self.assertEqual(refinement_command.count(DATE_PLACEHOLDER), 1)
+            self.assertEqual(refinement_command.count(OUTCOME_PLACEHOLDER), 1)
+            before_refinement = ledger.read_bytes()
+            with redirect_stderr(io.StringIO()), self.assertRaises(
+                SystemExit
+            ) as ctx:
+                main(refinement_command)
+            self.assertEqual(ctx.exception.code, 2)
+            self.assertEqual(ledger.read_bytes(), before_refinement)
+            refinement_output = run(
+                [
+                    (
+                        "2026-07-12"
+                        if value == DATE_PLACEHOLDER
+                        else "pilot-requested"
+                        if value == OUTCOME_PLACEHOLDER
+                        else value
+                    )
+                    for value in refinement_command
+                ]
+            )
+            self.assertNotIn("repo-scout-outreach ", refinement_output)
+            report = load_outreach_report(ledger, as_of=date(2026, 7, 12))
+            self.assertEqual(report["summary"]["pilot_requested"], 1)
             self.assertEqual(report["summary"]["attempted_prospects"], 1)
             with ledger.open(newline="", encoding="utf-8") as ledger_file:
                 row = next(csv.DictReader(ledger_file))
             self.assertEqual(row["approved_on"], "2026-07-01")
             self.assertEqual(row["contacted_on"], "2026-07-03")
             self.assertEqual(row["followed_up_on"], "2026-07-10")
-            self.assertEqual(row["status"], "replied")
+            self.assertEqual(row["status"], "pilot-requested")
 
     def test_record_contact_rejects_unsafe_transitions_without_mutation(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -2192,10 +2221,11 @@ class OutreachReportTests(unittest.TestCase):
             self.assertNotIn("2026-07-01", serialized)
             self.assertNotIn("2026-07-02", serialized)
             self.assertNotIn("evidence.example", serialized)
-            text = format_outreach_outcome(receipt)
+            text = format_outreach_outcome(receipt, ledger=ledger)
             self.assertIn("Follow-up cadence closed", text)
             self.assertIn("public pilot intake", text)
             self.assertIn("public demand or revenue evidence", text)
+            self.assertNotIn("repo-scout-outreach ", text)
             self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
 
     def test_record_outcome_accepts_followed_up_and_replied_sources(self) -> None:

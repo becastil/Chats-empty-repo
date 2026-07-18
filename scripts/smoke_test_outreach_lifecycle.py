@@ -220,13 +220,28 @@ def verify_outreach_lifecycle(
             outcome_arguments,
             environment=environment,
         )
+        refinement_arguments = _handoff_arguments(
+            handoff_outcome.stdout,
+            action="--record-outcome",
+            ledger=handoff_ledger,
+        )
+        refinement_arguments = _replace_outcome(
+            refinement_arguments,
+            observed_on="2026-07-12",
+            outcome="pilot-requested",
+        )
+        handoff_refinement = _run_arguments(
+            outreach_command,
+            refinement_arguments,
+            environment=environment,
+        )
         _require(
-            "repo-scout-outreach " not in handoff_outcome.stdout,
-            "completed outcome emitted another action command",
+            "repo-scout-outreach " not in handoff_refinement.stdout,
+            "terminal outcome emitted another action command",
         )
         handoff_row = _read_row(handoff_ledger)
         _require(
-            handoff_row["status"] == "replied"
+            handoff_row["status"] == "pilot-requested"
             and handoff_row["contacted_on"] == "2026-07-03"
             and handoff_row["followed_up_on"] == "2026-07-10",
             "copy-ready handoffs did not complete the synthetic lifecycle",
