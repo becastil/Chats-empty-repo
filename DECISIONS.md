@@ -1626,3 +1626,18 @@ exact alias, protected ledger path, confirmation flag, and follow-up due date,
 but the operator must enter the actual UTC send date. This protects outreach
 and follow-up evidence without sending a message, adding a prospect, or
 claiming demand or revenue.
+
+## 2026-07-18: Release Actual-Date Outreach Handoffs As v0.3.45
+
+The source tree and documentation require generated contact and follow-up
+commands to use explicit placeholders for real human send dates, but the public
+`v0.3.44` wheel still reuses approval and due dates. Version `0.3.45` therefore
+advances package, runtime, website, download, release-smoke, and synthetic
+distribution identities together.
+
+The release contract executes the installed outreach command with approval on
+July 1, contact on July 3, and follow-up on July 10, and requires the calculated
+July 10 due date to remain visible. Verified CI pins and measured distribution
+evidence stay on `v0.3.44` until publication and independent verification. This
+closes a public distribution mismatch; it does not perform human outreach,
+create a pilot request, collect payment, or claim revenue.

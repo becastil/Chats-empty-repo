@@ -442,6 +442,15 @@ four paid-workflow smoke harnesses passed before the pins changed. This removes
 a distribution mismatch; it does not prove a customer install, review or send
 a draft, create demand, or record revenue.
 
+Version `0.3.45` packages the actual-date outreach handoffs so the public wheel
+matches the documented human workflow. Its installed-command smoke approves on
+July 1, records the real send on July 3, displays the July 10 due date, and
+records the follow-up on July 10. It requires both generated future-action date
+placeholders before substituting those event dates. Verified policy pins and
+distribution baselines remain on `v0.3.44` until the new artifacts are public
+and independently reconciled. This distributes truthful private evidence
+handling; it does not review or send a draft, create demand, or record revenue.
+
 After a human completes those checks, guarded `--approve-next` can record the
 decision without hand-editing CSV. It requires the exact next alias, an explicit
 review date, and a confirmation flag; validates all rows before and after; and

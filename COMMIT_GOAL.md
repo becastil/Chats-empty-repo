@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after preventing outreach-date backdating: 147 / 1,000 (14.7%).
-- Remaining after preventing outreach-date backdating: 853 commits.
+- Progress after preparing the v0.3.45 release: 148 / 1,000 (14.8%).
+- Remaining after preparing the v0.3.45 release: 852 commits.
 
 ## Commit Standard
 

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.45 - 2026-07-18
+
 - Replaced approval-date and due-date assumptions in generated contact and
   follow-up commands with required `YYYY-MM-DD` placeholders for the actual
   human send dates.
