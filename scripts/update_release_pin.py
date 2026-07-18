@@ -12,11 +12,16 @@ from typing import Iterable, Sequence
 
 
 README_PATH = Path("README.md")
+BUSINESS_MODEL_PATH = Path("BUSINESS_MODEL.md")
 TEST_CONTRACT_PATH = Path("tests/test_ci_examples.py")
-TARGETS = (
+WORKFLOW_PATHS = (
     Path(".github/workflows/repo-scout-policy.yml"),
     Path("examples/github-actions/repo-scout-policy.yml"),
+)
+TARGETS = (
+    *WORKFLOW_PATHS,
     README_PATH,
+    BUSINESS_MODEL_PATH,
     TEST_CONTRACT_PATH,
 )
 VERSION_PATTERN = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+\Z")
@@ -61,6 +66,10 @@ def update_release_pin(root: Path, pin: ReleasePin) -> tuple[Path, ...]:
         originals[target] = (content, mode)
         if relative_path == README_PATH:
             prepared[target] = _update_readme(content, pin, relative_path)
+        elif relative_path == BUSINESS_MODEL_PATH:
+            prepared[target] = _update_business_model(
+                content, pin, relative_path
+            )
         elif relative_path == TEST_CONTRACT_PATH:
             prepared[target] = _update_test_contract(content, pin, relative_path)
         else:
@@ -258,6 +267,26 @@ def _update_readme(content: str, pin: ReleasePin, source: Path) -> str:
                 f"It installs the `v{pin.version}`"
             ),
             "verified CI version",
+        ),
+    )
+    return _apply_replacements(content, replacements, source)
+
+
+def _update_business_model(content: str, pin: ReleasePin, source: Path) -> str:
+    replacements = (
+        (
+            re.compile(
+                r"(?m)^The dogfood and copy-ready gates now install the "
+                r"independently verified\n"
+                r"`v[0-9]+\.[0-9]+\.[0-9]+` wheel, so v4 policies can run "
+                r"locally and in CI$"
+            ),
+            (
+                "The dogfood and copy-ready gates now install the independently "
+                "verified\n"
+                f"`v{pin.version}` wheel, so v4 policies can run locally and in CI"
+            ),
+            "verified paid CI version",
         ),
     )
     return _apply_replacements(content, replacements, source)

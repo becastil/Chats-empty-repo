@@ -1596,3 +1596,18 @@ runs that delivery contract whenever its implementation or documentation
 changes. This makes paid delivery and revenue tracking agree without automating
 business labels, creating an acquisition asset, or claiming a payment or
 customer.
+
+## 2026-07-18: Atomically Pin The Commercial Release Claim
+
+Both policy gates, the README, and the CI contract had advanced to independently
+verified `v0.3.44`, but the business model still claimed the paid CI path used
+`v0.3.43`. That stale buyer-facing statement weakened distribution trust even
+though the executable gates were correct.
+
+The guarded release-pin updater now treats the exact business-model statement
+as a fifth preflighted target. A missing or duplicate commercial claim stops
+the update before any file is replaced, and the existing staged rollback and
+permission guarantees apply to all five targets. The live CI contract also
+requires the commercial claim to match the pinned constant. This corrects and
+prevents factual drift in the existing paid workflow; it does not add a product
+feature, outreach asset, customer, payment, or revenue.

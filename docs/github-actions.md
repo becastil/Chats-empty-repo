@@ -103,8 +103,8 @@ gate to pass before merging. Never update only the version tag or replace the
 digest with a mutable URL.
 
 Repo Scout maintainers can update the dogfood workflow, copy-ready example,
-buyer-facing README claim, and contract-test identity together after
-independently verifying the release:
+buyer-facing README and business-model claims, and contract-test identity
+together after independently verifying the release:
 
 ```bash
 python3 scripts/update_release_pin.py \

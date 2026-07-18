@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Corrected the stale commercial paid-CI claim from verified `v0.3.43` to
+  `v0.3.44` and added it as a preflighted, atomic release-pin updater target.
+- Extended the live CI contract to require the README, business model, both
+  policy gates, and pin constants to advertise one verified release version.
 - Linked public `pilot-active` application to every paid delivery contract
   condition, including the acknowledged first-repository handoff, while
   keeping private evidence out of the public issue.

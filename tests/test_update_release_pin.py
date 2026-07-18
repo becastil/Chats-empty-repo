@@ -27,32 +27,64 @@ NEW_PIN = update_release_pin.ReleasePin("2.0.1", "a" * 40, "b" * 64)
 
 
 class UpdateReleasePinTests(unittest.TestCase):
-    def test_updates_workflows_readme_and_test_contract(self) -> None:
+    def test_updates_workflows_readme_business_model_and_test_contract(
+        self,
+    ) -> None:
         with TemporaryDirectory() as tmp:
             root = Path(tmp)
             self._write_fixture(root)
 
             updated = update_release_pin.update_release_pin(root, NEW_PIN)
 
-            self.assertEqual(updated, update_release_pin.TARGETS)
-            for path in updated:
+            self.assertEqual(
+                updated,
+                (
+                    *update_release_pin.WORKFLOW_PATHS,
+                    update_release_pin.README_PATH,
+                    update_release_pin.BUSINESS_MODEL_PATH,
+                    update_release_pin.TEST_CONTRACT_PATH,
+                ),
+            )
+            for path in (
+                *update_release_pin.WORKFLOW_PATHS,
+                update_release_pin.TEST_CONTRACT_PATH,
+            ):
                 content = (root / path).read_text(encoding="utf-8")
                 self.assertIn(NEW_PIN.version, content)
                 self.assertNotIn(OLD_VERSION, content)
-                if path != update_release_pin.README_PATH:
-                    self.assertIn(NEW_PIN.source_sha, content)
-                    self.assertIn(NEW_PIN.wheel_sha256, content)
+                self.assertIn(NEW_PIN.source_sha, content)
+                self.assertIn(NEW_PIN.wheel_sha256, content)
             readme = (root / update_release_pin.README_PATH).read_text(
                 encoding="utf-8"
             )
+            self.assertIn(f"It installs the `v{NEW_PIN.version}`", readme)
             self.assertIn("Quick start remains `v9.9.9`.", readme)
+            business_model = (
+                root / update_release_pin.BUSINESS_MODEL_PATH
+            ).read_text(encoding="utf-8")
+            self.assertIn(
+                "The dogfood and copy-ready gates now install the "
+                "independently verified\n"
+                f"`v{NEW_PIN.version}` wheel, so v4 policies can run locally "
+                "and in CI",
+                business_model,
+            )
+            self.assertNotIn(f"`v{OLD_VERSION}`", business_model)
+            self.assertIn(
+                "Historical distribution remains `v8.8.8`.",
+                business_model,
+            )
+            self.assertIn(
+                "Public checkpoint remains `v7.7.7`.",
+                business_model,
+            )
 
     @unittest.skipUnless(os.name == "posix", "requires POSIX file modes")
     def test_success_preserves_permissions_and_removes_staging_files(self) -> None:
         with TemporaryDirectory() as tmp:
             root = Path(tmp)
             self._write_fixture(root)
-            expected_modes = (0o640, 0o604, 0o644, 0o600)
+            expected_modes = (0o640, 0o604, 0o644, 0o620, 0o600)
             for path, mode in zip(update_release_pin.TARGETS, expected_modes):
                 (root / path).chmod(mode)
 
@@ -143,6 +175,37 @@ class UpdateReleasePinTests(unittest.TestCase):
 
             with self.assertRaisesRegex(
                 update_release_pin.PinUpdateError, "verified CI version"
+            ):
+                update_release_pin.update_release_pin(root, NEW_PIN)
+
+            self.assertEqual(
+                {
+                    path: (root / path).read_text(encoding="utf-8")
+                    for path in update_release_pin.TARGETS
+                },
+                before,
+            )
+
+    def test_business_model_layout_failure_leaves_every_target_unchanged(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self._write_fixture(root)
+            business_model = root / update_release_pin.BUSINESS_MODEL_PATH
+            business_model.write_text(
+                "Historical distribution remains `v8.8.8`.\n"
+                "Public checkpoint remains `v7.7.7`.\n",
+                encoding="utf-8",
+            )
+            before = {
+                path: (root / path).read_text(encoding="utf-8")
+                for path in update_release_pin.TARGETS
+            }
+
+            with self.assertRaisesRegex(
+                update_release_pin.PinUpdateError,
+                "verified paid CI version",
             ):
                 update_release_pin.update_release_pin(root, NEW_PIN)
 
@@ -311,7 +374,7 @@ class UpdateReleasePinTests(unittest.TestCase):
             f"  REPO_SCOUT_SOURCE_SHA: {OLD_SOURCE}\n"
             f"  REPO_SCOUT_WHEEL_SHA256: {OLD_DIGEST}\n"
         )
-        for path in update_release_pin.TARGETS[:2]:
+        for path in update_release_pin.WORKFLOW_PATHS:
             target = root / path
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(workflow, encoding="utf-8")
@@ -321,6 +384,16 @@ class UpdateReleasePinTests(unittest.TestCase):
             "Quick start remains `v9.9.9`.\n"
             "evidence, and a downloadable schema-2 rollout bundle. "
             f"It installs the `v{OLD_VERSION}`\n",
+            encoding="utf-8",
+        )
+
+        business_model = root / update_release_pin.BUSINESS_MODEL_PATH
+        business_model.write_text(
+            "Historical distribution remains `v8.8.8`.\n"
+            "The dogfood and copy-ready gates now install the independently "
+            "verified\n"
+            f"`v{OLD_VERSION}` wheel, so v4 policies can run locally and in CI\n"
+            "Public checkpoint remains `v7.7.7`.\n",
             encoding="utf-8",
         )
 

@@ -115,6 +115,15 @@ class CiExampleTests(unittest.TestCase):
             readme,
         )
 
+        business_model = (ROOT / "BUSINESS_MODEL.md").read_text(encoding="utf-8")
+        self.assertIn(
+            "The dogfood and copy-ready gates now install the independently "
+            "verified\n"
+            f"`v{REPO_SCOUT_VERSION}` wheel, so v4 policies can run locally "
+            "and in CI",
+            business_model,
+        )
+
         self.assertIn("path: target", external)
         self.assertNotIn("path: repo-scout", external)
         self.assertNotIn("repository: becastil/Chats-empty-repo", external)

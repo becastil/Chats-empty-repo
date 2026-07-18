@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after linking pilot activation to private handoff: 145 / 1,000 (14.5%).
-- Remaining after linking pilot activation to private handoff: 855 commits.
+- Progress after synchronizing the commercial release claim: 146 / 1,000 (14.6%).
+- Remaining after synchronizing the commercial release claim: 854 commits.
 
 ## Commit Standard
 
