@@ -79,6 +79,16 @@ The pilot includes:
 The paid value is consistency across repositories and teams, not access to the
 basic local scanner.
 
+Post-payment delivery uses one explicit acceptance contract. The operator keeps
+the 90-day dates, customer owner, agreed standards, CI provider, and up to 10
+stable repository IDs in a customer-approved private system. Acceptance
+requires a reviewed custom policy pack, agreed CI integration, current
+bundle for each scoped repository, counts-only rollout summary, and closeout
+record. `pilot-paid`, `pilot-active`, and `pilot-converted` remain human-applied
+business events; command output does not infer them. GitHub Actions is the only
+copy-ready gate currently shipped, so any other CI provider requires an
+explicit integration decision before payment.
+
 Policy version 2 can reject tracked or unignored sensitive paths without
 failing on properly ignored local copies. A founding-team custom pack can use
 the team's agreed credential, generated-secret, and local-configuration paths.

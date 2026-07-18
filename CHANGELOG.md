@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added a tested paid-pilot delivery contract covering private scope records,
+  the five $299 deliverables, shipped-command acceptance evidence, and exact
+  payment, activation, and annual-conversion boundaries.
+- Linked the copy-ready CI guide to that post-payment contract without adding a
+  new acquisition channel, software feature, or unearned revenue claim.
 - Refreshed the warning-free commercial evidence checkpoint after the verified
   `v0.3.44` release and CI rollout.
 - Recorded 11 additional primary artifact requests: 7 on `v0.3.44` and 4 later

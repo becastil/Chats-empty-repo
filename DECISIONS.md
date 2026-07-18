@@ -1529,3 +1529,21 @@ proof rather than buyer demand. Public pilot evidence and the aggregate
 outreach baseline still show zero pilot requests, attempts, and revenue.
 Acquisition therefore remains the commercial bottleneck, and human-reviewed
 outreach remains the next action.
+
+## 2026-07-18: Define Paid Pilot Delivery Acceptance Before First Payment
+
+The $299 offer already names policy design, CI guidance, one custom policy pack,
+and support across up to 10 repositories for 90 days, but it did not define a
+shared post-payment acceptance boundary. The rollout guide now requires a
+private scope record and five concrete deliverables produced through shipped
+commands: the reviewed policy pack, agreed CI integration, current repository
+bundles, counts-only rollout summary, and closeout record. GitHub Actions is the
+only copy-ready gate currently shipped; another selected CI provider requires
+an explicit integration decision before payment.
+
+Payment, first-repository activation, and annual conversion remain
+human-observed business events represented by `pilot-paid`, `pilot-active`, and
+`pilot-converted`. Tool output never applies those labels or turns a passing
+bundle into revenue. This reduces delivery ambiguity without adding another
+acquisition channel or paid-policy feature before the five-draft outreach queue
+is executed.

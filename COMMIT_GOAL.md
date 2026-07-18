@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after the verified v0.3.44 distribution checkpoint: 141 / 1,000 (14.1%).
-- Remaining after the verified v0.3.44 distribution checkpoint: 859 commits.
+- Progress after defining paid-pilot delivery acceptance: 142 / 1,000 (14.2%).
+- Remaining after defining paid-pilot delivery acceptance: 858 commits.
 
 ## Commit Standard
 
