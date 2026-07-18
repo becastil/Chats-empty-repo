@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added an ignored `pilot-private/` workspace and owner-only POSIX setup for
+  short-lived completed delivery records.
+- Added executable coverage that the completed-record path is ignored while the
+  blank public template remains trackable.
 - Added a copy-ready private paid-pilot delivery record with exactly 10
   repository slots, an explicit CI integration choice, five acceptance
   checklists, first-repository acknowledgement, and 90-day closeout.

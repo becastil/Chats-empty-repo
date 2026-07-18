@@ -4,6 +4,8 @@
 > private system. Do not commit customer information, repository evidence,
 > access details, payment details, or the completed record to this repository
 > or a public pilot issue.
+> If a short-lived local copy is necessary, use the ignored `pilot-private/`
+> workspace with an owner-only directory and file.
 
 ## Commercial Scope
 

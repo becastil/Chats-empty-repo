@@ -93,6 +93,11 @@ repository slots, but the completed copy belongs only in the
 customer-approved private system. The template records the CI decision, five
 deliverable acceptances, first-repository acknowledgement, and closeout without
 creating a public customer-data or payment record.
+A short-lived local fallback uses the ignored `pilot-private/` directory with
+owner-only `700/600` permissions and an explicit `git check-ignore` preflight.
+Ignore rules are not encryption or access control, so durable evidence still
+belongs in the customer-approved private system and completed records must
+never be force-added.
 
 Policy version 2 can reject tracked or unignored sensitive paths without
 failing on properly ignored local copies. A founding-team custom pack can use

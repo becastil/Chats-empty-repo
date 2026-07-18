@@ -41,6 +41,7 @@ next-env.d.ts
 /outputs/
 /work/
 /outreach-private/
+/pilot-private/
 
 # Python
 __pycache__/

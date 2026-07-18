@@ -126,6 +126,19 @@ the funnel record; keep delivery details in a customer-approved private system.
 Start from the
 [blank delivery record template](../examples/pilot-delivery-record.md), but
 complete and retain the copy only in that private system.
+When a short-lived local copy is necessary on a POSIX operator machine, create
+an owner-only ignored workspace and verify the boundary before adding data:
+
+```bash
+install -d -m 700 pilot-private
+install -m 600 examples/pilot-delivery-record.md \
+  pilot-private/delivery-record.md
+git check-ignore --quiet pilot-private/delivery-record.md
+```
+
+An ignored path is not encryption or access control. Keep the `700` directory
+and `600` record modes, never force-add the completed copy, and move durable
+evidence to the customer-approved private system.
 Before work starts, record the 90-day start and end dates, customer owner,
 Repo Scout operator, CI provider, customer-controlled access method, agreed
 standards and exception owner, private communication and evidence location, and

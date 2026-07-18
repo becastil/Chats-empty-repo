@@ -8,7 +8,7 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 143 of 1,000, with 857 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
+The delivery goal is 1,000 meaningful commits. This update is commit 144 of 1,000, with 856 remaining. Quality, test coverage, distribution, and revenue alignment take priority over commit volume.
 
 ## Implemented
 
@@ -40,6 +40,8 @@ The delivery goal is 1,000 meaningful commits. This update is commit 143 of 1,00
 - A copy-ready private pilot delivery record with exactly 10 repository slots,
   CI integration selection, five deliverable checklists, first-repository
   acknowledgement, and 90-day closeout evidence.
+- An ignored, owner-only `pilot-private/` local fallback with executable ignore
+  verification for short-lived completed delivery records.
 - Unit tests covering scanner behavior and JSON CLI output.
 - Responsive Repo Scout web companion with a server-rendered snapshot lab and accessible format toggle.
 - A hosted founding-team pilot offer with price, scope, implemented policy proof, and a direct conversion CTA.

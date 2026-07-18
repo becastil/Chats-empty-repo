@@ -1563,3 +1563,18 @@ locks the repository limit, shipped-command references, privacy boundary, and
 human `pilot-paid` before `pilot-active` before `pilot-converted` ordering.
 This improves paid delivery readiness without creating a new acquisition asset,
 payment claim, or software feature.
+
+## 2026-07-18: Ignore And Restrict Short-Lived Local Delivery Records
+
+The completed pilot delivery record contains repository identity, access,
+payment confirmation, CI, and customer-acceptance references. Warning operators
+not to commit it was insufficient while the repository offered no protected
+local destination. The `pilot-private/` path is now ignored, and the rollout
+guide creates its directory and record with owner-only `700/600` permissions
+before requiring `git check-ignore` to pass.
+
+The tracked blank template remains outside that ignore rule. Ignore rules are
+not encryption or access control, and `git add --force` can bypass them, so the
+local workspace is only a short-lived fallback; durable completed evidence
+still belongs in the customer-approved private system. This closes a paid
+delivery privacy gap without adding acquisition behavior or claiming revenue.

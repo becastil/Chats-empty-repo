@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import subprocess
 import tomllib
 import unittest
 
@@ -130,6 +131,34 @@ class PilotDeliveryContractTests(unittest.TestCase):
         self.assertIn("verify-receipt bootstrap-receipt.json", guide)
         self.assertIn("--rollout-checklist", guide)
         self.assertIn("--repository-id owner/repository", guide)
+
+    def test_local_delivery_workspace_is_ignored_and_owner_only(self) -> None:
+        guide = ROLLOUT_GUIDE.read_text(encoding="utf-8")
+        gitignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
+
+        self.assertIn("/pilot-private/", gitignore)
+        self.assertIn("install -d -m 700 pilot-private", guide)
+        self.assertIn(
+            "install -m 600 examples/pilot-delivery-record.md", guide
+        )
+        self.assertIn(
+            "git check-ignore --quiet pilot-private/delivery-record.md", guide
+        )
+        self.assertIn("An ignored path is not encryption or access control", guide)
+        self.assertIn("never force-add the completed copy", guide)
+
+        ignored = subprocess.run(
+            ["git", "check-ignore", "--quiet", "pilot-private/delivery-record.md"],
+            cwd=ROOT,
+            check=False,
+        )
+        tracked_template = subprocess.run(
+            ["git", "check-ignore", "--quiet", "examples/pilot-delivery-record.md"],
+            cwd=ROOT,
+            check=False,
+        )
+        self.assertEqual(ignored.returncode, 0)
+        self.assertNotEqual(tracked_template.returncode, 0)
 
     def test_payment_activation_and_conversion_remain_human_evidence(self) -> None:
         guide = ROLLOUT_GUIDE.read_text(encoding="utf-8")
