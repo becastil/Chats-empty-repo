@@ -1886,3 +1886,17 @@ evidence. A focused contract test requires that sentence in each guide and
 rejects the prior inferred-payment wording. This changes no live funnel data and
 creates no payment or revenue; it keeps buyer-facing and operator-facing
 accounting instructions aligned with executable behavior.
+
+## 2026-07-19: Require Public Lead History Before A Clean Loss Record
+
+The cumulative pilot contract permits an opportunity to become lost from any
+funnel stage, but every tracked opportunity must first carry `pilot-lead`.
+Because loss is outside the ordered positive-stage tuple, a record containing
+only `pilot-lost` was counted as a loss without the missing-stage warning that
+all other skipped histories receive.
+
+Loss remains an explicit human-applied outcome and is still counted, but a
+lost-only record now warns that `pilot-lead` is missing. Records that include a
+positive later stage continue through the existing cumulative-stage check, so
+the change adds no duplicate warning. This creates no lead, loss, or revenue;
+it prevents incomplete public request history from appearing warning-free.

@@ -288,18 +288,21 @@ def build_funnel(
                 )
             )
 
+        required_labels: set[str] = set()
         if furthest_stage >= 0:
-            required_labels = set(STAGE_LABELS[: furthest_stage + 1])
-            missing_labels = sorted(required_labels - known_labels)
-            if missing_labels:
-                warnings.append(
-                    _warning(
-                        issue,
-                        "missing_prior_stage",
-                        "Later funnel stage is present without all prior labels.",
-                        labels=missing_labels,
-                    )
+            required_labels.update(STAGE_LABELS[: furthest_stage + 1])
+        elif has_lost:
+            required_labels.add(STAGE_LABELS[0])
+        missing_labels = sorted(required_labels - known_labels)
+        if missing_labels:
+            warnings.append(
+                _warning(
+                    issue,
+                    "missing_prior_stage",
+                    "Funnel stage or loss is present without all prior labels.",
+                    labels=missing_labels,
                 )
+            )
 
         age_days: int | None = None
         if issue.updated_at is not None:

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Warned when a `pilot-lost` record lacks the required cumulative `pilot-lead`
+  history.
+- Kept the explicit loss visible while preventing that skipped public-request
+  milestone from passing as warning-free funnel evidence.
+- Added focused coverage for the loss total, zero revenue, and exact missing
+  label.
 - Aligned the business model, distribution guide, and pilot operator guide on
   the exact `pilot-paid` revenue boundary.
 - Removed stale language that allowed later lifecycle labels to stand in for

@@ -330,6 +330,37 @@ class PilotFunnelTests(unittest.TestCase):
             self.assertEqual(segment[key]["annual_conversions"], 0)
             self.assertEqual(segment[key]["lost_pilots"], 0)
 
+    def test_lost_outcome_warns_when_public_lead_history_is_missing(self) -> None:
+        payload = [
+            {
+                "number": 102,
+                "title": "Loss label without public intake history",
+                "url": "https://github.com/example/repo/issues/102",
+                "state": "CLOSED",
+                "updatedAt": "2026-07-10T12:00:00Z",
+                "labels": [{"name": "pilot-lost"}],
+                "body": (
+                    "### How did you hear about Repo Scout?\n\n"
+                    "Direct outreach\n\n"
+                    "### Purchase readiness\n\n"
+                    "Exploring before requesting budget\n\n"
+                    "### Primary purchase criterion\n\n"
+                    "Works across our repositories and CI"
+                ),
+            }
+        ]
+
+        report = build_funnel(payload, as_of=date(2026, 7, 10))
+
+        self.assertEqual(report["deals"][0]["stage"], "lost")
+        self.assertEqual(report["summary"]["lost_pilots"], 1)
+        self.assertEqual(report["summary"]["booked_pilots"], 0)
+        self.assertEqual(
+            [warning["kind"] for warning in report["warnings"]],
+            ["missing_prior_stage"],
+        )
+        self.assertEqual(report["warnings"][0]["labels"], ["pilot-lead"])
+
     def test_classifies_application_scope_without_exposing_standard_text(self) -> None:
         common = (
             "### How did you hear about Repo Scout?\n\nRepo Scout website\n\n"

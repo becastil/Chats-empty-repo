@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 165 of
-1,000, with 835 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 166 of
+1,000, with 834 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -63,6 +63,8 @@ alignment take priority over commit volume.
   visible without treating missing payment evidence as booked revenue.
 - Executable commercial-documentation proof that later lifecycle labels cannot
   substitute for the human-applied payment event.
+- Missing-stage warnings for loss records that lack the cumulative public lead
+  history required by the pilot funnel.
 - Conflict-safe terminal accounting that excludes converted-and-lost records
   from both resolved outcome totals while retaining historical booked revenue.
 - Deterministic stale-deal follow-up with explicit UTC dates, thresholds, and issue-activity ages.
