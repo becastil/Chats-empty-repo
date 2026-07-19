@@ -384,14 +384,17 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
   --as-of "$(date -u +%F)" \
   --record-outcome prospect-001 \
   --outcome pilot-requested \
+  --outcome-on "$(date -u +%F)" \
   --confirm-outcome-observed
 ```
 
 The guarded action accepts `replied`, `pilot-requested`, `not-a-fit`, or
 `do-not-contact` after contact, preserves approval and send history, and clears
-any pending follow-up. It sends nothing. Private outreach outcomes remain
-operator evidence; only public pilot intake and paid funnel stages count as
-demand or revenue.
+any pending follow-up. `--as-of` is the UTC ledger-audit date, while the
+required `--outcome-on` retains when the human actually observed the response
+or stop condition. It sends nothing. Private outreach outcomes remain operator
+evidence; only public pilot intake and paid funnel stages count as demand or
+revenue.
 
 The reporter enforces the 10-prospect experiment, three-signal qualification,
 one private HTTPS evidence link per signal, permitted contact channels, one

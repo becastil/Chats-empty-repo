@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 168 of
-1,000, with 832 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 169 of
+1,000, with 831 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -201,6 +201,9 @@ alignment take priority over commit volume.
 - Durable outcome observation dates with chronology validation, backdated
   refinement rejection, first-observation retention across classification, and
   explicit dated-versus-legacy outcome coverage.
+- Separate required outcome-event and ledger-audit dates so delayed human
+  recording retains the actual observation without weakening future-date
+  validation.
 - Current-UTC defaults and explicit UTC operator dates across outreach review,
   approval, contact, follow-up, and outcome recording.
 - Release-blocking installed-wheel proof for the guarded draft review, approval,

@@ -294,6 +294,7 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
   --as-of "$(date -u +%F)" \
   --record-outcome prospect-001 \
   --outcome pilot-requested \
+  --outcome-on "$(date -u +%F)" \
   --confirm-outcome-observed
 ```
 
@@ -301,14 +302,19 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
 responses can arrive out of send order. Supported outcomes are `replied`,
 `pilot-requested`, `not-a-fit`, and `do-not-contact`; a generic `replied` row
 may later move to one of the three specific outcomes after a human observes it.
-The command records that observation date in `outcome_on`. A later refinement
-cannot use a date before the original reply date, so the ledger retains when
-the first outcome was actually observed instead of allowing it to be backdated
-or replacing it with the later classification date.
+The required `--outcome-on` records that observation date in `outcome_on`,
+separately from the `--as-of` date used to audit the complete ledger. This
+allows a response observed earlier to be recorded honestly during a later
+operating session. An outcome date after `as_of` is rejected. A later
+refinement cannot use a date before the original reply date, so the ledger
+retains when the first outcome was actually observed instead of allowing it to
+be backdated or replacing it with the later classification date.
 Contact and follow-up text receipts emit this shell-quoted command with required
-`YYYY-MM-DD` and `OUTCOME` placeholders. Replace both with the actual UTC
-observation date and supported status; leaving either placeholder unchanged
-fails during argument parsing before the private ledger is read or modified.
+recording-date, observation-date, and `OUTCOME` placeholders. Replace
+`--as-of` with the current UTC recording date, `--outcome-on` with the actual
+UTC observation date, and `OUTCOME` with a supported status; leaving any
+placeholder unchanged fails during argument parsing before the private ledger
+is read or modified.
 The generic `replied` receipt emits one final guarded handoff for exactly
 `pilot-requested`, `not-a-fit`, or `do-not-contact`, retaining the same alias
 and ledger path while requiring a fresh observation date. Terminal outcome

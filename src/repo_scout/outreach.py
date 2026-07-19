@@ -442,12 +442,17 @@ def record_outreach_outcome(
     *,
     prospect_id: str,
     outcome: str,
+    outcome_on: date,
     outcome_confirmed: bool,
     as_of: date | None = None,
 ) -> dict[str, Any]:
     report_date = as_of or _utc_today()
     if type(report_date) is not date:
         raise OutreachInputError("as-of must be a date")
+    if type(outcome_on) is not date:
+        raise OutreachInputError("outcome-on must be a date")
+    if outcome_on > report_date:
+        raise OutreachInputError("outcome-on cannot be after as-of")
     if outcome_confirmed is not True:
         raise OutreachInputError(
             "--record-outcome requires --confirm-outcome-observed after a human "
@@ -495,7 +500,7 @@ def record_outreach_outcome(
     if (
         current_status == "replied"
         and prior_outcome_on is not None
-        and report_date < prior_outcome_on
+        and outcome_on < prior_outcome_on
     ):
         raise OutreachInputError(
             "refined outcome date cannot be before the recorded reply date "
@@ -509,7 +514,7 @@ def record_outreach_outcome(
             row["status"] = outcome
             row["next_action_on"] = ""
             if prior_outcome_on is None:
-                row["outcome_on"] = report_date.isoformat()
+                row["outcome_on"] = outcome_on.isoformat()
             break
 
     build_outreach_report(updated_rows, as_of=report_date)
@@ -1608,9 +1613,10 @@ def _format_outreach_outcome_handoff(
     status_list = ", ".join(statuses)
     return [
         (
-            "If a human observes a response or stop condition, replace "
-            "YYYY-MM-DD with the actual UTC observation date and OUTCOME with "
-            f"one of {status_list}, then record it:"
+            "If a human observes a response or stop condition, replace the "
+            "--as-of YYYY-MM-DD with the current UTC recording date, "
+            "--outcome-on YYYY-MM-DD with the actual UTC observation date, "
+            f"and OUTCOME with one of {status_list}, then record it:"
         ),
         _format_outreach_command(
             ledger,
@@ -1620,6 +1626,8 @@ def _format_outreach_outcome_handoff(
             prospect_id,
             "--outcome",
             OUTCOME_PLACEHOLDER,
+            "--outcome-on",
+            DATE_PLACEHOLDER,
             "--confirm-outcome-observed",
         ),
     ]
@@ -1825,6 +1833,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Observed status. Required with --record-outcome.",
     )
     parser.add_argument(
+        "--outcome-on",
+        type=_date_argument,
+        metavar="YYYY-MM-DD",
+        help="Human observation date. Required with --record-outcome.",
+    )
+    parser.add_argument(
         "--confirm-outcome-observed",
         action="store_true",
         help=(
@@ -1867,7 +1881,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     follow_up_options = (
         args.followed_up_on is not None or args.confirm_follow_up_sent
     )
-    outcome_options = args.outcome is not None or args.confirm_outcome_observed
+    outcome_options = (
+        args.outcome is not None
+        or args.outcome_on is not None
+        or args.confirm_outcome_observed
+    )
     try:
         if args.include_private_evidence and not args.review_next:
             raise OutreachInputError(
@@ -1891,7 +1909,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
         if args.record_outcome is None and outcome_options:
             raise OutreachInputError(
-                "--outcome and --confirm-outcome-observed require --record-outcome"
+                "--outcome, --outcome-on, and --confirm-outcome-observed "
+                "require --record-outcome"
             )
         if args.approve_next is not None:
             if decline_options:
@@ -2013,10 +2032,15 @@ def main(argv: Sequence[str] | None = None) -> int:
                 raise OutreachInputError(
                     "--record-outcome requires --outcome STATUS"
                 )
+            if args.outcome_on is None:
+                raise OutreachInputError(
+                    "--record-outcome requires --outcome-on YYYY-MM-DD"
+                )
             report = record_outreach_outcome(
                 args.ledger,
                 prospect_id=args.record_outcome,
                 outcome=args.outcome,
+                outcome_on=args.outcome_on,
                 outcome_confirmed=args.confirm_outcome_observed,
                 as_of=args.as_of,
             )

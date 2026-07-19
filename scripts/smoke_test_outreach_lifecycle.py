@@ -218,6 +218,7 @@ def verify_outreach_lifecycle(
         )
         outcome_arguments = _replace_outcome(
             outcome_arguments,
+            as_of="2026-07-13",
             observed_on="2026-07-11",
             outcome="replied",
         )
@@ -233,6 +234,7 @@ def verify_outreach_lifecycle(
         )
         refinement_arguments = _replace_outcome(
             refinement_arguments,
+            as_of="2026-07-13",
             observed_on="2026-07-12",
             outcome="pilot-requested",
         )
@@ -723,6 +725,8 @@ def verify_outreach_lifecycle(
                 draft["prospect_id"],
                 "--outcome",
                 "pilot-requested",
+                "--outcome-on",
+                "2026-07-11",
             ),
             environment=environment,
             expected_exit_code=2,
@@ -746,6 +750,8 @@ def verify_outreach_lifecycle(
                 draft["prospect_id"],
                 "--outcome",
                 "pilot-requested",
+                "--outcome-on",
+                "2026-07-11",
                 "--confirm-outcome-observed",
             ),
             environment=environment,
@@ -1051,25 +1057,36 @@ def _replace_event_date(
 def _replace_outcome(
     arguments: Sequence[str],
     *,
+    as_of: str,
     observed_on: str,
     outcome: str,
 ) -> tuple[str, ...]:
     _require(
-        arguments.count(DATE_PLACEHOLDER) == 1,
-        "outcome handoff must require one actual-date placeholder",
+        arguments.count(DATE_PLACEHOLDER) == 2,
+        "outcome handoff must require recording and observation dates",
     )
     _require(
         arguments.count(OUTCOME_PLACEHOLDER) == 1,
         "outcome handoff must require one observed-outcome placeholder",
     )
-    return tuple(
-        observed_on
-        if value == DATE_PLACEHOLDER
-        else outcome
-        if value == OUTCOME_PLACEHOLDER
-        else value
-        for value in arguments
-    )
+    replacements = {
+        "--as-of": as_of,
+        "--outcome-on": observed_on,
+    }
+    replaced: list[str] = []
+    for index, value in enumerate(arguments):
+        if value == DATE_PLACEHOLDER:
+            previous = arguments[index - 1] if index else ""
+            _require(
+                previous in replacements,
+                "outcome handoff date placeholder has no known option",
+            )
+            replaced.append(replacements[previous])
+        elif value == OUTCOME_PLACEHOLDER:
+            replaced.append(outcome)
+        else:
+            replaced.append(value)
+    return tuple(replaced)
 
 
 def _require_private_values_absent(

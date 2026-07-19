@@ -1929,3 +1929,18 @@ current human observation date. Source and installed-package lifecycle tests
 prove a July 11 reply remains July 11 after a July 12 pilot classification.
 This preserves private experiment history without creating a public request,
 payment, or revenue event.
+
+## 2026-07-19: Separate Outcome Events From Ledger Audit Dates
+
+The outcome command used `--as-of` as both the complete-ledger audit date and
+the human observation date. An operator recording a July 5 reply on July 10
+either had to misdate the reply or audit the entire ledger as of July 5, which
+could conflict with valid later activity elsewhere in the bounded batch.
+
+`--record-outcome` now requires `--outcome-on` independently. The event may be
+on or before `--as-of`, must still follow the selected prospect's contact and
+follow-up history, and cannot predate a retained generic reply during
+classification. Generated handoffs require both dates explicitly, and
+installed-package coverage records a reply and classification on their actual
+dates during a later audit. This improves private conversion evidence without
+creating demand, payment, or revenue.

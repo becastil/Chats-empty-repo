@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added a required `--outcome-on` date so private outreach outcomes can retain
+  an earlier human observation while the complete ledger is audited today.
+- Rejected outcome observations after `--as-of` and emitted separate
+  recording-date, observation-date, and status placeholders in every handoff.
+- Extended source and installed-wheel lifecycle coverage through delayed reply
+  recording and later terminal classification.
 - Preserved the first observed private outreach outcome date when a generic
   reply is later classified as a pilot request, rejection, or opt-out.
 - Added source and installed-package lifecycle regressions proving refinement

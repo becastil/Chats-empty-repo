@@ -2080,7 +2080,7 @@ class OutreachReportTests(unittest.TestCase):
             contact_outcome_command = command_for(
                 contact_output, "--record-outcome"
             )
-            self.assertEqual(contact_outcome_command.count(DATE_PLACEHOLDER), 1)
+            self.assertEqual(contact_outcome_command.count(DATE_PLACEHOLDER), 2)
             self.assertEqual(
                 contact_outcome_command.count(OUTCOME_PLACEHOLDER), 1
             )
@@ -2097,7 +2097,7 @@ class OutreachReportTests(unittest.TestCase):
                 follow_up_output, "--record-outcome"
             )
             self.assertEqual(outcome_command, contact_outcome_command)
-            self.assertEqual(outcome_command.count(DATE_PLACEHOLDER), 1)
+            self.assertEqual(outcome_command.count(DATE_PLACEHOLDER), 2)
             self.assertEqual(outcome_command.count(OUTCOME_PLACEHOLDER), 1)
             self.assertIn("--confirm-outcome-observed", outcome_command)
             before_outcome = ledger.read_bytes()
@@ -2127,7 +2127,7 @@ class OutreachReportTests(unittest.TestCase):
             refinement_command = command_for(
                 outcome_output, "--record-outcome"
             )
-            self.assertEqual(refinement_command.count(DATE_PLACEHOLDER), 1)
+            self.assertEqual(refinement_command.count(DATE_PLACEHOLDER), 2)
             self.assertEqual(refinement_command.count(OUTCOME_PLACEHOLDER), 1)
             before_refinement = ledger.read_bytes()
             with redirect_stderr(io.StringIO()), self.assertRaises(
@@ -2324,6 +2324,8 @@ class OutreachReportTests(unittest.TestCase):
                         "prospect-002",
                         "--outcome",
                         "pilot-requested",
+                        "--outcome-on",
+                        "2026-07-05",
                         "--confirm-outcome-observed",
                         "--format",
                         "json",
@@ -2382,6 +2384,36 @@ class OutreachReportTests(unittest.TestCase):
             self.assertNotIn("repo-scout-outreach ", text)
             self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
 
+    def test_record_outcome_separates_observation_date_from_as_of(self) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            _write_ledger(ledger, [_row()])
+            stdout = io.StringIO()
+
+            with redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-10",
+                        "--record-outcome",
+                        "prospect-001",
+                        "--outcome",
+                        "replied",
+                        "--outcome-on",
+                        "2026-07-05",
+                        "--confirm-outcome-observed",
+                        "--format",
+                        "json",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            with ledger.open(newline="", encoding="utf-8") as ledger_file:
+                updated = next(csv.DictReader(ledger_file))
+            self.assertEqual(updated["outcome_on"], "2026-07-05")
+            self.assertEqual(json.loads(stdout.getvalue())["as_of"], "2026-07-10")
+
     def test_record_outcome_accepts_followed_up_and_replied_sources(self) -> None:
         cases = (
             (
@@ -2411,6 +2443,8 @@ class OutreachReportTests(unittest.TestCase):
                                 "prospect-001",
                                 "--outcome",
                                 outcome,
+                                "--outcome-on",
+                                "2026-07-10",
                                 "--confirm-outcome-observed",
                                 "--format",
                                 "json",
@@ -2450,11 +2484,13 @@ class OutreachReportTests(unittest.TestCase):
                     [
                         str(ledger),
                         "--as-of",
-                        "2026-07-10",
+                        "2026-07-12",
                         "--record-outcome",
                         "prospect-001",
                         "--outcome",
                         "pilot-requested",
+                        "--outcome-on",
+                        "2026-07-10",
                         "--confirm-outcome-observed",
                     ]
                 )
@@ -2476,6 +2512,8 @@ class OutreachReportTests(unittest.TestCase):
                         "prospect-001",
                         "--outcome",
                         "pilot-requested",
+                        "--outcome-on",
+                        "2026-07-12",
                         "--confirm-outcome-observed",
                     ]
                 )
@@ -2502,8 +2540,34 @@ class OutreachReportTests(unittest.TestCase):
                         "prospect-001",
                         "--outcome",
                         "replied",
+                        "--outcome-on",
+                        "2026-07-10",
                     ],
                     "requires --confirm-outcome-observed",
+                ),
+                (
+                    _row(),
+                    [
+                        "--record-outcome",
+                        "prospect-001",
+                        "--outcome",
+                        "replied",
+                        "--confirm-outcome-observed",
+                    ],
+                    "requires --outcome-on YYYY-MM-DD",
+                ),
+                (
+                    _row(),
+                    [
+                        "--record-outcome",
+                        "prospect-001",
+                        "--outcome",
+                        "replied",
+                        "--outcome-on",
+                        "2026-07-11",
+                        "--confirm-outcome-observed",
+                    ],
+                    "outcome-on cannot be after as-of",
                 ),
                 (
                     _row(
@@ -2516,6 +2580,8 @@ class OutreachReportTests(unittest.TestCase):
                         "prospect-001",
                         "--outcome",
                         "replied",
+                        "--outcome-on",
+                        "2026-07-10",
                         "--confirm-outcome-observed",
                     ],
                     "status approved cannot record an outcome",
@@ -2527,6 +2593,8 @@ class OutreachReportTests(unittest.TestCase):
                         "prospect-001",
                         "--outcome",
                         "not-a-fit",
+                        "--outcome-on",
+                        "2026-07-10",
                         "--confirm-outcome-observed",
                     ],
                     "status pilot-requested cannot record an outcome",
@@ -2538,6 +2606,8 @@ class OutreachReportTests(unittest.TestCase):
                         "prospect-001",
                         "--outcome",
                         "replied",
+                        "--outcome-on",
+                        "2026-07-10",
                         "--confirm-outcome-observed",
                     ],
                     "already has outcome replied",
@@ -2549,13 +2619,21 @@ class OutreachReportTests(unittest.TestCase):
                         "prospect-999",
                         "--outcome",
                         "replied",
+                        "--outcome-on",
+                        "2026-07-10",
                         "--confirm-outcome-observed",
                     ],
                     "prospect_id is not present",
                 ),
                 (
                     _row(),
-                    ["--outcome", "replied", "--confirm-outcome-observed"],
+                    [
+                        "--outcome",
+                        "replied",
+                        "--outcome-on",
+                        "2026-07-10",
+                        "--confirm-outcome-observed",
+                    ],
                     "require --record-outcome",
                 ),
                 (
@@ -2565,6 +2643,8 @@ class OutreachReportTests(unittest.TestCase):
                         "prospect-001",
                         "--outcome",
                         "replied",
+                        "--outcome-on",
+                        "2026-07-10",
                         "--confirm-outcome-observed",
                         "--contacted-on",
                         "2026-07-01",
@@ -2615,6 +2695,8 @@ class OutreachReportTests(unittest.TestCase):
                         "prospect-001",
                         "--outcome",
                         "replied",
+                        "--outcome-on",
+                        "2026-07-05",
                         "--confirm-outcome-observed",
                     ]
                 )

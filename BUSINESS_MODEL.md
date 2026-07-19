@@ -541,13 +541,17 @@ cannot precede the recorded reply date and does not replace that first
 observation date. New outcomes retain their actual observation date in
 `outcome_on`; legacy nine-column ledgers remain readable, and older outcomes
 without dates are reported as undated rather than assigned invented history.
-The action sends nothing and schedules nothing. Contact and
+The required `--outcome-on` can precede the ledger's `--as-of` audit date, so a
+later operating session can preserve an earlier human observation; an outcome
+after the audit date is rejected. The action sends nothing and schedules
+nothing. Contact and
 follow-up receipts now preserve the exact alias and private ledger path in a
-shell-quoted outcome handoff. Required date and status placeholders stop an
-unchanged command before ledger access, keeping the operator responsible for
-the observed evidence. A generic reply receipt similarly carries one exact
-refinement handoff limited to `pilot-requested`, `not-a-fit`, or
-`do-not-contact`; terminal outcomes emit no next command.
+shell-quoted outcome handoff. Separate required recording-date,
+observation-date, and status placeholders stop an unchanged command before
+ledger access, keeping the operator responsible for the observed evidence. A
+generic reply receipt similarly carries one exact refinement handoff limited
+to `pilot-requested`, `not-a-fit`, or `do-not-contact`; terminal outcomes emit
+no next command.
 Private `pilot-requested` is an operator signal, not a public funnel event; the
 prospect must still submit pilot intake, and booked revenue requires the
 human-applied `pilot-paid` label.
