@@ -537,10 +537,11 @@ the exact alias because replies can arrive out of send order. It accepts
 requires explicit confirmation that a human observed the outcome, preserves
 approval and contact history, and clears any pending follow-up. A generic reply
 may later be refined to a specific terminal outcome, but the refinement date
-cannot precede the recorded reply date. New outcomes retain their actual
-observation date in `outcome_on`; legacy nine-column ledgers remain readable,
-and older outcomes without dates are reported as undated rather than assigned
-invented history. The action sends nothing and schedules nothing. Contact and
+cannot precede the recorded reply date and does not replace that first
+observation date. New outcomes retain their actual observation date in
+`outcome_on`; legacy nine-column ledgers remain readable, and older outcomes
+without dates are reported as undated rather than assigned invented history.
+The action sends nothing and schedules nothing. Contact and
 follow-up receipts now preserve the exact alias and private ledger path in a
 shell-quoted outcome handoff. Required date and status placeholders stop an
 unchanged command before ledger access, keeping the operator responsible for

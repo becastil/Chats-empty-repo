@@ -1915,3 +1915,17 @@ nine-column ledgers remain readable and upgrade on their next guarded write;
 historical outcomes without a date are counted as undated instead of receiving
 invented evidence. This creates no outreach result, public lead, payment, or
 revenue.
+
+## 2026-07-19: Preserve The First Private Outcome Observation
+
+The first `outcome_on` implementation rejected a classification date before a
+recorded generic reply but then replaced that reply date with the later
+classification date. The check prevented backdating while the write still
+discarded the evidence it depended on.
+
+A refinement now changes only the status and keeps the original `outcome_on`.
+Fresh outcomes and legacy outcomes without a retained date still receive the
+current human observation date. Source and installed-package lifecycle tests
+prove a July 11 reply remains July 11 after a July 12 pilot classification.
+This preserves private experiment history without creating a public request,
+payment, or revenue event.

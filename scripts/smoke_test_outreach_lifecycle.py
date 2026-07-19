@@ -253,7 +253,8 @@ def verify_outreach_lifecycle(
         _require(
             handoff_row["status"] == "pilot-requested"
             and handoff_row["contacted_on"] == "2026-07-03"
-            and handoff_row["followed_up_on"] == "2026-07-10",
+            and handoff_row["followed_up_on"] == "2026-07-10"
+            and handoff_row["outcome_on"] == "2026-07-11",
             "copy-ready handoffs did not complete the synthetic lifecycle",
         )
         checked.append("copy-ready-handoffs")

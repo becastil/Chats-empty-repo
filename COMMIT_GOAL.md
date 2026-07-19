@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after retaining outreach outcome dates: 167 / 1,000 (16.7%).
-- Remaining after retaining outreach outcome dates: 833 commits.
+- Progress after preserving first outcome dates: 168 / 1,000 (16.8%).
+- Remaining after preserving first outcome dates: 832 commits.
 
 ## Commit Standard
 

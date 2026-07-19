@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Preserved the first observed private outreach outcome date when a generic
+  reply is later classified as a pilot request, rejection, or opt-out.
+- Added source and installed-package lifecycle regressions proving refinement
+  changes the status without replacing the original observation date.
 - Retained the human-observed date for every newly recorded private outreach
   outcome in a durable `outcome_on` ledger field.
 - Rejected outcome dates outside contact and follow-up chronology, future

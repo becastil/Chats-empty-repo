@@ -303,7 +303,8 @@ responses can arrive out of send order. Supported outcomes are `replied`,
 may later move to one of the three specific outcomes after a human observes it.
 The command records that observation date in `outcome_on`. A later refinement
 cannot use a date before the original reply date, so the ledger retains when
-the first outcome was actually observed instead of allowing it to be backdated.
+the first outcome was actually observed instead of allowing it to be backdated
+or replacing it with the later classification date.
 Contact and follow-up text receipts emit this shell-quoted command with required
 `YYYY-MM-DD` and `OUTCOME` placeholders. Replace both with the actual UTC
 observation date and supported status; leaving either placeholder unchanged

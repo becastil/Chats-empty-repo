@@ -508,7 +508,8 @@ def record_outreach_outcome(
         if (row.get("prospect_id") or "").strip() == prospect_id:
             row["status"] = outcome
             row["next_action_on"] = ""
-            row["outcome_on"] = report_date.isoformat()
+            if prior_outcome_on is None:
+                row["outcome_on"] = report_date.isoformat()
             break
 
     build_outreach_report(updated_rows, as_of=report_date)

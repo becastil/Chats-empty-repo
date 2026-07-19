@@ -2159,6 +2159,7 @@ class OutreachReportTests(unittest.TestCase):
             self.assertEqual(row["contacted_on"], "2026-07-03")
             self.assertEqual(row["followed_up_on"], "2026-07-10")
             self.assertEqual(row["status"], "pilot-requested")
+            self.assertEqual(row["outcome_on"], "2026-07-11")
 
     def test_record_contact_rejects_unsafe_transitions_without_mutation(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -2483,7 +2484,7 @@ class OutreachReportTests(unittest.TestCase):
             with ledger.open(newline="", encoding="utf-8") as ledger_file:
                 updated = next(csv.DictReader(ledger_file))
             self.assertEqual(updated["status"], "pilot-requested")
-            self.assertEqual(updated["outcome_on"], "2026-07-12")
+            self.assertEqual(updated["outcome_on"], "2026-07-11")
 
     def test_record_outcome_rejects_unsafe_transitions_without_mutation(self) -> None:
         with TemporaryDirectory() as tmp:
