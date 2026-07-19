@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added outcome receipt schema 2 with the existing source-prefilled public
+  pilot intake URL only for confirmed private `pilot-requested` outcomes.
+- Printed the same buyer-controlled handoff in default text while leaving every
+  other outcome at an explicit JSON null with no text link.
+- Extended source and installed-command contracts without opening a form,
+  submitting intake, or converting private interest into public demand.
 - Extended the private-notes commit-race regression from approval to both
   content-bound review decisions.
 - Approval and decline now share proof that an edit during the locked commit

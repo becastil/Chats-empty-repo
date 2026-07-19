@@ -319,6 +319,16 @@ and schedules no further message. A private `pilot-requested` status is an
 operator signal only; ask the prospect to submit the public pilot intake before
 counting demand, payment, or revenue.
 
+Outcome receipt schema 2 includes the existing public intake URL only for
+`pilot-requested`, with `Direct outreach` visibly prefilled:
+
+<https://github.com/becastil/Chats-empty-repo/issues/new?template=founding-team-pilot.yml&discovery_source=Direct+outreach>
+
+The default text receipt prints the same link. Share it only after the observed
+request; the prospect can review and edit the source answer before submitting.
+Repo Scout does not open the form, submit it, or turn private interest into a
+public lead. Every other outcome carries a JSON `null` and no text link.
+
 Every lifecycle mutation records the exact ledger revision it validated, stages
 the replacement, then acquires an owner-only adjacent lock before comparing and
 replacing. A concurrent command or newer ledger revision stops with a retry

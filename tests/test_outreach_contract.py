@@ -9,7 +9,10 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from repo_scout.outreach import SCHEMA_VERSION  # noqa: E402
+from repo_scout.outreach import (  # noqa: E402
+    PUBLIC_PILOT_INTAKE_URL,
+    SCHEMA_VERSION,
+)
 
 
 README = ROOT / "README.md"
@@ -126,6 +129,7 @@ class DirectOutreachContractTests(unittest.TestCase):
             "public pilot intake before counting demand, payment, or revenue",
             normalized_playbook,
         )
+        self.assertIn(PUBLIC_PILOT_INTAKE_URL, playbook)
         self.assertIn("Stop immediately after an opt-out", playbook)
         self.assertIn("reply, page visit, or release request", playbook)
         self.assertIn("do not count", playbook.lower())

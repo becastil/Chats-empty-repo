@@ -35,6 +35,11 @@ OPT_OUT_REVIEW_CHECK = (
 )
 DATE_PLACEHOLDER = "YYYY-MM-DD"
 OUTCOME_PLACEHOLDER = "OUTCOME"
+PUBLIC_PILOT_INTAKE_URL = (
+    "https://github.com/becastil/Chats-empty-repo/issues/new"
+    "?template=founding-team-pilot.yml"
+    "&discovery_source=Direct+outreach"
+)
 
 
 class SmokeTestError(RuntimeError):
@@ -238,6 +243,10 @@ def verify_outreach_lifecycle(
         _require(
             "repo-scout-outreach " not in handoff_refinement.stdout,
             "terminal outcome emitted another action command",
+        )
+        _require(
+            PUBLIC_PILOT_INTAKE_URL in handoff_refinement.stdout,
+            "private pilot request omitted its source-prefilled public intake",
         )
         handoff_row = _read_row(handoff_ledger)
         _require(
@@ -746,6 +755,11 @@ def verify_outreach_lifecycle(
         _require(
             outcome.get("outcome", {}).get("status") == "pilot-requested",
             "pilot-requested outcome was not recorded",
+        )
+        _require(
+            outcome.get("public_pilot_intake_url")
+            == PUBLIC_PILOT_INTAKE_URL,
+            "pilot-requested JSON omitted its source-prefilled public intake",
         )
         _require_private_values_absent(
             outcome,

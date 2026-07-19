@@ -34,13 +34,18 @@ APPROVAL_SCHEMA_VERSION = 1
 DECLINE_SCHEMA_VERSION = 2
 CONTACT_SCHEMA_VERSION = 1
 FOLLOW_UP_SCHEMA_VERSION = 1
-OUTCOME_SCHEMA_VERSION = 1
+OUTCOME_SCHEMA_VERSION = 2
 MAX_PROSPECTS = 10
 FOLLOW_UP_DAYS = 7
 MAX_FOLLOW_UPS = 1
 MAX_PRIVATE_DRAFT_BYTES = 128 * 1024
 DATE_PLACEHOLDER = "YYYY-MM-DD"
 OUTCOME_PLACEHOLDER = "OUTCOME"
+PUBLIC_PILOT_INTAKE_URL = (
+    "https://github.com/becastil/Chats-empty-repo/issues/new"
+    "?template=founding-team-pilot.yml"
+    "&discovery_source=Direct+outreach"
+)
 LEDGER_FIELDS = (
     "prospect_id",
     "fit_signals",
@@ -498,6 +503,11 @@ def record_outreach_outcome(
             "prospect_id": prospect_id,
             "status": outcome,
         },
+        "public_pilot_intake_url": (
+            PUBLIC_PILOT_INTAKE_URL
+            if outcome == "pilot-requested"
+            else None
+        ),
         "action_note": (
             "The human-observed outcome was recorded atomically. Repo Scout sent "
             "nothing, scheduled no further message, and created no public pilot "
@@ -1591,6 +1601,10 @@ def format_outreach_outcome(
             "Next: ask the prospect to submit the public pilot intake before "
             "counting the request as public demand or revenue evidence."
         )
+        handoff = [
+            "Public pilot intake (Direct outreach source prefilled):",
+            outcome_report["public_pilot_intake_url"],
+        ]
     else:
         next_step = "Next: stop contact; no further message is scheduled."
     lines = [

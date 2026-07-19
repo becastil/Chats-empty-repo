@@ -24,6 +24,7 @@ from repo_scout.outreach import (  # noqa: E402
     LEDGER_FIELDS,
     OUTCOME_PLACEHOLDER,
     OutreachInputError,
+    PUBLIC_PILOT_INTAKE_URL,
     build_next_outreach_review,
     build_outreach_report,
     format_next_outreach_review,
@@ -2145,6 +2146,7 @@ class OutreachReportTests(unittest.TestCase):
                 ]
             )
             self.assertNotIn("repo-scout-outreach ", refinement_output)
+            self.assertIn(PUBLIC_PILOT_INTAKE_URL, refinement_output)
             report = load_outreach_report(ledger, as_of=date(2026, 7, 12))
             self.assertEqual(report["summary"]["pilot_requested"], 1)
             self.assertEqual(report["summary"]["attempted_prospects"], 1)
@@ -2349,10 +2351,14 @@ class OutreachReportTests(unittest.TestCase):
             self.assertEqual(report["summary"]["attempted_prospects"], 2)
             self.assertEqual(report["summary"]["due_followups"], 0)
             receipt = json.loads(stdout.getvalue())
-            self.assertEqual(receipt["schema_version"], 1)
+            self.assertEqual(receipt["schema_version"], 2)
             self.assertTrue(receipt["private_output"])
             self.assertTrue(receipt["human_outcome_confirmed"])
             self.assertEqual(receipt["outcome"]["status"], "pilot-requested")
+            self.assertEqual(
+                receipt["public_pilot_intake_url"],
+                PUBLIC_PILOT_INTAKE_URL,
+            )
             serialized = json.dumps(receipt)
             self.assertNotIn("approved_on", serialized)
             self.assertNotIn("contacted_on", serialized)
@@ -2364,6 +2370,7 @@ class OutreachReportTests(unittest.TestCase):
             self.assertIn("Follow-up cadence closed", text)
             self.assertIn("public pilot intake", text)
             self.assertIn("public demand or revenue evidence", text)
+            self.assertIn(PUBLIC_PILOT_INTAKE_URL, text)
             self.assertNotIn("repo-scout-outreach ", text)
             self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
 
@@ -2384,8 +2391,9 @@ class OutreachReportTests(unittest.TestCase):
                 with TemporaryDirectory() as tmp:
                     ledger = Path(tmp) / "ledger.csv"
                     _write_ledger(ledger, [row])
+                    stdout = io.StringIO()
 
-                    with redirect_stdout(io.StringIO()):
+                    with redirect_stdout(stdout):
                         exit_code = main(
                             [
                                 str(ledger),
@@ -2402,6 +2410,8 @@ class OutreachReportTests(unittest.TestCase):
                         )
 
                     self.assertEqual(exit_code, 0)
+                    receipt = json.loads(stdout.getvalue())
+                    self.assertIsNone(receipt["public_pilot_intake_url"])
                     with ledger.open(newline="", encoding="utf-8") as ledger_file:
                         updated = next(csv.DictReader(ledger_file))
                     self.assertEqual(updated["status"], outcome)

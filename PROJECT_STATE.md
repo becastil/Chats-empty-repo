@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 162 of
-1,000, with 838 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 163 of
+1,000, with 837 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -264,6 +264,8 @@ alignment take priority over commit volume.
   access when left unchanged.
 - One guarded refinement handoff after a generic reply, limited to the three
   specific terminal outcomes and absent from terminal receipts.
+- Schema-2 outcome receipts that carry the existing source-prefilled public
+  intake only for private pilot interest, without opening or submitting it.
 - Safe refinement of generic replies into specific terminal outcomes without
   converting private outreach status into public demand or revenue evidence.
 - Complete shell-quoted private text handoffs from review through approval,

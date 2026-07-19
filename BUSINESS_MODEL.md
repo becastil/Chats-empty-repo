@@ -543,6 +543,11 @@ similarly carries one exact refinement handoff limited to `pilot-requested`,
 `not-a-fit`, or `do-not-contact`; terminal outcomes emit no next command.
 Private `pilot-requested` is an operator signal, not a public funnel event; the
 prospect must still submit pilot intake, and only paid stages count as revenue.
+Outcome receipt schema 2 now carries the existing GitHub intake with
+`Direct outreach` visibly prefilled in both JSON and default text, but only for
+that private pilot-interest status. Other outcomes expose no conversion link.
+The tool does not open or submit the form, and the prospect retains control of
+the editable source answer and public submission.
 
 Every approval, decline, contact, follow-up, and outcome write now carries the
 SHA-256 revision of the private ledger it validated. The staged replacement

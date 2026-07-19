@@ -1841,3 +1841,18 @@ shapes. Each must reject with the generic fresh-review instruction, preserve
 the private ledger byte for byte, omit the edited message from errors, and
 remove staged output. This creates no review decision or outreach event; it
 protects the evidence boundary used when a human chooses either outcome.
+
+## 2026-07-19: Link Private Pilot Interest To Existing Public Intake
+
+The guarded outreach ledger deliberately keeps a human-observed
+`pilot-requested` status private and outside the revenue funnel. Its receipt
+previously told the operator to request public intake but omitted the existing
+form, creating avoidable friction at the only point where private interest can
+become source-attributed public evidence.
+
+Outcome receipt schema 2 now includes that GitHub form with the visible
+`Direct outreach` answer prefilled, in JSON and default text, only for
+`pilot-requested`. Other outcomes use an explicit null and no text link. Repo
+Scout does not open or submit the form, the prospect can edit the source answer,
+and no lead, demand, payment, or revenue exists until the prospect independently
+submits intake and the existing funnel advances.

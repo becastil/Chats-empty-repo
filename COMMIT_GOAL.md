@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after proving both decision race guards: 162 / 1,000 (16.2%).
-- Remaining after proving both decision race guards: 838 commits.
+- Progress after linking private interest to public intake: 163 / 1,000 (16.3%).
+- Remaining after linking private interest to public intake: 837 commits.
 
 ## Commit Standard
 
