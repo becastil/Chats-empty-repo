@@ -235,6 +235,18 @@ class PilotDeliveryContractTests(unittest.TestCase):
             normalized.index("Apply `pilot-converted`"),
         )
 
+    def test_commercial_docs_require_exact_payment_evidence(self) -> None:
+        exact_payment_rule = (
+            "Booked revenue requires the `pilot-paid` label itself; later "
+            "labels do not substitute for missing payment evidence."
+        )
+        for path in (BUSINESS_MODEL, PILOT_TRACKING, ROOT / "DISTRIBUTION.md"):
+            with self.subTest(path=path.name):
+                normalized = " ".join(path.read_text(encoding="utf-8").split())
+                self.assertIn(exact_payment_rule, normalized)
+                self.assertNotIn("or a later paid stage", normalized)
+                self.assertNotIn("Only `pilot-paid` and later", normalized)
+
     def test_public_activation_label_requires_private_handoff_evidence(self) -> None:
         tracking = " ".join(PILOT_TRACKING.read_text(encoding="utf-8").split())
 

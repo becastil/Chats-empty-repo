@@ -1871,3 +1871,18 @@ warning, while source, readiness, and purchase-criterion revenue segments all
 exclude the unsupported booking. Paid records that later become lost or enter a
 terminal conflict still retain historical revenue because their payment label
 is present.
+
+## 2026-07-19: Keep Commercial Guides On The Exact Payment Boundary
+
+After revenue recognition was corrected to require `pilot-paid`, the business
+model, distribution guide, and pilot tracking guide still said later lifecycle
+stages could stand in for that label. An operator following those words could
+present a warning-bearing active or converted record as booked revenue even
+though the reporter correctly excluded it.
+
+All three commercial guides now state one shared rule: booked revenue requires
+the payment label itself, and later labels cannot replace missing payment
+evidence. A focused contract test requires that sentence in each guide and
+rejects the prior inferred-payment wording. This changes no live funnel data and
+creates no payment or revenue; it keeps buyer-facing and operator-facing
+accounting instructions aligned with executable behavior.

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Aligned the business model, distribution guide, and pilot operator guide on
+  the exact `pilot-paid` revenue boundary.
+- Removed stale language that allowed later lifecycle labels to stand in for
+  missing payment evidence.
+- Added an executable documentation contract that prevents those three
+  commercial guides from restoring the inferred-payment rule.
 - Required the exact `pilot-paid` label before a public pilot contributes to
   booked-pilot or booked-revenue totals.
 - Kept later-stage label drift visible while excluding its unsupported revenue

@@ -185,8 +185,9 @@ not repository source or customer data.
 GitHub counts requests rather than unique users. Wheel counts include Repo
 Scout's own verified CI bootstrap, and all channels may include maintainer
 checks or retries. Treat the report as directional distribution evidence, not
-an install, activation, or revenue count. Only `pilot-paid` and later paid
-stages count toward the initial $897 goal.
+an install, activation, or revenue count. Booked revenue requires the
+`pilot-paid` label itself; later labels do not substitute for missing payment
+evidence.
 
 ## Weekly Growth Review
 

@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after requiring exact payment evidence: 164 / 1,000 (16.4%).
-- Remaining after requiring exact payment evidence: 836 commits.
+- Progress after locking the documented payment boundary: 165 / 1,000 (16.5%).
+- Remaining after locking the documented payment boundary: 835 commits.
 
 ## Commit Standard
 

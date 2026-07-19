@@ -210,14 +210,16 @@ The hosted offer now has one canonical search identity, a crawler policy, and a
 one-page sitemap. Campaign query variants keep their source-specific intake
 behavior for people while pointing search engines at the same production page.
 This is acquisition infrastructure, not evidence of traffic or demand; only
-self-reported intake and paid-stage labels affect commercial validation.
+self-reported intake and explicit `pilot-paid` payment evidence affect
+commercial validation.
 
 Machine-readable offer data keeps the free and paid layers distinct. The
 current zipapp is represented as a $0 `SoftwareApplication`; the founding-team
 pilot is a separate $299 `Service` with the same duration, repository limit,
 audience, and local-code boundary shown to visitors. No review or rating data
 is published because none has been earned. Search presentation remains outside
-the revenue ledger until a buyer submits intake and reaches a paid stage.
+the revenue ledger until a buyer submits intake and the human-applied
+`pilot-paid` label records received payment.
 The maintainer production audit now fails when the deployed canonical metadata,
 free software offer, release version, or portable download URL drifts from the
 current project version. This protects the existing buyer path from sending a
@@ -542,7 +544,8 @@ the operator responsible for the observed evidence. A generic reply receipt
 similarly carries one exact refinement handoff limited to `pilot-requested`,
 `not-a-fit`, or `do-not-contact`; terminal outcomes emit no next command.
 Private `pilot-requested` is an operator signal, not a public funnel event; the
-prospect must still submit pilot intake, and only paid stages count as revenue.
+prospect must still submit pilot intake, and booked revenue requires the
+human-applied `pilot-paid` label.
 Outcome receipt schema 2 now carries the existing GitHub intake with
 `Direct outreach` visibly prefilled in both JSON and default text, but only for
 that private pilot-interest status. Other outcomes expose no conversion link.
@@ -615,9 +618,9 @@ pilot demand validates the additional infrastructure.
 ## Revenue Evidence
 
 Founding-team requests are tracked with cumulative `pilot-*` labels and the
-dependency-free `repo-scout-pilot` report. Only issues that reach `pilot-paid`
-or a later paid stage count toward the three-pilot and $897 initial-revenue
-targets. Qualified leads and written offers remain pipeline, not booked
+dependency-free `repo-scout-pilot` report. Booked revenue requires the
+`pilot-paid` label itself; later labels do not substitute for missing payment
+evidence. Qualified leads and written offers remain pipeline, not booked
 revenue. Label warnings must be resolved before totals are used in a roadmap or
 sales decision.
 
@@ -656,7 +659,7 @@ The intake also requires one public purchase-readiness answer: ready to buy the
 $299 pilot, needs internal approval, or exploring before requesting budget.
 Funnel totals connect each readiness state to qualification, offers,
 booked revenue, conversion, and loss. Readiness is self-reported intent, not
-cash; only `pilot-paid` or a later paid stage counts as booked revenue.
+cash; only an explicit `pilot-paid` label counts as booked revenue.
 
 The intake requires one primary purchase criterion covering policy fit,
 cross-repository rollout, leadership or audit evidence, privacy and security,

@@ -151,10 +151,11 @@ The default report measures the current founding goal:
 - $897 target initial revenue.
 - One annual conversion as the retention milestone.
 
-Booked revenue includes issues that reached `pilot-paid` or a later cumulative
-stage. A later `pilot-lost` label does not erase cash already received. If a
-payment is refunded, remove `pilot-paid` and later paid-stage labels before the
-next report, and retain the refund evidence outside the public issue.
+Booked revenue requires the `pilot-paid` label itself; later labels do not
+substitute for missing payment evidence. A later `pilot-lost` label does not
+erase cash already received. If a payment is refunded, remove `pilot-paid` and
+later paid-stage labels before the next report, and retain the refund evidence
+outside the public issue.
 
 The readiness summary is willingness-to-pay evidence, not accounting. A
 `ready` request contributes $0 until payment is received and the issue reaches
