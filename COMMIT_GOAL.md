@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after linking private interest to public intake: 163 / 1,000 (16.3%).
-- Remaining after linking private interest to public intake: 837 commits.
+- Progress after requiring exact payment evidence: 164 / 1,000 (16.4%).
+- Remaining after requiring exact payment evidence: 836 commits.
 
 ## Commit Standard
 

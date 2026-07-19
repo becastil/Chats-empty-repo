@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Required the exact `pilot-paid` label before a public pilot contributes to
+  booked-pilot or booked-revenue totals.
+- Kept later-stage label drift visible while excluding its unsupported revenue
+  from source, readiness, and purchase-criterion segments.
+- Corrected the synthetic drift fixture from four inferred bookings to three
+  evidenced bookings and the exact $897 target.
 - Added outcome receipt schema 2 with the existing source-prefilled public
   pilot intake URL only for confirmed private `pilot-requested` outcomes.
 - Printed the same buyer-controlled handoff in default text while leaving every

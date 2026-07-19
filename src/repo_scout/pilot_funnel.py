@@ -376,7 +376,7 @@ def build_funnel(
                 )
 
         by_stage[stage] += 1
-        is_booked = furthest_stage >= STAGE_LABELS.index("pilot-paid")
+        is_booked = "pilot-paid" in known_labels
         is_converted = has_converted and not has_lost
         is_lost = has_lost and not has_converted
         booked_pilots += int(is_booked)

@@ -1856,3 +1856,18 @@ Outcome receipt schema 2 now includes that GitHub form with the visible
 Scout does not open or submit the form, the prospect can edit the source answer,
 and no lead, demand, payment, or revenue exists until the prospect independently
 submits intake and the existing funnel advances.
+
+## 2026-07-19: Require Exact Payment Evidence For Booked Revenue
+
+The public pilot funnel uses cumulative labels, but it previously inferred a
+booking whenever an issue reached `pilot-active` or `pilot-converted`, even if
+the required `pilot-paid` label was absent. A skipped-stage warning therefore
+coexisted with booked revenue that had no payment event, contradicting the
+cash-not-optimism accounting boundary.
+
+Booked-pilot and booked-revenue totals now require `pilot-paid` itself. A later
+stage still remains visible and continues to produce the existing missing-stage
+warning, while source, readiness, and purchase-criterion revenue segments all
+exclude the unsupported booking. Paid records that later become lost or enter a
+terminal conflict still retain historical revenue because their payment label
+is present.

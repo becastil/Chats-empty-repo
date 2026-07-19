@@ -104,10 +104,10 @@ class PilotFunnelTests(unittest.TestCase):
         self.assertEqual(report["schema_version"], 7)
         self.assertEqual(report["summary"]["tracked_issues"], 8)
         self.assertEqual(report["summary"]["ignored_issues"], 1)
-        self.assertEqual(report["summary"]["booked_pilots"], 4)
-        self.assertEqual(report["summary"]["booked_revenue_usd"], 1196)
+        self.assertEqual(report["summary"]["booked_pilots"], 3)
+        self.assertEqual(report["summary"]["booked_revenue_usd"], 897)
         self.assertEqual(report["summary"]["remaining_pilots"], 0)
-        self.assertEqual(report["summary"]["target_attainment_percent"], 133.3)
+        self.assertEqual(report["summary"]["target_attainment_percent"], 100.0)
         self.assertEqual(report["summary"]["annual_conversions"], 1)
         self.assertEqual(report["summary"]["lost_pilots"], 1)
         self.assertEqual(report["summary"]["stale_deals"], 2)
@@ -202,7 +202,7 @@ class PilotFunnelTests(unittest.TestCase):
         )
         self.assertEqual(report["by_source"]["website"]["deals"], 1)
         self.assertEqual(report["by_source"]["outreach"]["booked_pilots"], 1)
-        self.assertEqual(report["by_source"]["referral"]["booked_pilots"], 1)
+        self.assertEqual(report["by_source"]["referral"]["booked_pilots"], 0)
         self.assertEqual(report["by_source"]["social"]["lost_pilots"], 1)
         self.assertEqual(report["deals"][0]["source"], "website")
         self.assertEqual(report["follow_up"]["deals"][0]["source"], "website")
@@ -231,8 +231,8 @@ class PilotFunnelTests(unittest.TestCase):
                 "deals": 3,
                 "qualified_pilots": 3,
                 "offered_pilots": 2,
-                "booked_pilots": 2,
-                "booked_revenue_usd": 598,
+                "booked_pilots": 1,
+                "booked_revenue_usd": 299,
                 "annual_conversions": 0,
                 "lost_pilots": 0,
             },
@@ -242,6 +242,10 @@ class PilotFunnelTests(unittest.TestCase):
         self.assertEqual(
             report["by_decision_criterion"]["policy_fit"]["booked_pilots"],
             1,
+        )
+        self.assertEqual(
+            report["by_decision_criterion"]["rollout_fit"]["booked_pilots"],
+            0,
         )
         self.assertEqual(
             report["by_decision_criterion"]["privacy_security"][
@@ -261,6 +265,11 @@ class PilotFunnelTests(unittest.TestCase):
             report["summary"]["tracked_issues"],
         )
         self.assertEqual(report["deals"][0]["purchase_readiness"], "ready")
+        active_drift = next(
+            deal for deal in report["deals"] if deal["number"] == 4
+        )
+        self.assertEqual(active_drift["stage"], "active")
+        self.assertFalse(active_drift["booked"])
         self.assertEqual(
             report,
             build_funnel(list(reversed(payload)), as_of=date(2026, 7, 10)),
@@ -715,9 +724,9 @@ class PilotFunnelTests(unittest.TestCase):
         report = json.loads(stdout.getvalue())
         self.assertEqual(exit_code, 0)
         self.assertEqual(report["pricing"]["target_revenue_usd"], 2000)
-        self.assertEqual(report["summary"]["booked_revenue_usd"], 1600)
-        self.assertEqual(report["summary"]["remaining_pilots"], 1)
-        self.assertEqual(report["summary"]["remaining_revenue_usd"], 400)
+        self.assertEqual(report["summary"]["booked_revenue_usd"], 1200)
+        self.assertEqual(report["summary"]["remaining_pilots"], 2)
+        self.assertEqual(report["summary"]["remaining_revenue_usd"], 800)
         self.assertEqual(report["summary"]["stale_deals"], 0)
         self.assertIn(
             "$400 pilot terms",
@@ -1079,7 +1088,7 @@ class PilotFunnelTests(unittest.TestCase):
         )
 
         self.assertEqual(completed.returncode, 0, completed.stderr)
-        self.assertEqual(json.loads(completed.stdout)["summary"]["booked_pilots"], 4)
+        self.assertEqual(json.loads(completed.stdout)["summary"]["booked_pilots"], 3)
 
 
 if __name__ == "__main__":
