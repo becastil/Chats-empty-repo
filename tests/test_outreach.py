@@ -58,6 +58,7 @@ def _row(**overrides: str) -> dict[str, str]:
         "followed_up_on": "",
         "next_action_on": "2026-07-08",
         "approved_on": "2026-06-30",
+        "outcome_on": "",
     }
     row.update(overrides)
     return row
@@ -147,7 +148,7 @@ class OutreachReportTests(unittest.TestCase):
 
         report = build_outreach_report(rows, as_of=date(2026, 7, 10))
 
-        self.assertEqual(report["schema_version"], 6)
+        self.assertEqual(report["schema_version"], 7)
         self.assertTrue(report["experiment"]["human_approval_required"])
         self.assertEqual(report["summary"]["prospects"], 9)
         self.assertEqual(report["summary"]["attempted_prospects"], 5)
@@ -156,6 +157,8 @@ class OutreachReportTests(unittest.TestCase):
         self.assertEqual(report["summary"]["approved"], 1)
         self.assertEqual(report["summary"]["closed"], 2)
         self.assertEqual(report["summary"]["fit_evidence_links"], 27)
+        self.assertEqual(report["summary"]["dated_outcomes"], 0)
+        self.assertEqual(report["summary"]["undated_outcomes"], 3)
         self.assertIn(
             "Drafts awaiting review: 1", format_outreach_report(report)
         )
@@ -1412,7 +1415,7 @@ class OutreachReportTests(unittest.TestCase):
             )
 
             report = load_outreach_report(ledger, as_of=date(2026, 7, 13))
-            self.assertEqual(report["schema_version"], 6)
+            self.assertEqual(report["schema_version"], 7)
             self.assertEqual(report["summary"]["review_declined"], 1)
             self.assertEqual(report["summary"]["closed"], 1)
             self.assertEqual(report["summary"]["attempted_prospects"], 0)
@@ -2338,9 +2341,13 @@ class OutreachReportTests(unittest.TestCase):
                 for field in LEDGER_FIELDS
                 if outcome[field] != original_by_id["prospect-002"][field]
             }
-            self.assertEqual(changed_fields, {"status", "next_action_on"})
+            self.assertEqual(
+                changed_fields,
+                {"status", "next_action_on", "outcome_on"},
+            )
             self.assertEqual(outcome["status"], "pilot-requested")
             self.assertEqual(outcome["next_action_on"], "")
+            self.assertEqual(outcome["outcome_on"], "2026-07-05")
             self.assertEqual(outcome["approved_on"], "2026-07-01")
             self.assertEqual(outcome["contacted_on"], "2026-07-02")
             self.assertEqual(
@@ -2419,6 +2426,64 @@ class OutreachReportTests(unittest.TestCase):
                     self.assertEqual(updated["contacted_on"], row["contacted_on"])
                     self.assertEqual(updated["followed_up_on"], row["followed_up_on"])
                     self.assertEqual(updated["next_action_on"], "")
+                    self.assertEqual(updated["outcome_on"], "2026-07-10")
+
+    def test_refined_outcome_cannot_precede_recorded_reply(self) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            _write_ledger(
+                ledger,
+                [
+                    _row(
+                        status="replied",
+                        next_action_on="",
+                        outcome_on="2026-07-11",
+                    )
+                ],
+            )
+            before = ledger.read_bytes()
+            stderr = io.StringIO()
+
+            with redirect_stderr(stderr):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-10",
+                        "--record-outcome",
+                        "prospect-001",
+                        "--outcome",
+                        "pilot-requested",
+                        "--confirm-outcome-observed",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 2)
+            self.assertIn(
+                "cannot be before the recorded reply date 2026-07-11",
+                stderr.getvalue(),
+            )
+            self.assertEqual(ledger.read_bytes(), before)
+
+            with redirect_stdout(io.StringIO()):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-12",
+                        "--record-outcome",
+                        "prospect-001",
+                        "--outcome",
+                        "pilot-requested",
+                        "--confirm-outcome-observed",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            with ledger.open(newline="", encoding="utf-8") as ledger_file:
+                updated = next(csv.DictReader(ledger_file))
+            self.assertEqual(updated["status"], "pilot-requested")
+            self.assertEqual(updated["outcome_on"], "2026-07-12")
 
     def test_record_outcome_rejects_unsafe_transitions_without_mutation(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -3005,6 +3070,59 @@ class OutreachReportTests(unittest.TestCase):
             ):
                 build_outreach_report([rows], as_of=date(2026, 7, 11))
 
+    def test_validates_outcome_observation_dates(self) -> None:
+        invalid_rows = (
+            (
+                _row(outcome_on="2026-07-02"),
+                "status contacted cannot have outcome_on",
+            ),
+            (
+                _row(
+                    status="replied",
+                    next_action_on="",
+                    outcome_on="2026-07-12",
+                ),
+                "outcome_on cannot be after as-of",
+            ),
+            (
+                _row(
+                    status="replied",
+                    next_action_on="",
+                    outcome_on="2026-06-30",
+                ),
+                "outcome_on cannot be before contacted_on",
+            ),
+            (
+                _row(
+                    status="replied",
+                    followed_up_on="2026-07-08",
+                    next_action_on="",
+                    outcome_on="2026-07-07",
+                ),
+                "outcome_on cannot be before followed_up_on",
+            ),
+        )
+
+        for row, message in invalid_rows:
+            with self.subTest(message=message), self.assertRaisesRegex(
+                OutreachInputError, message
+            ):
+                build_outreach_report([row], as_of=date(2026, 7, 11))
+
+        report = build_outreach_report(
+            [
+                _row(
+                    status="replied",
+                    next_action_on="",
+                    outcome_on="2026-07-02",
+                )
+            ],
+            as_of=date(2026, 7, 11),
+        )
+        self.assertEqual(report["summary"]["dated_outcomes"], 1)
+        self.assertEqual(report["summary"]["undated_outcomes"], 0)
+        self.assertIn("Dated outcomes: 1 / 1", format_outreach_report(report))
+
     def test_caps_the_experiment_at_ten_prospects(self) -> None:
         rows = [
             _row(
@@ -3078,6 +3196,27 @@ class OutreachReportTests(unittest.TestCase):
         self.assertEqual(library_report["as_of"], "2026-07-18")
         self.assertEqual(json.loads(stdout.getvalue())["as_of"], "2026-07-18")
 
+    def test_reads_legacy_nine_column_ledgers_without_inventing_dates(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "legacy-ledger.csv"
+            legacy_fields = LEDGER_FIELDS[:-1]
+            row = _row(status="replied", next_action_on="")
+            ledger.write_text(
+                ",".join(legacy_fields)
+                + "\n"
+                + ",".join(row[field] for field in legacy_fields)
+                + "\n",
+                encoding="utf-8",
+            )
+
+            report = load_outreach_report(ledger, as_of=date(2026, 7, 13))
+
+            self.assertEqual(report["schema_version"], 7)
+            self.assertEqual(report["summary"]["dated_outcomes"], 0)
+            self.assertEqual(report["summary"]["undated_outcomes"], 1)
+
     def test_rejects_wrong_row_width_and_malformed_csv(self) -> None:
         with TemporaryDirectory() as tmp:
             ledger = Path(tmp) / "ledger.csv"
@@ -3086,11 +3225,11 @@ class OutreachReportTests(unittest.TestCase):
             invalid_ledgers = (
                 (
                     header + "\n" + ",".join(values + ["unexpected"]) + "\n",
-                    "must have exactly 9 columns; found 10",
+                    "must have exactly 10 columns; found 11",
                 ),
                 (
                     header + "\n" + ",".join(values[:-1]) + "\n",
-                    "must have exactly 9 columns; found 8",
+                    "must have exactly 10 columns; found 9",
                 ),
                 (
                     header + '\n"unterminated\n',

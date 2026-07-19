@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 166 of
-1,000, with 834 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 167 of
+1,000, with 833 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -195,8 +195,11 @@ alignment take priority over commit volume.
   reply, pilot-requested, rejection, and opt-out states.
 - Missing, future, and post-contact approval-date rejection without exposing
   private review dates in report output.
-- Strict nine-column outreach CSV rows with controlled malformed-quoting,
-  missing-cell, and extra-cell rejection.
+- Backward-compatible nine-column outreach reads and strict ten-column current
+  writes with controlled malformed-quoting, missing-cell, and extra-cell
+  rejection.
+- Durable outcome observation dates with chronology validation, backdated
+  refinement rejection, and explicit dated-versus-legacy outcome coverage.
 - Current-UTC defaults and explicit UTC operator dates across outreach review,
   approval, contact, follow-up, and outcome recording.
 - Release-blocking installed-wheel proof for the guarded draft review, approval,

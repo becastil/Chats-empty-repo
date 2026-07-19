@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Retained the human-observed date for every newly recorded private outreach
+  outcome in a durable `outcome_on` ledger field.
+- Rejected outcome dates outside contact and follow-up chronology, future
+  observations, and refinements backdated before the original generic reply.
+- Kept legacy nine-column ledgers readable while reporting undated historical
+  outcomes explicitly and upgrading later guarded writes to ten columns.
 - Warned when a `pilot-lost` record lacks the required cumulative `pilot-lead`
   history.
 - Kept the explicit loss visible while preventing that skipped public-request

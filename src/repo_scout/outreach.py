@@ -28,7 +28,7 @@ elif os.name == "nt":
     import msvcrt
 
 
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 7
 REVIEW_SCHEMA_VERSION = 4
 APPROVAL_SCHEMA_VERSION = 1
 DECLINE_SCHEMA_VERSION = 2
@@ -46,7 +46,7 @@ PUBLIC_PILOT_INTAKE_URL = (
     "?template=founding-team-pilot.yml"
     "&discovery_source=Direct+outreach"
 )
-LEDGER_FIELDS = (
+LEGACY_LEDGER_FIELDS = (
     "prospect_id",
     "fit_signals",
     "fit_evidence",
@@ -57,6 +57,7 @@ LEDGER_FIELDS = (
     "next_action_on",
     "approved_on",
 )
+LEDGER_FIELDS = (*LEGACY_LEDGER_FIELDS, "outcome_on")
 FIT_SIGNALS = (
     "team_5_50",
     "multi_repo",
@@ -461,17 +462,23 @@ def record_outreach_outcome(
 
     _require_private_live_path(path, label="outreach ledger")
     rows, ledger_revision = _load_outreach_snapshot(path)
-    build_outreach_report(rows, as_of=report_date)
-    selected = next(
+    selected_entry = next(
         (
-            {field: (row.get(field) or "").strip() for field in LEDGER_FIELDS}
-            for row in rows
+            (
+                row_number,
+                {
+                    field: (row.get(field) or "").strip()
+                    for field in LEDGER_FIELDS
+                },
+            )
+            for row_number, row in enumerate(rows, start=2)
             if (row.get("prospect_id") or "").strip() == prospect_id
         ),
         None,
     )
-    if selected is None:
+    if selected_entry is None:
         raise OutreachInputError("prospect_id is not present in the outreach ledger")
+    row_number, selected = selected_entry
     current_status = selected["status"]
     if current_status not in OUTCOME_SOURCE_STATUSES:
         raise OutreachInputError(
@@ -480,12 +487,28 @@ def record_outreach_outcome(
         )
     if current_status == outcome:
         raise OutreachInputError(f"prospect already has outcome {outcome}")
+    prior_outcome_on = _optional_date(
+        selected["outcome_on"],
+        row_number=row_number,
+        field="outcome_on",
+    )
+    if (
+        current_status == "replied"
+        and prior_outcome_on is not None
+        and report_date < prior_outcome_on
+    ):
+        raise OutreachInputError(
+            "refined outcome date cannot be before the recorded reply date "
+            f"{prior_outcome_on.isoformat()}"
+        )
 
+    build_outreach_report(rows, as_of=report_date)
     updated_rows = [dict(row) for row in rows]
     for row in updated_rows:
         if (row.get("prospect_id") or "").strip() == prospect_id:
             row["status"] = outcome
             row["next_action_on"] = ""
+            row["outcome_on"] = report_date.isoformat()
             break
 
     build_outreach_report(updated_rows, as_of=report_date)
@@ -634,20 +657,25 @@ def _load_outreach_snapshot(
         text = payload.decode("utf-8")
         with io.StringIO(text, newline="") as ledger_file:
             reader = csv.reader(ledger_file, strict=True)
-            header = next(reader, [])
-            if tuple(header) != LEDGER_FIELDS:
+            header = tuple(next(reader, []))
+            if header not in {LEDGER_FIELDS, LEGACY_LEDGER_FIELDS}:
                 expected = ",".join(LEDGER_FIELDS)
+                legacy = ",".join(LEGACY_LEDGER_FIELDS)
                 raise OutreachInputError(
-                    f"ledger header must be exactly: {expected}"
+                    "ledger header must be exactly the current or legacy "
+                    f"schema: {expected} OR {legacy}"
                 )
             rows = []
             for row_number, values in enumerate(reader, start=2):
-                if len(values) != len(LEDGER_FIELDS):
+                if len(values) != len(header):
                     raise OutreachInputError(
                         f"row {row_number}: ledger row must have exactly "
-                        f"{len(LEDGER_FIELDS)} columns; found {len(values)}"
+                        f"{len(header)} columns; found {len(values)}"
                     )
-                rows.append(dict(zip(LEDGER_FIELDS, values, strict=True)))
+                row = dict(zip(header, values, strict=True))
+                if header == LEGACY_LEDGER_FIELDS:
+                    row["outcome_on"] = ""
+                rows.append(row)
     except csv.Error as exc:
         raise OutreachInputError(f"cannot parse outreach ledger: {exc}") from exc
     except (OSError, UnicodeError) as exc:
@@ -888,6 +916,8 @@ def build_outreach_report(
     seen_ids: set[str] = set()
     due_followups: list[dict[str, Any]] = []
     fit_evidence_links = 0
+    dated_outcomes = 0
+    undated_outcomes = 0
 
     for row_number, raw_row in enumerate(rows, start=2):
         row = {field: (raw_row.get(field) or "").strip() for field in LEDGER_FIELDS}
@@ -959,6 +989,9 @@ def build_outreach_report(
         approved_on = _optional_date(
             row["approved_on"], row_number=row_number, field="approved_on"
         )
+        outcome_on = _optional_date(
+            row["outcome_on"], row_number=row_number, field="outcome_on"
+        )
 
         if status in PRE_CONTACT_STATUSES:
             if any(
@@ -1020,6 +1053,29 @@ def build_outreach_report(
                     f"row {row_number}: followed_up_on cannot be after as-of"
                 )
 
+        if outcome_on is not None:
+            if status not in OUTCOME_STATUSES:
+                raise OutreachInputError(
+                    f"row {row_number}: status {status} cannot have outcome_on"
+                )
+            if outcome_on > as_of:
+                raise OutreachInputError(
+                    f"row {row_number}: outcome_on cannot be after as-of"
+                )
+            if contacted_on is not None and outcome_on < contacted_on:
+                raise OutreachInputError(
+                    f"row {row_number}: outcome_on cannot be before contacted_on"
+                )
+            if followed_up_on is not None and outcome_on < followed_up_on:
+                raise OutreachInputError(
+                    f"row {row_number}: outcome_on cannot be before followed_up_on"
+                )
+        if status in OUTCOME_STATUSES:
+            if outcome_on is None:
+                undated_outcomes += 1
+            else:
+                dated_outcomes += 1
+
         if status == "contacted":
             if followed_up_on is not None:
                 raise OutreachInputError(
@@ -1080,6 +1136,8 @@ def build_outreach_report(
             "closed": closed,
             "due_followups": len(due_followups),
             "fit_evidence_links": fit_evidence_links,
+            "dated_outcomes": dated_outcomes,
+            "undated_outcomes": undated_outcomes,
         },
         "by_status": status_counts,
         "due_followups": due_followups,
@@ -1298,6 +1356,11 @@ def format_outreach_report(report: dict[str, Any]) -> str:
         f"Attempted prospects: {summary['attempted_prospects']}",
         f"Due follow-ups: {summary['due_followups']}",
         f"Ledger pilot requests: {summary['pilot_requested']}",
+        (
+            "Dated outcomes: "
+            f"{summary['dated_outcomes']} / "
+            f"{summary['dated_outcomes'] + summary['undated_outcomes']}"
+        ),
     ]
     if report["due_followups"]:
         lines.append("Follow-ups due:")

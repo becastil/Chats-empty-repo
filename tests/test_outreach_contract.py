@@ -157,6 +157,7 @@ class DirectOutreachContractTests(unittest.TestCase):
                     "followed_up_on",
                     "next_action_on",
                     "approved_on",
+                    "outcome_on",
                 ]
             ],
         )

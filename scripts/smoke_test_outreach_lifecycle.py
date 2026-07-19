@@ -23,6 +23,7 @@ LEDGER_FIELDS = (
     "followed_up_on",
     "next_action_on",
     "approved_on",
+    "outcome_on",
 )
 SIGNALS = "team_5_50;multi_repo;agent_use"
 EVIDENCE = (
@@ -317,7 +318,7 @@ def verify_outreach_lifecycle(
         )
         declined_summary = declined_report.get("summary", {})
         _require(
-            declined_report.get("schema_version") == 6,
+            declined_report.get("schema_version") == 7,
             "outreach schema changed",
         )
         _require(
@@ -530,7 +531,7 @@ def verify_outreach_lifecycle(
             as_of="2026-07-02",
             environment=environment,
         )
-        _require(approved_report.get("schema_version") == 6, "schema changed")
+        _require(approved_report.get("schema_version") == 7, "schema changed")
         _require(
             approved_report.get("experiment", {}).get("human_approval_required")
             is True,
@@ -774,7 +775,8 @@ def verify_outreach_lifecycle(
         outcome_row = _read_row(ledger)
         _require(
             outcome_row["status"] == "pilot-requested"
-            and not outcome_row["next_action_on"],
+            and not outcome_row["next_action_on"]
+            and outcome_row["outcome_on"] == "2026-07-11",
             "outcome did not stop the follow-up cadence",
         )
         _require(
@@ -796,6 +798,10 @@ def verify_outreach_lifecycle(
         _require(
             outcome_report.get("summary", {}).get("attempted_prospects") == 1,
             "outcome inflated the attempted-prospect count",
+        )
+        _require(
+            outcome_report.get("summary", {}).get("dated_outcomes") == 1,
+            "outcome observation date was not retained",
         )
         checked.append("pilot-outcome-recorded")
 
@@ -826,7 +832,7 @@ def verify_outreach_lifecycle(
             expected_exit_code=2,
         )
         _require(
-            "ledger row must have exactly 9 columns; found 10"
+            "ledger row must have exactly 10 columns; found 11"
             in extra_column.stderr,
             "extra column did not produce its controlled error",
         )
@@ -866,6 +872,7 @@ def _row(**overrides: str) -> dict[str, str]:
         "followed_up_on": "",
         "next_action_on": "2026-07-08",
         "approved_on": "2026-06-30",
+        "outcome_on": "",
     }
     row.update(overrides)
     return row

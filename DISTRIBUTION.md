@@ -102,7 +102,9 @@ ends contact immediately. Sales messages never belong in GitHub issues, pull
 requests, or security channels.
 
 The header-only `examples/outreach-ledger.csv` can be copied into the ignored
-`outreach-private/` directory. That ledger uses prospect aliases and records
+`outreach-private/` directory. Its current ten-column shape retains outcome
+observation dates, while legacy nine-column ledgers remain readable without
+inventing missing history. The ledger uses prospect aliases and records
 operator activity without committing names, addresses, message bodies, source
 code, or confidential company details. `repo-scout-outreach` validates the
 10-prospect cap, qualification keys, permitted channels, alias format, and the

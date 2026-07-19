@@ -301,6 +301,9 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
 responses can arrive out of send order. Supported outcomes are `replied`,
 `pilot-requested`, `not-a-fit`, and `do-not-contact`; a generic `replied` row
 may later move to one of the three specific outcomes after a human observes it.
+The command records that observation date in `outcome_on`. A later refinement
+cannot use a date before the original reply date, so the ledger retains when
+the first outcome was actually observed instead of allowing it to be backdated.
 Contact and follow-up text receipts emit this shell-quoted command with required
 `YYYY-MM-DD` and `OUTCOME` placeholders. Replace both with the actual UTC
 observation date and supported status; leaving either placeholder unchanged
@@ -318,6 +321,12 @@ The private receipt omits evidence and action dates. Repo Scout sends nothing
 and schedules no further message. A private `pilot-requested` status is an
 operator signal only; ask the prospect to submit the public pilot intake before
 counting demand, payment, or revenue.
+
+The current ledger template has ten columns, ending in `outcome_on`. Existing
+nine-column ledgers remain readable, and the first guarded mutation upgrades
+them to the current shape. Repo Scout does not invent observation dates for
+older outcome rows: the aggregate report counts those as undated legacy
+outcomes so the missing history remains explicit.
 
 Outcome receipt schema 2 includes the existing public intake URL only for
 `pilot-requested`, with `Direct outreach` visibly prefilled:

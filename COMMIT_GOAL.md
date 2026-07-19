@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after auditing loss lead history: 166 / 1,000 (16.6%).
-- Remaining after auditing loss lead history: 834 commits.
+- Progress after retaining outreach outcome dates: 167 / 1,000 (16.7%).
+- Remaining after retaining outreach outcome dates: 833 commits.
 
 ## Commit Standard
 

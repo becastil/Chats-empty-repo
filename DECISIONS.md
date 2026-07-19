@@ -1900,3 +1900,18 @@ lost-only record now warns that `pilot-lead` is missing. Records that include a
 positive later stage continue through the existing cumulative-stage check, so
 the change adds no duplicate warning. This creates no lead, loss, or revenue;
 it prevents incomplete public request history from appearing warning-free.
+
+## 2026-07-19: Retain Private Outcome Observation Dates
+
+The guarded outcome command required an explicit human observation date but
+discarded it after validating the action. A later classification could
+therefore use an earlier date without contradicting any durable ledger field,
+weakening the evidence history behind the private conversion experiment.
+
+The current ledger adds `outcome_on` and records the date on every new outcome.
+It rejects dates outside contact and follow-up chronology, future dates, and a
+specific refinement dated before its original generic reply. Existing
+nine-column ledgers remain readable and upgrade on their next guarded write;
+historical outcomes without a date are counted as undated instead of receiving
+invented evidence. This creates no outreach result, public lead, payment, or
+revenue.
