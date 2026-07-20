@@ -112,7 +112,7 @@ This is useful free CI enforcement; the paid work remains agreeing on the
 right rules and rolling the same reviewed policy across uneven repositories.
 Versions 1 and 2 remain readable so verified CI upgrades can be staged safely.
 The dogfood and copy-ready gates now install the independently verified
-`v0.3.45` wheel, so v4 policies can run locally and in CI
+`v0.3.46` wheel, so v4 policies can run locally and in CI
 without source checkout, mutable package resolution, or a team-managed secret.
 Maintainer pin upgrades now preflight and update the dogfood workflow,
 copy-ready customer example, buyer-facing README and commercial model claims,
@@ -483,12 +483,16 @@ review queue. The installed wheel now retains first outcome observation dates,
 separates delayed outcome events from the ledger audit date, links confirmed
 private pilot interest to the buyer-controlled public intake form, and requires
 the exact `pilot-paid` label before reporting booked revenue. It also warns on
-lost opportunities missing public lead history. Verified customer and dogfood
-CI pins, public traffic baselines, and measured release evidence remain on
-`v0.3.45` until the new artifacts are published and independently reconciled.
-This makes current conversion evidence controls distributable; it does not
-review or send outreach, create a public request, collect payment, or claim
-revenue.
+lost opportunities missing public lead history. After separate public-artifact
+verification, customer and dogfood policy gates now pin source commit
+`6a352d76e0c22679096f7606c5bab1429872e961` and wheel SHA-256
+`5a32dffabbeb7abf98d13fec5bca148830b8e80a1d4de0f6f424b1b57dc8db45`.
+The downloaded manifest, annotated tag ancestry, all three provenance
+attestations, seven installed command identities, and four paid-workflow smoke
+harnesses passed before the pins changed. Public traffic baselines and measured
+release evidence remain on their last deliberate `v0.3.45` checkpoint. This
+makes current conversion evidence controls distributable; it does not review or
+send outreach, create a public request, collect payment, or claim revenue.
 
 After a human completes those checks, guarded `--approve-next` can record the
 decision without hand-editing CSV. It requires the exact next alias, an explicit

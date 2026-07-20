@@ -1959,3 +1959,21 @@ complete guarded outreach and commercial reporting lifecycle through the built
 wheel before publishing checksums and provenance. Existing verified CI pins and
 measured baselines remain on `v0.3.45` until separate artifact verification.
 Publishing creates no prospect action, pilot request, payment, or revenue.
+
+## 2026-07-20: Advance Both Policy Gates To Verified v0.3.46
+
+The public `v0.3.46` wheel independently measures to SHA-256
+`5a32dffabbeb7abf98d13fec5bca148830b8e80a1d4de0f6f424b1b57dc8db45`
+and resolves through annotated tag `v0.3.46` to main-branch source commit
+`6a352d76e0c22679096f7606c5bab1429872e961`.
+
+Before changing either pin, all three downloaded artifacts matched the public
+manifest and verified against GitHub build provenance. A fresh no-dependency
+wheel installation reconciled all seven command identities and passed the
+policy activation, guarded outreach lifecycle, commercial reporting, and
+rollout-summary harnesses. The atomic maintainer updater then advanced the
+dogfood workflow, copy-ready customer workflow, buyer-facing README claim,
+commercial model claim, and executable pin contract together. Measured traffic
+and funnel baselines remain at their last deliberate checkpoint. This improves
+paid CI distribution integrity without proving a customer install, outreach
+attempt, pilot request, payment, or revenue.

@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Independently verified the public `v0.3.46` manifest, annotated tag, main
+  ancestry, and provenance attestations for all three distributable artifacts.
+- Verified all seven installed command identities and four paid-workflow smoke
+  harnesses from a fresh no-dependency `v0.3.46` wheel installation.
+- Advanced the dogfood and copy-ready policy gates to the independently
+  measured `v0.3.46` wheel digest and exact release source commit.
+- Preserved the honest commercial boundary: verification and CI distribution
+  created no customer install, outreach attempt, pilot request, payment, or
+  revenue.
+
 ## 0.3.46 - 2026-07-20
 
 - Added a required `--outcome-on` date so private outreach outcomes can retain
