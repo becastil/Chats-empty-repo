@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Corrected the private outreach playbook from a stale nine-column requirement
+  to the current ten-column ledger contract ending in `outcome_on`.
+- Derived the template and operator-guide column checks from the runtime
+  `LEDGER_FIELDS` schema while retaining explicit legacy nine-column reads.
 - Independently verified the public `v0.3.46` manifest, annotated tag, main
   ancestry, and provenance attestations for all three distributable artifacts.
 - Verified all seven installed command identities and four paid-workflow smoke

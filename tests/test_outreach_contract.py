@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from repo_scout.outreach import (  # noqa: E402
+    LEDGER_FIELDS,
     PUBLIC_PILOT_INTAKE_URL,
     SCHEMA_VERSION,
 )
@@ -135,6 +136,14 @@ class DirectOutreachContractTests(unittest.TestCase):
         self.assertIn("do not count", playbook.lower())
         self.assertNotIn("limited time", playbook.lower())
         self.assertNotIn("guaranteed", playbook.lower())
+        self.assertIn(
+            f"exactly {len(LEDGER_FIELDS)} header columns",
+            normalized_playbook,
+        )
+        self.assertIn(
+            "Legacy nine-column ledgers remain readable",
+            playbook,
+        )
 
         readme = README.read_text(encoding="utf-8")
         self.assertIn("current UTC calendar date", " ".join(readme.split()))
@@ -144,23 +153,7 @@ class DirectOutreachContractTests(unittest.TestCase):
         with LEDGER_TEMPLATE.open(newline="", encoding="utf-8") as ledger_file:
             rows = list(csv.reader(ledger_file))
 
-        self.assertEqual(
-            rows,
-            [
-                [
-                    "prospect_id",
-                    "fit_signals",
-                    "fit_evidence",
-                    "contacted_on",
-                    "channel",
-                    "status",
-                    "followed_up_on",
-                    "next_action_on",
-                    "approved_on",
-                    "outcome_on",
-                ]
-            ],
-        )
+        self.assertEqual(rows, [list(LEDGER_FIELDS)])
         gitignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
         self.assertIn("/outreach-private/", gitignore)
         playbook = PLAYBOOK.read_text(encoding="utf-8")
