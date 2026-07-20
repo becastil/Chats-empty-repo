@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.46 - 2026-07-20
+
 - Added a required `--outcome-on` date so private outreach outcomes can retain
   an earlier human observation while the complete ledger is audited today.
 - Rejected outcome observations after `--as-of` and emitted separate

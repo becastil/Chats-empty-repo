@@ -1944,3 +1944,18 @@ classification. Generated handoffs require both dates explicitly, and
 installed-package coverage records a reply and classification on their actual
 dates during a later audit. This improves private conversion evidence without
 creating demand, payment, or revenue.
+
+## 2026-07-20: Release Current Conversion Evidence Controls As v0.3.46
+
+The public `v0.3.45` wheel predates the current guarded outcome history, public
+pilot-intake handoff, exact payment recognition, and missing-lead warning.
+Keeping those controls only on `main` leaves the installable operator workflow
+behind the documented revenue boundary.
+
+Version `0.3.46` advances the package, runtime, website download identity,
+verification guide, release smoke fixture, and structured software offer
+together. The release workflow must pass every source test and execute the
+complete guarded outreach and commercial reporting lifecycle through the built
+wheel before publishing checksums and provenance. Existing verified CI pins and
+measured baselines remain on `v0.3.45` until separate artifact verification.
+Publishing creates no prospect action, pilot request, payment, or revenue.

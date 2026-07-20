@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after separating outcome event dates: 169 / 1,000 (16.9%).
-- Remaining after separating outcome event dates: 831 commits.
+- Progress after preparing the v0.3.46 release: 170 / 1,000 (17.0%).
+- Remaining after preparing the v0.3.46 release: 830 commits.
 
 ## Commit Standard
 

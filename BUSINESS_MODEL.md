@@ -478,6 +478,18 @@ boundary. This distributes truthful private evidence handling; it does not
 prove a customer install, review or send a draft, create demand, or record
 revenue.
 
+Version `0.3.46` packages the next execution boundary for the existing private
+review queue. The installed wheel now retains first outcome observation dates,
+separates delayed outcome events from the ledger audit date, links confirmed
+private pilot interest to the buyer-controlled public intake form, and requires
+the exact `pilot-paid` label before reporting booked revenue. It also warns on
+lost opportunities missing public lead history. Verified customer and dogfood
+CI pins, public traffic baselines, and measured release evidence remain on
+`v0.3.45` until the new artifacts are published and independently reconciled.
+This makes current conversion evidence controls distributable; it does not
+review or send outreach, create a public request, collect payment, or claim
+revenue.
+
 After a human completes those checks, guarded `--approve-next` can record the
 decision without hand-editing CSV. It requires the exact next alias, an explicit
 review date, and a confirmation flag; validates all rows before and after; and
