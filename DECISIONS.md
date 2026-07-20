@@ -2023,3 +2023,19 @@ alias is present. Otherwise it writes no report to standard output, emits an
 alias-free diagnostic, and returns dedicated exit code 7. Invalid ledgers retain
 exit code 2. This gives CI and baseline publication a stable fail-closed contract
 without mutating outreach evidence or creating demand, payment, or revenue.
+
+## 2026-07-20: Release Private Report Safeguards As v0.3.47
+
+The public `v0.3.46` wheel predates approved-send recovery, schema-9 privacy
+classification, and the fail-closed counts-only publication guard. Keeping
+those controls on `main` would leave the installed five-draft workflow unable
+to recover a lost approval receipt safely or stop private aliases before output.
+
+Version `0.3.47` advances the package, runtime, portable download, website
+identity, verification guide, and commercial smoke fixture together. The tag
+must execute the complete guarded outreach lifecycle through the installed
+wheel, including successful alias-free output and exit-7 rejection with empty
+standard output for an approved alias, before checksums and provenance are
+published. Existing verified CI pins and measured baselines remain on
+`v0.3.46` until separate artifact verification. Publishing creates no prospect
+action, pilot request, payment, or revenue.

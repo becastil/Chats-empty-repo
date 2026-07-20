@@ -494,6 +494,17 @@ release evidence remain on their last deliberate `v0.3.45` checkpoint. This
 makes current conversion evidence controls distributable; it does not review or
 send outreach, create a public request, collect payment, or claim revenue.
 
+Version `0.3.47` packages the privacy-safe recovery path for that same private
+queue. Schema-9 reports recover only the next approved alias, classify every
+next-approved or due-follow-up alias as private, and expose an alias-free
+counts-only state for publication automation. The installed
+`--require-counts-only` guard emits nothing and exits 7 before a private report
+can reach an artifact, and it cannot be combined with review or lifecycle
+mutations. Verified customer and dogfood CI pins remain on `v0.3.46` until the
+new artifacts are independently reconciled. This distributes an execution
+safeguard; it does not review or send outreach, create demand, collect payment,
+or claim revenue.
+
 After a human completes those checks, guarded `--approve-next` can record the
 decision without hand-editing CSV. It requires the exact next alias, an explicit
 review date, and a confirmation flag; validates all rows before and after; and

@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after adding the counts-only output guard: 175 / 1,000 (17.5%).
-- Remaining after adding the counts-only output guard: 825 commits.
+- Progress after preparing the v0.3.47 release: 176 / 1,000 (17.6%).
+- Remaining after preparing the v0.3.47 release: 824 commits.
 
 ## Commit Standard
 

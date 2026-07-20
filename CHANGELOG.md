@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.47 - 2026-07-20
+
 - Added schema-9 recovery for the next approved outreach alias when the
   one-time approval receipt is no longer visible.
 - Regenerated the guarded contact-recording handoff with required UTC date
