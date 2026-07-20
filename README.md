@@ -402,17 +402,20 @@ seven-day follow-up, and opt-out stop states. Schema-3 reports separate
 personalized drafts awaiting review from messages actually sent and expose only
 aggregate evidence-link counts, so neither draft preparation nor untraceable
 qualification can inflate attempted-prospect counts.
-Schema-8 reports add explicit human-approved and review-declined pre-send counts,
+Schema-9 reports add explicit human-approved and review-declined pre-send counts,
 require a retained approval date no later than contact, and keep researched,
 drafted, approved, and review-declined rows outside attempted outreach. They
 also separate dated outcomes from legacy outcomes whose observation date was
 never retained. When an approval receipt is no longer visible, the report
 recovers only the next approved alias and an exact manual-send recording
 handoff with required date placeholders. It still omits the draft, evidence,
-channel, and approval date. A review-declined row counts as closed without
-becoming a contact attempt. The auditor also rejects malformed CSV and any row
-with missing or extra cells instead of silently dropping private sales
-evidence. Its activity totals are not lead or revenue evidence. See
+channel, and approval date. A machine-readable `private_output` flag and matching
+text note mark reports with that alias or any due-follow-up alias as private;
+only reports containing neither are marked counts-only. A review-declined row
+counts as closed without becoming a contact attempt. The auditor also rejects
+malformed CSV and any row with missing or extra cells instead of silently
+dropping private sales evidence. Its activity totals are not lead or revenue
+evidence. See
 [docs/direct-outreach.md](docs/direct-outreach.md) for the operating contract.
 
 Install it locally in editable mode:

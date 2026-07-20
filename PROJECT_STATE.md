@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 173 of
-1,000, with 827 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 174 of
+1,000, with 826 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -245,8 +245,10 @@ alignment take priority over commit volume.
   draft review with complete note-to-ledger identity preflight.
 - Guarded `--approve-next` recording that requires the exact next alias, an
   explicit review date, and confirmation that a human completed every check.
-- Schema-8 alias-only recovery of the next approved message and its guarded
-  contact-recording handoff after the one-time approval receipt is lost.
+- Schema-9 alias-only recovery of the next approved message and its guarded
+  contact-recording handoff after the one-time approval receipt is lost, with
+  machine-readable privacy classification for approved and due-follow-up
+  reports versus alias-free counts-only output.
 - Schema-6 pre-contact `review-declined` decisions that close an unsuitable
   draft without approval, contact dates, or attempted-prospect inflation.
 - A runtime-linked buyer-facing outreach contract that describes the packaged

@@ -28,7 +28,7 @@ elif os.name == "nt":
     import msvcrt
 
 
-SCHEMA_VERSION = 8
+SCHEMA_VERSION = 9
 REVIEW_SCHEMA_VERSION = 4
 APPROVAL_SCHEMA_VERSION = 1
 DECLINE_SCHEMA_VERSION = 2
@@ -1112,6 +1112,7 @@ def build_outreach_report(
 
     due_followups.sort(key=lambda item: (item["due_on"], item["prospect_id"]))
     next_approved_row = _next_status_row(rows, "approved")
+    private_output = bool(due_followups) or next_approved_row is not None
     attempted = len(rows) - sum(
         status_counts[status] for status in PRE_CONTACT_STATUSES
     )
@@ -1153,6 +1154,13 @@ def build_outreach_report(
             else None
         ),
         "due_followups": due_followups,
+        "private_output": private_output,
+        "privacy_note": (
+            "This report contains private prospect aliases and must not be "
+            "committed or shared."
+            if private_output
+            else "This report is counts-only and contains no prospect aliases."
+        ),
         "evidence_note": (
             "Outreach ledger activity is not lead, demand, payment, or revenue "
             "evidence."
@@ -1413,6 +1421,7 @@ def format_outreach_report(
                     ),
                 ]
             )
+    lines.append(f"Privacy: {report['privacy_note']}")
     lines.append(f"Evidence: {report['evidence_note']}")
     return "\n".join(lines)
 

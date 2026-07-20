@@ -148,7 +148,7 @@ class OutreachReportTests(unittest.TestCase):
 
         report = build_outreach_report(rows, as_of=date(2026, 7, 10))
 
-        self.assertEqual(report["schema_version"], 8)
+        self.assertEqual(report["schema_version"], 9)
         self.assertTrue(report["experiment"]["human_approval_required"])
         self.assertEqual(report["summary"]["prospects"], 9)
         self.assertEqual(report["summary"]["attempted_prospects"], 5)
@@ -166,6 +166,15 @@ class OutreachReportTests(unittest.TestCase):
         self.assertIn("Qualification links: 27", text)
         self.assertEqual(
             report["next_approved"], {"prospect_id": "prospect-008"}
+        )
+        self.assertTrue(report["private_output"])
+        self.assertEqual(
+            report["privacy_note"],
+            "This report contains private prospect aliases and must not be "
+            "committed or shared.",
+        )
+        self.assertIn(
+            "Privacy: This report contains private prospect aliases", text
         )
         self.assertIn(
             "Next approved message awaiting manual send: prospect-008", text
@@ -206,6 +215,28 @@ class OutreachReportTests(unittest.TestCase):
         self.assertEqual(report["summary"]["prospects"], 0)
         self.assertIsNone(report["next_approved"])
         self.assertEqual(report["due_followups"], [])
+        self.assertFalse(report["private_output"])
+        self.assertEqual(
+            report["privacy_note"],
+            "This report is counts-only and contains no prospect aliases.",
+        )
+        self.assertIn(
+            "Privacy: This report is counts-only and contains no prospect aliases.",
+            format_outreach_report(report),
+        )
+
+    def test_marks_due_followup_aliases_private_without_an_approval(self) -> None:
+        report = build_outreach_report(
+            [_row()],
+            as_of=date(2026, 7, 8),
+        )
+
+        self.assertIsNone(report["next_approved"])
+        self.assertEqual(
+            report["due_followups"][0]["prospect_id"], "prospect-001"
+        )
+        self.assertTrue(report["private_output"])
+        self.assertIn("must not be committed or shared", report["privacy_note"])
 
     def test_recovers_only_the_lowest_approved_alias(self) -> None:
         rows = [
@@ -1455,7 +1486,7 @@ class OutreachReportTests(unittest.TestCase):
             )
 
             report = load_outreach_report(ledger, as_of=date(2026, 7, 13))
-            self.assertEqual(report["schema_version"], 8)
+            self.assertEqual(report["schema_version"], 9)
             self.assertEqual(report["summary"]["review_declined"], 1)
             self.assertEqual(report["summary"]["closed"], 1)
             self.assertEqual(report["summary"]["attempted_prospects"], 0)
@@ -3336,7 +3367,7 @@ class OutreachReportTests(unittest.TestCase):
 
             report = load_outreach_report(ledger, as_of=date(2026, 7, 13))
 
-            self.assertEqual(report["schema_version"], 8)
+            self.assertEqual(report["schema_version"], 9)
             self.assertEqual(report["summary"]["dated_outcomes"], 0)
             self.assertEqual(report["summary"]["undated_outcomes"], 1)
 

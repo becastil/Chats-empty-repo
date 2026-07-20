@@ -367,16 +367,19 @@ mutation upgrades them. Missing, extra, duplicate, insecure, and
 credential-bearing evidence links also fail validation. A separate
 `followed_up_on` field rejects a second message sent before that date. It
 reports drafts awaiting review and approved messages separately from sent
-attempts. Schema 8 also surfaces only the next approved alias and a guarded
+attempts. Schema 9 also surfaces only the next approved alias and a guarded
 `--record-contact` handoff with two date placeholders, so an operator can resume
 after losing the one-time approval receipt without opening or editing the CSV.
-The recovery output omits the draft, evidence, channel, and approval date and
-remains private because it contains an alias. Source URLs never appear in
-report output. The command never sends outreach, and its
+The recovery output omits the draft, evidence, channel, and approval date.
+Every report now includes a machine-readable `private_output` flag and matching
+privacy note: any next-approved or due-follow-up alias makes the output private,
+while a report with neither is explicitly counts-only. Source URLs never appear
+in report output. The command never sends outreach, and its
 reply or pilot-requested counts do not become public demand or revenue evidence;
 only public pilot intake and cumulative funnel labels do.
 
 A reviewed batch may publish the command's counts-only JSON as a measurement
-baseline. Before committing it, verify that it contains no `prospect-` alias,
-URL, email address, company name, or message text. The ignored ledger and draft
-notes remain the only source for identities and qualification links.
+baseline only when `private_output` is `false`. Before committing it, also
+verify that it contains no `prospect-` alias, URL, email address, company name,
+or message text. The ignored ledger and draft notes remain the only source for
+identities and qualification links.

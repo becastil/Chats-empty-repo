@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after adding approved-send recovery: 173 / 1,000 (17.3%).
-- Remaining after adding approved-send recovery: 827 commits.
+- Progress after classifying private outreach reports: 174 / 1,000 (17.4%).
+- Remaining after classifying private outreach reports: 826 commits.
 
 ## Commit Standard
 

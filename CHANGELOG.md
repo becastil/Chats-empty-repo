@@ -2,10 +2,14 @@
 
 ## Unreleased
 
-- Added schema-8 recovery for the next approved outreach alias when the
+- Added schema-9 recovery for the next approved outreach alias when the
   one-time approval receipt is no longer visible.
 - Regenerated the guarded contact-recording handoff with required UTC date
   placeholders while omitting drafts, evidence, channels, and approval dates.
+- Marked reports with a next-approved or due-follow-up alias as private through
+  a machine-readable flag and matching terminal warning.
+- Marked reports with neither alias source as counts-only so publication
+  automation can reject private execution evidence before committing it.
 - Extended source, documentation, and installed-command contracts without
   sending outreach or changing attempted-prospect and revenue boundaries.
 - Corrected the private outreach playbook from a stale nine-column requirement

@@ -321,8 +321,12 @@ def verify_outreach_lifecycle(
         )
         declined_summary = declined_report.get("summary", {})
         _require(
-            declined_report.get("schema_version") == 8,
+            declined_report.get("schema_version") == 9,
             "outreach schema changed",
+        )
+        _require(
+            declined_report.get("private_output") is False,
+            "counts-only decline report was marked private",
         )
         _require(
             declined_summary.get("review_declined") == 1
@@ -534,7 +538,7 @@ def verify_outreach_lifecycle(
             as_of="2026-07-02",
             environment=environment,
         )
-        _require(approved_report.get("schema_version") == 8, "schema changed")
+        _require(approved_report.get("schema_version") == 9, "schema changed")
         _require(
             approved_report.get("experiment", {}).get("human_approval_required")
             is True,
@@ -551,6 +555,10 @@ def verify_outreach_lifecycle(
             approved_report.get("next_approved")
             == {"prospect_id": draft["prospect_id"]},
             "approved report did not recover the next alias",
+        )
+        _require(
+            approved_report.get("private_output") is True,
+            "approved alias report was not marked private",
         )
         for private_value in ("2026-07-01", "https://evidence.example"):
             _require(

@@ -1992,3 +1992,19 @@ channel, approval date, and recipient details; alias-bearing output remains
 private. JSON receives the same single `next_approved` alias so automation can
 resume deterministically. This makes an existing human-approved transition
 recoverable without approving, sending, creating demand, or recording revenue.
+
+## 2026-07-20: Mark Alias-Bearing Outreach Reports Private
+
+The ordinary report can contain a private alias for either the next approved
+manual send or a due follow-up. Omitting URLs, recipients, and draft text limits
+exposure, but automation still had to inspect arbitrary JSON strings to decide
+whether the report was safe to commit as a counts-only baseline.
+
+Outreach report schema 9 adds a top-level `private_output` boolean and stable
+`privacy_note`. A next-approved alias or any due-follow-up alias sets the flag
+to `true` and warns that the report must not be committed or shared; a report
+with neither alias source sets it to `false` and identifies itself as counts-only.
+Text output prints the same classification. Publication still requires a final
+check for aliases and identity data, but automation can now fail closed without
+parsing prose or private values. This protects execution evidence without
+reviewing, approving, sending, creating demand, or recording revenue.
