@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added schema-8 recovery for the next approved outreach alias when the
+  one-time approval receipt is no longer visible.
+- Regenerated the guarded contact-recording handoff with required UTC date
+  placeholders while omitting drafts, evidence, channels, and approval dates.
+- Extended source, documentation, and installed-command contracts without
+  sending outreach or changing attempted-prospect and revenue boundaries.
 - Corrected the private outreach playbook from a stale nine-column requirement
   to the current ten-column ledger contract ending in `outcome_on`.
 - Derived the template and operator-guide column checks from the runtime

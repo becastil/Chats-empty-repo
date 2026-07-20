@@ -1977,3 +1977,18 @@ commercial model claim, and executable pin contract together. Measured traffic
 and funnel baselines remain at their last deliberate checkpoint. This improves
 paid CI distribution integrity without proving a customer install, outreach
 attempt, pilot request, payment, or revenue.
+
+## 2026-07-20: Recover One Approved Send Without Reopening The Ledger
+
+Approval previously emitted the exact guarded contact-recording command only
+once. If that terminal output disappeared before the human sent the message,
+the ordinary report showed an approved count but no alias, forcing manual CSV
+inspection and command reconstruction inside the live five-draft queue.
+
+Outreach report schema 8 now exposes only the lowest approved alias and, in
+text output, regenerates the contact-recording command with separate required
+audit and send-date placeholders. The recovery omits the draft, evidence,
+channel, approval date, and recipient details; alias-bearing output remains
+private. JSON receives the same single `next_approved` alias so automation can
+resume deterministically. This makes an existing human-approved transition
+recoverable without approving, sending, creating demand, or recording revenue.

@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after reconciling the outreach ledger guide: 172 / 1,000 (17.2%).
-- Remaining after reconciling the outreach ledger guide: 828 commits.
+- Progress after adding approved-send recovery: 173 / 1,000 (17.3%).
+- Remaining after adding approved-send recovery: 827 commits.
 
 ## Commit Standard
 

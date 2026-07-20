@@ -148,7 +148,7 @@ class OutreachReportTests(unittest.TestCase):
 
         report = build_outreach_report(rows, as_of=date(2026, 7, 10))
 
-        self.assertEqual(report["schema_version"], 7)
+        self.assertEqual(report["schema_version"], 8)
         self.assertTrue(report["experiment"]["human_approval_required"])
         self.assertEqual(report["summary"]["prospects"], 9)
         self.assertEqual(report["summary"]["attempted_prospects"], 5)
@@ -159,12 +159,23 @@ class OutreachReportTests(unittest.TestCase):
         self.assertEqual(report["summary"]["fit_evidence_links"], 27)
         self.assertEqual(report["summary"]["dated_outcomes"], 0)
         self.assertEqual(report["summary"]["undated_outcomes"], 3)
-        self.assertIn(
-            "Drafts awaiting review: 1", format_outreach_report(report)
+        text = format_outreach_report(report, ledger=Path("private ledger.csv"))
+        self.assertIn("Drafts awaiting review: 1", text)
+        self.assertIn("Approved to send: 1", text)
+        self.assertIn("Declined before contact: 1", text)
+        self.assertIn("Qualification links: 27", text)
+        self.assertEqual(
+            report["next_approved"], {"prospect_id": "prospect-008"}
         )
-        self.assertIn("Approved to send: 1", format_outreach_report(report))
-        self.assertIn("Declined before contact: 1", format_outreach_report(report))
-        self.assertIn("Qualification links: 27", format_outreach_report(report))
+        self.assertIn(
+            "Next approved message awaiting manual send: prospect-008", text
+        )
+        self.assertIn(
+            "repo-scout-outreach --as-of YYYY-MM-DD "
+            "--record-contact prospect-008 --contacted-on YYYY-MM-DD "
+            "--confirm-sent -- 'private ledger.csv'",
+            text,
+        )
         self.assertEqual(report["summary"]["due_followups"], 1)
         self.assertEqual(report["summary"]["pilot_requested"], 1)
         self.assertEqual(
@@ -193,7 +204,36 @@ class OutreachReportTests(unittest.TestCase):
         )
 
         self.assertEqual(report["summary"]["prospects"], 0)
+        self.assertIsNone(report["next_approved"])
         self.assertEqual(report["due_followups"], [])
+
+    def test_recovers_only_the_lowest_approved_alias(self) -> None:
+        rows = [
+            _row(
+                prospect_id="prospect-003",
+                status="approved",
+                contacted_on="",
+                next_action_on="",
+                approved_on="2026-07-11",
+            ),
+            _row(
+                prospect_id="prospect-002",
+                status="approved",
+                contacted_on="",
+                next_action_on="",
+                approved_on="2026-07-12",
+            ),
+        ]
+
+        report = build_outreach_report(rows, as_of=date(2026, 7, 13))
+        text = format_outreach_report(report, ledger=Path("ledger.csv"))
+
+        self.assertEqual(
+            report["next_approved"], {"prospect_id": "prospect-002"}
+        )
+        self.assertIn("--record-contact prospect-002", text)
+        self.assertNotIn("prospect-003", json.dumps(report))
+        self.assertNotIn("prospect-003", text)
 
     def test_surfaces_one_alias_only_human_review_at_a_time(self) -> None:
         rows = [
@@ -1415,7 +1455,7 @@ class OutreachReportTests(unittest.TestCase):
             )
 
             report = load_outreach_report(ledger, as_of=date(2026, 7, 13))
-            self.assertEqual(report["schema_version"], 7)
+            self.assertEqual(report["schema_version"], 8)
             self.assertEqual(report["summary"]["review_declined"], 1)
             self.assertEqual(report["summary"]["closed"], 1)
             self.assertEqual(report["summary"]["attempted_prospects"], 0)
@@ -3296,7 +3336,7 @@ class OutreachReportTests(unittest.TestCase):
 
             report = load_outreach_report(ledger, as_of=date(2026, 7, 13))
 
-            self.assertEqual(report["schema_version"], 7)
+            self.assertEqual(report["schema_version"], 8)
             self.assertEqual(report["summary"]["dated_outcomes"], 0)
             self.assertEqual(report["summary"]["undated_outcomes"], 1)
 

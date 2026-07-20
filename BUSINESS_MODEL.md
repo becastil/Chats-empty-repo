@@ -536,6 +536,14 @@ the receipt stays private. The tool does not deliver the message or an automatic
 follow-up. A recorded contact enters outreach-attempt operations, but still is
 not a lead, pilot request, payment, or revenue.
 
+Schema 8 makes that transition recoverable if the one-time approval receipt is
+lost. The ordinary report surfaces only the lowest approved alias and regenerates
+the guarded contact-recording command with required send-date placeholders. It
+does not expose the draft, qualification evidence, channel, or approval date,
+and alias-bearing output remains private. This prevents a reviewed message from
+being stranded without approving or sending it, creating demand, or recording
+revenue.
+
 After a human sends the one allowed follow-up on or after day seven, guarded
 `--record-follow-up` records the earliest due contacted alias. It retains the
 approval and initial-contact evidence, atomically changes only status,

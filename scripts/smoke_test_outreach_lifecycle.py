@@ -321,7 +321,7 @@ def verify_outreach_lifecycle(
         )
         declined_summary = declined_report.get("summary", {})
         _require(
-            declined_report.get("schema_version") == 7,
+            declined_report.get("schema_version") == 8,
             "outreach schema changed",
         )
         _require(
@@ -534,7 +534,7 @@ def verify_outreach_lifecycle(
             as_of="2026-07-02",
             environment=environment,
         )
-        _require(approved_report.get("schema_version") == 7, "schema changed")
+        _require(approved_report.get("schema_version") == 8, "schema changed")
         _require(
             approved_report.get("experiment", {}).get("human_approval_required")
             is True,
@@ -547,11 +547,12 @@ def verify_outreach_lifecycle(
             "approval was counted as a contact attempt",
         )
         serialized = json.dumps(approved_report, sort_keys=True)
-        for private_value in (
-            draft["prospect_id"],
-            "2026-07-01",
-            "https://evidence.example",
-        ):
+        _require(
+            approved_report.get("next_approved")
+            == {"prospect_id": draft["prospect_id"]},
+            "approved report did not recover the next alias",
+        )
+        for private_value in ("2026-07-01", "https://evidence.example"):
             _require(
                 private_value not in serialized,
                 "approved report exposed private ledger data",

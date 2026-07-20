@@ -33,6 +33,10 @@ class DirectOutreachContractTests(unittest.TestCase):
             normalized_readme,
         )
         self.assertIn(
+            "recovers only the next approved alias",
+            normalized_readme,
+        )
+        self.assertIn(
             "A review-declined row counts as closed without becoming a contact "
             "attempt.",
             normalized_readme,
@@ -110,6 +114,15 @@ class DirectOutreachContractTests(unittest.TestCase):
             playbook,
         )
         self.assertIn("Repo Scout sends nothing", playbook)
+        self.assertIn(
+            "only the next approved alias and a guarded `--record-contact` "
+            "handoff",
+            normalized_playbook,
+        )
+        self.assertIn(
+            "omits the draft, evidence, channel, and approval date",
+            normalized_playbook,
+        )
         self.assertIn("makes send timing inferable", " ".join(playbook.split()))
         self.assertIn("--record-follow-up", playbook)
         self.assertIn("--confirm-follow-up-sent", playbook)

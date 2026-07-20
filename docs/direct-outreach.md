@@ -367,9 +367,12 @@ mutation upgrades them. Missing, extra, duplicate, insecure, and
 credential-bearing evidence links also fail validation. A separate
 `followed_up_on` field rejects a second message sent before that date. It
 reports drafts awaiting review and approved messages separately from sent
-attempts, aliases, and aggregate evidence-link counts only; source URLs never
-appear in report output. Approval dates also remain private. The command never
-sends outreach, and its
+attempts. Schema 8 also surfaces only the next approved alias and a guarded
+`--record-contact` handoff with two date placeholders, so an operator can resume
+after losing the one-time approval receipt without opening or editing the CSV.
+The recovery output omits the draft, evidence, channel, and approval date and
+remains private because it contains an alias. Source URLs never appear in
+report output. The command never sends outreach, and its
 reply or pilot-requested counts do not become public demand or revenue evidence;
 only public pilot intake and cumulative funnel labels do.
 

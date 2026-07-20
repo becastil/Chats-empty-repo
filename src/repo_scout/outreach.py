@@ -28,7 +28,7 @@ elif os.name == "nt":
     import msvcrt
 
 
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 8
 REVIEW_SCHEMA_VERSION = 4
 APPROVAL_SCHEMA_VERSION = 1
 DECLINE_SCHEMA_VERSION = 2
@@ -1111,6 +1111,7 @@ def build_outreach_report(
             )
 
     due_followups.sort(key=lambda item: (item["due_on"], item["prospect_id"]))
+    next_approved_row = _next_status_row(rows, "approved")
     attempted = len(rows) - sum(
         status_counts[status] for status in PRE_CONTACT_STATUSES
     )
@@ -1146,6 +1147,11 @@ def build_outreach_report(
             "undated_outcomes": undated_outcomes,
         },
         "by_status": status_counts,
+        "next_approved": (
+            {"prospect_id": next_approved_row["prospect_id"]}
+            if next_approved_row is not None
+            else None
+        ),
         "due_followups": due_followups,
         "evidence_note": (
             "Outreach ledger activity is not lead, demand, payment, or revenue "
@@ -1348,7 +1354,9 @@ def _next_contacted_row(
     return contacted_rows[0] if contacted_rows else None
 
 
-def format_outreach_report(report: dict[str, Any]) -> str:
+def format_outreach_report(
+    report: dict[str, Any], *, ledger: Path | None = None
+) -> str:
     summary = report["summary"]
     experiment = report["experiment"]
     lines = [
@@ -1378,6 +1386,32 @@ def format_outreach_report(report: dict[str, Any]) -> str:
             )
             lines.append(
                 f"- {item['prospect_id']}: {item['due_on']} ({timing})"
+            )
+    next_approved = report["next_approved"]
+    if next_approved is not None:
+        lines.append(
+            "Next approved message awaiting manual send: "
+            f"{next_approved['prospect_id']}"
+        )
+        if ledger is not None:
+            lines.extend(
+                [
+                    (
+                        "After a human sends it, replace both YYYY-MM-DD "
+                        "placeholders with the actual UTC send date, then "
+                        "record that send:"
+                    ),
+                    _format_outreach_command(
+                        ledger,
+                        "--as-of",
+                        DATE_PLACEHOLDER,
+                        "--record-contact",
+                        next_approved["prospect_id"],
+                        "--contacted-on",
+                        DATE_PLACEHOLDER,
+                        "--confirm-sent",
+                    ),
+                ]
             )
     lines.append(f"Evidence: {report['evidence_note']}")
     return "\n".join(lines)
@@ -2099,7 +2133,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
         )
     else:
-        print(format_outreach_report(report))
+        print(format_outreach_report(report, ledger=args.ledger))
     return 0
 
 
