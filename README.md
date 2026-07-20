@@ -304,6 +304,19 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
   --as-of "$(date -u +%F)"
 ```
 
+When JSON is destined for a committed measurement baseline or CI artifact,
+require the report to be alias-free before Repo Scout writes it:
+
+```bash
+repo-scout-outreach outreach-private/outreach-ledger.csv \
+  --as-of "$(date -u +%F)" --format json \
+  --require-counts-only > outreach-baseline.json
+```
+
+If an approved send or due follow-up makes the report private, the guard writes
+nothing to standard output and exits with code 7. It is mutually exclusive with
+review and lifecycle actions, so it cannot approve, decline, or mutate a ledger.
+
 After the batch passes validation, surface one complete private checklist for
 the required human review without changing the ledger or sending a message:
 

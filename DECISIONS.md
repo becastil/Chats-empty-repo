@@ -2008,3 +2008,18 @@ Text output prints the same classification. Publication still requires a final
 check for aliases and identity data, but automation can now fail closed without
 parsing prose or private values. This protects execution evidence without
 reviewing, approving, sending, creating demand, or recording revenue.
+
+## 2026-07-20: Fail Closed Before Publishing Private Outreach Reports
+
+The schema-9 `private_output` flag lets careful consumers classify a report,
+but publication scripts would still have to emit and parse alias-bearing JSON
+before deciding to reject it. That leaves a preventable disclosure path in CI
+logs, temporary artifacts, and scripts that forget the check.
+
+`--require-counts-only` is therefore an ordinary-report-only guard. It is
+mutually exclusive with every human review and lifecycle action. After ledger
+validation, it emits text or JSON only when no next-approved or due-follow-up
+alias is present. Otherwise it writes no report to standard output, emits an
+alias-free diagnostic, and returns dedicated exit code 7. Invalid ledgers retain
+exit code 2. This gives CI and baseline publication a stable fail-closed contract
+without mutating outreach evidence or creating demand, payment, or revenue.

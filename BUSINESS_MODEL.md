@@ -546,6 +546,10 @@ with neither kind of alias are marked counts-only. This lets publication
 automation refuse private execution evidence before it becomes an artifact and
 prevents a reviewed message from being stranded without approving or sending
 it, creating demand, or recording revenue.
+The companion `--require-counts-only` guard makes that refusal executable: it
+emits no report and exits with code 7 when either alias source is present. The
+flag cannot be combined with a review or lifecycle mutation, so a CI or
+publication job can fail closed without changing private sales evidence.
 
 After a human sends the one allowed follow-up on or after day seven, guarded
 `--record-follow-up` records the earliest due contacted alias. It retains the

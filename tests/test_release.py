@@ -199,6 +199,7 @@ class ReleaseManifestTests(unittest.TestCase):
                 "private-review-bundle",
                 "unconfirmed-approval-rejected",
                 "draft-approved",
+                "counts-only-publication-guard",
                 "contact-recorded",
                 "follow-up-recorded",
                 "duplicate-follow-up-rejected",

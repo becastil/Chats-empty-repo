@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after classifying private outreach reports: 174 / 1,000 (17.4%).
-- Remaining after classifying private outreach reports: 826 commits.
+- Progress after adding the counts-only output guard: 175 / 1,000 (17.5%).
+- Remaining after adding the counts-only output guard: 825 commits.
 
 ## Commit Standard
 

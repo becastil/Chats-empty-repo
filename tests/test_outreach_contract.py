@@ -41,6 +41,8 @@ class DirectOutreachContractTests(unittest.TestCase):
             "attempt.",
             normalized_readme,
         )
+        self.assertIn("--require-counts-only", readme)
+        self.assertIn("exits with code 7", normalized_readme)
 
     def test_playbook_preserves_offer_source_and_bounded_cadence(self) -> None:
         playbook = PLAYBOOK.read_text(encoding="utf-8")
@@ -143,6 +145,8 @@ class DirectOutreachContractTests(unittest.TestCase):
             "public pilot intake before counting demand, payment, or revenue",
             normalized_playbook,
         )
+        self.assertIn("--require-counts-only", playbook)
+        self.assertIn("exits with code 7", normalized_playbook)
         self.assertIn(PUBLIC_PILOT_INTAKE_URL, playbook)
         self.assertIn("Stop immediately after an opt-out", playbook)
         self.assertIn("reply, page visit, or release request", playbook)

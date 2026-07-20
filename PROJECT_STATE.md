@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 174 of
-1,000, with 826 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 175 of
+1,000, with 825 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -249,6 +249,8 @@ alignment take priority over commit volume.
   contact-recording handoff after the one-time approval receipt is lost, with
   machine-readable privacy classification for approved and due-follow-up
   reports versus alias-free counts-only output.
+- A mutation-free `--require-counts-only` publication guard that emits no
+  alias-bearing report and returns a dedicated exit code for CI automation.
 - Schema-6 pre-contact `review-declined` decisions that close an unsuitable
   draft without approval, contact dates, or attempted-prospect inflation.
 - A runtime-linked buyer-facing outreach contract that describes the packaged

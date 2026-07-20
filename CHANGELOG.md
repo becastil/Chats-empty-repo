@@ -10,6 +10,10 @@
   a machine-readable flag and matching terminal warning.
 - Marked reports with neither alias source as counts-only so publication
   automation can reject private execution evidence before committing it.
+- Added `--require-counts-only` to emit only alias-free ordinary reports and
+  fail with exit code 7 before private JSON or text reaches standard output.
+- Made the publication guard mutually exclusive with every review and lifecycle
+  action so it cannot mutate the private ledger.
 - Extended source, documentation, and installed-command contracts without
   sending outreach or changing attempted-prospect and revenue boundaries.
 - Corrected the private outreach playbook from a stale nine-column requirement

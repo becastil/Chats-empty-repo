@@ -383,3 +383,11 @@ baseline only when `private_output` is `false`. Before committing it, also
 verify that it contains no `prospect-` alias, URL, email address, company name,
 or message text. The ignored ledger and draft notes remain the only source for
 identities and qualification links.
+
+Use `--require-counts-only` when the output is destined for a baseline or CI
+artifact. It emits the ordinary text or JSON report only when `private_output`
+is `false`. If a next-approved or due-follow-up alias is present, it writes
+nothing to standard output, prints an alias-free refusal to standard error, and
+exits with code 7. The guard is mutually exclusive with review, approval,
+decline, contact, follow-up, and outcome actions, so invoking it cannot mutate
+the private ledger.

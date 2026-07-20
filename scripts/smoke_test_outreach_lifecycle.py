@@ -328,6 +328,18 @@ def verify_outreach_lifecycle(
             declined_report.get("private_output") is False,
             "counts-only decline report was marked private",
         )
+        counts_only_report = _run(
+            outreach_command,
+            decline_ledger,
+            as_of="2026-07-01",
+            arguments=("--require-counts-only",),
+            environment=environment,
+            expected_exit_code=0,
+        )
+        _require(
+            json.loads(counts_only_report.stdout).get("private_output") is False,
+            "counts-only guard did not emit the public-safe report",
+        )
         _require(
             declined_summary.get("review_declined") == 1
             and declined_summary.get("closed") == 1
@@ -560,6 +572,23 @@ def verify_outreach_lifecycle(
             approved_report.get("private_output") is True,
             "approved alias report was not marked private",
         )
+        private_report = _run(
+            outreach_command,
+            ledger,
+            as_of="2026-07-02",
+            arguments=("--require-counts-only",),
+            environment=environment,
+            expected_exit_code=7,
+        )
+        _require(
+            not private_report.stdout,
+            "counts-only guard emitted private report output",
+        )
+        _require(
+            "refused output" in private_report.stderr
+            and draft["prospect_id"] not in private_report.stderr,
+            "counts-only guard did not fail privately",
+        )
         for private_value in ("2026-07-01", "https://evidence.example"):
             _require(
                 private_value not in serialized,
@@ -576,6 +605,7 @@ def verify_outreach_lifecycle(
             "approval created contact activity",
         )
         checked.append("draft-approved")
+        checked.append("counts-only-publication-guard")
 
         contact = _json_command(
             outreach_command,

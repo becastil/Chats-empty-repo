@@ -39,6 +39,7 @@ MAX_PROSPECTS = 10
 FOLLOW_UP_DAYS = 7
 MAX_FOLLOW_UPS = 1
 MAX_PRIVATE_DRAFT_BYTES = 128 * 1024
+PRIVATE_OUTPUT_EXIT_CODE = 7
 DATE_PLACEHOLDER = "YYYY-MM-DD"
 OUTCOME_PLACEHOLDER = "OUTCOME"
 PUBLIC_PILOT_INTAKE_URL = (
@@ -1803,6 +1804,14 @@ def build_parser() -> argparse.ArgumentParser:
             "for a contacted prospect."
         ),
     )
+    action_group.add_argument(
+        "--require-counts-only",
+        action="store_true",
+        help=(
+            "Emit an ordinary report only when it contains no private prospect "
+            "aliases; otherwise write nothing to stdout and exit 7."
+        ),
+    )
     parser.add_argument(
         "--approved-on",
         type=_date_argument,
@@ -2114,6 +2123,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     except OutreachInputError as exc:
         print(f"repo-scout-outreach: {exc}", file=sys.stderr)
         return 2
+
+    if args.require_counts_only and report["private_output"]:
+        print(
+            "repo-scout-outreach: report contains private prospect aliases; "
+            "--require-counts-only refused output",
+            file=sys.stderr,
+        )
+        return PRIVATE_OUTPUT_EXIT_CODE
 
     if args.format == "json":
         print(json.dumps(report, indent=2, sort_keys=True))

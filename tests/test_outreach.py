@@ -24,6 +24,7 @@ from repo_scout.outreach import (  # noqa: E402
     LEDGER_FIELDS,
     OUTCOME_PLACEHOLDER,
     OutreachInputError,
+    PRIVATE_OUTPUT_EXIT_CODE,
     PUBLIC_PILOT_INTAKE_URL,
     build_next_outreach_review,
     build_outreach_report,
@@ -3323,6 +3324,90 @@ class OutreachReportTests(unittest.TestCase):
 
             self.assertEqual(exit_code, 2)
             self.assertIn("ledger header must be exactly", stderr.getvalue())
+
+    def test_cli_fails_closed_when_counts_only_output_would_be_private(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            _write_ledger(ledger, [_row()])
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+
+            with redirect_stdout(stdout), redirect_stderr(stderr):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-08",
+                        "--format",
+                        "json",
+                        "--require-counts-only",
+                    ]
+                )
+
+            self.assertEqual(exit_code, PRIVATE_OUTPUT_EXIT_CODE)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertIn("refused output", stderr.getvalue())
+            self.assertNotIn("prospect-001", stderr.getvalue())
+
+    def test_cli_emits_a_verified_counts_only_report(self) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            _write_ledger(
+                ledger,
+                [
+                    _row(
+                        status="drafted",
+                        contacted_on="",
+                        next_action_on="",
+                        approved_on="",
+                    )
+                ],
+            )
+            stdout = io.StringIO()
+
+            with redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-08",
+                        "--format",
+                        "json",
+                        "--require-counts-only",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            self.assertFalse(json.loads(stdout.getvalue())["private_output"])
+
+    def test_counts_only_guard_is_mutually_exclusive_with_private_actions(
+        self,
+    ) -> None:
+        private_actions = (
+            ("--review-next",),
+            ("--approve-next", "prospect-001"),
+            ("--decline-next", "prospect-001"),
+            ("--record-contact", "prospect-001"),
+            ("--record-follow-up", "prospect-001"),
+            ("--record-outcome", "prospect-001"),
+        )
+
+        for private_action in private_actions:
+            with self.subTest(private_action=private_action):
+                with redirect_stderr(io.StringIO()), self.assertRaises(
+                    SystemExit
+                ) as raised:
+                    main(
+                        [
+                            "ledger.csv",
+                            "--require-counts-only",
+                            *private_action,
+                        ]
+                    )
+
+                self.assertEqual(raised.exception.code, 2)
 
     def test_cli_defaults_to_the_current_utc_calendar_date(self) -> None:
         with TemporaryDirectory() as tmp:
