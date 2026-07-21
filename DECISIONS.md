@@ -2197,3 +2197,20 @@ before checksums and provenance are published. Paid-CI pins stay on independentl
 verified `v0.3.48` until the new public artifacts are reconciled separately.
 Publishing the fix does not approve or send outreach, create demand, collect
 payment, or record revenue.
+
+## 2026-07-21: Advance Paid CI Only After Independent v0.3.49 Verification
+
+The `v0.3.49` release workflow built and attested the private-review cleanup
+fix, but its own success was not sufficient evidence for customer and dogfood
+policy gates to trust a new artifact identity. A separate download reconciled
+all three checksum entries, confirmed the annotated tag resolves to a commit on
+`main`, measured the wheel digest, and verified each attestation against the
+exact release signer workflow, semantic tag, source commit, and GitHub-hosted
+runner requirement.
+
+Only after those checks passed did the atomic six-target updater advance both
+workflows, the buyer-facing README, commercial model, project state, and
+executable contract together. This strengthens paid-CI supply-chain integrity
+while leaving the existing owner-only review bundle and required human decision
+untouched. It does not establish a customer install, outreach attempt, pilot
+request, payment, or revenue.

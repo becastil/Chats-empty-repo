@@ -112,7 +112,7 @@ This is useful free CI enforcement; the paid work remains agreeing on the
 right rules and rolling the same reviewed policy across uneven repositories.
 Versions 1 and 2 remain readable so verified CI upgrades can be staged safely.
 The dogfood and copy-ready gates now install the independently verified
-`v0.3.48` wheel, so v4 policies can run locally and in CI
+`v0.3.49` wheel, so v4 policies can run locally and in CI
 without source checkout, mutable package resolution, or a team-managed secret.
 Maintainer pin upgrades now preflight and update the dogfood workflow,
 copy-ready customer example, buyer-facing README, commercial model and
@@ -460,12 +460,15 @@ demand, or recording revenue.
 
 Version `0.3.49` packages that truthful cleanup boundary so future owner-only
 review bundles do not depend on a source checkout. The installed lifecycle
-smoke must still prove clean review publication, exact permissions, alias-free
-terminal output, and zero ledger mutation before release. Customer and dogfood
-CI remain pinned to independently verified `v0.3.48` artifacts until the new
-manifest, tag ancestry, signer workflow, and attestations are checked
-separately. This release does not perform a review, send outreach, create
-demand, collect payment, or record revenue.
+smoke proved clean review publication, exact permissions, alias-free terminal
+output, and zero ledger mutation before release. After separate public-artifact
+verification, customer and dogfood CI now pin source commit
+`78abdb3e7dc2bfe2e2060727ea5a7636d9dc63fb` and wheel SHA-256
+`47b68b7fb5e93665fd8888972c8cb1e07e3a89db4262f8c38127709295c21bc3`.
+The manifest, annotated tag ancestry, release workflow, all three provenance
+attestations, exact signer workflow, and GitHub-hosted-runner restriction passed
+before the pins changed. Publishing and pinning this safeguard does not perform
+a review, send outreach, create demand, collect payment, or record revenue.
 
 Version `0.3.48` advances the package, portable CLI, website identity,
 verification guide, and installed commercial smoke fixture together so that

@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Independently reconciled the public `v0.3.49` manifest, annotated tag, main
+  ancestry, release workflow, and all three provenance attestations.
+- Measured the released wheel digest separately and matched every downloaded
+  artifact to the published checksum manifest.
+- Advanced the dogfood and copy-ready policy gates to the exact `v0.3.49`
+  source commit and wheel digest through the atomic six-target pin updater.
+- Preserved the commercial boundary: verified CI distribution created no
+  customer install, outreach attempt, pilot request, payment, or revenue.
+
 ## 0.3.49 - 2026-07-21
 
 - Reported post-publication private-review cleanup failures instead of silently
