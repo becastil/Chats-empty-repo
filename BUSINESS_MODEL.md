@@ -450,9 +450,12 @@ ignored private workspace instead of exposing the draft, alias, and evidence to
 terminal capture or relying on shell redirection. The command stages and syncs
 the full text with owner-only permissions, atomically publishes only to a new
 path, refuses overwrite or symbolic-link destinations, and prints only an
-alias-free confirmation. The ledger remains unchanged. This makes the bounded
-human review queue easier to execute without performing the review, approving
-or sending a message, creating public demand, or recording revenue.
+alias-free confirmation. A failed staging cleanup after publication now reports
+the completed review and retained owner-only path instead of claiming clean
+success, allowing manual cleanup without an overwrite-producing retry. The
+ledger remains unchanged. This makes the bounded human review queue easier to
+execute without performing the review, approving or sending a message, creating
+public demand, or recording revenue.
 
 Version `0.3.48` advances the package, portable CLI, website identity,
 verification guide, and installed commercial smoke fixture together so that

@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 185 of
-1,000, with 815 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 186 of
+1,000, with 814 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -234,7 +234,10 @@ alignment take priority over commit volume.
 - Symmetric approval and decline race coverage proving commit-window notes
   edits preserve ledger evidence, hide changed text, and clean staged output.
 - Atomic `--write-review` creation for owner-only private review bundles, with
-  no terminal disclosure, overwrite, ledger mutation, or retained staging file.
+  no terminal disclosure, overwrite, ledger mutation, or retained staging file
+  after a clean result.
+- Truthful post-publication cleanup failures that retain the completed review,
+  identify the owner-only staging copy, and prevent a misleading success receipt.
 - Live outreach review and mutation preflight that rejects tracked, unignored,
   or symlinked in-repository ledgers and draft notes before reading private
   material.

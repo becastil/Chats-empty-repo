@@ -2117,7 +2117,7 @@ receipt.
 existing owner-only parent, enforces the ignored and untracked boundary inside a
 Git worktree, fully writes and syncs a `600` adjacent staging file, then uses an
 atomic no-overwrite publication step. Existing files and symbolic links are
-refused, staging paths are removed after success or failure, and standard output
+refused, staging paths are removed before every clean result, and standard output
 contains no prospect alias. The outreach ledger is read but never changed. This
 helps execute the bounded human queue without making a review decision, sending
 outreach, or claiming pilot demand, payment, or revenue.
@@ -2166,3 +2166,19 @@ occurred. Automation must not run either generated decision, send a message, or
 record contact without the explicit checks and real-world action required by
 the operator contract. The public baseline records only aggregate readiness so
 the next run cannot mistake a prepared file for demand, payment, or revenue.
+
+## 2026-07-21: Treat Review Cleanup Failure As A Partial Success
+
+The private review writer publishes with a no-overwrite hard link and then
+removes its hidden staging name. A filesystem failure during that final unlink
+previously left both owner-only names present while the command still printed a
+clean success receipt. The review content and ledger were safe, but the receipt
+made the retained private copy invisible to the operator.
+
+The command now distinguishes this state explicitly: it exits unsuccessfully,
+says the intended review was written, and identifies a neutral retained staging
+filename inside the private output directory instead of repeating a potentially
+sensitive destination name. The operator removes that file instead of retrying;
+the destination remains intact and overwrite-protected. This keeps private
+evidence handling truthful for the active human review queue; it does not make a
+review decision, send outreach, create demand, or record revenue.

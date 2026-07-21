@@ -652,12 +652,13 @@ def _write_private_review(path: Path, content: str) -> None:
         label="private review output",
     )
     temporary_path: Path | None = None
+    operation_error: OutreachInputError | None = None
     try:
         with NamedTemporaryFile(
             "w",
             encoding="utf-8",
             dir=protected_path.parent,
-            prefix=f".{protected_path.name}.",
+            prefix=".repo-scout-review.",
             suffix=".tmp",
             delete=False,
         ) as review_file:
@@ -684,18 +685,37 @@ def _write_private_review(path: Path, content: str) -> None:
             raise OutreachInputError(
                 f"cannot publish private review output safely: {exc}"
             ) from exc
-    except OutreachInputError:
-        raise
+    except OutreachInputError as exc:
+        operation_error = exc
     except OSError as exc:
-        raise OutreachInputError(
+        operation_error = OutreachInputError(
             f"cannot write private review output safely: {exc}"
-        ) from exc
-    finally:
-        if temporary_path is not None:
-            try:
-                temporary_path.unlink(missing_ok=True)
-            except OSError:
-                pass
+        )
+
+    cleanup_error: OSError | None = None
+    if temporary_path is not None:
+        try:
+            temporary_path.unlink(missing_ok=True)
+        except OSError as exc:
+            cleanup_error = exc
+    if cleanup_error is not None:
+        assert temporary_path is not None
+
+    if operation_error is not None:
+        if cleanup_error is not None:
+            raise OutreachInputError(
+                f"{operation_error}; temporary cleanup incomplete for "
+                f"owner-only staging file {temporary_path.name} in the "
+                f"private review output directory: {cleanup_error}"
+            ) from operation_error
+        raise operation_error
+    if cleanup_error is not None:
+        raise OutreachInputError(
+            "private review output was written, but temporary cleanup "
+            f"incomplete for owner-only staging file {temporary_path.name} in "
+            f"the private review output directory: {cleanup_error}; remove "
+            "that staging file before continuing"
+        ) from cleanup_error
 
 
 def _require_owner_only_permissions(path: Path, *, label: str) -> int | None:

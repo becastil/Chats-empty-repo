@@ -534,7 +534,7 @@ class OutreachReportTests(unittest.TestCase):
             self.assertIn("--approve-next prospect-001", review_text)
             self.assertIn("--decline-next prospect-001", review_text)
             self.assertEqual(
-                list(private_directory.glob(".review.md.*.tmp")),
+                list(private_directory.glob(".repo-scout-review.*.tmp")),
                 [],
             )
             if os.name == "posix":
@@ -581,7 +581,7 @@ class OutreachReportTests(unittest.TestCase):
             )
             self.assertIn("refusing to overwrite", stderr.getvalue())
             self.assertEqual(
-                list(private_directory.glob(".review.md.*.tmp")),
+                list(private_directory.glob(".repo-scout-review.*.tmp")),
                 [],
             )
 
@@ -683,9 +683,60 @@ class OutreachReportTests(unittest.TestCase):
             self.assertFalse(review.exists())
             self.assertIn("cannot publish", stderr.getvalue())
             self.assertEqual(
-                list(private_directory.glob(".review.md.*.tmp")),
+                list(private_directory.glob(".repo-scout-review.*.tmp")),
                 [],
             )
+
+    def test_write_review_reports_cleanup_failure_after_publication(self) -> None:
+        with TemporaryDirectory() as tmp:
+            private_directory = Path(tmp) / "private"
+            private_directory.mkdir(mode=0o700)
+            ledger = private_directory / "ledger.csv"
+            review = private_directory / "prospect-001-review.md"
+            _write_ledger(
+                ledger,
+                [
+                    _row(
+                        status="drafted",
+                        contacted_on="",
+                        next_action_on="",
+                        approved_on="",
+                    )
+                ],
+            )
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+
+            with patch.object(
+                Path,
+                "unlink",
+                side_effect=OSError("injected cleanup failure"),
+            ), redirect_stdout(stdout), redirect_stderr(stderr):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--review-next",
+                        "--write-review",
+                        str(review),
+                    ]
+                )
+
+            self.assertEqual(exit_code, 2)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertTrue(review.is_file())
+            staged = list(private_directory.glob(".repo-scout-review.*.tmp"))
+            self.assertEqual(len(staged), 1)
+            self.assertIn("review output was written", stderr.getvalue())
+            self.assertIn("temporary cleanup incomplete", stderr.getvalue())
+            self.assertIn(staged[0].name, stderr.getvalue())
+            self.assertIn("remove that staging file", stderr.getvalue())
+            self.assertNotIn("prospect-001", stderr.getvalue())
+            if os.name == "posix":
+                self.assertEqual(review.stat().st_mode & 0o777, 0o600)
+                self.assertEqual(staged[0].stat().st_mode & 0o777, 0o600)
+            staged[0].unlink()
 
     def test_write_review_requires_ignored_untracked_git_destination(self) -> None:
         with TemporaryDirectory() as tmp:

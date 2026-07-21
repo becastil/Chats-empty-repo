@@ -173,11 +173,16 @@ receipt and the reviewed notes path.
 `--review-next` text mode, an existing owner-only parent directory, and an
 ignored, untracked destination when the file is inside a Git worktree. The
 command fully writes and syncs a `600` staging file before atomically publishing
-it, refuses to replace any existing file or symbolic link, and removes its
-staging path after success or failure. Standard output contains only an
+it, refuses to replace any existing file or symbolic link, and requires staging
+cleanup before reporting a clean result. Standard output contains only an
 alias-free confirmation. Review the file locally, choose exactly one generated
 decision, then remove or privately archive it before creating the next bundle.
 Writing the bundle does not edit the ledger, approve a draft, or send outreach.
+If the review publishes but hidden staging cleanup fails, the command reports
+that the review was written, identifies the retained neutral staging filename
+inside the private output directory, and exits unsuccessfully. Remove that
+staging file manually; do not rerun the same command because the intended
+review destination already exists.
 Approval and decline also retain the bounded notes file revision captured while
 verifying that receipt. While holding the ledger lock, Repo Scout compares the
 current private notes to that revision; any intervening edit stops the decision,

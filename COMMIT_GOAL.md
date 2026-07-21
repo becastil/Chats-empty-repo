@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after preparing the first private review bundle: 185 / 1,000 (18.5%).
-- Remaining after preparing the first private review bundle: 815 commits.
+- Progress after making private-review cleanup truthful: 186 / 1,000 (18.6%).
+- Remaining after making private-review cleanup truthful: 814 commits.
 
 ## Commit Standard
 
