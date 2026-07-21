@@ -2137,3 +2137,18 @@ before provenance attestation. Existing paid-CI pins remain on independently
 verified `v0.3.47` until the new manifest, tag ancestry, signer workflow, and
 attestations are checked separately. The release creates no outreach attempt,
 pilot request, payment, or revenue.
+
+## 2026-07-21: Advance Paid CI Only After Independent v0.3.48 Verification
+
+The release workflow built and attested `v0.3.48`, but its own success was not
+enough to change the artifact identity trusted by customer and dogfood policy
+gates. A separate download reconciled all three manifest entries, confirmed the
+annotated tag resolves to the release commit, measured the wheel SHA-256, and
+verified all three attestations against the pinned signer workflow, source ref,
+source commit, and GitHub-hosted runner requirement.
+
+Only after those checks passed did the atomic pin updater advance both
+workflows, the buyer-facing claim, the commercial model, project state, and the
+executable CI contract together. This reduces paid-CI supply-chain drift while
+leaving the roadmap focused on five human-reviewed outreach attempts. It does
+not establish a customer install, demand, payment, or revenue.

@@ -112,7 +112,7 @@ This is useful free CI enforcement; the paid work remains agreeing on the
 right rules and rolling the same reviewed policy across uneven repositories.
 Versions 1 and 2 remain readable so verified CI upgrades can be staged safely.
 The dogfood and copy-ready gates now install the independently verified
-`v0.3.47` wheel, so v4 policies can run locally and in CI
+`v0.3.48` wheel, so v4 policies can run locally and in CI
 without source checkout, mutable package resolution, or a team-managed secret.
 Maintainer pin upgrades now preflight and update the dogfood workflow,
 copy-ready customer example, buyer-facing README, commercial model and
@@ -457,10 +457,14 @@ verification guide, and installed commercial smoke fixture together so that
 owner-only review-file creation reaches the existing five-draft workflow. The
 tag must prove the complete private write through the installed wheel, including
 alias-free terminal output and exact `600` file permissions, before checksums
-and provenance are published. Verified customer and dogfood CI pins remain on
-`v0.3.47` until the new artifacts are independently reconciled. Publishing this
-operator safeguard does not perform a review, send outreach, create demand,
-collect payment, or record revenue.
+and provenance are published. After separate public-artifact verification,
+customer and dogfood CI now pin source commit
+`608de9ff4c2ee2e995917ee02346c4420c6b18e1` and wheel SHA-256
+`448c1b7ba2bd1953d4c0ef04656c9886ef2613ef31386812a857f2bb20ee5b22`.
+The manifest, annotated tag ancestry, and all three provenance attestations
+passed before the pins changed. Publishing and pinning this operator safeguard
+does not perform a review, send outreach, create demand, collect payment, or
+record revenue.
 
 Version `0.3.43` advances the package, runtime, website, download guide, and
 installed-command smoke identities together so the schema-4 content receipt can

@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Independently verified the public `v0.3.48` manifest, annotated tag, main
+  ancestry, and provenance attestations for all three distributable artifacts.
+- Measured the released wheel digest separately from the release workflow and
+  reconciled it to the published checksum manifest.
+- Advanced the dogfood and copy-ready policy gates to the exact `v0.3.48`
+  source commit and wheel digest through the atomic six-target pin updater.
+- Preserved the commercial boundary: CI distribution created no customer
+  install, outreach attempt, pilot request, payment, or revenue.
+
 ## 0.3.48 - 2026-07-21
 
 - Added `--write-review` to atomically create a complete outreach review bundle
