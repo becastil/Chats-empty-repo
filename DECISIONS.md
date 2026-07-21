@@ -2039,3 +2039,23 @@ standard output for an approved alias, before checksums and provenance are
 published. Existing verified CI pins and measured baselines remain on
 `v0.3.46` until separate artifact verification. Publishing creates no prospect
 action, pilot request, payment, or revenue.
+
+## 2026-07-20: Advance Both Policy Gates To Verified v0.3.47
+
+The public `v0.3.47` wheel independently measures to SHA-256
+`bd59a65be2eb9695af0cd49ec09abdea35d963646c9382893fa768b8a94e2f9c`
+and resolves through annotated tag `v0.3.47` to main-branch source commit
+`4f7113b018d33622f556adb86905ef625378c8e0`.
+
+Before changing either pin, all three downloaded artifacts matched the public
+manifest and verified against GitHub build provenance from the exact release
+workflow on a GitHub-hosted runner. A fresh no-dependency wheel installation
+reconciled all seven command identities and passed the policy activation,
+guarded outreach lifecycle, commercial reporting, and rollout-summary
+harnesses; the portable artifact also matched the release identity and scanned
+the repository. The atomic maintainer updater then advanced the dogfood
+workflow, copy-ready customer workflow, buyer-facing README claim, commercial
+model claim, and executable pin contract together. Measured traffic and funnel
+baselines remain at their last deliberate checkpoint. This improves paid CI
+distribution integrity without proving a customer install, outreach attempt,
+pilot request, payment, or revenue.

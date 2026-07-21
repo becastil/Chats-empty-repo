@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 176 of
-1,000, with 824 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 177 of
+1,000, with 823 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -336,7 +336,7 @@ alignment take priority over commit volume.
 - Git-aware pattern matching across all tracked or unignored paths, independent of the snapshot's 500-path detail cap.
 - Bounded pattern evidence with full match counts, 20 sorted paths per pattern, and explicit truncation state.
 - Strict wildcard, path, duplicate, required-file conflict, exact-rule overlap, and fingerprint validation for pattern rules.
-- Independently pinned `v0.3.46` wheel digest, source commit, manifest,
+- Independently pinned `v0.3.47` wheel digest, source commit, manifest,
   provenance, signer workflow, and hosted-runner checks in both policy gates.
 - A preflighted maintainer updater that changes the dogfood workflow, customer
   example, buyer-facing README and commercial model claims, and CI pin contract
