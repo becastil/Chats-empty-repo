@@ -478,6 +478,277 @@ class OutreachReportTests(unittest.TestCase):
             self.assertEqual(report["review"]["prospect_id"], "prospect-001")
             self.assertIn("does not approve", report["action_note"])
 
+    def test_review_next_writes_private_bundle_without_terminal_disclosure(self) -> None:
+        with TemporaryDirectory() as tmp:
+            private_directory = Path(tmp) / "private"
+            private_directory.mkdir(mode=0o700)
+            ledger = private_directory / "ledger.csv"
+            notes = private_directory / "drafts.md"
+            review = private_directory / "review.md"
+            _write_ledger(
+                ledger,
+                [
+                    _row(
+                        status="drafted",
+                        contacted_on="",
+                        next_action_on="",
+                        approved_on="",
+                    )
+                ],
+            )
+            notes.write_text(
+                "## prospect-001\n\nSelected private message\n",
+                encoding="utf-8",
+            )
+            if os.name == "posix":
+                notes.chmod(0o600)
+            ledger_before = ledger.read_bytes()
+            stdout = io.StringIO()
+
+            with redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--review-next",
+                        "--include-private-evidence",
+                        "--include-private-draft",
+                        str(notes),
+                        "--write-review",
+                        str(review),
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(ledger.read_bytes(), ledger_before)
+            self.assertEqual(
+                stdout.getvalue(),
+                "Private review written with owner-only permissions.\n",
+            )
+            self.assertNotIn("prospect-001", stdout.getvalue())
+            review_text = review.read_text(encoding="utf-8")
+            self.assertIn("prospect-001", review_text)
+            self.assertIn("Selected private message", review_text)
+            self.assertIn("team_5_50: https://evidence.example/team", review_text)
+            self.assertIn("--approve-next prospect-001", review_text)
+            self.assertIn("--decline-next prospect-001", review_text)
+            self.assertEqual(
+                list(private_directory.glob(".review.md.*.tmp")),
+                [],
+            )
+            if os.name == "posix":
+                self.assertEqual(review.stat().st_mode & 0o777, 0o600)
+
+    def test_write_review_refuses_overwrite_without_leaving_staged_files(self) -> None:
+        with TemporaryDirectory() as tmp:
+            private_directory = Path(tmp) / "private"
+            private_directory.mkdir(mode=0o700)
+            ledger = private_directory / "ledger.csv"
+            review = private_directory / "review.md"
+            _write_ledger(
+                ledger,
+                [
+                    _row(
+                        status="drafted",
+                        contacted_on="",
+                        next_action_on="",
+                        approved_on="",
+                    )
+                ],
+            )
+            review.write_text("existing private review\n", encoding="utf-8")
+            if os.name == "posix":
+                review.chmod(0o600)
+            stderr = io.StringIO()
+
+            with redirect_stderr(stderr):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--review-next",
+                        "--write-review",
+                        str(review),
+                    ]
+                )
+
+            self.assertEqual(exit_code, 2)
+            self.assertEqual(
+                review.read_text(encoding="utf-8"),
+                "existing private review\n",
+            )
+            self.assertIn("refusing to overwrite", stderr.getvalue())
+            self.assertEqual(
+                list(private_directory.glob(".review.md.*.tmp")),
+                [],
+            )
+
+    def test_write_review_rejects_unsafe_options_and_parent_permissions(self) -> None:
+        with TemporaryDirectory() as tmp:
+            private_directory = Path(tmp) / "private"
+            private_directory.mkdir(mode=0o700)
+            ledger = private_directory / "ledger.csv"
+            review = private_directory / "review.md"
+            _write_ledger(
+                ledger,
+                [
+                    _row(
+                        status="drafted",
+                        contacted_on="",
+                        next_action_on="",
+                        approved_on="",
+                    )
+                ],
+            )
+
+            cases = (
+                (["--write-review", str(review)], "requires --review-next"),
+                (
+                    [
+                        "--review-next",
+                        "--format",
+                        "json",
+                        "--write-review",
+                        str(review),
+                    ],
+                    "requires --format text",
+                ),
+            )
+            for arguments, expected in cases:
+                with self.subTest(expected=expected):
+                    stderr = io.StringIO()
+                    with redirect_stderr(stderr):
+                        exit_code = main(
+                            [str(ledger), "--as-of", "2026-07-13", *arguments]
+                        )
+                    self.assertEqual(exit_code, 2)
+                    self.assertIn(expected, stderr.getvalue())
+                    self.assertFalse(review.exists())
+
+            if os.name == "posix":
+                private_directory.chmod(0o750)
+                stderr = io.StringIO()
+                with redirect_stderr(stderr):
+                    exit_code = main(
+                        [
+                            str(ledger),
+                            "--as-of",
+                            "2026-07-13",
+                            "--review-next",
+                            "--write-review",
+                            str(review),
+                        ]
+                    )
+                self.assertEqual(exit_code, 2)
+                self.assertIn("chmod 700", stderr.getvalue())
+                self.assertFalse(review.exists())
+
+    def test_write_review_removes_staging_file_after_publish_failure(self) -> None:
+        with TemporaryDirectory() as tmp:
+            private_directory = Path(tmp) / "private"
+            private_directory.mkdir(mode=0o700)
+            ledger = private_directory / "ledger.csv"
+            review = private_directory / "review.md"
+            _write_ledger(
+                ledger,
+                [
+                    _row(
+                        status="drafted",
+                        contacted_on="",
+                        next_action_on="",
+                        approved_on="",
+                    )
+                ],
+            )
+            stderr = io.StringIO()
+
+            with patch(
+                "repo_scout.outreach.os.link",
+                side_effect=OSError("injected publish failure"),
+            ), redirect_stderr(stderr):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--review-next",
+                        "--write-review",
+                        str(review),
+                    ]
+                )
+
+            self.assertEqual(exit_code, 2)
+            self.assertFalse(review.exists())
+            self.assertIn("cannot publish", stderr.getvalue())
+            self.assertEqual(
+                list(private_directory.glob(".review.md.*.tmp")),
+                [],
+            )
+
+    def test_write_review_requires_ignored_untracked_git_destination(self) -> None:
+        with TemporaryDirectory() as tmp:
+            repository = Path(tmp)
+            subprocess.run(
+                ["git", "init", "--quiet", str(repository)],
+                check=True,
+            )
+            private_directory = repository / "private"
+            private_directory.mkdir(mode=0o700)
+            (repository / ".gitignore").write_text(
+                "/private/\n",
+                encoding="utf-8",
+            )
+            ledger = private_directory / "ledger.csv"
+            _write_ledger(
+                ledger,
+                [
+                    _row(
+                        status="drafted",
+                        contacted_on="",
+                        next_action_on="",
+                        approved_on="",
+                    )
+                ],
+            )
+            unignored_review = repository / "review.md"
+            stderr = io.StringIO()
+
+            with redirect_stderr(stderr):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--review-next",
+                        "--write-review",
+                        str(unignored_review),
+                    ]
+                )
+
+            self.assertEqual(exit_code, 2)
+            self.assertFalse(unignored_review.exists())
+            self.assertIn("must be ignored and untracked", stderr.getvalue())
+
+            ignored_review = private_directory / "review.md"
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--review-next",
+                        "--write-review",
+                        str(ignored_review),
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            self.assertTrue(ignored_review.is_file())
+            self.assertNotIn("prospect-001", stdout.getvalue())
+
     def test_live_actions_require_ignored_untracked_git_paths(self) -> None:
         with TemporaryDirectory() as tmp:
             repository = Path(tmp)

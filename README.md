@@ -324,12 +324,16 @@ the required human review without changing the ledger or sending a message:
 repo-scout-outreach outreach-private/outreach-ledger.csv \
   --as-of "$(date -u +%F)" --review-next \
   --include-private-evidence \
-  --include-private-draft outreach-private/drafts.md
+  --include-private-draft outreach-private/drafts.md \
+  --write-review outreach-private/next-review.md
 ```
 
-Keep this review output private; it names the next ledger alias and includes its
-qualification sources and draft. A complete bundle emits a SHA-256 review
-receipt plus exact content-bound approval and decline commands.
+The command creates an owner-only private file only after the complete bundle
+has been written, keeps its alias and evidence out of terminal output, and
+refuses to overwrite an earlier review. The bundle contains the next ledger
+alias, qualification sources, draft, SHA-256 review receipt, and exact
+content-bound approval and decline commands. Remove or privately archive it
+after the human decision before writing the next review.
 Omit `--as-of` to use the current UTC calendar date; the explicit UTC date in
 these examples keeps review receipts and later lifecycle records reproducible
 across operator timezones.

@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 181 of
-1,000, with 819 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 182 of
+1,000, with 818 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -233,6 +233,8 @@ alignment take priority over commit volume.
   content receipt verification but before approval or decline commits.
 - Symmetric approval and decline race coverage proving commit-window notes
   edits preserve ledger evidence, hide changed text, and clean staged output.
+- Atomic `--write-review` creation for owner-only private review bundles, with
+  no terminal disclosure, overwrite, ledger mutation, or retained staging file.
 - Live outreach review and mutation preflight that rejects tracked, unignored,
   or symlinked in-repository ledgers and draft notes before reading private
   material.
@@ -396,8 +398,9 @@ python3 scripts/audit_pilot_labels.py --repo becastil/Chats-empty-repo
 ## Next Small Task
 
 Human-review the five private, evidence-backed drafts, using `--review-next`
-with `--include-private-evidence` and `--include-private-draft` for a complete
-private bundle. Record each decision with the content-bound `--approve-next` or
+with `--include-private-evidence`, `--include-private-draft`, and
+`--write-review` for a complete owner-only private bundle. Record each decision
+with the content-bound `--approve-next` or
 `--decline-next` command emitted by that review, and send only approved drafts
 one at a time through their published business channels.
 Immediately record each human send with guarded `--record-contact`, which

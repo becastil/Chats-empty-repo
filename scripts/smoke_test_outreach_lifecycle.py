@@ -156,6 +156,36 @@ def verify_outreach_lifecycle(
         checked.append("permissive-ledger-rejected")
         handoff_ledger.chmod(0o600)
 
+        private_review = Path(tmp) / "private review.md"
+        written_review = _run_arguments(
+            outreach_command,
+            (
+                "--as-of",
+                "2026-07-01",
+                "--review-next",
+                "--write-review",
+                str(private_review),
+                "--",
+                str(handoff_ledger),
+            ),
+            environment=environment,
+        )
+        _require(
+            written_review.stdout
+            == "Private review written with owner-only permissions.\n",
+            "private review write disclosed alias-bearing output",
+        )
+        _require(
+            "prospect-001" in private_review.read_text(encoding="utf-8"),
+            "private review write omitted the selected alias",
+        )
+        if os.name == "posix":
+            _require(
+                private_review.stat().st_mode & 0o777 == 0o600,
+                "private review write did not use owner-only permissions",
+            )
+        checked.append("private-review-written")
+
         handoff_review = _run_arguments(
             outreach_command,
             (

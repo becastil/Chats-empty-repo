@@ -2103,3 +2103,21 @@ does not replace repository content or permissions, and leaves the existing
 write path unchanged when the flag is absent. This gives paid-CI distribution
 upgrades a mutation-free review step without verifying provenance itself or
 claiming customer activation, demand, payment, or revenue.
+
+## 2026-07-21: Publish Complete Outreach Reviews Only To New Private Files
+
+The next required commercial action is human review of five prepared drafts.
+The complete review mode previously printed each selected alias, message, and
+qualification source to standard output. Keeping that material beyond one
+terminal session depended on shell redirection, which could inherit a permissive
+umask, expose content to terminal capture, or silently replace an earlier review
+receipt.
+
+`--write-review` now accepts only `--review-next` text output. It requires an
+existing owner-only parent, enforces the ignored and untracked boundary inside a
+Git worktree, fully writes and syncs a `600` adjacent staging file, then uses an
+atomic no-overwrite publication step. Existing files and symbolic links are
+refused, staging paths are removed after success or failure, and standard output
+contains no prospect alias. The outreach ledger is read but never changed. This
+helps execute the bounded human queue without making a review decision, sending
+outreach, or claiming pilot demand, payment, or revenue.

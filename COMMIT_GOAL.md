@@ -8,9 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after adding mutation-free verified-pin preflight: 181 / 1,000
-  (18.1%).
-- Remaining after adding mutation-free verified-pin preflight: 819 commits.
+- Progress after adding private outreach review files: 182 / 1,000 (18.2%).
+- Remaining after adding private outreach review files: 818 commits.
 
 ## Commit Standard
 

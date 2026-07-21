@@ -192,6 +192,7 @@ class ReleaseManifestTests(unittest.TestCase):
             (
                 "utc-date-default",
                 "permissive-ledger-rejected",
+                "private-review-written",
                 "copy-ready-handoffs",
                 "draft-declined-without-contact",
                 "draft-reviewed",

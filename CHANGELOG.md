@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Added `--write-review` to atomically create a complete outreach review bundle
+  with owner-only permissions while keeping aliases, drafts, and evidence out
+  of terminal output.
+- Refused existing, symbolic-link, tracked, unignored, permissive-parent, and
+  non-text review destinations without changing the private outreach ledger.
+- Removed staged review files after success or failure and extended the
+  installed-command smoke contract through the private write path.
+- Preserved the commercial boundary: writing review evidence does not perform
+  human judgment, approve or send outreach, create a pilot request, or record
+  revenue.
 - Independently verified the public `v0.3.47` manifest, annotated tag, main
   ancestry, and provenance attestations for all three distributable artifacts.
 - Verified all seven installed command identities, the portable CLI, and four

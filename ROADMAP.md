@@ -8,8 +8,9 @@
 ## Near Term
 
 - Human-review the five prepared, publicly qualified drafts. Use the
-  content-bound `--approve-next` or `--decline-next` command emitted by each
-  complete private review, send only approved messages one at a time, record
+  owner-only `--write-review` bundle and the content-bound `--approve-next` or
+  `--decline-next` command emitted by each complete private review, send only
+  approved messages one at a time, record
   each human send through guarded `--record-contact`, then record the one
   human-sent, day-seven follow-up through guarded `--record-follow-up`. Record
   any human-observed reply, pilot request, rejection, or opt-out through guarded

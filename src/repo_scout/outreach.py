@@ -549,12 +549,49 @@ def record_outreach_outcome(
 def _require_private_live_path(path: Path, *, label: str) -> None:
     protected_path = path.parent.resolve() / path.name
     _require_owner_only_permissions(protected_path, label=label)
+    _require_ignored_untracked_path(protected_path, label=label)
+
+
+def _require_private_output_path(path: Path, *, label: str) -> Path:
+    protected_path = path.parent.resolve() / path.name
+    try:
+        protected_path.lstat()
+    except FileNotFoundError:
+        pass
+    except OSError as exc:
+        raise OutreachInputError(f"cannot inspect {label}: {exc}") from exc
+    else:
+        raise OutreachInputError(
+            f"{label} already exists; refusing to overwrite private review evidence"
+        )
+
+    try:
+        parent_stat = protected_path.parent.stat()
+    except OSError as exc:
+        raise OutreachInputError(
+            f"cannot inspect {label} parent directory: {exc}"
+        ) from exc
+    if not stat.S_ISDIR(parent_stat.st_mode):
+        raise OutreachInputError(f"{label} parent must be an existing directory")
+    if os.name == "posix" and parent_stat.st_mode & (
+        stat.S_IRWXG | stat.S_IRWXO
+    ):
+        raise OutreachInputError(
+            f"{label} parent directory must use owner-only permissions "
+            "(chmod 700) before writing private review evidence"
+        )
+
+    _require_ignored_untracked_path(protected_path, label=label)
+    return protected_path
+
+
+def _require_ignored_untracked_path(path: Path, *, label: str) -> None:
     try:
         worktree = subprocess.run(
             [
                 "git",
                 "-C",
-                str(protected_path.parent),
+                str(path.parent),
                 "rev-parse",
                 "--show-toplevel",
             ],
@@ -570,7 +607,7 @@ def _require_private_live_path(path: Path, *, label: str) -> None:
 
     worktree_root = Path(worktree.stdout.strip()).resolve()
     try:
-        relative_path = protected_path.relative_to(worktree_root).as_posix()
+        relative_path = path.relative_to(worktree_root).as_posix()
     except ValueError:
         return
 
@@ -607,6 +644,58 @@ def _require_private_live_path(path: Path, *, label: str) -> None:
             f"{label} inside a Git worktree must be ignored and untracked "
             "before live outreach actions"
         )
+
+
+def _write_private_review(path: Path, content: str) -> None:
+    protected_path = _require_private_output_path(
+        path,
+        label="private review output",
+    )
+    temporary_path: Path | None = None
+    try:
+        with NamedTemporaryFile(
+            "w",
+            encoding="utf-8",
+            dir=protected_path.parent,
+            prefix=f".{protected_path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as review_file:
+            temporary_path = Path(review_file.name)
+            os.chmod(temporary_path, 0o600)
+            review_file.write(content)
+            if not content.endswith("\n"):
+                review_file.write("\n")
+            review_file.flush()
+            os.fsync(review_file.fileno())
+
+        _require_private_output_path(
+            protected_path,
+            label="private review output",
+        )
+        try:
+            os.link(temporary_path, protected_path)
+        except FileExistsError as exc:
+            raise OutreachInputError(
+                "private review output already exists; refusing to overwrite "
+                "private review evidence"
+            ) from exc
+        except OSError as exc:
+            raise OutreachInputError(
+                f"cannot publish private review output safely: {exc}"
+            ) from exc
+    except OutreachInputError:
+        raise
+    except OSError as exc:
+        raise OutreachInputError(
+            f"cannot write private review output safely: {exc}"
+        ) from exc
+    finally:
+        if temporary_path is not None:
+            try:
+                temporary_path.unlink(missing_ok=True)
+            except OSError:
+                pass
 
 
 def _require_owner_only_permissions(path: Path, *, label: str) -> int | None:
@@ -1921,6 +2010,15 @@ def build_parser() -> argparse.ArgumentParser:
             "section from bounded private Markdown notes."
         ),
     )
+    parser.add_argument(
+        "--write-review",
+        type=Path,
+        metavar="PATH",
+        help=(
+            "With --review-next text output, atomically create an owner-only "
+            "private review file instead of printing the bundle."
+        ),
+    )
     return parser
 
 
@@ -1947,6 +2045,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             raise OutreachInputError(
                 "--include-private-draft requires --review-next"
             )
+        if args.write_review is not None and not args.review_next:
+            raise OutreachInputError("--write-review requires --review-next")
+        if args.write_review is not None and args.format != "text":
+            raise OutreachInputError("--write-review requires --format text")
         _validate_review_binding_options(
             review_digest=args.review_digest,
             private_drafts_path=args.reviewed_private_draft,
@@ -2133,33 +2235,39 @@ def main(argv: Sequence[str] | None = None) -> int:
         return PRIVATE_OUTPUT_EXIT_CODE
 
     if args.format == "json":
-        print(json.dumps(report, indent=2, sort_keys=True))
+        rendered_output = json.dumps(report, indent=2, sort_keys=True)
     elif args.record_outcome is not None:
-        print(format_outreach_outcome(report, ledger=args.ledger))
+        rendered_output = format_outreach_outcome(report, ledger=args.ledger)
     elif args.record_follow_up is not None:
-        print(format_outreach_follow_up(report, ledger=args.ledger))
+        rendered_output = format_outreach_follow_up(report, ledger=args.ledger)
     elif args.record_contact is not None:
-        print(format_outreach_contact(report, ledger=args.ledger))
+        rendered_output = format_outreach_contact(report, ledger=args.ledger)
     elif args.approve_next is not None:
-        print(format_outreach_approval(report, ledger=args.ledger))
+        rendered_output = format_outreach_approval(report, ledger=args.ledger)
     elif args.decline_next is not None:
-        print(
-            format_outreach_decline(
-                report,
-                ledger=args.ledger,
-                private_drafts_path=args.reviewed_private_draft,
-            )
+        rendered_output = format_outreach_decline(
+            report,
+            ledger=args.ledger,
+            private_drafts_path=args.reviewed_private_draft,
         )
     elif args.review_next:
-        print(
-            format_next_outreach_review(
-                report,
-                ledger=args.ledger,
-                private_drafts_path=args.include_private_draft,
-            )
+        rendered_output = format_next_outreach_review(
+            report,
+            ledger=args.ledger,
+            private_drafts_path=args.include_private_draft,
         )
     else:
-        print(format_outreach_report(report, ledger=args.ledger))
+        rendered_output = format_outreach_report(report, ledger=args.ledger)
+
+    if args.write_review is not None:
+        try:
+            _write_private_review(args.write_review, rendered_output)
+        except OutreachInputError as exc:
+            print(f"repo-scout-outreach: {exc}", file=sys.stderr)
+            return 2
+        print("Private review written with owner-only permissions.")
+    else:
+        print(rendered_output)
     return 0
 
 

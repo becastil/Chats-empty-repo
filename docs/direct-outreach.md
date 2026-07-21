@@ -154,7 +154,8 @@ private review session:
 repo-scout-outreach outreach-private/outreach-ledger.csv \
   --as-of "$(date -u +%F)" --review-next \
   --include-private-evidence \
-  --include-private-draft outreach-private/drafts.md
+  --include-private-draft outreach-private/drafts.md \
+  --write-review outreach-private/next-review.md
 ```
 
 The notes file uses one exact `## prospect-NNN` heading per draft. Before
@@ -163,17 +164,27 @@ showing anything, the opt-in requires a section for every ledger row still in
 Sections for review-declined, approved, or contacted aliases may remain as
 private history. The output then selects only the section matching the next
 ledger alias, maps every declared fit signal to its private HTTPS source, and
-marks both disclosures. A complete evidence-and-draft bundle also prints an
+marks both disclosures. A complete evidence-and-draft bundle also contains an
 opaque SHA-256 receipt over the normalized selected ledger row, private draft,
 review date, and five human checks. Both generated decision commands carry that
 receipt and the reviewed notes path.
+
+`--write-review` keeps that complete text out of terminal logs. It requires
+`--review-next` text mode, an existing owner-only parent directory, and an
+ignored, untracked destination when the file is inside a Git worktree. The
+command fully writes and syncs a `600` staging file before atomically publishing
+it, refuses to replace any existing file or symbolic link, and removes its
+staging path after success or failure. Standard output contains only an
+alias-free confirmation. Review the file locally, choose exactly one generated
+decision, then remove or privately archive it before creating the next bundle.
+Writing the bundle does not edit the ledger, approve a draft, or send outreach.
 Approval and decline also retain the bounded notes file revision captured while
 verifying that receipt. While holding the ledger lock, Repo Scout compares the
 current private notes to that revision; any intervening edit stops the decision,
 preserves the ledger, removes staged output, and requires a new review.
 Duplicate, malformed, empty, oversized, missing, or unknown sections fail
-without changing the ledger or exposing message text. Keep this output in the
-ignored workspace and do not redirect it into committed reports, logs, issue
+without changing the ledger or exposing message text. Keep each review file in
+the ignored workspace and do not move it into committed reports, logs, issue
 comments, or CI artifacts.
 Without the flags, review output remains redacted. Showing the bundle still does
 not verify a claim, approve a draft, or send a message; the human must read the

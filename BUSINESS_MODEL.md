@@ -443,6 +443,15 @@ longer matches the human evidence. Symmetric regression coverage now forces
 that exact commit-window edit during both approval and decline, proving each
 branch preserves ledger bytes, hides changed text, and removes staged output.
 
+The same complete review can now be created with `--write-review` inside the
+ignored private workspace instead of exposing the draft, alias, and evidence to
+terminal capture or relying on shell redirection. The command stages and syncs
+the full text with owner-only permissions, atomically publishes only to a new
+path, refuses overwrite or symbolic-link destinations, and prints only an
+alias-free confirmation. The ledger remains unchanged. This makes the bounded
+human review queue easier to execute without performing the review, approving
+or sending a message, creating public demand, or recording revenue.
+
 Version `0.3.43` advances the package, runtime, website, download guide, and
 installed-command smoke identities together so the schema-4 content receipt can
 reach the five-draft operator workflow. The same boundary ships bounded GitHub
