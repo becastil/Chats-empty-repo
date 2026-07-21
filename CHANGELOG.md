@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.49 - 2026-07-21
+
 - Reported post-publication private-review cleanup failures instead of silently
   claiming success while a hidden staging copy remains.
 - Preserved the completed owner-only review and identified a neutral retained

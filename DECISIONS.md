@@ -2182,3 +2182,18 @@ sensitive destination name. The operator removes that file instead of retrying;
 the destination remains intact and overwrite-protected. This keeps private
 evidence handling truthful for the active human review queue; it does not make a
 review decision, send outreach, create demand, or record revenue.
+
+## 2026-07-21: Release Truthful Review Cleanup As v0.3.49
+
+The cleanup-failure behavior on `main` protects private review evidence only for
+operators running an editable checkout. The active workflow uses verified
+GitHub releases, and future review bundles need the same truthful partial-success
+receipt without weakening the human decision boundary.
+
+Version `0.3.49` advances package, portable, website, verification-guide, and
+installed commercial-fixture identities together. The release must pass every
+source test and prove the clean private review path through the installed wheel
+before checksums and provenance are published. Paid-CI pins stay on independently
+verified `v0.3.48` until the new public artifacts are reconciled separately.
+Publishing the fix does not approve or send outreach, create demand, collect
+payment, or record revenue.

@@ -451,11 +451,21 @@ terminal capture or relying on shell redirection. The command stages and syncs
 the full text with owner-only permissions, atomically publishes only to a new
 path, refuses overwrite or symbolic-link destinations, and prints only an
 alias-free confirmation. A failed staging cleanup after publication now reports
-the completed review and retained owner-only path instead of claiming clean
-success, allowing manual cleanup without an overwrite-producing retry. The
-ledger remains unchanged. This makes the bounded human review queue easier to
-execute without performing the review, approving or sending a message, creating
-public demand, or recording revenue.
+the completed review and a neutral retained owner-only filename instead of
+claiming clean success or repeating a potentially sensitive destination name.
+This allows manual cleanup without an overwrite-producing retry. The ledger
+remains unchanged. This makes the bounded human review queue easier to execute
+without performing the review, approving or sending a message, creating public
+demand, or recording revenue.
+
+Version `0.3.49` packages that truthful cleanup boundary so future owner-only
+review bundles do not depend on a source checkout. The installed lifecycle
+smoke must still prove clean review publication, exact permissions, alias-free
+terminal output, and zero ledger mutation before release. Customer and dogfood
+CI remain pinned to independently verified `v0.3.48` artifacts until the new
+manifest, tag ancestry, signer workflow, and attestations are checked
+separately. This release does not perform a review, send outreach, create
+demand, collect payment, or record revenue.
 
 Version `0.3.48` advances the package, portable CLI, website identity,
 verification guide, and installed commercial smoke fixture together so that
