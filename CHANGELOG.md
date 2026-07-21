@@ -29,6 +29,12 @@
   downgrade, same-version, permission-preservation, and rollback contracts.
 - Added an executable documentation check so those release-upgrade instructions
   cannot regress to the older shape-only, five-target description.
+- Added `--check` to the maintainer release-pin updater so all six layouts,
+  identities, and downgrade boundaries can be reviewed without a write.
+- Emitted `verified` target receipts in check mode while leaving every file,
+  permission bit, and staging path unchanged.
+- Documented the preflight-before-update workflow and covered its exact output
+  and mutation-free behavior through the command entry point.
 
 ## 0.3.47 - 2026-07-20
 

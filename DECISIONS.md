@@ -2089,3 +2089,17 @@ revalidate or reconcile the current artifact identities, and forward upgrades
 retain the existing atomic replacement and rollback behavior. This prevents an
 accidental distribution downgrade without claiming adoption, demand, payment,
 or revenue.
+
+## 2026-07-20: Separate Release-Pin Preflight From The Write Transaction
+
+The maintainer updater already prepared every replacement in memory before
+writing, but its command exposed only the mutating path. Reviewing a future
+release identity against all six live layouts therefore also entered the
+staging and replacement transaction.
+
+`--check` now stops after the same shape, layout, and numeric downgrade
+validation and reports each target as verified. It creates no temporary file,
+does not replace repository content or permissions, and leaves the existing
+write path unchanged when the flag is absent. This gives paid-CI distribution
+upgrades a mutation-free review step without verifying provenance itself or
+claiming customer activation, demand, payment, or revenue.

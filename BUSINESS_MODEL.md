@@ -125,6 +125,9 @@ Every version-bearing target also rejects a numerically older release before
 staging starts. Revalidating the current release remains supported, so a
 maintainer can reconcile its source commit and wheel digest without weakening
 the paid CI path to an older artifact.
+The maintainer can run that complete validation through `--check` before the
+transaction. Check mode reports every verified target but creates no staging
+file and replaces no repository content, keeping review separate from commit.
 Staging now stores normalized permission bits rather than raw filesystem mode
 metadata. Regression coverage proves successful updates and rollback restores
 retain each target's access mode, recovery copies keep the original mode, and

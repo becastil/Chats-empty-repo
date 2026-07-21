@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 import importlib.util
+from io import StringIO
 import os
 from pathlib import Path
 import stat
@@ -104,9 +105,55 @@ class UpdateReleasePinTests(unittest.TestCase):
             "same-version revalidation",
             "preserve each\ntarget's permission bits",
             "rolls\nback every target",
+            "--check",
+            "without staging or replacing files",
         ):
             with self.subTest(required=required):
                 self.assertIn(required, guide)
+
+    def test_check_mode_preflights_without_writing(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self._write_fixture(root)
+            before = {
+                path: (
+                    (root / path).read_text(encoding="utf-8"),
+                    stat.S_IMODE((root / path).stat().st_mode),
+                )
+                for path in update_release_pin.TARGETS
+            }
+
+            with patch("sys.stdout", new_callable=StringIO) as output:
+                status = update_release_pin.main(
+                    [
+                        "--version",
+                        NEW_PIN.version,
+                        "--source-sha",
+                        NEW_PIN.source_sha,
+                        "--wheel-sha256",
+                        NEW_PIN.wheel_sha256,
+                        "--root",
+                        str(root),
+                        "--check",
+                    ]
+                )
+
+            self.assertEqual(status, 0)
+            self.assertEqual(
+                output.getvalue().splitlines(),
+                [f"verified {path}" for path in update_release_pin.TARGETS],
+            )
+            self.assertEqual(
+                {
+                    path: (
+                        (root / path).read_text(encoding="utf-8"),
+                        stat.S_IMODE((root / path).stat().st_mode),
+                    )
+                    for path in update_release_pin.TARGETS
+                },
+                before,
+            )
+            self.assertEqual(self._staging_files(root), [])
 
     @unittest.skipUnless(os.name == "posix", "requires POSIX file modes")
     def test_success_preserves_permissions_and_removes_staging_files(self) -> None:

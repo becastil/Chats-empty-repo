@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 180 of
-1,000, with 820 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 181 of
+1,000, with 819 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -345,6 +345,8 @@ alignment take priority over commit volume.
   downgrades before staging while allowing same-version revalidation.
 - A tested maintainer guide covering the complete six-target pin transaction,
   downgrade boundary, permission preservation, and rollback behavior.
+- A `--check` release-pin preflight that validates the full six-target update
+  without creating staging files or replacing repository content.
 - Staged-original rollback that restores every verified-pin target already
   replaced when a later filesystem write fails, with retained recovery evidence
   if rollback itself cannot complete.

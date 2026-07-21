@@ -113,6 +113,10 @@ python3 scripts/update_release_pin.py \
   --wheel-sha256 INDEPENDENTLY_MEASURED_64_CHARACTER_DIGEST
 ```
 
+Add `--check` to that command first to validate the same release identity,
+six-target layout, and downgrade boundary without staging or replacing files.
+After review, rerun the command without `--check` to perform the atomic update.
+
 The updater validates all identity shapes and preflights all six
 version-bearing targets before writing. It refuses a numerically older release
 before staging, while same-version revalidation and forward upgrades remain

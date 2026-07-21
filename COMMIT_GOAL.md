@@ -8,9 +8,9 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after locking the verified-pin maintainer guide to behavior: 180 /
-  1,000 (18.0%).
-- Remaining after locking the verified-pin maintainer guide: 820 commits.
+- Progress after adding mutation-free verified-pin preflight: 181 / 1,000
+  (18.1%).
+- Remaining after adding mutation-free verified-pin preflight: 819 commits.
 
 ## Commit Standard
 

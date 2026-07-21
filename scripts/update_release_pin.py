@@ -52,7 +52,12 @@ class ReleasePin:
             )
 
 
-def update_release_pin(root: Path, pin: ReleasePin) -> tuple[Path, ...]:
+def update_release_pin(
+    root: Path,
+    pin: ReleasePin,
+    *,
+    check: bool = False,
+) -> tuple[Path, ...]:
     pin.validate()
     project_root = root.expanduser().resolve()
     prepared: dict[Path, str] = {}
@@ -80,6 +85,9 @@ def update_release_pin(root: Path, pin: ReleasePin) -> tuple[Path, ...]:
             prepared[target] = _update_test_contract(content, pin, relative_path)
         else:
             prepared[target] = _update_workflow(content, pin, relative_path)
+
+    if check:
+        return TARGETS
 
     update_paths: dict[Path, Path] = {}
     rollback_paths: dict[Path, Path] = {}
@@ -193,6 +201,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=Path.cwd(),
         help="Repository root. Defaults to the current directory.",
     )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Validate every target without staging or replacing files.",
+    )
     return parser
 
 
@@ -200,12 +213,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     pin = ReleasePin(args.version, args.source_sha, args.wheel_sha256)
     try:
-        updated = update_release_pin(args.root, pin)
+        updated = update_release_pin(args.root, pin, check=args.check)
     except PinUpdateError as exc:
         print(f"update-release-pin: {exc}", file=sys.stderr)
         return 2
+    action = "verified" if args.check else "updated"
     for path in updated:
-        print(f"updated {path}")
+        print(f"{action} {path}")
     return 0
 
 
