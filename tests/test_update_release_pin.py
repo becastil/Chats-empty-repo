@@ -92,6 +92,22 @@ class UpdateReleasePinTests(unittest.TestCase):
                 project_state,
             )
 
+    def test_maintainer_guide_describes_the_atomic_pin_contract(self) -> None:
+        guide = (ROOT / "docs" / "github-actions.md").read_text(
+            encoding="utf-8"
+        )
+
+        for required in (
+            "business-model and project-state claims",
+            "all six\nversion-bearing targets",
+            "refuses a numerically older release\nbefore staging",
+            "same-version revalidation",
+            "preserve each\ntarget's permission bits",
+            "rolls\nback every target",
+        ):
+            with self.subTest(required=required):
+                self.assertIn(required, guide)
+
     @unittest.skipUnless(os.name == "posix", "requires POSIX file modes")
     def test_success_preserves_permissions_and_removes_staging_files(self) -> None:
         with TemporaryDirectory() as tmp:

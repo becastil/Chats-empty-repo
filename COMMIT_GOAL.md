@@ -8,8 +8,9 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after rejecting verified CI release downgrades: 179 / 1,000 (17.9%).
-- Remaining after rejecting verified CI release downgrades: 821 commits.
+- Progress after locking the verified-pin maintainer guide to behavior: 180 /
+  1,000 (18.0%).
+- Remaining after locking the verified-pin maintainer guide: 820 commits.
 
 ## Commit Standard
 

@@ -25,6 +25,10 @@
   a downgrade before any transaction file is staged or replaced.
 - Added per-target regression coverage proving all six version claims enforce
   the same monotonic release boundary without partial writes.
+- Updated the maintainer CI guide to name all six atomic pin targets and the
+  downgrade, same-version, permission-preservation, and rollback contracts.
+- Added an executable documentation check so those release-upgrade instructions
+  cannot regress to the older shape-only, five-target description.
 
 ## 0.3.47 - 2026-07-20
 
