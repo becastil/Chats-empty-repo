@@ -27,7 +27,7 @@ NEW_PIN = update_release_pin.ReleasePin("2.0.1", "a" * 40, "b" * 64)
 
 
 class UpdateReleasePinTests(unittest.TestCase):
-    def test_updates_workflows_readme_business_model_and_test_contract(
+    def test_updates_workflows_claims_project_state_and_test_contract(
         self,
     ) -> None:
         with TemporaryDirectory() as tmp:
@@ -42,6 +42,7 @@ class UpdateReleasePinTests(unittest.TestCase):
                     *update_release_pin.WORKFLOW_PATHS,
                     update_release_pin.README_PATH,
                     update_release_pin.BUSINESS_MODEL_PATH,
+                    update_release_pin.PROJECT_STATE_PATH,
                     update_release_pin.TEST_CONTRACT_PATH,
                 ),
             )
@@ -78,13 +79,25 @@ class UpdateReleasePinTests(unittest.TestCase):
                 "Public checkpoint remains `v7.7.7`.",
                 business_model,
             )
+            project_state = (
+                root / update_release_pin.PROJECT_STATE_PATH
+            ).read_text(encoding="utf-8")
+            self.assertIn(
+                f"- Independently pinned `v{NEW_PIN.version}` wheel digest",
+                project_state,
+            )
+            self.assertNotIn(f"`v{OLD_VERSION}`", project_state)
+            self.assertIn(
+                "Historical release remains `v6.6.6`.",
+                project_state,
+            )
 
     @unittest.skipUnless(os.name == "posix", "requires POSIX file modes")
     def test_success_preserves_permissions_and_removes_staging_files(self) -> None:
         with TemporaryDirectory() as tmp:
             root = Path(tmp)
             self._write_fixture(root)
-            expected_modes = (0o640, 0o604, 0o644, 0o620, 0o600)
+            expected_modes = (0o640, 0o604, 0o644, 0o620, 0o600, 0o660)
             for path, mode in zip(update_release_pin.TARGETS, expected_modes):
                 (root / path).chmod(mode)
 
@@ -217,6 +230,36 @@ class UpdateReleasePinTests(unittest.TestCase):
                 before,
             )
 
+    def test_project_state_layout_failure_leaves_every_target_unchanged(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self._write_fixture(root)
+            project_state = root / update_release_pin.PROJECT_STATE_PATH
+            project_state.write_text(
+                "# missing verified project-state version\n",
+                encoding="utf-8",
+            )
+            before = {
+                path: (root / path).read_text(encoding="utf-8")
+                for path in update_release_pin.TARGETS
+            }
+
+            with self.assertRaisesRegex(
+                update_release_pin.PinUpdateError,
+                "verified project-state version",
+            ):
+                update_release_pin.update_release_pin(root, NEW_PIN)
+
+            self.assertEqual(
+                {
+                    path: (root / path).read_text(encoding="utf-8")
+                    for path in update_release_pin.TARGETS
+                },
+                before,
+            )
+
     def test_mid_commit_failure_rolls_back_every_updated_target(self) -> None:
         with TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -232,20 +275,20 @@ class UpdateReleasePinTests(unittest.TestCase):
             real_replace = update_release_pin.os.replace
             replace_calls = 0
 
-            def fail_second_replace(source: Path, target: Path) -> None:
+            def fail_final_replace(source: Path, target: Path) -> None:
                 nonlocal replace_calls
                 replace_calls += 1
-                if replace_calls == 2:
-                    raise OSError("synthetic second replace failure")
+                if replace_calls == len(update_release_pin.TARGETS):
+                    raise OSError("synthetic final replace failure")
                 real_replace(source, target)
 
             with patch.object(
                 update_release_pin.os,
                 "replace",
-                side_effect=fail_second_replace,
+                side_effect=fail_final_replace,
             ), self.assertRaisesRegex(
                 update_release_pin.PinUpdateError,
-                "rolled back 1 updated target",
+                "rolled back 5 updated target",
             ):
                 update_release_pin.update_release_pin(root, NEW_PIN)
 
@@ -394,6 +437,16 @@ class UpdateReleasePinTests(unittest.TestCase):
             "verified\n"
             f"`v{OLD_VERSION}` wheel, so v4 policies can run locally and in CI\n"
             "Public checkpoint remains `v7.7.7`.\n",
+            encoding="utf-8",
+        )
+
+        project_state = root / update_release_pin.PROJECT_STATE_PATH
+        project_state.write_text(
+            "Historical release remains `v6.6.6`.\n"
+            f"- Independently pinned `v{OLD_VERSION}` wheel digest, source "
+            "commit, manifest,\n"
+            "  provenance, signer workflow, and hosted-runner checks in both "
+            "policy gates.\n",
             encoding="utf-8",
         )
 

@@ -13,6 +13,7 @@ from typing import Iterable, Sequence
 
 README_PATH = Path("README.md")
 BUSINESS_MODEL_PATH = Path("BUSINESS_MODEL.md")
+PROJECT_STATE_PATH = Path("PROJECT_STATE.md")
 TEST_CONTRACT_PATH = Path("tests/test_ci_examples.py")
 WORKFLOW_PATHS = (
     Path(".github/workflows/repo-scout-policy.yml"),
@@ -22,6 +23,7 @@ TARGETS = (
     *WORKFLOW_PATHS,
     README_PATH,
     BUSINESS_MODEL_PATH,
+    PROJECT_STATE_PATH,
     TEST_CONTRACT_PATH,
 )
 VERSION_PATTERN = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+\Z")
@@ -68,6 +70,10 @@ def update_release_pin(root: Path, pin: ReleasePin) -> tuple[Path, ...]:
             prepared[target] = _update_readme(content, pin, relative_path)
         elif relative_path == BUSINESS_MODEL_PATH:
             prepared[target] = _update_business_model(
+                content, pin, relative_path
+            )
+        elif relative_path == PROJECT_STATE_PATH:
+            prepared[target] = _update_project_state(
                 content, pin, relative_path
             )
         elif relative_path == TEST_CONTRACT_PATH:
@@ -287,6 +293,23 @@ def _update_business_model(content: str, pin: ReleasePin, source: Path) -> str:
                 f"`v{pin.version}` wheel, so v4 policies can run locally and in CI"
             ),
             "verified paid CI version",
+        ),
+    )
+    return _apply_replacements(content, replacements, source)
+
+
+def _update_project_state(content: str, pin: ReleasePin, source: Path) -> str:
+    replacements = (
+        (
+            re.compile(
+                r"(?m)^- Independently pinned `v[0-9]+\.[0-9]+\.[0-9]+` "
+                r"wheel digest, source commit, manifest,$"
+            ),
+            (
+                f"- Independently pinned `v{pin.version}` wheel digest, "
+                "source commit, manifest,"
+            ),
+            "verified project-state version",
         ),
     )
     return _apply_replacements(content, replacements, source)

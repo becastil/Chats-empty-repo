@@ -12,6 +12,12 @@
 - Preserved the honest commercial boundary: verification and CI distribution
   created no customer install, outreach attempt, pilot request, payment, or
   revenue.
+- Added the current verified-pin claim in `PROJECT_STATE.md` to the atomic
+  maintainer pin update instead of relying on a separate manual edit.
+- Preflighted the project-state layout with the other five targets and rolled
+  back its replacement through the same permission-preserving transaction.
+- Added focused success, permission, and mutation-free layout-drift coverage
+  for the expanded six-target update.
 
 ## 0.3.47 - 2026-07-20
 

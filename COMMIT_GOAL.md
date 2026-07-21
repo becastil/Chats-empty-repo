@@ -8,9 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after independently pinning v0.3.47 in both policy gates: 177 /
-  1,000 (17.7%).
-- Remaining after independently pinning v0.3.47: 823 commits.
+- Progress after adding the project-state claim to atomic pin updates: 178 /
+  1,000 (17.8%).
+- Remaining after adding the project-state claim to atomic pin updates: 822
+  commits.
 
 ## Commit Standard
 

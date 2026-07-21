@@ -2059,3 +2059,18 @@ model claim, and executable pin contract together. Measured traffic and funnel
 baselines remain at their last deliberate checkpoint. This improves paid CI
 distribution integrity without proving a customer install, outreach attempt,
 pilot request, payment, or revenue.
+
+## 2026-07-20: Keep The Project-State Pin Claim In The Same Transaction
+
+Verified-pin upgrades changed both policy workflows, the copy-ready example,
+buyer-facing README and business-model claims, and the executable CI contract
+together. `PROJECT_STATE.md` carried the same current verified version but
+still required a separate manual edit, leaving one repository-facing claim
+outside the preflight and rollback boundary.
+
+The maintainer updater now treats that exact project-state line as a sixth
+transaction target. It requires exactly one recognized claim before staging
+any write, preserves its permission bits, and rolls it back with every other
+target if a later replacement fails. Historical release references remain
+untouched. This reduces paid-CI distribution drift without changing a policy,
+publishing a release, contacting a prospect, or creating demand or revenue.

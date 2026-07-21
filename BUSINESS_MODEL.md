@@ -115,11 +115,12 @@ The dogfood and copy-ready gates now install the independently verified
 `v0.3.47` wheel, so v4 policies can run locally and in CI
 without source checkout, mutable package resolution, or a team-managed secret.
 Maintainer pin upgrades now preflight and update the dogfood workflow,
-copy-ready customer example, buyer-facing README and commercial model claims,
-and contract test as one reviewed change, reducing the chance that distribution
-trust metadata diverges between internal and customer activation paths. A
-mid-write failure now restores every already-replaced target from staged
-originals instead of leaving internal and customer pins split.
+copy-ready customer example, buyer-facing README, commercial model and
+project-state claims, and contract test as one reviewed change, reducing the
+chance that distribution trust metadata diverges between internal and customer
+activation paths. A mid-write failure now restores every already-replaced
+target from staged originals instead of leaving internal and customer pins
+split.
 Staging now stores normalized permission bits rather than raw filesystem mode
 metadata. Regression coverage proves successful updates and rollback restores
 retain each target's access mode, recovery copies keep the original mode, and
