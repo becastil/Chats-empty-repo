@@ -2121,3 +2121,19 @@ refused, staging paths are removed after success or failure, and standard output
 contains no prospect alias. The outreach ledger is read but never changed. This
 helps execute the bounded human queue without making a review decision, sending
 outreach, or claiming pilot demand, payment, or revenue.
+
+## 2026-07-21: Release Private Review Files As v0.3.48
+
+The owner-only review-file path is covered by source tests and the installed
+outreach lifecycle harness, but `v0.3.47` cannot expose it to the operator. The
+five prepared drafts should not depend on a source checkout or an unverified
+local package build for their human review boundary.
+
+Version `0.3.48` advances the package and runtime versions, portable download,
+website metadata, verification guide, and installed commercial fixture as one
+release. Its tag must run all source tests, build the exact portable, wheel, and
+source artifacts, then prove the new private write through the installed wheel
+before provenance attestation. Existing paid-CI pins remain on independently
+verified `v0.3.47` until the new manifest, tag ancestry, signer workflow, and
+attestations are checked separately. The release creates no outreach attempt,
+pilot request, payment, or revenue.

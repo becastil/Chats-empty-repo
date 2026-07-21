@@ -21,7 +21,7 @@ sys.modules[SPEC.name] = audit_production_site
 SPEC.loader.exec_module(audit_production_site)
 
 URL = "https://repo-scout.becastil.chatgpt.site/"
-VERSION = "0.3.47"
+VERSION = "0.3.48"
 PILOT_URL = f"{URL}#team-pilot"
 PILOT_APPLICATION_URL = (
     "https://github.com/becastil/Chats-empty-repo/issues/new"
@@ -211,7 +211,7 @@ class ProductionSiteAuditTests(unittest.TestCase):
             )
 
         self.assertEqual(result, 0)
-        self.assertIn("version=0.3.47", stdout.getvalue())
+        self.assertIn("version=0.3.48", stdout.getvalue())
         self.assertIn("software-version", stdout.getvalue())
         self.assertIn("paid-service", stdout.getvalue())
         self.assertIn("pilot-application", stdout.getvalue())

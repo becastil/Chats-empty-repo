@@ -452,6 +452,16 @@ alias-free confirmation. The ledger remains unchanged. This makes the bounded
 human review queue easier to execute without performing the review, approving
 or sending a message, creating public demand, or recording revenue.
 
+Version `0.3.48` advances the package, portable CLI, website identity,
+verification guide, and installed commercial smoke fixture together so that
+owner-only review-file creation reaches the existing five-draft workflow. The
+tag must prove the complete private write through the installed wheel, including
+alias-free terminal output and exact `600` file permissions, before checksums
+and provenance are published. Verified customer and dogfood CI pins remain on
+`v0.3.47` until the new artifacts are independently reconciled. Publishing this
+operator safeguard does not perform a review, send outreach, create demand,
+collect payment, or record revenue.
+
 Version `0.3.43` advances the package, runtime, website, download guide, and
 installed-command smoke identities together so the schema-4 content receipt can
 reach the five-draft operator workflow. The same boundary ships bounded GitHub

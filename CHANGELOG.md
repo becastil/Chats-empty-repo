@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.48 - 2026-07-21
+
 - Added `--write-review` to atomically create a complete outreach review bundle
   with owner-only permissions while keeping aliases, drafts, and evidence out
   of terminal output.
