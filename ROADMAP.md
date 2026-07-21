@@ -7,8 +7,9 @@
 
 ## Near Term
 
-- Human-review the five prepared, publicly qualified drafts. Use the
-  owner-only `--write-review` bundle and the content-bound `--approve-next` or
+- Human-review the five prepared, publicly qualified drafts. The first
+  owner-only `--write-review` bundle is ready in the ignored private workspace;
+  use its content-bound `--approve-next` or
   `--decline-next` command emitted by each complete private review, send only
   approved messages one at a time, record
   each human send through guarded `--record-contact`, then record the one

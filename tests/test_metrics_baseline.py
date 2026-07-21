@@ -146,13 +146,13 @@ class MetricsBaselineTests(unittest.TestCase):
             },
         )
 
-    def test_outreach_draft_baseline_is_aggregate_and_unsent(self) -> None:
+    def test_outreach_review_checkpoint_is_aggregate_and_unsent(self) -> None:
         report = self._read("outreach-draft-baseline.json")
         summary = report["summary"]
         serialized = json.dumps(report)
 
-        self.assertEqual(report["schema_version"], 5)
-        self.assertEqual(report["as_of"], "2026-07-14")
+        self.assertEqual(report["schema_version"], 9)
+        self.assertEqual(report["as_of"], "2026-07-21")
         self.assertEqual(summary["prospects"], 5)
         self.assertEqual(summary["drafted"], 5)
         self.assertEqual(summary["fit_evidence_links"], 16)
@@ -161,10 +161,16 @@ class MetricsBaselineTests(unittest.TestCase):
         self.assertEqual(summary["contacted"], 0)
         self.assertEqual(summary["replied"], 0)
         self.assertEqual(summary["pilot_requested"], 0)
+        self.assertEqual(summary["review_declined"], 0)
+        self.assertEqual(summary["dated_outcomes"], 0)
+        self.assertEqual(summary["undated_outcomes"], 0)
         self.assertEqual(report["due_followups"], [])
+        self.assertIsNone(report["next_approved"])
+        self.assertFalse(report["private_output"])
         self.assertNotIn("prospect-", serialized)
         self.assertNotIn("https://", serialized)
         self.assertNotIn("@", serialized)
+        self.assertIn("counts-only", report["privacy_note"])
         self.assertIn("not lead, demand, payment, or revenue", report["evidence_note"])
 
     @staticmethod

@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-07-14",
+  "as_of": "2026-07-21",
   "by_status": {
     "approved": 0,
     "contacted": 0,
@@ -9,7 +9,8 @@
     "not-a-fit": 0,
     "pilot-requested": 0,
     "replied": 0,
-    "researched": 0
+    "researched": 0,
+    "review-declined": 0
   },
   "due_followups": [],
   "evidence_note": "Outreach ledger activity is not lead, demand, payment, or revenue evidence.",
@@ -19,12 +20,16 @@
     "max_follow_ups": 1,
     "max_prospects": 10
   },
-  "schema_version": 5,
+  "next_approved": null,
+  "privacy_note": "This report is counts-only and contains no prospect aliases.",
+  "private_output": false,
+  "schema_version": 9,
   "summary": {
     "approved": 0,
     "attempted_prospects": 0,
     "closed": 0,
     "contacted": 0,
+    "dated_outcomes": 0,
     "drafted": 5,
     "due_followups": 0,
     "fit_evidence_links": 16,
@@ -32,6 +37,8 @@
     "pilot_requested": 0,
     "prospects": 5,
     "replied": 0,
-    "researched": 0
+    "researched": 0,
+    "review_declined": 0,
+    "undated_outcomes": 0
   }
 }

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Created the first complete owner-only review bundle from the independently
+  verified `v0.3.48` wheel without changing the private outreach ledger.
+- Refreshed the committed counts-only outreach checkpoint to schema 9 after the
+  bundle write, preserving 5 drafts, 16 fit links, 0 approvals, 0 attempts, and
+  no private alias, address, message, review date, or evidence URL.
 - Independently verified the public `v0.3.48` manifest, annotated tag, main
   ancestry, and provenance attestations for all three distributable artifacts.
 - Measured the released wheel digest separately from the release workflow and

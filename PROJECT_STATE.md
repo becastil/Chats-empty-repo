@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 184 of
-1,000, with 816 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 185 of
+1,000, with 815 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -328,7 +328,7 @@ alignment take priority over commit volume.
   installed-command behavior, and consistent wheel and zipapp version identity.
 - Five personalized, qualified outreach drafts prepared from narrow
   company-controlled public evidence and kept in the ignored private workspace.
-- A committed schema-5 outreach draft baseline proving 5 drafts, 16 reviewed
+- A committed schema-9 outreach review checkpoint proving 5 drafts, 16 reviewed
   fit links, 0 approvals, and 0 attempts while exposing no identity, address,
   alias, draft, review date, or source URL.
 - Backward-compatible policy v2 `forbidden_files` rules with normalized exact paths and contradictory-rule rejection.
@@ -399,10 +399,9 @@ python3 scripts/audit_pilot_labels.py --repo becastil/Chats-empty-repo
 
 ## Next Small Task
 
-Human-review the five private, evidence-backed drafts, using `--review-next`
-with `--include-private-evidence`, `--include-private-draft`, and
-`--write-review` for a complete owner-only private bundle. Record each decision
-with the content-bound `--approve-next` or
+The first complete owner-only bundle is prepared in the ignored private
+workspace from the verified `v0.3.48` wheel. Human-review that private file and
+record the decision with its content-bound `--approve-next` or
 `--decline-next` command emitted by that review, and send only approved drafts
 one at a time through their published business channels.
 Immediately record each human send with guarded `--record-contact`, which

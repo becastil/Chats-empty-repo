@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after independently pinning v0.3.48: 184 / 1,000 (18.4%).
-- Remaining after independently pinning v0.3.48: 816 commits.
+- Progress after preparing the first private review bundle: 185 / 1,000 (18.5%).
+- Remaining after preparing the first private review bundle: 815 commits.
 
 ## Commit Standard
 

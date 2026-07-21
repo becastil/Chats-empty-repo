@@ -401,10 +401,12 @@ boundary by rejecting group/world-accessible files and immediate parent
 directories before reading private material. Counts-only validation of the
 empty public template remains available. This reduces accidental prospect-data
 disclosure; it does not approve a draft, create an attempt, or establish demand.
-The committed schema-3 baseline contains only aggregate counts. All five remain
-`drafted`: approved messages, attempted outreach, replies, pilot requests, and
-revenue are still zero until a human reviews and sends each message through its
-published business channel.
+The committed schema-9 checkpoint contains only aggregate counts. The first
+complete owner-only review bundle has been created in the ignored private
+workspace from the verified `v0.3.48` wheel without changing the ledger. All
+five remain `drafted`: approved messages, attempted outreach, replies, pilot
+requests, and revenue are still zero until a human reviews and sends each
+message through its published business channel.
 
 The operator can now request one deterministic `--review-next` checklist. It
 names only the next private alias and permitted channel, reports qualification

@@ -2152,3 +2152,17 @@ workflows, the buyer-facing claim, the commercial model, project state, and the
 executable CI contract together. This reduces paid-CI supply-chain drift while
 leaving the roadmap focused on five human-reviewed outreach attempts. It does
 not establish a customer install, demand, payment, or revenue.
+
+## 2026-07-21: Stop Automation At The First Real Human Review
+
+The verified `v0.3.48` wheel created the first complete review bundle inside
+the ignored owner-only workspace. The destination is a nonempty `600` file,
+remains untracked, and left no staging file. Ledger bytes and the schema-9
+counts-only report were unchanged: five drafts, 16 fit-evidence links, zero
+approvals, zero attempts, and zero pilot requests.
+
+That bundle is the handoff to human judgment, not evidence that judgment
+occurred. Automation must not run either generated decision, send a message, or
+record contact without the explicit checks and real-world action required by
+the operator contract. The public baseline records only aggregate readiness so
+the next run cannot mistake a prepared file for demand, payment, or revenue.
