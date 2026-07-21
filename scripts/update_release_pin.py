@@ -213,7 +213,8 @@ def _update_workflow(content: str, pin: ReleasePin, source: Path) -> str:
     replacements = (
         (
             re.compile(
-                r'(?m)^  REPO_SCOUT_VERSION: "[0-9]+\.[0-9]+\.[0-9]+"$'
+                r'(?m)^  REPO_SCOUT_VERSION: "'
+                r'(?P<version>[0-9]+\.[0-9]+\.[0-9]+)"$'
             ),
             f'  REPO_SCOUT_VERSION: "{pin.version}"',
             "version",
@@ -229,14 +230,15 @@ def _update_workflow(content: str, pin: ReleasePin, source: Path) -> str:
             "wheel SHA-256",
         ),
     )
-    return _apply_replacements(content, replacements, source)
+    return _apply_replacements(content, replacements, source, pin)
 
 
 def _update_test_contract(content: str, pin: ReleasePin, source: Path) -> str:
     replacements = (
         (
             re.compile(
-                r'(?m)^REPO_SCOUT_VERSION = "[0-9]+\.[0-9]+\.[0-9]+"$'
+                r'(?m)^REPO_SCOUT_VERSION = "'
+                r'(?P<version>[0-9]+\.[0-9]+\.[0-9]+)"$'
             ),
             f'REPO_SCOUT_VERSION = "{pin.version}"',
             "version",
@@ -258,7 +260,7 @@ def _update_test_contract(content: str, pin: ReleasePin, source: Path) -> str:
             "wheel SHA-256",
         ),
     )
-    return _apply_replacements(content, replacements, source)
+    return _apply_replacements(content, replacements, source, pin)
 
 
 def _update_readme(content: str, pin: ReleasePin, source: Path) -> str:
@@ -266,7 +268,8 @@ def _update_readme(content: str, pin: ReleasePin, source: Path) -> str:
         (
             re.compile(
                 r"(?m)^evidence, and a downloadable schema-2 rollout bundle\. "
-                r"It installs the `v[0-9]+\.[0-9]+\.[0-9]+`$"
+                r"It installs the `v"
+                r"(?P<version>[0-9]+\.[0-9]+\.[0-9]+)`$"
             ),
             (
                 "evidence, and a downloadable schema-2 rollout bundle. "
@@ -275,7 +278,7 @@ def _update_readme(content: str, pin: ReleasePin, source: Path) -> str:
             "verified CI version",
         ),
     )
-    return _apply_replacements(content, replacements, source)
+    return _apply_replacements(content, replacements, source, pin)
 
 
 def _update_business_model(content: str, pin: ReleasePin, source: Path) -> str:
@@ -284,7 +287,8 @@ def _update_business_model(content: str, pin: ReleasePin, source: Path) -> str:
             re.compile(
                 r"(?m)^The dogfood and copy-ready gates now install the "
                 r"independently verified\n"
-                r"`v[0-9]+\.[0-9]+\.[0-9]+` wheel, so v4 policies can run "
+                r"`v(?P<version>[0-9]+\.[0-9]+\.[0-9]+)` wheel, so v4 "
+                r"policies can run "
                 r"locally and in CI$"
             ),
             (
@@ -295,14 +299,15 @@ def _update_business_model(content: str, pin: ReleasePin, source: Path) -> str:
             "verified paid CI version",
         ),
     )
-    return _apply_replacements(content, replacements, source)
+    return _apply_replacements(content, replacements, source, pin)
 
 
 def _update_project_state(content: str, pin: ReleasePin, source: Path) -> str:
     replacements = (
         (
             re.compile(
-                r"(?m)^- Independently pinned `v[0-9]+\.[0-9]+\.[0-9]+` "
+                r"(?m)^- Independently pinned `v"
+                r"(?P<version>[0-9]+\.[0-9]+\.[0-9]+)` "
                 r"wheel digest, source commit, manifest,$"
             ),
             (
@@ -312,21 +317,36 @@ def _update_project_state(content: str, pin: ReleasePin, source: Path) -> str:
             "verified project-state version",
         ),
     )
-    return _apply_replacements(content, replacements, source)
+    return _apply_replacements(content, replacements, source, pin)
+
+
+def _version_key(version: str) -> tuple[int, int, int]:
+    major, minor, patch = version.split(".")
+    return int(major), int(minor), int(patch)
 
 
 def _apply_replacements(
     content: str,
     replacements: tuple[tuple[re.Pattern[str], str, str], ...],
     source: Path,
+    pin: ReleasePin,
 ) -> str:
     updated = content
     for pattern, replacement, label in replacements:
-        updated, count = pattern.subn(replacement, updated)
-        if count != 1:
+        matches = tuple(pattern.finditer(updated))
+        if len(matches) != 1:
             raise PinUpdateError(
-                f"{source} must contain exactly one {label} pin; found {count}"
+                f"{source} must contain exactly one {label} pin; "
+                f"found {len(matches)}"
             )
+        if "version" in pattern.groupindex:
+            current_version = matches[0].group("version")
+            if _version_key(pin.version) < _version_key(current_version):
+                raise PinUpdateError(
+                    f"{source} refuses verified release downgrade from "
+                    f"{current_version} to {pin.version}"
+                )
+        updated = pattern.sub(replacement, updated)
     return updated
 
 

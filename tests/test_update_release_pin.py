@@ -260,6 +260,39 @@ class UpdateReleasePinTests(unittest.TestCase):
                 before,
             )
 
+    def test_every_version_target_rejects_a_release_downgrade(self) -> None:
+        for relative_path in update_release_pin.TARGETS:
+            with self.subTest(path=relative_path), TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                self._write_fixture(root)
+                target = root / relative_path
+                target.write_text(
+                    target.read_text(encoding="utf-8").replace(
+                        OLD_VERSION,
+                        "3.0.0",
+                    ),
+                    encoding="utf-8",
+                )
+                before = {
+                    path: (root / path).read_text(encoding="utf-8")
+                    for path in update_release_pin.TARGETS
+                }
+
+                with self.assertRaisesRegex(
+                    update_release_pin.PinUpdateError,
+                    "refuses verified release downgrade from 3.0.0 to 2.0.1",
+                ):
+                    update_release_pin.update_release_pin(root, NEW_PIN)
+
+                self.assertEqual(
+                    {
+                        path: (root / path).read_text(encoding="utf-8")
+                        for path in update_release_pin.TARGETS
+                    },
+                    before,
+                )
+                self.assertEqual(self._staging_files(root), [])
+
     def test_mid_commit_failure_rolls_back_every_updated_target(self) -> None:
         with TemporaryDirectory() as tmp:
             root = Path(tmp)

@@ -18,6 +18,13 @@
   back its replacement through the same permission-preserving transaction.
 - Added focused success, permission, and mutation-free layout-drift coverage
   for the expanded six-target update.
+- Rejected a verified-pin update when its numeric release version is older than
+  the current claim in any workflow, buyer-facing document, state record, or
+  executable contract target.
+- Kept equal-version revalidation and forward upgrades supported while failing
+  a downgrade before any transaction file is staged or replaced.
+- Added per-target regression coverage proving all six version claims enforce
+  the same monotonic release boundary without partial writes.
 
 ## 0.3.47 - 2026-07-20
 

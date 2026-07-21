@@ -2074,3 +2074,18 @@ any write, preserves its permission bits, and rolls it back with every other
 target if a later replacement fails. Historical release references remain
 untouched. This reduces paid-CI distribution drift without changing a policy,
 publishing a release, contacting a prospect, or creating demand or revenue.
+
+## 2026-07-20: Reject Verified CI Release Downgrades Before Staging
+
+The atomic updater validated version, source-commit, and wheel-digest shapes but
+accepted any syntactically valid version. A stale command could therefore move
+both paid-CI workflows and all synchronized claims back to an older release
+without triggering layout or transaction safeguards.
+
+Each of the six version-bearing targets now captures its current numeric
+release and rejects an incoming lower major, minor, or patch tuple before any
+temporary file is written. Equal versions remain valid so maintainers can
+revalidate or reconcile the current artifact identities, and forward upgrades
+retain the existing atomic replacement and rollback behavior. This prevents an
+accidental distribution downgrade without claiming adoption, demand, payment,
+or revenue.

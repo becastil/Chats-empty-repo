@@ -8,10 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after adding the project-state claim to atomic pin updates: 178 /
-  1,000 (17.8%).
-- Remaining after adding the project-state claim to atomic pin updates: 822
-  commits.
+- Progress after rejecting verified CI release downgrades: 179 / 1,000 (17.9%).
+- Remaining after rejecting verified CI release downgrades: 821 commits.
 
 ## Commit Standard
 

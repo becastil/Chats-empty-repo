@@ -121,6 +121,10 @@ chance that distribution trust metadata diverges between internal and customer
 activation paths. A mid-write failure now restores every already-replaced
 target from staged originals instead of leaving internal and customer pins
 split.
+Every version-bearing target also rejects a numerically older release before
+staging starts. Revalidating the current release remains supported, so a
+maintainer can reconcile its source commit and wheel digest without weakening
+the paid CI path to an older artifact.
 Staging now stores normalized permission bits rather than raw filesystem mode
 metadata. Regression coverage proves successful updates and rollback restores
 retain each target's access mode, recovery copies keep the original mode, and
