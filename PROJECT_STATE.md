@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 200 of
-1,000, with 800 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 201 of
+1,000, with 799 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -84,6 +84,9 @@ alignment take priority over commit volume.
 - Tag-driven wheel and source releases with strict version alignment and exact artifact validation.
 - Hash-locked release build tooling, deterministic SHA-256 manifests, and clean-environment command smoke tests.
 - GitHub build-provenance attestations and immutable-action release automation.
+- Repository-level release immutability enabled for future publications, with
+  executable proof that the release job rejects any exact tagged release whose
+  GitHub API evidence is not `immutable: true`.
 - Explicit MIT license text included in packaged distributions.
 - Required self-reported discovery channels in founding-team pilot intake.
 - Schema-3 source attribution for qualification, offers, booked revenue, conversion, loss, and follow-up.
@@ -427,6 +430,11 @@ python3 scripts/audit_pilot_labels.py --repo becastil/Chats-empty-repo
 ```
 
 ## Next Small Task
+
+Publish the next patch release through the enabled immutable-release setting,
+require its GitHub API evidence to report `immutable: true`, and only then
+advance paid-CI pins. The current `v0.3.50` release predates enforcement and is
+still protected by its pinned digest and provenance, but it is not immutable.
 
 The first complete owner-only bundle is prepared in the ignored private
 workspace from the verified `v0.3.48` wheel. Human-review that private file and

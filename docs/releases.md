@@ -13,6 +13,13 @@ The checksum file detects accidental or malicious byte changes after download.
 The provenance attestation separately verifies that GitHub Actions built the
 artifact from this repository's tagged source.
 
+Repository-level release immutability is enabled for future publications. It
+locks a published release's tag and assets against modification or deletion.
+The release workflow queries the exact tag after publication and fails unless
+GitHub reports `immutable: true`. The current `v0.3.50` release predates this
+setting, so its pinned checksum and provenance remain the trust boundary until
+the next immutable patch release is published.
+
 ## Install A Release
 
 The shortest path downloads one executable Python file and does not modify the
@@ -139,7 +146,8 @@ Before publication, the workflow:
    recommendation route plus Node policy enforcement, and checks the guarded
    outreach review-to-observed-outcome lifecycle and its privacy boundaries.
 6. Generates deterministic SHA-256 checksums and GitHub provenance attestations.
-7. Creates the GitHub Release from the existing immutable tag.
+7. Creates the GitHub Release, queries the exact published tag through GitHub's
+   versioned REST API, and fails unless the release reports `immutable: true`.
 
 All actions use full commit pins. Release permissions are limited to creating
 the release, requesting the short-lived identity token, and writing artifact

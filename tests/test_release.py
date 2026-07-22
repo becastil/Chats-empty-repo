@@ -9,6 +9,7 @@ import re
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
+import textwrap
 import tomllib
 import unittest
 import zipfile
@@ -626,6 +627,87 @@ class ReleaseWorkflowTests(unittest.TestCase):
         self.assertEqual(actions, expected_actions)
         for action in actions:
             self.assertRegex(action, r"^[\w.-]+/[\w.-]+@[0-9a-f]{40}$")
+
+    def test_release_publication_requires_immutable_release_evidence(self) -> None:
+        workflow = (ROOT / ".github/workflows/release.yml").read_text(
+            encoding="utf-8"
+        )
+        marker = "      - name: Publish and verify immutable GitHub release\n"
+        self.assertIn(marker, workflow)
+        publish_step = workflow[workflow.index(marker) :]
+        publish_script = textwrap.dedent(
+            publish_step.split("        run: |\n", 1)[1]
+        )
+
+        self.assertIn('gh release create "$GITHUB_REF_NAME"', publish_script)
+        self.assertIn(
+            '"repos/${GITHUB_REPOSITORY}/releases/tags/${GITHUB_REF_NAME}"',
+            publish_script,
+        )
+        self.assertIn("Accept: application/vnd.github+json", publish_script)
+        self.assertIn("X-GitHub-Api-Version: 2026-03-10", publish_script)
+        self.assertIn("--jq '.immutable'", publish_script)
+        self.assertLess(
+            publish_script.index("gh release create"),
+            publish_script.index("gh api"),
+        )
+
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            fake_bin = root / "bin"
+            fake_bin.mkdir()
+            log = root / "gh-log"
+            fake_gh = fake_bin / "gh"
+            fake_gh.write_text(
+                f"#!{sys.executable}\n"
+                "import os\n"
+                "from pathlib import Path\n"
+                "import shlex\n"
+                "import sys\n"
+                "log = Path(os.environ['FAKE_GH_LOG'])\n"
+                "with log.open('a', encoding='utf-8') as output:\n"
+                "    output.write(shlex.join(sys.argv[1:]) + '\\n')\n"
+                "if sys.argv[1] == 'api':\n"
+                "    if os.environ.get('FAKE_GH_API_FAIL') == '1':\n"
+                "        raise SystemExit(1)\n"
+                "    print(os.environ['FAKE_RELEASE_IMMUTABLE'])\n",
+                encoding="utf-8",
+            )
+            fake_gh.chmod(0o755)
+
+            for immutable, api_fail, expected_success in (
+                ("true", "0", True),
+                ("false", "0", False),
+                ("unexpected", "0", False),
+                ("true", "1", False),
+            ):
+                with self.subTest(immutable=immutable, api_fail=api_fail):
+                    log.write_text("", encoding="utf-8")
+                    environment = os.environ.copy()
+                    environment.update(
+                        {
+                            "FAKE_GH_API_FAIL": api_fail,
+                            "FAKE_GH_LOG": str(log),
+                            "FAKE_RELEASE_IMMUTABLE": immutable,
+                            "GH_TOKEN": "test-token",
+                            "GITHUB_REF_NAME": "v0.3.50",
+                            "GITHUB_REPOSITORY": "example/repo-scout",
+                            "PATH": f"{fake_bin}{os.pathsep}{environment['PATH']}",
+                        }
+                    )
+                    completed = subprocess.run(
+                        ["bash", "-e"],
+                        input=publish_script,
+                        env=environment,
+                        capture_output=True,
+                        text=True,
+                    )
+
+                    self.assertEqual(completed.returncode == 0, expected_success)
+                    calls = log.read_text(encoding="utf-8").splitlines()
+                    self.assertEqual(len(calls), 2)
+                    self.assertTrue(calls[0].startswith("release create "))
+                    self.assertTrue(calls[1].startswith("api "))
 
     def test_release_requirements_are_exactly_pinned_and_hashed(self) -> None:
         requirements = (

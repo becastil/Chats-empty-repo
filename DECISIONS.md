@@ -2416,3 +2416,19 @@ selection and formats the offer recommendation from that value. A regression
 proves a `$400` report recommends `$400` terms. This preserves the public `$299`
 founding offer while preventing custom reports from producing contradictory
 sales guidance; it does not create an offer, payment, or revenue event.
+
+## 2026-07-22: Require GitHub Evidence Of Release Immutability
+
+The release workflow called its publication step immutable, and the maintainer
+guide described an immutable tag, but repository release immutability was not
+enabled. GitHub reported `immutable: false` for `v0.3.50`, so its independent
+digest and provenance protected artifact identity while deletion or replacement
+could still interrupt the paid CI download path.
+
+Repository-level release immutability is now enabled for future publications.
+The release workflow publishes from the tested tag, queries that exact release
+through GitHub's versioned REST API, and fails unless the `immutable` field is
+exactly `true`. Executable tests cover true, false, malformed, and failed API
+responses. Because GitHub does not apply this setting retroactively, the guide
+and project state retain an explicit `v0.3.50` caveat until the next immutable
+patch release is published and independently pinned.

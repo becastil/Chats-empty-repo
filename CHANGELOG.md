@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Enabled GitHub release immutability for future repository releases.
+- Required the release job to query the exact published tag and fail unless
+  GitHub returns `immutable: true` under the current REST API contract.
+- Added executable success, false-state, malformed-state, and API-failure
+  coverage for release immutability verification.
+- Documented that `v0.3.50` predates enforcement and remains digest-and-
+  provenance verified but mutable.
 - Carried the validated pilot price into growth-report offer recommendations
   instead of hard-coding `$299` when direct callers configure another price.
 - Added a custom-price regression proving a `$400` pilot report recommends

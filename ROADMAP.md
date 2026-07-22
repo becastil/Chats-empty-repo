@@ -7,6 +7,9 @@
 
 ## Near Term
 
+- Publish the next patch release through the enabled immutable-release setting,
+  verify the exact GitHub release reports `immutable: true`, and only then
+  advance paid-CI pins away from mutable `v0.3.50`.
 - Human-review the five prepared, publicly qualified drafts. The first
   owner-only `--write-review` bundle is ready in the ignored private workspace;
   use its content-bound `--approve-next` or

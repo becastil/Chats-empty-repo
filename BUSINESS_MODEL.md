@@ -41,6 +41,13 @@ attestation to that repository, semantic tag, commit, release workflow, and a
 GitHub-hosted runner. Executable documentation tests require all five identity
 constraints for every artifact. This keeps the buyer-facing trust procedure
 aligned with paid CI without proving activation, demand, payment, or revenue.
+Repository-level release immutability is now enabled for future publications.
+After publishing, the release job queries the exact semantic tag through the
+versioned GitHub API and fails unless its release object reports
+`immutable: true`. The current `v0.3.50` release predates that setting and
+remains pinned by digest, source commit, and provenance rather than by GitHub's
+immutable-release lock. The next paid-CI pin must move only after a new release
+passes the immutable evidence check.
 The wheel adoption path now reports all 7 packaged commands, and its release
 test derives complete version-smoke coverage from `[project.scripts]` instead
 of a second hardcoded command list. This keeps the paid CI activation surface
