@@ -34,11 +34,13 @@ The free CLI should be good enough to adopt without a sales conversation.
 Verified GitHub releases remove source-checkout trust and installation friction
 from pilot onboarding. PyPI distribution, billing, and license enforcement stay
 deferred until paid demand justifies their operational cost.
-The public verification guide now reconciles its downloaded-file, checksum, and
+The public verification guide reconciles its downloaded-file, checksum, and
 provenance-command counts to the three artifacts defined by the release builder.
-This prevents the trust instructions from understating what a buyer should
-verify; it improves distribution credibility without proving activation,
-demand, payment, or revenue.
+It also resolves the annotated tag's exact source commit and constrains every
+attestation to that repository, semantic tag, commit, release workflow, and a
+GitHub-hosted runner. Executable documentation tests require all five identity
+constraints for every artifact. This keeps the buyer-facing trust procedure
+aligned with paid CI without proving activation, demand, payment, or revenue.
 The wheel adoption path now reports all 7 packaged commands, and its release
 test derives complete version-smoke coverage from `[project.scripts]` instead
 of a second hardcoded command list. This keeps the paid CI activation surface

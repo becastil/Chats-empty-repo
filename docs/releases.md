@@ -44,19 +44,62 @@ Run the checksum command from the directory containing all 4 downloaded
 files:
 
 ```bash
-shasum -a 256 -c SHA256SUMS
-gh attestation verify repo-scout-0.3.50.pyz \
-  --repo becastil/Chats-empty-repo
-gh attestation verify repo_scout-0.3.50-py3-none-any.whl \
-  --repo becastil/Chats-empty-repo
-gh attestation verify repo_scout-0.3.50.tar.gz \
-  --repo becastil/Chats-empty-repo
+(
+  set -euo pipefail
+
+  REPO_SCOUT_REPOSITORY="becastil/Chats-empty-repo"
+  REPO_SCOUT_VERSION="0.3.50"
+  REPO_SCOUT_TAG="v${REPO_SCOUT_VERSION}"
+  REPO_SCOUT_SIGNER_WORKFLOW="${REPO_SCOUT_REPOSITORY}/.github/workflows/release.yml"
+
+  [[ "$REPO_SCOUT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+  REPO_SCOUT_TAG_LINE="$(
+    git ls-remote --exit-code --tags \
+      "https://github.com/${REPO_SCOUT_REPOSITORY}.git" \
+      "refs/tags/${REPO_SCOUT_TAG}^{}"
+  )"
+  read -r REPO_SCOUT_SOURCE_SHA REPO_SCOUT_RESOLVED_REF \
+    <<<"$REPO_SCOUT_TAG_LINE"
+  [[ "$REPO_SCOUT_RESOLVED_REF" == "refs/tags/${REPO_SCOUT_TAG}^{}" ]]
+  [[ "$REPO_SCOUT_SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
+
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum --check SHA256SUMS
+  else
+    shasum -a 256 -c SHA256SUMS
+  fi
+  gh attestation verify "repo-scout-${REPO_SCOUT_VERSION}.pyz" \
+    --repo "$REPO_SCOUT_REPOSITORY" \
+    --signer-workflow "$REPO_SCOUT_SIGNER_WORKFLOW" \
+    --source-ref "refs/tags/${REPO_SCOUT_TAG}" \
+    --source-digest "$REPO_SCOUT_SOURCE_SHA" \
+    --deny-self-hosted-runners
+  gh attestation verify "repo_scout-${REPO_SCOUT_VERSION}-py3-none-any.whl" \
+    --repo "$REPO_SCOUT_REPOSITORY" \
+    --signer-workflow "$REPO_SCOUT_SIGNER_WORKFLOW" \
+    --source-ref "refs/tags/${REPO_SCOUT_TAG}" \
+    --source-digest "$REPO_SCOUT_SOURCE_SHA" \
+    --deny-self-hosted-runners
+  gh attestation verify "repo_scout-${REPO_SCOUT_VERSION}.tar.gz" \
+    --repo "$REPO_SCOUT_REPOSITORY" \
+    --signer-workflow "$REPO_SCOUT_SIGNER_WORKFLOW" \
+    --source-ref "refs/tags/${REPO_SCOUT_TAG}" \
+    --source-digest "$REPO_SCOUT_SOURCE_SHA" \
+    --deny-self-hosted-runners
+)
 ```
 
 All 3 checksum lines must report `OK`, and all 3 attestation commands must verify
-against `becastil/Chats-empty-repo`. A checksum alone is not proof of origin
-because an attacker who replaces an artifact could also replace an unattested
-checksum file.
+against `becastil/Chats-empty-repo`, the exact semantic tag and peeled source
+commit, the release workflow, and a GitHub-hosted runner. The subshell stops if
+the annotated tag does not resolve to a 40-character commit. A checksum alone
+is not proof of origin because an attacker who replaces an artifact could also
+replace an unattested checksum file.
+
+The lookup verifies the annotated tag target currently published by GitHub.
+The paid CI examples go further by pinning the separately reviewed source
+commit and wheel digest directly, so a later tag move cannot change their
+trusted artifact identity.
 
 ## Audit The Production Download
 

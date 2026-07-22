@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Bound every public release attestation command to the exact repository,
+  semantic tag, peeled source commit, signer workflow, and hosted-runner rule.
+- Resolved the source commit from the remote annotated tag without requiring a
+  repository checkout and stopped verification when it cannot be resolved.
+- Used the platform checksum command available on Linux or macOS and added an
+  offline Bash syntax contract for the published verification block.
+- Extended the artifact-count documentation contract so every distributable
+  must retain all five strict provenance identity constraints.
 - Independently reconciled the public `v0.3.50` manifest, annotated tag, main
   ancestry, release workflow, and all three provenance attestations.
 - Measured the released wheel digest separately and matched every downloaded

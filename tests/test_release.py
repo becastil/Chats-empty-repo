@@ -126,11 +126,11 @@ class ReleaseManifestTests(unittest.TestCase):
         _, verification_heading, verification_tail = documentation.partition(
             "## Verify A Release"
         )
-        verification, maintainer_heading, _ = verification_tail.partition(
-            "## Maintainer Release Contract"
+        verification, audit_heading, _ = verification_tail.partition(
+            "## Audit The Production Download"
         )
         self.assertTrue(verification_heading)
-        self.assertTrue(maintainer_heading)
+        self.assertTrue(audit_heading)
 
         artifact_count = len(prepare_release.ARTIFACT_TEMPLATE)
         normalized = " ".join(verification.split())
@@ -142,11 +142,92 @@ class ReleaseManifestTests(unittest.TestCase):
             verification.count("gh attestation verify "),
             artifact_count,
         )
+        self.assertIn("set -euo pipefail", verification)
+        version = prepare_release.load_project_version(ROOT)
+        self.assertIn(
+            'REPO_SCOUT_REPOSITORY="becastil/Chats-empty-repo"',
+            verification,
+        )
+        self.assertIn(f'REPO_SCOUT_VERSION="{version}"', verification)
+        self.assertIn(
+            'REPO_SCOUT_TAG="v${REPO_SCOUT_VERSION}"',
+            verification,
+        )
+        self.assertIn(
+            'REPO_SCOUT_SIGNER_WORKFLOW="${REPO_SCOUT_REPOSITORY}/'
+            '.github/workflows/release.yml"',
+            verification,
+        )
+        self.assertEqual(
+            verification.count("git ls-remote --exit-code --tags "),
+            1,
+        )
+        self.assertIn(
+            '"refs/tags/${REPO_SCOUT_TAG}^{}"',
+            verification,
+        )
+        self.assertIn(
+            '[[ "$REPO_SCOUT_RESOLVED_REF" == '
+            '"refs/tags/${REPO_SCOUT_TAG}^{}" ]]',
+            verification,
+        )
+        self.assertIn(
+            '[[ "$REPO_SCOUT_SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]',
+            verification,
+        )
+        self.assertIn("sha256sum --check SHA256SUMS", verification)
+        self.assertIn("shasum -a 256 -c SHA256SUMS", verification)
+        for template in prepare_release.ARTIFACT_TEMPLATE:
+            artifact = template.format(version="${REPO_SCOUT_VERSION}")
+            self.assertIn(f'"{artifact}"', verification)
+        for requirement in (
+            '--repo "$REPO_SCOUT_REPOSITORY"',
+            '--signer-workflow "$REPO_SCOUT_SIGNER_WORKFLOW"',
+            '--source-ref "refs/tags/${REPO_SCOUT_TAG}"',
+            '--source-digest "$REPO_SCOUT_SOURCE_SHA"',
+            "--deny-self-hosted-runners",
+        ):
+            self.assertEqual(
+                verification.count(requirement),
+                artifact_count,
+                requirement,
+            )
+        self.assertNotRegex(
+            verification,
+            r"--source-digest [0-9a-f]{40}",
+        )
         self.assertIn(
             f"All {artifact_count} checksum lines must report `OK`, and all "
             f"{artifact_count} attestation commands must verify",
             normalized,
         )
+
+    def test_release_verification_snippet_is_valid_bash(self) -> None:
+        documentation = (ROOT / "docs" / "releases.md").read_text(
+            encoding="utf-8"
+        )
+        _, verification_heading, verification_tail = documentation.partition(
+            "## Verify A Release"
+        )
+        verification, audit_heading, _ = verification_tail.partition(
+            "## Audit The Production Download"
+        )
+        _, code_heading, code_tail = verification.partition("```bash\n")
+        snippet, code_end, _ = code_tail.partition("```\n")
+        self.assertTrue(verification_heading)
+        self.assertTrue(audit_heading)
+        self.assertTrue(code_heading)
+        self.assertTrue(code_end)
+
+        result = subprocess.run(
+            ["bash", "-n"],
+            input=snippet,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_distribution_path_counts_every_packaged_command(self) -> None:
         with (ROOT / "pyproject.toml").open("rb") as project_file:

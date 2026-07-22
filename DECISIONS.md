@@ -2279,3 +2279,23 @@ executable contract together. This strengthens paid-CI supply-chain integrity
 while leaving the owner-only review bundle and required human decision
 untouched. It does not establish a customer install, outreach attempt, pilot
 request, payment, or revenue.
+
+## 2026-07-22: Bind Public Verification To The Paid-CI Artifact Identity
+
+The public release guide required checksums and repository-scoped GitHub
+attestations, but repository scope alone did not reproduce the identity contract
+used by customer CI. It did not require the exact semantic tag, source commit,
+release workflow, or GitHub-hosted runner for each artifact.
+
+The checkout-free guide now peels the remote annotated tag to its 40-character
+source commit inside a fail-closed Bash subshell, validates the exact resolved
+ref and digest shape, and selects the checksum command available on Linux or
+macOS. Every portable, wheel, and source attestation is constrained to the
+repository, tag, source digest, signer workflow, and hosted-runner rule. The
+release documentation test derives the artifact count, requires all five
+constraints for every command, and checks the block's Bash syntax offline.
+
+Dynamic lookup verifies the tag target currently published by GitHub, while
+paid CI retains the stronger separately reviewed fixed source and wheel pins.
+This aligns their identity dimensions without claiming equal immutability, and
+does not establish an install, activation, pilot request, payment, or revenue.
