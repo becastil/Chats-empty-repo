@@ -157,6 +157,11 @@ erase cash already received. If a payment is refunded, remove `pilot-paid` and
 later paid-stage labels before the next report, and retain the refund evidence
 outside the public issue.
 
+Resolved annual-conversion totals also require `pilot-paid`. A
+`pilot-converted` issue that skipped payment keeps its visible stage and
+`missing_prior_stage` warning for repair, but contributes zero conversions to
+the overall, source, readiness, and purchase-criterion totals.
+
 The readiness summary is willingness-to-pay evidence, not accounting. A
 `ready` request contributes $0 until payment is received and the issue reaches
 `pilot-paid`.
@@ -184,7 +189,7 @@ private contact information outside GitHub.
 The pipeline is evidence, not the sale: `pilot-offered` measures conversion
 work, while only `pilot-paid` moves booked revenue toward $897.
 
-Compare purchase criteria only after outcomes exist. Repeated paid or converted
-results can show which proof, policy pack, or rollout playbook deserves more
-investment; unqualified requests and stated preferences alone do not establish
-a moat or willingness to pay.
+Compare purchase criteria only after outcomes exist. Repeated paid or
+payment-backed converted results can show which proof, policy pack, or rollout
+playbook deserves more investment; unqualified requests and stated preferences
+alone do not establish a moat or willingness to pay.

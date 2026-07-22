@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from contextlib import redirect_stderr, redirect_stdout
+from datetime import date
 import io
 import json
 from pathlib import Path
@@ -18,7 +19,10 @@ from repo_scout.growth import (  # noqa: E402
     format_growth_report,
     main,
 )
-from repo_scout.pilot_funnel import DECISION_CRITERION_KEYS  # noqa: E402
+from repo_scout.pilot_funnel import (  # noqa: E402
+    DECISION_CRITERION_KEYS,
+    build_funnel,
+)
 
 
 class GrowthReportTests(unittest.TestCase):
@@ -134,6 +138,65 @@ class GrowthReportTests(unittest.TestCase):
             "Qualification scope: 1 complete / 1 target / 0 review / "
             "0 subset required",
             format_growth_report(report),
+        )
+
+    def test_payment_gate_prevents_cross_issue_conversion_masking(self) -> None:
+        body = (
+            "### How did you hear about Repo Scout?\n\n"
+            "Direct outreach\n\n"
+            "### Purchase readiness\n\n"
+            "Ready to purchase the $299 pilot\n\n"
+            "### Primary purchase criterion\n\n"
+            "Supports our required repository standards"
+        )
+        pilot = build_funnel(
+            [
+                {
+                    "number": 201,
+                    "title": "Converted without payment evidence",
+                    "url": "https://github.com/example/repo/issues/201",
+                    "state": "CLOSED",
+                    "updatedAt": "2026-07-10T12:00:00Z",
+                    "labels": [
+                        {"name": label}
+                        for label in (
+                            "pilot-lead",
+                            "pilot-qualified",
+                            "pilot-offered",
+                            "pilot-active",
+                            "pilot-converted",
+                        )
+                    ],
+                    "body": body,
+                },
+                {
+                    "number": 202,
+                    "title": "Paid pilot without annual conversion",
+                    "url": "https://github.com/example/repo/issues/202",
+                    "state": "OPEN",
+                    "updatedAt": "2026-07-10T12:00:00Z",
+                    "labels": [
+                        {"name": label}
+                        for label in (
+                            "pilot-lead",
+                            "pilot-qualified",
+                            "pilot-offered",
+                            "pilot-paid",
+                        )
+                    ],
+                    "body": body,
+                },
+            ],
+            as_of=date(2026, 7, 10),
+        )
+
+        report = build_growth_report(self._distribution(), pilot)
+
+        self.assertEqual(report["summary"]["booked_pilots"], 1)
+        self.assertEqual(report["summary"]["annual_conversions"], 0)
+        self.assertEqual(report["sources"][0]["annual_conversions"], 0)
+        self.assertEqual(
+            report["decision_criteria"][0]["annual_conversions"], 0
         )
 
     def test_rejects_inconsistent_schema_seven_qualification_evidence(self) -> None:

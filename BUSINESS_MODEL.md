@@ -763,6 +763,13 @@ evidence. Qualified leads and written offers remain pipeline, not booked
 revenue. Label warnings must be resolved before totals are used in a roadmap or
 sales decision.
 
+Resolved annual conversions require the same explicit payment milestone. A
+`pilot-converted` issue without `pilot-paid` remains visibly converted and
+retains its skipped-stage warning, but contributes zero annual conversions to
+the summary, source, readiness, purchase-criterion, and joined growth totals.
+This prevents one unsupported conversion from being hidden by another issue's
+legitimate payment inside an aggregate segment.
+
 An issue carrying both `pilot-converted` and `pilot-lost` remains a visible
 terminal conflict. It retains booked revenue when the cumulative paid milestone
 is present, but contributes to neither resolved conversion nor resolved loss

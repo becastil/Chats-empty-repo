@@ -330,6 +330,54 @@ class PilotFunnelTests(unittest.TestCase):
             self.assertEqual(segment[key]["annual_conversions"], 0)
             self.assertEqual(segment[key]["lost_pilots"], 0)
 
+    def test_conversion_requires_explicit_paid_stage_evidence(self) -> None:
+        payload = [
+            {
+                "number": 103,
+                "title": "Conversion label without payment evidence",
+                "url": "https://github.com/example/repo/issues/103",
+                "state": "CLOSED",
+                "updatedAt": "2026-07-10T12:00:00Z",
+                "labels": [
+                    {"name": label}
+                    for label in (
+                        "pilot-lead",
+                        "pilot-qualified",
+                        "pilot-offered",
+                        "pilot-active",
+                        "pilot-converted",
+                    )
+                ],
+                "body": (
+                    "### How did you hear about Repo Scout?\n\n"
+                    "Direct outreach\n\n"
+                    "### Purchase readiness\n\n"
+                    "Ready to purchase the $299 pilot\n\n"
+                    "### Primary purchase criterion\n\n"
+                    "Supports our required repository standards"
+                ),
+            }
+        ]
+
+        report = build_funnel(payload, as_of=date(2026, 7, 10))
+
+        self.assertEqual(report["deals"][0]["stage"], "converted")
+        self.assertFalse(report["deals"][0]["booked"])
+        self.assertEqual(report["summary"]["booked_pilots"], 0)
+        self.assertEqual(report["summary"]["annual_conversions"], 0)
+        self.assertEqual(
+            [warning["kind"] for warning in report["warnings"]],
+            ["missing_prior_stage"],
+        )
+        self.assertEqual(report["warnings"][0]["labels"], ["pilot-paid"])
+        for segment, key in (
+            (report["by_source"], "outreach"),
+            (report["by_readiness"], "ready"),
+            (report["by_decision_criterion"], "policy_fit"),
+        ):
+            self.assertEqual(segment[key]["booked_pilots"], 0)
+            self.assertEqual(segment[key]["annual_conversions"], 0)
+
     def test_lost_outcome_warns_when_public_lead_history_is_missing(self) -> None:
         payload = [
             {

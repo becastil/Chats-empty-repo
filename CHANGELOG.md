@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Required explicit `pilot-paid` evidence before `pilot-converted` contributes
+  to overall or segmented annual-conversion totals, while preserving its stage
+  and skipped-payment warning for repair.
+- Added a joined-growth regression proving an unsupported conversion cannot be
+  hidden by a separate legitimate payment in the same aggregate segment.
 - Required the paid-CI release manifest to contain exactly one canonical entry
   binding the pinned wheel digest to the expected wheel filename.
 - Added executable missing, altered, and duplicate manifest regressions that

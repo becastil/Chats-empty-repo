@@ -2337,3 +2337,21 @@ present files. Executable tests keep the two workflows byte-identical and prove
 all three new failures without contacting GitHub. This strengthens paid-CI
 artifact identity without establishing an install, customer usage, demand,
 payment, or revenue.
+
+## 2026-07-22: Require Payment Evidence Before Counting Conversion
+
+The funnel treated an unconflicted `pilot-converted` label as a resolved annual
+conversion even when the cumulative `pilot-paid` milestone was absent. The
+record produced a skipped-stage warning and booked no revenue, but it still
+increased summary and segmented retention totals. Pairing that record with a
+separate paid, unconverted issue in the same source or purchase-criterion
+segment could satisfy the growth report's aggregate conversions-at-most-booked
+validation and publish unsupported retention evidence.
+
+Resolved conversion accounting now requires both `pilot-paid` and an
+unconflicted `pilot-converted` label. A skipped-payment record keeps its visible
+converted stage and `missing_prior_stage` warning so the public history can be
+repaired, but contributes zero to summary, source, readiness,
+purchase-criterion, and joined growth conversion totals. This aligns retention
+evidence with the existing payment boundary without mutating labels, erasing
+warnings, or claiming a real payment or conversion.

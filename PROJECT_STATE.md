@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 195 of
-1,000, with 805 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 196 of
+1,000, with 804 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -61,6 +61,9 @@ alignment take priority over commit volume.
 - Label-drift warnings and tested $299 pilot / $897 target accounting semantics.
 - Exact `pilot-paid` revenue recognition that keeps later-stage label drift
   visible without treating missing payment evidence as booked revenue.
+- Payment-backed annual-conversion accounting that preserves skipped-stage
+  warnings without letting unsupported retention evidence enter overall or
+  segmented funnel and growth totals.
 - Executable commercial-documentation proof that later lifecycle labels cannot
   substitute for the human-applied payment event.
 - Missing-stage warnings for loss records that lack the cumulative public lead
