@@ -50,8 +50,11 @@ jobs:
               --repo "$REPO_SCOUT_REPOSITORY" \
               --dir "$attempt_dir" \
               --pattern "$wheel_name" \
-              --pattern SHA256SUMS; then
-              mv "$attempt_dir/$wheel_name" "$attempt_dir/SHA256SUMS" "$release_dir/"
+              --pattern SHA256SUMS \
+              && [[ -f "$attempt_dir/$wheel_name" ]] \
+              && [[ -f "$attempt_dir/SHA256SUMS" ]] \
+              && mv "$attempt_dir/$wheel_name" "$attempt_dir/SHA256SUMS" \
+                "$release_dir/"; then
               break
             fi
             if [[ "$attempt" -eq 4 ]]; then
@@ -92,7 +95,8 @@ jobs:
         run: |
           wheel="$RUNNER_TEMP/repo-scout-release/repo_scout-${REPO_SCOUT_VERSION}-py3-none-any.whl"
           python -m venv "$RUNNER_TEMP/repo-scout-venv"
-          "$RUNNER_TEMP/repo-scout-venv/bin/python" -m pip install --no-deps "$wheel"
+          "$RUNNER_TEMP/repo-scout-venv/bin/python" -m pip install \
+            --disable-pip-version-check --no-index --no-deps "$wheel"
 
       - name: Enforce policy and generate rollout evidence
         run: >-

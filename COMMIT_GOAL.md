@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after hardening public release verification: 193 / 1,000 (19.3%).
-- Remaining after hardening public release verification: 807 commits.
+- Progress after hardening paid-CI release activation: 194 / 1,000 (19.4%).
+- Remaining after hardening paid-CI release activation: 806 commits.
 
 ## Commit Standard
 

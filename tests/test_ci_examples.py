@@ -95,7 +95,7 @@ class CiExampleTests(unittest.TestCase):
             self.assertIn(
                 'python -m venv "$RUNNER_TEMP/repo-scout-venv"', workflow
             )
-            self.assertIn("-m pip install --no-deps", workflow)
+            self.assertNotIn("-m pip install --no-deps", workflow)
             self.assertIn(
                 '"$RUNNER_TEMP/repo-scout-venv/bin/repo-scout"', workflow
             )
@@ -144,10 +144,14 @@ class CiExampleTests(unittest.TestCase):
             'attempt_dir="$release_dir/attempt-$attempt"', dogfood_download
         )
         self.assertIn(
-            'mv "$attempt_dir/$wheel_name" "$attempt_dir/SHA256SUMS" '
-            '"$release_dir/"',
+            '&& [[ -f "$attempt_dir/$wheel_name" ]]',
             dogfood_download,
         )
+        self.assertIn(
+            '&& [[ -f "$attempt_dir/SHA256SUMS" ]]',
+            dogfood_download,
+        )
+        self.assertIn('&& mv "$attempt_dir/$wheel_name"', dogfood_download)
         self.assertIn('if [[ "$attempt" -eq 4 ]]', dogfood_download)
         self.assertIn('sleep "$((attempt * 5))"', dogfood_download)
         download_script = textwrap.dedent(
@@ -186,6 +190,33 @@ class CiExampleTests(unittest.TestCase):
             text=True,
         )
         self.assertEqual(syntax_check.returncode, 0, syntax_check.stderr)
+
+        enforce_marker = "      - name: Enforce policy and generate rollout evidence\n"
+        dogfood_install = dogfood[
+            dogfood.index(install_marker) : dogfood.index(enforce_marker)
+        ]
+        external_install = external[
+            external.index(install_marker) : external.index(enforce_marker)
+        ]
+        self.assertEqual(dogfood_install, external_install)
+        install_script = textwrap.dedent(
+            dogfood_install.split("        run: |\n", 1)[1]
+        )
+        syntax_check = subprocess.run(
+            ["bash", "-n"],
+            input=install_script,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(syntax_check.returncode, 0, syntax_check.stderr)
+        normalized_install = " ".join(
+            install_script.replace("\\\n", "").split()
+        )
+        self.assertIn(
+            '"$RUNNER_TEMP/repo-scout-venv/bin/python" -m pip install '
+            '--disable-pip-version-check --no-index --no-deps "$wheel"',
+            normalized_install,
+        )
 
     def test_release_download_retries_are_executable_and_bounded(self) -> None:
         workflow = (ROOT / ".github/workflows/repo-scout-policy.yml").read_text(
@@ -244,6 +275,51 @@ class CiExampleTests(unittest.TestCase):
             self.assertFalse(
                 (
                     failed_release
+                    / f"repo_scout-{REPO_SCOUT_VERSION}-py3-none-any.whl"
+                ).exists()
+            )
+
+            partial, partial_counter, partial_sleeps = self._run_release_download(
+                download_script,
+                fake_bin,
+                root / "partial-recovered",
+                success_on=1,
+                partial_until=2,
+            )
+            partial_release = root / "partial-recovered/repo-scout-release"
+            self.assertEqual(partial.returncode, 0, partial.stderr)
+            self.assertEqual(partial_counter, 3)
+            self.assertEqual(partial_sleeps, ["5", "10"])
+            self.assertEqual(
+                (
+                    partial_release
+                    / f"repo_scout-{REPO_SCOUT_VERSION}-py3-none-any.whl"
+                ).read_text(encoding="utf-8"),
+                "wheel",
+            )
+            self.assertEqual(
+                (partial_release / "SHA256SUMS").read_text(encoding="utf-8"),
+                "manifest",
+            )
+
+            partial_failed, partial_failed_counter, partial_failed_sleeps = (
+                self._run_release_download(
+                    download_script,
+                    fake_bin,
+                    root / "partial-failed",
+                    success_on=1,
+                    partial_until=4,
+                )
+            )
+            partial_failed_release = root / "partial-failed/repo-scout-release"
+            self.assertEqual(partial_failed.returncode, 1)
+            self.assertEqual(partial_failed_counter, 4)
+            self.assertEqual(partial_failed_sleeps, ["5", "10", "15"])
+            self.assertIn("failed after 4 attempts", partial_failed.stderr)
+            self.assertFalse((partial_failed_release / "SHA256SUMS").exists())
+            self.assertFalse(
+                (
+                    partial_failed_release
                     / f"repo_scout-{REPO_SCOUT_VERSION}-py3-none-any.whl"
                 ).exists()
             )
@@ -523,6 +599,8 @@ class CiExampleTests(unittest.TestCase):
             "    destination.mkdir(parents=True, exist_ok=True)\n"
             "    version = os.environ['REPO_SCOUT_VERSION']\n"
             "    (destination / f'repo_scout-{version}-py3-none-any.whl').write_text('wheel')\n"
+            "    if attempt <= int(os.environ['FAKE_GH_PARTIAL_UNTIL']):\n"
+            "        raise SystemExit(0)\n"
             "    (destination / 'SHA256SUMS').write_text('manifest')\n",
             encoding="utf-8",
         )
@@ -545,6 +623,7 @@ class CiExampleTests(unittest.TestCase):
         runner_temp: Path,
         *,
         success_on: int,
+        partial_until: int = 0,
     ) -> tuple[subprocess.CompletedProcess[str], int, list[str]]:
         runner_temp.mkdir()
         counter = runner_temp / "gh-count"
@@ -553,6 +632,7 @@ class CiExampleTests(unittest.TestCase):
         environment.update(
             {
                 "FAKE_GH_COUNTER": str(counter),
+                "FAKE_GH_PARTIAL_UNTIL": str(partial_until),
                 "FAKE_GH_SUCCESS_ON": str(success_on),
                 "FAKE_SLEEP_LOG": str(sleep_log),
                 "PATH": f"{fake_bin}{os.pathsep}{environment['PATH']}",
@@ -595,6 +675,7 @@ class CiExampleTests(unittest.TestCase):
         environment.update(
             {
                 "FAKE_GH_COUNTER": str(counter),
+                "FAKE_GH_PARTIAL_UNTIL": "0",
                 "FAKE_GH_SUCCESS_ON": str(success_on),
                 "FAKE_SLEEP_LOG": str(sleep_log),
                 "PATH": f"{fake_bin}{os.pathsep}{environment['PATH']}",

@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Kept wheel, manifest, and promotion checks inside each bounded release
+  download attempt so successful one-asset responses retry instead of aborting.
+- Added executable recovery and terminal-failure coverage for GitHub CLI calls
+  that return success after downloading only the wheel.
+- Disabled package-index access and pip's remote version check when both policy
+  gates install the already verified local wheel.
+- Kept dependency resolution disabled and made the customer and dogfood install
+  blocks byte-identical under an executable Bash syntax contract.
+- Documented that paid-CI activation contacts no Python registry after the
+  bounded GitHub release download.
 - Bound every public release attestation command to the exact repository,
   semantic tag, peeled source commit, signer workflow, and hosted-runner rule.
 - Resolved the source commit from the remote annotated tag without requiring a

@@ -67,6 +67,10 @@ workflow, plus `SHA256SUMS`, from the public GitHub Release using the
 runner-provided token. No team-managed secret or API key is required. The
 download uses up to four isolated attempts with 5, 10, and 15-second waits so a
 brief GitHub REST failure cannot leave partial files in a later attempt.
+An attempt succeeds only when the download command returns successfully, both
+the wheel and manifest are regular files, and both promote into the trusted
+release directory. A successful one-asset response therefore follows the same
+bounded retry path instead of aborting at the missing-file move.
 
 Before installation, the gate verifies:
 
@@ -82,12 +86,14 @@ backoff. Every attempt retains the exact wheel, repository, source commit, tag,
 signer workflow, and hosted-runner requirements.
 
 Repo Scout is installed without dependencies into a virtual environment under
-`RUNNER_TEMP`. The target checkout is never used as an install location, and
-the rollout bundle is also written outside it, so enforcement does not dirty
-the repository being checked. Any download, digest, manifest, provenance, or
-install failure stops the job before the policy scan. A download or provenance
-check that still fails after its fourth attempt exits explicitly instead of
-using stale, partial, or unverified evidence.
+`RUNNER_TEMP`. The local wheel install disables package indexes, dependency
+resolution, and pip's remote version check, so no Python registry is consulted
+after the verified GitHub release download. The target checkout is never used
+as an install location, and the rollout bundle is also written outside it, so
+enforcement does not dirty the repository being checked. Any download, digest,
+manifest, provenance, or install failure stops the job before the policy scan.
+A download or provenance check that still fails after its fourth attempt exits
+explicitly instead of using stale, partial, or unverified evidence.
 
 The bundle contains repository filenames, policy findings, a policy
 fingerprint, and the checked-out commit. GitHub job summaries and artifacts

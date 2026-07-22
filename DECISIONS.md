@@ -2299,3 +2299,22 @@ Dynamic lookup verifies the tag target currently published by GitHub, while
 paid CI retains the stronger separately reviewed fixed source and wheel pins.
 This aligns their identity dimensions without claiming equal immutability, and
 does not establish an install, activation, pilot request, payment, or revenue.
+
+## 2026-07-22: Require Complete, Index-Free Paid-CI Activation
+
+GitHub CLI can return success when one release pattern matches even if another
+requested asset is absent. Both policy gates previously ran `mv` after that
+success condition, so a missing manifest aborted under Bash error handling
+instead of entering the documented bounded retry path. The later local-wheel
+install also disabled dependencies but did not explicitly forbid package-index
+access or pip's remote version check.
+
+Each attempt now succeeds only when the download returns zero, both the wheel
+and manifest are regular files, and both promote into the trusted release
+directory. Successful partial responses remain isolated and retry with the
+same 5, 10, and 15-second waits; a fourth partial response exits explicitly.
+The verified local-wheel install now disables package indexes, dependency
+resolution, and pip's version check. Executable tests cover partial recovery,
+terminal partial failure, byte-identical customer and dogfood install blocks,
+and Bash syntax. This reduces paid-CI activation failures and mutable network
+access without establishing customer usage, demand, payment, or revenue.
