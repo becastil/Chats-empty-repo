@@ -2318,3 +2318,22 @@ resolution, and pip's version check. Executable tests cover partial recovery,
 terminal partial failure, byte-identical customer and dogfood install blocks,
 and Bash syntax. This reduces paid-CI activation failures and mutable network
 access without establishing customer usage, demand, payment, or revenue.
+
+## 2026-07-22: Bind The Release Manifest To The Pinned Wheel
+
+Paid CI independently checked the pinned wheel digest and then ran
+`sha256sum --check --ignore-missing --strict` against the downloaded release
+manifest. A local executable reproduction showed that GNU `sha256sum` can exit
+successfully when every manifest entry names an absent file. The digest still
+protected the wheel bytes, but the separate manifest check did not require the
+manifest to identify that wheel at all.
+
+Both customer and dogfood gates now require exactly one canonical manifest line
+containing the pinned SHA-256 digest, two-space separator, and expected wheel
+filename before checksum or provenance verification. Missing entries, altered
+digests, and duplicate canonical entries exit before any attestation request.
+The ordinary checksum pass remains in place to reject conflicting entries for
+present files. Executable tests keep the two workflows byte-identical and prove
+all three new failures without contacting GitHub. This strengthens paid-CI
+artifact identity without establishing an install, customer usage, demand,
+payment, or revenue.

@@ -70,7 +70,19 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           release_dir="$RUNNER_TEMP/repo-scout-release"
-          wheel="$release_dir/repo_scout-${REPO_SCOUT_VERSION}-py3-none-any.whl"
+          wheel_name="repo_scout-${REPO_SCOUT_VERSION}-py3-none-any.whl"
+          wheel="$release_dir/$wheel_name"
+          manifest="$release_dir/SHA256SUMS"
+          manifest_matches="$(
+            awk -v expected="$REPO_SCOUT_WHEEL_SHA256  $wheel_name" '
+              $0 == expected { matches += 1 }
+              END { print matches + 0 }
+            ' "$manifest"
+          )"
+          if [[ "$manifest_matches" != "1" ]]; then
+            printf 'Repo Scout release manifest must contain exactly one pinned wheel entry.\n' >&2
+            exit 1
+          fi
           printf '%s  %s\n' "$REPO_SCOUT_WHEEL_SHA256" "$wheel" \
             | sha256sum --check --strict -
           pushd "$release_dir"

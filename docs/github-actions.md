@@ -75,11 +75,18 @@ bounded retry path instead of aborting at the missing-file move.
 Before installation, the gate verifies:
 
 - The wheel matches the independently pinned SHA-256 digest in the workflow.
+- The manifest contains exactly one canonical entry binding that digest to the
+  pinned wheel filename.
 - The wheel matches the release's `SHA256SUMS` manifest.
 - GitHub's signed provenance names the pinned source commit and semantic release
   tag.
 - The signer is this repository's `.github/workflows/release.yml` workflow.
 - The attested build used a GitHub-hosted runner.
+
+The exact-entry check runs before checksum or provenance verification. A
+manifest that omits the wheel, changes its digest, or repeats its canonical
+entry therefore fails even though `sha256sum --ignore-missing` can return
+success when every listed artifact is absent from the download directory.
 
 Provenance verification also uses up to four attempts with the same bounded
 backoff. Every attempt retains the exact wheel, repository, source commit, tag,

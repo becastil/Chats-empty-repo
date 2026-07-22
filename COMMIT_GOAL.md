@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after hardening paid-CI release activation: 194 / 1,000 (19.4%).
-- Remaining after hardening paid-CI release activation: 806 commits.
+- Progress after binding paid-CI manifests to pinned wheels: 195 / 1,000 (19.5%).
+- Remaining after binding paid-CI manifests to pinned wheels: 805 commits.
 
 ## Commit Standard
 

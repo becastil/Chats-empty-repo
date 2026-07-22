@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Required the paid-CI release manifest to contain exactly one canonical entry
+  binding the pinned wheel digest to the expected wheel filename.
+- Added executable missing, altered, and duplicate manifest regressions that
+  fail before any provenance request, even when checksum tooling ignores absent
+  artifacts.
 - Kept wheel, manifest, and promotion checks inside each bounded release
   download attempt so successful one-asset responses retry instead of aborting.
 - Added executable recovery and terminal-failure coverage for GitHub CLI calls

@@ -176,6 +176,11 @@ class CiExampleTests(unittest.TestCase):
         self.assertEqual(dogfood_verify.count("gh attestation verify"), 1)
         self.assertIn("for attempt in 1 2 3 4; do", dogfood_verify)
         self.assertIn(
+            'awk -v expected="$REPO_SCOUT_WHEEL_SHA256  $wheel_name"',
+            dogfood_verify,
+        )
+        self.assertIn('if [[ "$manifest_matches" != "1" ]]', dogfood_verify)
+        self.assertIn(
             "Repo Scout provenance verification failed after %s attempts.",
             dogfood_verify,
         )
@@ -371,6 +376,50 @@ class CiExampleTests(unittest.TestCase):
                 "provenance verification failed after 4 attempts",
                 failed.stderr,
             )
+
+    def test_release_manifest_requires_exact_pinned_wheel_entry(self) -> None:
+        workflow = (ROOT / ".github/workflows/repo-scout-policy.yml").read_text(
+            encoding="utf-8"
+        )
+        verify_marker = "      - name: Verify release integrity and provenance\n"
+        install_marker = "      - name: Install verified Repo Scout release\n"
+        verify_step = workflow[
+            workflow.index(verify_marker) : workflow.index(install_marker)
+        ]
+        verify_script = textwrap.dedent(
+            verify_step.split("        run: |\n", 1)[1]
+        )
+        wheel_name = f"repo_scout-{REPO_SCOUT_VERSION}-py3-none-any.whl"
+        expected_line = f"{REPO_SCOUT_WHEEL_SHA256}  {wheel_name}\n"
+        invalid_manifests = {
+            "missing wheel": f"{'0' * 64}  repo_scout-{REPO_SCOUT_VERSION}.tar.gz\n",
+            "altered digest": f"{'0' * 64}  {wheel_name}\n",
+            "duplicate wheel": expected_line * 2,
+        }
+
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            fake_bin = root / "bin"
+            self._write_retry_fakes(fake_bin)
+
+            for label, manifest_text in invalid_manifests.items():
+                with self.subTest(label=label):
+                    completed, attempt_count, sleeps = (
+                        self._run_provenance_verification(
+                            verify_script,
+                            fake_bin,
+                            root / label.replace(" ", "-"),
+                            success_on=1,
+                            manifest_text=manifest_text,
+                        )
+                    )
+                    self.assertEqual(completed.returncode, 1)
+                    self.assertEqual(attempt_count, 0)
+                    self.assertEqual(sleeps, [])
+                    self.assertIn(
+                        "manifest must contain exactly one pinned wheel entry",
+                        completed.stderr,
+                    )
 
     def test_example_policy_uses_the_supported_contract(self) -> None:
         policy_path = ROOT / "examples/github-actions/repo-scout-policy.toml"
@@ -662,13 +711,19 @@ class CiExampleTests(unittest.TestCase):
         runner_temp: Path,
         *,
         success_on: int,
+        manifest_text: str | None = None,
     ) -> tuple[subprocess.CompletedProcess[str], int, list[str]]:
         runner_temp.mkdir()
         release_dir = runner_temp / "repo-scout-release"
         release_dir.mkdir()
         wheel = release_dir / f"repo_scout-{REPO_SCOUT_VERSION}-py3-none-any.whl"
         wheel.write_text("wheel", encoding="utf-8")
-        (release_dir / "SHA256SUMS").write_text("manifest", encoding="utf-8")
+        if manifest_text is None:
+            manifest_text = f"{REPO_SCOUT_WHEEL_SHA256}  {wheel.name}\n"
+        (release_dir / "SHA256SUMS").write_text(
+            manifest_text,
+            encoding="utf-8",
+        )
         counter = runner_temp / "gh-count"
         sleep_log = runner_temp / "sleep-log"
         environment = os.environ.copy()
@@ -698,7 +753,10 @@ class CiExampleTests(unittest.TestCase):
             if sleep_log.exists()
             else []
         )
-        return completed, int(counter.read_text(encoding="utf-8")), sleeps
+        attempt_count = (
+            int(counter.read_text(encoding="utf-8")) if counter.exists() else 0
+        )
+        return completed, attempt_count, sleeps
 
     @staticmethod
     def _commit_repository(root: Path) -> None:

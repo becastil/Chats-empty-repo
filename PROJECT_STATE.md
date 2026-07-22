@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 194 of
-1,000, with 806 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 195 of
+1,000, with 805 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -85,6 +85,8 @@ alignment take priority over commit volume.
 - Explicit missing, unknown, and ambiguous source warnings for legacy or edited issues.
 - Copy-ready and dogfooded CI bootstrap from a versioned Repo Scout wheel instead of a source checkout.
 - Independent wheel digest, release manifest, source commit, tag, signer workflow, and hosted-runner verification.
+- Exact single-entry binding between the pinned wheel digest, canonical wheel
+  filename, and downloaded release manifest before provenance verification.
 - Runner-temp virtual-environment installation that leaves the protected checkout unchanged.
 - Package-index-free verified wheel installation with dependency resolution
   and pip's remote version check disabled in both policy gates.

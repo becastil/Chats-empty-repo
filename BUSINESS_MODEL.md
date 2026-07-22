@@ -66,6 +66,13 @@ not prove customer usage, demand, payment, or revenue. The CI contract executes
 both shell blocks with injected transient, partial-success, and terminal
 failures, proving exact waits, trusted-file promotion, recovery, and explicit
 terminal failure without calling GitHub.
+Before either provenance loop begins, the manifest must contain exactly one
+canonical entry binding the independently pinned digest to the expected wheel
+filename. Missing, altered, and duplicate wheel entries stop activation before
+an attestation request, closing the case where `sha256sum --ignore-missing`
+accepts a manifest whose listed artifacts are all absent. Executable customer
+and dogfood contracts cover each rejection without treating trust validation as
+customer usage, demand, payment, or revenue.
 Existing handoff and rollout reports are now replaced only after a complete
 new report is staged, with the original access permissions carried into the
 atomic swap. A failed swap leaves the prior evidence unchanged. This protects
