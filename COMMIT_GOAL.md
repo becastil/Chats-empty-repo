@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after preparing the first immutable release: 202 / 1,000 (20.2%).
-- Remaining after preparing the first immutable release: 798 commits.
+- Progress after promoting the first immutable paid-CI pin: 203 / 1,000 (20.3%).
+- Remaining after promoting the first immutable paid-CI pin: 797 commits.
 
 ## Commit Standard
 

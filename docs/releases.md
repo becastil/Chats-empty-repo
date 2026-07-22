@@ -17,8 +17,9 @@ Repository-level release immutability locks a published release's tag and
 assets against modification or deletion. The release workflow queries the
 exact tag after publication and fails unless GitHub reports `immutable: true`.
 The `v0.3.51` publication is the first release boundary protected by this
-setting. Paid CI remains pinned to independently verified `v0.3.50` artifacts
-until the new manifest, tag, source, and provenance are reviewed separately.
+setting. Paid CI now pins its independently verified source commit and wheel
+digest after separately reconciling the manifest, annotated tag, main ancestry,
+release workflow, immutable state, and all three provenance attestations.
 
 ## Install A Release
 

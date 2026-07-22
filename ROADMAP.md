@@ -7,9 +7,6 @@
 
 ## Near Term
 
-- Independently reconcile the immutable `v0.3.51` manifest, annotated tag,
-  main ancestry, and all three provenance attestations, then advance paid-CI
-  pins away from the separately verified but mutable `v0.3.50` release.
 - Human-review the five prepared, publicly qualified drafts. The first
   owner-only `--write-review` bundle is ready in the ignored private workspace;
   use its content-bound `--approve-next` or

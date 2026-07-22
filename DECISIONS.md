@@ -2452,3 +2452,24 @@ this change. The new manifest, annotated tag, source commit, signer workflow,
 hosted-runner rule, and all three attestations require a separate reconciliation
 before the atomic six-target pin update. Publishing creates no customer install,
 pilot request, payment, or revenue.
+
+## 2026-07-22: Advance Paid CI After Independent v0.3.51 Verification
+
+The `v0.3.51` release workflow built and attested the first artifact set covered
+by repository-level release immutability, but workflow success alone was not
+enough evidence for customer and dogfood policy gates to trust a new identity.
+A separate download matched all three artifacts to `SHA256SUMS`, confirmed the
+remote annotated tag peels to a commit on `main`, and required GitHub's exact
+release object to report `immutable: true`.
+
+Each artifact then passed provenance verification against the exact repository,
+semantic tag, source commit, release workflow, and GitHub-hosted-runner rule.
+Only after those checks passed did the atomic six-target updater advance both
+workflows, the buyer-facing README, commercial model, project state, and
+executable contract to source commit
+`e38c54c1564a65427ed6616eda180e5dadf40414` and wheel SHA-256
+`506925aaba1acec2e4e4f6332753f1a140a0ec3d3ed133e15489613883e425b5`.
+
+This reduces interruption and artifact-substitution risk in paid-CI activation
+without treating verification as a customer install, outreach attempt, pilot
+request, payment, or revenue.

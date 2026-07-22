@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 202 of
-1,000, with 798 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 203 of
+1,000, with 797 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -374,7 +374,7 @@ alignment take priority over commit volume.
 - Git-aware pattern matching across all tracked or unignored paths, independent of the snapshot's 500-path detail cap.
 - Bounded pattern evidence with full match counts, 20 sorted paths per pattern, and explicit truncation state.
 - Strict wildcard, path, duplicate, required-file conflict, exact-rule overlap, and fingerprint validation for pattern rules.
-- Independently pinned `v0.3.50` wheel digest, source commit, manifest,
+- Independently pinned `v0.3.51` wheel digest, source commit, manifest,
   provenance, signer workflow, and hosted-runner checks in both policy gates.
 - A preflighted maintainer updater that changes the dogfood workflow, customer
   example, buyer-facing README, commercial model and project-state claims, and
@@ -432,11 +432,6 @@ python3 scripts/audit_pilot_labels.py --repo becastil/Chats-empty-repo
 ```
 
 ## Next Small Task
-
-Independently reconcile the public `v0.3.51` manifest, annotated tag, main
-ancestry, and all three provenance attestations after its GitHub API evidence
-reports `immutable: true`; only then advance paid-CI pins from the separately
-verified but mutable `v0.3.50` release.
 
 The first complete owner-only bundle is prepared in the ignored private
 workspace from the verified `v0.3.48` wheel. Human-review that private file and

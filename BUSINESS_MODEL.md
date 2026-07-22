@@ -44,9 +44,10 @@ aligned with paid CI without proving activation, demand, payment, or revenue.
 Repository-level release immutability is enabled. After publishing, the release
 job queries the exact semantic tag through the versioned GitHub API and fails
 unless its release object reports `immutable: true`. Version `0.3.51` is the
-first release boundary required to pass that lock. The paid-CI gates remain
-pinned to separately verified `v0.3.50` artifacts until the new manifest, tag,
-source, and provenance are independently reconciled.
+first release boundary required to pass that lock. After a separate public-
+artifact reconciliation, both paid-CI gates now pin its exact source commit and
+wheel digest alongside the manifest, tag, signer workflow, hosted runner, and
+provenance constraints.
 The wheel adoption path now reports all 7 packaged commands, and its release
 test derives complete version-smoke coverage from `[project.scripts]` instead
 of a second hardcoded command list. This keeps the paid CI activation surface
@@ -133,7 +134,7 @@ This is useful free CI enforcement; the paid work remains agreeing on the
 right rules and rolling the same reviewed policy across uneven repositories.
 Versions 1 and 2 remain readable so verified CI upgrades can be staged safely.
 The dogfood and copy-ready gates now install the independently verified
-`v0.3.50` wheel, so v4 policies can run locally and in CI
+`v0.3.51` wheel, so v4 policies can run locally and in CI
 without source checkout, mutable package resolution, or a team-managed secret.
 Maintainer pin upgrades now preflight and update the dogfood workflow,
 copy-ready customer example, buyer-facing README, commercial model and
@@ -500,12 +501,16 @@ sending, or counting outreach as pilot demand or revenue.
 Version `0.3.51` packages the paid-CI activation hardening, exact public
 provenance constraints, payment-backed conversion accounting, strict commercial
 inputs and dates, configured-price recommendations, and post-publication
-immutable-release evidence accumulated since `v0.3.50`. Its release must pass
-the complete source and installed-command contracts before publication.
-Customer and dogfood CI remain on independently verified `v0.3.50` until the
-new manifest, source commit, tag, signer workflow, attestations, and immutable
-state are reconciled in a separate review. Publishing does not establish a
-customer install, outreach attempt, pilot request, payment, or revenue.
+immutable-release evidence accumulated since `v0.3.50`. The complete source and
+installed-command contracts passed before publication. After separate public-
+artifact verification, customer and dogfood CI now pin source commit
+`e38c54c1564a65427ed6616eda180e5dadf40414` and wheel SHA-256
+`506925aaba1acec2e4e4f6332753f1a140a0ec3d3ed133e15489613883e425b5`.
+The manifest, annotated tag ancestry, main ancestry, release workflow,
+`immutable: true` state, all three provenance attestations, exact signer
+workflow, and GitHub-hosted-runner restriction passed before the pins changed.
+Publishing and pinning these artifacts does not establish a customer install,
+outreach attempt, pilot request, payment, or revenue.
 
 Version `0.3.50` packages that guarded-ledger cleanup boundary so the human
 approval and send-recording workflow does not depend on a source checkout. The
