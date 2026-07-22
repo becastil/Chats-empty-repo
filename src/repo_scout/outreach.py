@@ -864,13 +864,15 @@ def _write_outreach_rows(
     expected_private_draft_revision: tuple[Path, str] | None = None,
 ) -> None:
     temporary_path: Path | None = None
+    operation_error: OutreachInputError | None = None
+    operation_cause: Exception | None = None
     try:
         with NamedTemporaryFile(
             "w",
             newline="",
             encoding="utf-8",
             dir=path.parent,
-            prefix=f".{path.name}.",
+            prefix=".repo-scout-ledger.",
             suffix=".tmp",
             delete=False,
         ) as ledger_file:
@@ -936,16 +938,41 @@ def _write_outreach_rows(
                     )
             os.replace(temporary_path, path)
             temporary_path = None
-    except OutreachInputError:
-        raise
+    except OutreachInputError as exc:
+        operation_error = exc
     except (csv.Error, OSError, UnicodeError, ValueError) as exc:
-        raise OutreachInputError("cannot update outreach ledger safely") from exc
-    finally:
-        if temporary_path is not None:
-            try:
-                temporary_path.unlink(missing_ok=True)
-            except OSError:
-                pass
+        operation_error = OutreachInputError(
+            "cannot update outreach ledger safely"
+        )
+        operation_cause = exc
+
+    cleanup_error: OSError | None = None
+    if temporary_path is not None:
+        try:
+            temporary_path.unlink(missing_ok=True)
+        except OSError as exc:
+            cleanup_error = exc
+    if cleanup_error is not None:
+        assert temporary_path is not None
+
+    if operation_error is not None:
+        if operation_cause is not None:
+            operation_error.__cause__ = operation_cause
+        if cleanup_error is not None:
+            raise OutreachInputError(
+                f"{operation_error}; temporary cleanup incomplete for "
+                f"owner-only staging file {temporary_path.name} in the "
+                "private outreach ledger directory; remove that staging "
+                "file before continuing"
+            ) from operation_error
+        raise operation_error
+    if cleanup_error is not None:
+        raise OutreachInputError(
+            "outreach ledger was updated, but temporary cleanup incomplete "
+            f"for owner-only staging file {temporary_path.name} in the "
+            "private outreach ledger directory; remove that staging file "
+            "before continuing"
+        ) from cleanup_error
 
 
 def _load_private_drafts(path: Path) -> dict[str, str]:

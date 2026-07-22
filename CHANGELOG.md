@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Reported private outreach ledger staging-cleanup failures alongside the
+  original guarded-mutation error instead of silently leaving a hidden copy.
+- Replaced destination-derived lifecycle staging names with a neutral prefix
+  and omitted filesystem details that could disclose a private ledger identity.
+- Preserved the original ledger bytes and owner-only staging permissions while
+  giving the operator an exact retained filename to remove before continuing.
 - Refreshed public distribution, schema-7 pilot, and joined growth baselines
   after the independently verified `v0.3.49` release and paid-CI promotion.
 - Recorded 50 additional primary artifact requests across four new releases

@@ -2230,3 +2230,19 @@ CI activity, so the movement remains directional reach rather than users,
 installs, leads, or willingness to pay. Acquisition remains the commercial
 bottleneck, and the next action remains human review of the prepared outreach
 queue rather than another product or acquisition feature.
+
+## 2026-07-22: Make Failed Ledger Cleanup Visible Without Leaking Identity
+
+Every human approval, decline, contact, follow-up, and outcome record stages a
+complete private CSV replacement before it acquires the ledger lock. A failed
+mutation previously attempted to remove that staging file in a `finally` block
+and silently ignored an unlink failure. The current ledger remained safe, but
+an operator could not know that another private copy had been retained.
+
+Lifecycle staging files now use a neutral name unrelated to the private ledger.
+When both the mutation and cleanup fail, the command reports the original
+mutation error plus the exact neutral owner-only filename to remove. It omits
+the cleanup exception because real filesystem errors can contain the sensitive
+destination path. Failed replacement still preserves the original ledger bytes
+and permissions. This strengthens the existing acquisition workflow without
+reviewing a draft, sending outreach, creating demand, or recording revenue.

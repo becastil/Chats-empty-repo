@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 189 of
-1,000, with 811 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 190 of
+1,000, with 810 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -238,6 +238,9 @@ alignment take priority over commit volume.
   after a clean result.
 - Truthful post-publication cleanup failures that retain the completed review,
   identify the owner-only staging copy, and prevent a misleading success receipt.
+- Truthful guarded-ledger cleanup failures that retain the original mutation
+  error, identify only a neutral owner-only staging filename, and keep private
+  ledger identity out of terminal guidance.
 - Live outreach review and mutation preflight that rejects tracked, unignored,
   or symlinked in-repository ledgers and draft notes before reading private
   material.

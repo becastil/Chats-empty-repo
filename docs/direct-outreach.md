@@ -367,6 +367,12 @@ replacing. A concurrent command or newer ledger revision stops with a retry
 message and leaves both the newer evidence and temporary-file boundary intact.
 The hidden lock file contains no prospect data and remains beside the ignored
 private ledger so atomic replacements cannot bypass it.
+If a failed mutation cannot remove its staged replacement, the command keeps
+the original mutation error, identifies the retained neutral owner-only staging
+filename, and exits unsuccessfully without printing the destination-derived
+ledger name or cleanup exception. The current ledger remains unchanged when
+replacement failed. Remove the named staging file before retrying the guarded
+action.
 While holding that lock, Repo Scout rechecks that the current ledger is a
 regular file and that its POSIX file and parent permissions remain owner-only.
 Late privacy drift stops the action without replacing the current bytes or

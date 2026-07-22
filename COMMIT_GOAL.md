@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after the post-v0.3.49 commercial checkpoint: 189 / 1,000 (18.9%).
-- Remaining after the post-v0.3.49 commercial checkpoint: 811 commits.
+- Progress after private ledger cleanup hardening: 190 / 1,000 (19.0%).
+- Remaining after private ledger cleanup hardening: 810 commits.
 
 ## Commit Standard
 

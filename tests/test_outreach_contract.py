@@ -149,6 +149,17 @@ class DirectOutreachContractTests(unittest.TestCase):
             "public pilot intake before counting demand, payment, or revenue",
             normalized_playbook,
         )
+        self.assertIn(
+            "keeps the original mutation error", normalized_playbook
+        )
+        self.assertIn(
+            "retained neutral owner-only staging filename",
+            normalized_playbook,
+        )
+        self.assertIn(
+            "without printing the destination-derived ledger name",
+            normalized_playbook,
+        )
         self.assertIn("--require-counts-only", playbook)
         self.assertIn("exits with code 7", normalized_playbook)
         self.assertIn(PUBLIC_PILOT_INTAKE_URL, playbook)

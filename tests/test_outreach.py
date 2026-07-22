@@ -1322,7 +1322,9 @@ class OutreachReportTests(unittest.TestCase):
             self.assertNotIn("2026-07-12", json.dumps(receipt))
             self.assertNotIn("evidence.example", json.dumps(receipt))
             self.assertIn("No outreach was sent", receipt["action_note"])
-            self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
+            self.assertEqual(
+                list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
+            )
 
     def test_content_bound_approve_rejects_an_edited_private_draft(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -1396,7 +1398,9 @@ class OutreachReportTests(unittest.TestCase):
                 stderr.getvalue(),
             )
             self.assertNotIn("Edited after human review", stderr.getvalue())
-            self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
+            self.assertEqual(
+                list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
+            )
 
     def test_content_bound_decisions_reject_private_draft_commit_races(
         self,
@@ -1506,7 +1510,9 @@ class OutreachReportTests(unittest.TestCase):
                     stderr.getvalue(),
                 )
                 self.assertNotIn(edited_message, stderr.getvalue())
-                self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
+                self.assertEqual(
+                    list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
+                )
 
     def test_content_bound_approve_accepts_the_current_private_review(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -1636,7 +1642,9 @@ class OutreachReportTests(unittest.TestCase):
                 stderr.getvalue(),
             )
             self.assertNotIn("edited-agents", stderr.getvalue())
-            self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
+            self.assertEqual(
+                list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
+            )
 
     def test_content_bound_decline_preserves_complete_next_review(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -1851,7 +1859,9 @@ class OutreachReportTests(unittest.TestCase):
                 main(next_review_command)
             self.assertEqual(ctx.exception.code, 2)
             self.assertEqual(ledger.read_bytes(), before_next_review)
-            self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
+            self.assertEqual(
+                list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
+            )
 
     def test_decline_final_draft_ends_the_review_queue(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -1954,7 +1964,7 @@ class OutreachReportTests(unittest.TestCase):
                     self.assertIn(message, stderr.getvalue())
                     self.assertEqual(ledger.read_bytes(), before)
                     self.assertEqual(
-                        list(Path(tmp).glob(".ledger.csv.*.tmp")), []
+                        list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
                     )
 
     def test_approve_next_rejects_unsafe_transitions_without_mutation(self) -> None:
@@ -2047,7 +2057,7 @@ class OutreachReportTests(unittest.TestCase):
                     self.assertIn(message, stderr.getvalue())
                     self.assertEqual(ledger.read_bytes(), before)
                     self.assertEqual(
-                        list(Path(tmp).glob(".ledger.csv.*.tmp")), []
+                        list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
                     )
 
     def test_approve_next_preserves_original_when_atomic_replace_fails(self) -> None:
@@ -2087,7 +2097,77 @@ class OutreachReportTests(unittest.TestCase):
             self.assertEqual(exit_code, 2)
             self.assertIn("cannot update outreach ledger safely", stderr.getvalue())
             self.assertEqual(ledger.read_bytes(), before)
-            self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
+            self.assertEqual(
+                list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
+            )
+
+    def test_approve_next_reports_staging_cleanup_failure_privately(self) -> None:
+        with TemporaryDirectory() as tmp:
+            private_directory = Path(tmp) / "private"
+            private_directory.mkdir(mode=0o700)
+            ledger = private_directory / "prospect-001-private-ledger.csv"
+            _write_ledger(
+                ledger,
+                [
+                    _row(
+                        status="drafted",
+                        contacted_on="",
+                        next_action_on="",
+                        approved_on="",
+                    )
+                ],
+            )
+            before = ledger.read_bytes()
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+
+            with (
+                patch(
+                    "repo_scout.outreach.os.replace",
+                    side_effect=OSError("injected publish failure"),
+                ),
+                patch.object(
+                    Path,
+                    "unlink",
+                    side_effect=OSError(
+                        "cleanup failed for prospect-001-private-ledger.csv"
+                    ),
+                ),
+                redirect_stdout(stdout),
+                redirect_stderr(stderr),
+            ):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--approve-next",
+                        "prospect-001",
+                        "--approved-on",
+                        "2026-07-12",
+                        "--confirm-reviewed",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 2)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertEqual(ledger.read_bytes(), before)
+            staged = list(
+                private_directory.glob(".repo-scout-ledger.*.tmp")
+            )
+            self.assertEqual(len(staged), 1)
+            error = stderr.getvalue()
+            self.assertIn("cannot update outreach ledger safely", error)
+            self.assertIn("temporary cleanup incomplete", error)
+            self.assertIn(staged[0].name, error)
+            self.assertIn("remove that staging file", error)
+            self.assertNotIn(ledger.name, error)
+            self.assertNotIn(str(ledger), error)
+            self.assertNotIn("prospect-001", error)
+            if os.name == "posix":
+                self.assertEqual(ledger.stat().st_mode & 0o777, 0o600)
+                self.assertEqual(staged[0].stat().st_mode & 0o777, 0o600)
+            staged[0].unlink()
 
     def test_lifecycle_lock_rejects_concurrent_approval_then_allows_retry(
         self,
@@ -2320,7 +2400,7 @@ class OutreachReportTests(unittest.TestCase):
             self.assertEqual(ledger.read_bytes(), before)
             self.assertEqual(ledger.stat().st_mode & 0o777, 0o640)
             self.assertEqual(
-                list(Path(tmp).glob(".private-ledger.csv.*.tmp")),
+                list(Path(tmp).glob(".repo-scout-ledger.*.tmp")),
                 [],
             )
 
@@ -2404,7 +2484,9 @@ class OutreachReportTests(unittest.TestCase):
             text = format_outreach_contact(receipt, ledger=ledger)
             self.assertIn("Manual follow-up due: 2026-07-19", text)
             self.assertIn("follow up manually", text)
-            self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
+            self.assertEqual(
+                list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
+            )
 
     def test_text_handoffs_require_actual_human_event_dates(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -2651,7 +2733,7 @@ class OutreachReportTests(unittest.TestCase):
                     self.assertIn(message, stderr.getvalue())
                     self.assertEqual(ledger.read_bytes(), before)
                     self.assertEqual(
-                        list(Path(tmp).glob(".ledger.csv.*.tmp")), []
+                        list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
                     )
 
     def test_record_contact_preserves_original_when_atomic_replace_fails(self) -> None:
@@ -2691,7 +2773,9 @@ class OutreachReportTests(unittest.TestCase):
             self.assertEqual(exit_code, 2)
             self.assertIn("cannot update outreach ledger safely", stderr.getvalue())
             self.assertEqual(ledger.read_bytes(), before)
-            self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
+            self.assertEqual(
+                list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
+            )
 
     def test_record_outcome_clears_follow_up_and_preserves_history(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -2776,7 +2860,9 @@ class OutreachReportTests(unittest.TestCase):
             self.assertIn("public demand or revenue evidence", text)
             self.assertIn(PUBLIC_PILOT_INTAKE_URL, text)
             self.assertNotIn("repo-scout-outreach ", text)
-            self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
+            self.assertEqual(
+                list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
+            )
 
     def test_record_outcome_separates_observation_date_from_as_of(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -3066,7 +3152,7 @@ class OutreachReportTests(unittest.TestCase):
                     self.assertIn(message, stderr.getvalue())
                     self.assertEqual(ledger.read_bytes(), before)
                     self.assertEqual(
-                        list(Path(tmp).glob(".ledger.csv.*.tmp")), []
+                        list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
                     )
 
     def test_record_outcome_preserves_original_when_atomic_replace_fails(self) -> None:
@@ -3098,7 +3184,9 @@ class OutreachReportTests(unittest.TestCase):
             self.assertEqual(exit_code, 2)
             self.assertIn("cannot update outreach ledger safely", stderr.getvalue())
             self.assertEqual(ledger.read_bytes(), before)
-            self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
+            self.assertEqual(
+                list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
+            )
 
     def test_record_follow_up_closes_the_earliest_due_contact(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -3178,7 +3266,9 @@ class OutreachReportTests(unittest.TestCase):
             self.assertIn("Repo Scout sent nothing", receipt["action_note"])
             text = format_outreach_follow_up(receipt, ledger=ledger)
             self.assertIn("stop immediately after an opt-out", text)
-            self.assertEqual(list(Path(tmp).glob(".ledger.csv.*.tmp")), [])
+            self.assertEqual(
+                list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
+            )
 
     def test_record_follow_up_rejects_unsafe_transitions_without_mutation(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -3278,7 +3368,7 @@ class OutreachReportTests(unittest.TestCase):
                     self.assertIn(message, stderr.getvalue())
                     self.assertEqual(ledger.read_bytes(), before)
                     self.assertEqual(
-                        list(Path(tmp).glob(".ledger.csv.*.tmp")), []
+                        list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
                     )
 
     def test_guarded_outreach_lifecycle_actions_compose(self) -> None:

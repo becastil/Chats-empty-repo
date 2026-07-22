@@ -458,6 +458,16 @@ remains unchanged. This makes the bounded human review queue easier to execute
 without performing the review, approving or sending a message, creating public
 demand, or recording revenue.
 
+The guarded approval, decline, contact, follow-up, and outcome mutations now
+apply the same truthful cleanup boundary to the private CSV ledger. If a failed
+mutation also cannot remove its staged replacement, the command retains the
+original mutation error, reports only a neutral owner-only staging filename,
+and tells the operator to remove that file before continuing. It does not print
+the destination-derived name or the cleanup exception, either of which could
+contain private ledger identity. A failed replacement leaves the current ledger
+unchanged. This protects the bounded acquisition workflow without approving,
+sending, or counting outreach as pilot demand or revenue.
+
 Version `0.3.49` packages that truthful cleanup boundary so future owner-only
 review bundles do not depend on a source checkout. The installed lifecycle
 smoke proved clean review publication, exact permissions, alias-free terminal
