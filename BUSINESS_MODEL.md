@@ -468,6 +468,17 @@ contain private ledger identity. A failed replacement leaves the current ledger
 unchanged. This protects the bounded acquisition workflow without approving,
 sending, or counting outreach as pilot demand or revenue.
 
+Version `0.3.50` packages that guarded-ledger cleanup boundary so the human
+approval and send-recording workflow does not depend on a source checkout. The
+source suite must prove the dual mutation-and-cleanup failure preserves current
+ledger bytes, owner-only staging permissions, the original error, and private
+identity redaction. The installed lifecycle smoke must still prove the complete
+guarded path before release. Customer and dogfood CI stay on independently
+verified `v0.3.49` until the new manifest, source commit, signer workflow, and
+attestations are reconciled separately. Publishing this safeguard does not
+review or send outreach, create a pilot request, collect payment, or record
+revenue.
+
 Version `0.3.49` packages that truthful cleanup boundary so future owner-only
 review bundles do not depend on a source checkout. The installed lifecycle
 smoke proved clean review publication, exact permissions, alias-free terminal

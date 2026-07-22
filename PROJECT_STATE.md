@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 190 of
-1,000, with 810 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 191 of
+1,000, with 809 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -330,6 +330,8 @@ alignment take priority over commit volume.
   keep complete private outreach material out of terminal capture.
 - `v0.3.49` patch-release boundary for truthful, alias-safe private-review
   staging cleanup failures through the installable distribution.
+- `v0.3.50` patch-release boundary for truthful, identity-safe private-ledger
+  staging cleanup failures through the installable outreach command.
 - Public `v0.3.34` release of strict schema-5 outreach operations in the wheel
   and source archive alongside the portable CLI, checksums, and provenance.
 - `v0.3.35` patch-release boundary for guarded outreach operations, complete
@@ -399,7 +401,7 @@ alignment take priority over commit volume.
 ## How To Run
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.49/repo-scout-0.3.49.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.50/repo-scout-0.3.50.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 python3 -m unittest discover -s tests
 python3 scripts/audit_pilot_labels.py --repo becastil/Chats-empty-repo

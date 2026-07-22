@@ -2246,3 +2246,19 @@ the cleanup exception because real filesystem errors can contain the sensitive
 destination path. Failed replacement still preserves the original ledger bytes
 and permissions. This strengthens the existing acquisition workflow without
 reviewing a draft, sending outreach, creating demand, or recording revenue.
+
+## 2026-07-22: Release Guarded Ledger Cleanup As v0.3.50
+
+The truthful private-ledger cleanup behavior on `main` protects lifecycle
+mutations only for operators running a source checkout. The bounded human
+review queue uses verified installable commands, and its next real decision can
+be an approval or decline followed by contact recording. Those mutations need
+the same observable, identity-safe failure boundary before they are used.
+
+Version `0.3.50` advances package, portable, website, verification-guide, and
+installed commercial-fixture identities together. The release must pass the
+source regression for simultaneous mutation and cleanup failure, then exercise
+the guarded outreach lifecycle from the built wheel before publishing checksums
+and provenance. Paid-CI pins remain on independently verified `v0.3.49` until
+the new artifacts are reconciled separately. Publishing does not review a
+draft, send outreach, create demand, collect payment, or record revenue.

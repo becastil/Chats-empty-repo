@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.50 - 2026-07-22
+
 - Reported private outreach ledger staging-cleanup failures alongside the
   original guarded-mutation error instead of silently leaving a hidden copy.
 - Replaced destination-derived lifecycle staging names with a neutral prefix

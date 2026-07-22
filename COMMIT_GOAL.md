@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after private ledger cleanup hardening: 190 / 1,000 (19.0%).
-- Remaining after private ledger cleanup hardening: 810 commits.
+- Progress after preparing the v0.3.50 release: 191 / 1,000 (19.1%).
+- Remaining after preparing the v0.3.50 release: 809 commits.
 
 ## Commit Standard
 
