@@ -56,6 +56,7 @@ def build_growth_report(
         qualified_pilots=qualified_pilots,
         offered_pilots=offered_pilots,
         booked_pilots=pilot_summary["booked_pilots"],
+        pilot_price_usd=pricing["pilot_price_usd"],
         target_pilots=pricing["target_pilots"],
         annual_conversions=pilot_summary["annual_conversions"],
     )
@@ -711,6 +712,7 @@ def _choose_bottleneck(
     qualified_pilots: int,
     offered_pilots: int,
     booked_pilots: int,
+    pilot_price_usd: int,
     target_pilots: int,
     annual_conversions: int,
 ) -> dict[str, str]:
@@ -750,7 +752,10 @@ def _choose_bottleneck(
         return {
             "stage": "offer",
             "reason": "Qualified pilot demand exists, but no offer is recorded.",
-            "next_action": "Send the explicit $299 pilot terms to a qualified team.",
+            "next_action": (
+                f"Send the explicit ${pilot_price_usd} pilot terms to a qualified "
+                "team."
+            ),
         }
     if booked_pilots == 0:
         return {

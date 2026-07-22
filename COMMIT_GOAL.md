@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after making commercial report dates explicit: 199 / 1,000 (19.9%).
-- Remaining after making commercial report dates explicit: 801 commits.
+- Progress after keeping offer recommendations price-consistent: 200 / 1,000 (20.0%).
+- Remaining after keeping offer recommendations price-consistent: 800 commits.
 
 ## Commit Standard
 

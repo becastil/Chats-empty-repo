@@ -775,6 +775,9 @@ Direct callers may change the pilot price, pilot target, and inactivity
 threshold only with genuine positive integers. Booleans, floats, and numeric
 strings fail before issue parsing so a malformed assumption cannot enter the
 schema-7 revenue report and then fail or distort joined growth validation.
+The joined growth review carries that validated pilot price into its offer-stage
+next action, so a custom commercial report cannot silently recommend the public
+default price instead.
 
 Resolved annual conversions require the same explicit payment milestone. A
 `pilot-converted` issue without `pilot-paid` remains visibly converted and

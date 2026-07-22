@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Carried the validated pilot price into growth-report offer recommendations
+  instead of hard-coding `$299` when direct callers configure another price.
+- Added a custom-price regression proving a `$400` pilot report recommends
+  `$400` terms while leaving the public `$299` founding offer unchanged.
 - Made `None` the only current-UTC default sentinel for pilot and outreach API
   report dates instead of treating every falsey value as omitted.
 - Added cross-entry-point rejection coverage proving falsey non-date values fail

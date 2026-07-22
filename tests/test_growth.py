@@ -347,6 +347,24 @@ class GrowthReportTests(unittest.TestCase):
                 report = build_growth_report(self._distribution(), pilot)
                 self.assertEqual(report["bottleneck"]["stage"], expected)
 
+    def test_offer_bottleneck_uses_configured_pilot_price(self) -> None:
+        pilot = self._pilot(
+            sources={"website": self._source(deals=1, qualified=1)}
+        )
+        pilot["pricing"] = {
+            "pilot_price_usd": 400,
+            "target_pilots": 3,
+            "target_revenue_usd": 1200,
+        }
+
+        report = build_growth_report(self._distribution(), pilot)
+
+        self.assertEqual(report["bottleneck"]["stage"], "offer")
+        self.assertEqual(
+            report["bottleneck"]["next_action"],
+            "Send the explicit $400 pilot terms to a qualified team.",
+        )
+
     def test_requires_a_baseline_before_prioritizing_commercial_movement(self) -> None:
         distribution = self._distribution()
         distribution["change"] = None

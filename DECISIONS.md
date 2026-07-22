@@ -2403,3 +2403,16 @@ reject any supplied non-date before ledger access. Regressions cover each
 wrapper and all three falsey value classes, plus direct pilot funnel use. This
 keeps commercial chronology explicit without reading private outreach data,
 changing public funnel state, or creating demand or revenue.
+
+## 2026-07-22: Keep Growth Recommendations Bound To Reported Pricing
+
+The pilot funnel supports a validated custom price for direct callers, but the
+joined growth report hard-coded `$299` in its offer-stage next action. A valid
+report configured for `$400` therefore reconciled its revenue correctly while
+still telling the operator to send the wrong commercial terms.
+
+The growth report now passes the validated `pilot_price_usd` into bottleneck
+selection and formats the offer recommendation from that value. A regression
+proves a `$400` report recommends `$400` terms. This preserves the public `$299`
+founding offer while preventing custom reports from producing contradictory
+sales guidance; it does not create an offer, payment, or revenue event.

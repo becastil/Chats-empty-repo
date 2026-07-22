@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 199 of
-1,000, with 801 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 200 of
+1,000, with 800 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -138,6 +138,8 @@ alignment take priority over commit volume.
 - Backward-compatible weekly distribution baselines with signed per-channel request deltas.
 - New-release, removed-release, removed-asset, and decreasing-counter evidence warnings.
 - Dependency-free weekly growth reviews that join signed distribution movement to attributed pilot, offer, and booked-revenue evidence.
+- Price-consistent offer recommendations that carry the validated pilot price
+  into the commercial bottleneck action instead of silently quoting $299.
 - Deterministic commercial bottlenecks from missing measurement through acquisition, qualification, offer, payment, pilot target, retention, and validation.
 - Explicit refusal to calculate download-to-lead conversion rates from non-unique artifact requests.
 - Release-blocking installed-wheel proof that raw GitHub release exports become
