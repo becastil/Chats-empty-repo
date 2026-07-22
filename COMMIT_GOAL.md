@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after promoting the first immutable paid-CI pin: 203 / 1,000 (20.3%).
-- Remaining after promoting the first immutable paid-CI pin: 797 commits.
+- Progress after preparing the tested public-site deployment handoff: 204 / 1,000 (20.4%).
+- Remaining after preparing the tested public-site deployment handoff: 796 commits.
 
 ## Commit Standard
 

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Detected that the public site still advertises `v0.3.50` while the released
+  download and paid-CI trust pins are on immutable `v0.3.51`.
+- Built, tested, linted, and packaged the exact `v0.3.51` site source, pushed
+  that commit to the existing Sites source repository, and saved Sites version
+  46 without claiming it was publicly deployed.
+- Added a release-contract test for the existing-project handoff, explicit
+  public-publish approval, saved-versus-live distinction, and immediate
+  post-deployment production audit.
 - Independently reconciled the immutable public `v0.3.51` manifest, annotated
   tag, main ancestry, release workflow, and all three provenance attestations.
 - Measured the released wheel digest separately and matched every downloaded

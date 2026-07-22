@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 203 of
-1,000, with 797 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 204 of
+1,000, with 796 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -81,6 +81,11 @@ alignment take priority over commit volume.
   pilot service, and website-attributed application link.
 - A read-only daily production workflow that runs the release-identity audit
   with immutable action pins and no repository secrets.
+- A contract-tested public-site deployment handoff that binds the exact tested
+  source to the existing Sites project, keeps saved versions distinct from live
+  production, requires explicit owner approval, and immediately audits a
+  successful publish. The `v0.3.51` source is saved as Sites version 46 but is
+  not yet live.
 - Tag-driven wheel and source releases with strict version alignment and exact artifact validation.
 - Hash-locked release build tooling, deterministic SHA-256 manifests, and clean-environment command smoke tests.
 - GitHub build-provenance attestations and immutable-action release automation.
@@ -433,11 +438,16 @@ python3 scripts/audit_pilot_labels.py --repo becastil/Chats-empty-repo
 
 ## Next Small Task
 
-The first complete owner-only bundle is prepared in the ignored private
-workspace from the verified `v0.3.48` wheel. Human-review that private file and
-record the decision with its content-bound `--approve-next` or
-`--decline-next` command emitted by that review, and send only approved drafts
-one at a time through their published business channels.
+The public site still advertises `v0.3.50`. Sites version 46 is prepared from
+the exact tested `v0.3.51` source in the existing project. Obtain explicit
+owner approval, deploy that saved version to the public site, and immediately
+run `python3 scripts/audit_production_site.py`. Do not describe the saved
+version as live before both steps pass.
+
+Then human-review the first complete owner-only bundle in the ignored private
+workspace, record the decision with its content-bound `--approve-next` or
+`--decline-next` command, and send only approved drafts one at a time through
+their published business channels.
 Immediately record each human send with guarded `--record-contact`, which
 retains approval and calculates the exact seven-day follow-up before the next
 message. When due, send that one follow-up manually and close its cadence

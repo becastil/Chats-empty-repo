@@ -127,10 +127,14 @@ class ReleaseManifestTests(unittest.TestCase):
         _, verification_heading, verification_tail = documentation.partition(
             "## Verify A Release"
         )
-        verification, audit_heading, _ = verification_tail.partition(
+        verification, deployment_heading, deployment_tail = verification_tail.partition(
+            "## Prepare And Approve A Site Deployment"
+        )
+        _, audit_heading, _ = deployment_tail.partition(
             "## Audit The Production Download"
         )
         self.assertTrue(verification_heading)
+        self.assertTrue(deployment_heading)
         self.assertTrue(audit_heading)
 
         artifact_count = len(prepare_release.ARTIFACT_TEMPLATE)
@@ -210,12 +214,16 @@ class ReleaseManifestTests(unittest.TestCase):
         _, verification_heading, verification_tail = documentation.partition(
             "## Verify A Release"
         )
-        verification, audit_heading, _ = verification_tail.partition(
+        verification, deployment_heading, deployment_tail = verification_tail.partition(
+            "## Prepare And Approve A Site Deployment"
+        )
+        _, audit_heading, _ = deployment_tail.partition(
             "## Audit The Production Download"
         )
         _, code_heading, code_tail = verification.partition("```bash\n")
         snippet, code_end, _ = code_tail.partition("```\n")
         self.assertTrue(verification_heading)
+        self.assertTrue(deployment_heading)
         self.assertTrue(audit_heading)
         self.assertTrue(code_heading)
         self.assertTrue(code_end)
@@ -229,6 +237,35 @@ class ReleaseManifestTests(unittest.TestCase):
         )
 
         self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_site_deployment_handoff_preserves_publication_boundary(self) -> None:
+        documentation = (ROOT / "docs" / "releases.md").read_text(
+            encoding="utf-8"
+        )
+        _, deployment_heading, deployment_tail = documentation.partition(
+            "## Prepare And Approve A Site Deployment"
+        )
+        deployment, audit_heading, audit = deployment_tail.partition(
+            "## Audit The Production Download"
+        )
+        self.assertTrue(deployment_heading)
+        self.assertTrue(audit_heading)
+
+        normalized = " ".join(deployment.split())
+        for command in ("npm ci", "npm test", "npm run lint"):
+            self.assertIn(command, deployment)
+        for requirement in (
+            "exact committed source",
+            "existing Sites source repository",
+            "existing Sites project",
+            "`.openai/hosting.json`",
+            "Saving a version does not make that version live",
+            "explicit owner approval",
+            "Only after the approved deployment succeeds",
+            "immediately run the production audit",
+        ):
+            self.assertIn(requirement, normalized, requirement)
+        self.assertIn("python3 scripts/audit_production_site.py", audit)
 
     def test_distribution_path_counts_every_packaged_command(self) -> None:
         with (ROOT / "pyproject.toml").open("rb") as project_file:

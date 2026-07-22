@@ -109,6 +109,33 @@ The paid CI examples go further by pinning the separately reviewed source
 commit and wheel digest directly, so a later tag move cannot change their
 trusted artifact identity.
 
+## Prepare And Approve A Site Deployment
+
+A release identity change is not complete on the public site until the exact
+committed source is built, saved, approved, deployed, and audited. For every
+site release:
+
+1. Install the lockfile dependencies and validate the production build and
+   source before packaging it:
+
+   ```bash
+   npm ci
+   npm test
+   npm run lint
+   ```
+
+2. Build and package that exact committed source, push the same commit to the
+   existing Sites source repository, and reuse the existing Sites project in
+   `.openai/hosting.json`. Do not create a replacement project for a version
+   update.
+3. Save the packaged version against that same source commit. Saving a version
+   does not make that version live.
+4. Obtain explicit owner approval before deploying the saved version to the
+   existing public production site.
+5. Only after the approved deployment succeeds, immediately run the production
+   audit in the next section. A prepared or saved version must not be described
+   as deployed before both steps finish.
+
 ## Audit The Production Download
 
 After publishing the site, maintainers can verify that its canonical metadata,

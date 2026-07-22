@@ -2473,3 +2473,24 @@ executable contract to source commit
 This reduces interruption and artifact-substitution risk in paid-CI activation
 without treating verification as a customer install, outreach attempt, pilot
 request, payment, or revenue.
+
+## 2026-07-22: Separate Saved Site Versions From Public Publication
+
+The production audit found that the public site still advertised `v0.3.50`
+after the immutable `v0.3.51` release and paid-CI pin promotion. The monitor
+correctly detected the mismatch, but the release guide moved directly from
+artifact verification to a post-publication audit without specifying how the
+tested source reaches the existing Sites project or when a saved version becomes
+live. The same operational gap had appeared after an earlier release.
+
+The release handoff now requires the lockfile install, production build test,
+lint, exact-source push and save against the existing project, explicit owner
+approval before a public deployment, and an immediate production audit after a
+successful publish. Executable documentation coverage protects each boundary.
+The exact `v0.3.51` source has been pushed and saved as Sites version 46, but the
+public site remains on `v0.3.50` until the approval-gated deployment succeeds.
+
+Preparing a deployable version closes part of a demonstrated distribution gap;
+it does not create a visit, install, outreach attempt, pilot request, payment,
+or revenue event, and it does not justify silently crossing the public publish
+boundary.
