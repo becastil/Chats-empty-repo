@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added a read-only hosted site dependency contract for relevant changes,
+  manual checks, and weekly advisory refreshes using immutable checkout and
+  Node setup actions.
+- Required the hosted contract to install the exact lock, report zero
+  vulnerabilities, build and exercise the PostCSS, Sharp, and Miniflare
+  compatibility path, and lint before success.
+- Recorded exact security-hardened commit `4d0053f` as saved Sites version 47
+  without crossing the separate public-deployment approval boundary.
 - Patched Next and its matching lint rules to `16.2.11`, Cloudflare's Vite
   plugin to `1.46.0`, Vite to `8.1.5`, and Wrangler to `4.113.0` without
   changing the public site or offer.

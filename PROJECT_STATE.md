@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 205 of
-1,000, with 795 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 206 of
+1,000, with 794 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -88,8 +88,13 @@ alignment take priority over commit volume.
 - A zero-vulnerability site dependency lock with a supported Next security
   patch, current Cloudflare and Vite build tooling, advisory-fixed PostCSS and
   Sharp overrides, and a release-handoff audit covering the complete install.
-  The security-hardened candidate is prepared for an exact-source replacement
-  save in the existing Sites project; production is unchanged.
+  The exact security-hardened source commit is saved as Sites version 47;
+  production is unchanged.
+- A read-only hosted site dependency contract that runs on relevant lock and
+  workflow changes, manual dispatch, and a weekly schedule. It installs the
+  exact lock on Node `22.13.0`, requires zero reported vulnerabilities, builds
+  and exercises the patched runtime, and lints without repository secrets or
+  write permissions.
 - Tag-driven wheel and source releases with strict version alignment and exact artifact validation.
 - Hash-locked release build tooling, deterministic SHA-256 manifests, and clean-environment command smoke tests.
 - GitHub build-provenance attestations and immutable-action release automation.
@@ -443,9 +448,9 @@ python3 scripts/audit_pilot_labels.py --repo becastil/Chats-empty-repo
 ## Next Small Task
 
 The public site still advertises `v0.3.50`. Sites version 46 is superseded and
-must not be deployed. Confirm that an exact-source replacement from the audited,
-security-hardened commit is the newest saved version, obtain explicit owner
-approval, deploy only that version, and immediately run
+must not be deployed. Version 47 is the exact-source replacement from audited
+security-hardened commit `4d0053f63a19d7a9113e263d2b1c242c0e2c1d6f`.
+Obtain explicit owner approval, deploy only version 47, and immediately run
 `python3 scripts/audit_production_site.py`. Do not describe the saved version as
 live before both steps pass.
 

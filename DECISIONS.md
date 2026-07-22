@@ -2522,3 +2522,25 @@ and must not be published; only an exact-source save of the security-hardened
 commit may cross the separate owner-approval boundary. This reduces buyer-path
 supply-chain risk but does not create a visit, install, request, payment, or
 revenue event.
+
+## 2026-07-22: Recheck The Buyer-Path Dependency Contract In Hosted CI
+
+The zero-vulnerability lock and local compatibility tests protected the saved
+site candidate, but a new advisory can be published while that lock remains
+unchanged. Waiting for the next manual publication handoff would leave the
+buyer path silently stale, while running the complete site toolchain on every
+repository commit would add unrelated CI cost during the 1,000-commit cadence.
+
+A dedicated hosted contract now runs when the package manifests, compatibility
+test, or workflow changes, on explicit manual dispatch, and every Monday. It
+uses the exact minimum Node `22.13.0`, installs the committed lock, fails on any
+reported vulnerability, builds and runs the site and override compatibility
+tests, and lints. Checkout and Node setup actions are pinned to complete commit
+identities; the job has only read access, receives no repository secrets, and
+cannot publish a saved version or deploy production.
+
+The previously audited source commit is now saved as Sites version 47, while
+the public site remains on `v0.3.50` behind the existing owner-approval gate.
+The hosted contract reduces the chance that vulnerable buyer-path dependencies
+reach that gate; neither a passing run nor a saved version is evidence of a
+visit, install, pilot request, payment, or revenue.

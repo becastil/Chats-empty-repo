@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after hardening the audited site dependency chain: 205 / 1,000 (20.5%).
-- Remaining after hardening the audited site dependency chain: 795 commits.
+- Progress after enforcing the site dependency contract in hosted CI: 206 / 1,000 (20.6%).
+- Remaining after enforcing the site dependency contract in hosted CI: 794 commits.
 
 ## Commit Standard
 
