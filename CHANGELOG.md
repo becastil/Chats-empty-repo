@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Rejected compact and ISO week-date spellings in every outreach ledger field
+  and CLI date option before private queue selection or mutation.
+- Added a guarded follow-up regression proving an earlier noncanonical due date
+  cannot be reordered behind a later canonical date.
 - Required explicit `pilot-paid` evidence before `pilot-converted` contributes
   to overall or segmented annual-conversion totals, while preserving its stage
   and skipped-payment warning for repair.

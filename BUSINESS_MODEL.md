@@ -273,6 +273,10 @@ Its omitted-date default and every documented lifecycle command use the current
 UTC calendar date. This keeps a review receipt, approval, manual contact, and
 follow-up on one reproducible day convention when the operator's local date
 differs near midnight; it does not make or send any of those decisions.
+Every nonblank ledger date and CLI date option must also use canonical,
+zero-padded `YYYY-MM-DD`. Compact and ISO week spellings fail before queue
+selection or mutation so textual due-date ordering cannot contradict calendar
+ordering.
 Schema-3 outreach reports separate drafts from sent attempts. Schema 5 adds an
 explicit `approved` checkpoint and requires its private approval date
 to survive every later status. Drafted and approved rows require a permitted

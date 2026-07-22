@@ -2322,7 +2322,7 @@ def _optional_date(value: str, *, row_number: int, field: str) -> date | None:
     if not value:
         return None
     try:
-        return date.fromisoformat(value)
+        return _canonical_date(value)
     except ValueError as exc:
         raise OutreachInputError(
             f"row {row_number}: {field} must be YYYY-MM-DD"
@@ -2367,9 +2367,16 @@ def _fit_evidence(value: str, *, row_number: int) -> dict[str, str]:
 
 def _date_argument(value: str) -> date:
     try:
-        return date.fromisoformat(value)
+        return _canonical_date(value)
     except ValueError as exc:
         raise argparse.ArgumentTypeError("must be YYYY-MM-DD") from exc
+
+
+def _canonical_date(value: str) -> date:
+    parsed = date.fromisoformat(value)
+    if parsed.isoformat() != value:
+        raise ValueError("date must use canonical YYYY-MM-DD form")
+    return parsed
 
 
 def _utc_today() -> date:

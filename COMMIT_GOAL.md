@@ -8,9 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after requiring payment-backed conversion evidence: 196 / 1,000
-  (19.6%).
-- Remaining after requiring payment-backed conversion evidence: 804 commits.
+- Progress after enforcing canonical outreach dates: 197 / 1,000 (19.7%).
+- Remaining after enforcing canonical outreach dates: 803 commits.
 
 ## Commit Standard
 

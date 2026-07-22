@@ -2355,3 +2355,20 @@ repaired, but contributes zero to summary, source, readiness,
 purchase-criterion, and joined growth conversion totals. This aligns retention
 evidence with the existing payment boundary without mutating labels, erasing
 warnings, or claiming a real payment or conversion.
+
+## 2026-07-22: Require Canonical Outreach Dates Before Queue Ordering
+
+Python's ISO parser accepts compact calendar dates and ISO week dates in
+addition to the documented `YYYY-MM-DD` form. Outreach validation therefore
+accepted a compact `next_action_on` value as the correct calendar date, while
+the guarded follow-up selector still sorted the original strings. An earlier
+compact date could sort behind a later canonical date and make the recorder
+demand the wrong prospect first.
+
+All nonblank outreach ledger dates and every CLI date argument now pass through
+one canonical parser that requires the parsed date to round-trip exactly to its
+input. Noncanonical spellings fail before queue selection, private file
+mutation, or output. The guarded regression pairs an earlier compact due date
+with a later canonical one, verifies controlled rejection, and proves the
+ledger remains unchanged. This protects the bounded conversion experiment's
+chronology without reviewing, approving, or sending any real outreach.

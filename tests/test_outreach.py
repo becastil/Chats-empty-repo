@@ -26,6 +26,7 @@ from repo_scout.outreach import (  # noqa: E402
     OutreachInputError,
     PRIVATE_OUTPUT_EXIT_CODE,
     PUBLIC_PILOT_INTAKE_URL,
+    build_parser,
     build_next_outreach_review,
     build_outreach_report,
     format_next_outreach_review,
@@ -3270,6 +3271,50 @@ class OutreachReportTests(unittest.TestCase):
                 list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
             )
 
+    def test_record_follow_up_rejects_noncanonical_date_before_selection(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            rows = [
+                _row(
+                    prospect_id="prospect-001",
+                    contacted_on="2026-07-03",
+                    next_action_on="20260710",
+                    approved_on="2026-07-02",
+                ),
+                _row(
+                    prospect_id="prospect-002",
+                    contacted_on="2026-07-05",
+                    next_action_on="2026-07-12",
+                    approved_on="2026-07-04",
+                ),
+            ]
+            _write_ledger(ledger, rows)
+            before = ledger.read_bytes()
+            stderr = io.StringIO()
+
+            with redirect_stderr(stderr):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-12",
+                        "--record-follow-up",
+                        "prospect-001",
+                        "--followed-up-on",
+                        "2026-07-10",
+                        "--confirm-follow-up-sent",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 2)
+            self.assertIn(
+                "row 2: next_action_on must be YYYY-MM-DD",
+                stderr.getvalue(),
+            )
+            self.assertEqual(ledger.read_bytes(), before)
+
     def test_record_follow_up_rejects_unsafe_transitions_without_mutation(self) -> None:
         with TemporaryDirectory() as tmp:
             ledger = Path(tmp) / "ledger.csv"
@@ -3820,6 +3865,20 @@ class OutreachReportTests(unittest.TestCase):
                     )
 
                 self.assertEqual(raised.exception.code, 2)
+
+    def test_cli_rejects_noncanonical_iso_date_spellings(self) -> None:
+        for value in ("20260708", "2026-W28-3"):
+            with self.subTest(value=value):
+                stderr = io.StringIO()
+                with redirect_stderr(stderr), self.assertRaises(
+                    SystemExit
+                ) as raised:
+                    build_parser().parse_args(
+                        ["ledger.csv", "--as-of", value]
+                    )
+
+                self.assertEqual(raised.exception.code, 2)
+                self.assertIn("must be YYYY-MM-DD", stderr.getvalue())
 
     def test_cli_defaults_to_the_current_utc_calendar_date(self) -> None:
         with TemporaryDirectory() as tmp:
