@@ -971,6 +971,27 @@ class PilotFunnelTests(unittest.TestCase):
         with self.assertRaisesRegex(FunnelInputError, "duplicate issue number: 1"):
             build_funnel([issue, issue])
 
+    def test_build_funnel_rejects_non_integer_commercial_controls(self) -> None:
+        invalid_controls = (
+            ("pilot_price_usd", "pilot price", True),
+            ("pilot_price_usd", "pilot price", 299.5),
+            ("pilot_price_usd", "pilot price", "299"),
+            ("target_pilots", "target pilots", True),
+            ("target_pilots", "target pilots", 3.0),
+            ("target_pilots", "target pilots", "3"),
+            ("stale_days", "stale days", True),
+            ("stale_days", "stale days", 7.0),
+            ("stale_days", "stale days", "7"),
+        )
+
+        for argument, label, value in invalid_controls:
+            with self.subTest(argument=argument, value=value):
+                with self.assertRaisesRegex(
+                    FunnelInputError,
+                    f"{label} must be a positive integer",
+                ):
+                    build_funnel([], **{argument: value})
+
     def test_follow_up_handles_boundaries_offsets_and_data_quality(self) -> None:
         payload = [
             {

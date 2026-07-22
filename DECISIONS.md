@@ -2372,3 +2372,19 @@ mutation, or output. The guarded regression pairs an earlier compact due date
 with a later canonical one, verifies controlled rejection, and proves the
 ledger remains unchanged. This protects the bounded conversion experiment's
 chronology without reviewing, approving, or sending any real outreach.
+
+## 2026-07-22: Reject Non-Integer Pilot Reporting Controls
+
+The Python funnel API annotated pilot price, target-pilot count, and stale-day
+threshold as integers but only compared each value with one. Because booleans
+are integer subclasses and floats support that comparison, both entered
+schema-7 reports; numeric strings instead leaked an uncontrolled `TypeError`.
+A report could therefore contain a JSON boolean or fractional commercial
+assumption that downstream growth validation correctly refused.
+
+All three controls now require a non-boolean integer greater than zero before
+any issue is parsed. A regression matrix covers boolean, float, and
+numeric-string inputs for each control and requires the existing
+`FunnelInputError` messages. This keeps pilot pricing, revenue targets, and
+follow-up thresholds internally consistent without changing the $299 offer,
+creating demand, or touching private outreach evidence.

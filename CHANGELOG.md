@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Required genuine positive integers for direct pilot price, target-pilot, and
+  stale-day controls before building revenue or follow-up evidence.
+- Added controlled rejection coverage for boolean, float, and numeric-string
+  values across all three pilot reporter controls.
 - Rejected compact and ISO week-date spellings in every outreach ledger field
   and CLI date option before private queue selection or mutation.
 - Added a guarded follow-up regression proving an earlier noncanonical due date

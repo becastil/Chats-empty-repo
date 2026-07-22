@@ -61,6 +61,11 @@ Use `--format json` for a machine-readable report. `--pilot-price` and
 `--target-pilots` change the commercial assumptions without changing issue
 data.
 
+When calling `build_funnel` directly, `pilot_price_usd`, `target_pilots`, and
+`stale_days` must be genuine positive integers. Booleans, floats, and numeric
+strings fail before issue parsing so the emitted pricing and follow-up schema
+remains compatible with joined growth validation.
+
 Funnel JSON declares `schema_version: 7`. Its `follow_up` object records the
 UTC `as_of` date, the inactivity threshold, and a deterministic deal list.
 Omit `--as-of` to use the current UTC date. `--stale-days` changes the default

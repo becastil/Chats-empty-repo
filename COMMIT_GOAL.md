@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after enforcing canonical outreach dates: 197 / 1,000 (19.7%).
-- Remaining after enforcing canonical outreach dates: 803 commits.
+- Progress after enforcing integer revenue controls: 198 / 1,000 (19.8%).
+- Remaining after enforcing integer revenue controls: 802 commits.
 
 ## Commit Standard
 

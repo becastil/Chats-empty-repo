@@ -149,11 +149,23 @@ def build_funnel(
 ) -> dict[str, Any]:
     if not isinstance(payload, list):
         raise FunnelInputError("issue export must be a JSON array")
-    if pilot_price_usd < 1:
+    if (
+        not isinstance(pilot_price_usd, int)
+        or isinstance(pilot_price_usd, bool)
+        or pilot_price_usd < 1
+    ):
         raise FunnelInputError("pilot price must be a positive integer")
-    if target_pilots < 1:
+    if (
+        not isinstance(target_pilots, int)
+        or isinstance(target_pilots, bool)
+        or target_pilots < 1
+    ):
         raise FunnelInputError("target pilots must be a positive integer")
-    if stale_days < 1:
+    if (
+        not isinstance(stale_days, int)
+        or isinstance(stale_days, bool)
+        or stale_days < 1
+    ):
         raise FunnelInputError("stale days must be a positive integer")
     report_date = as_of or _utc_today()
     if isinstance(report_date, datetime) or not isinstance(report_date, date):

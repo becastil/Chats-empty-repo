@@ -767,6 +767,11 @@ evidence. Qualified leads and written offers remain pipeline, not booked
 revenue. Label warnings must be resolved before totals are used in a roadmap or
 sales decision.
 
+Direct callers may change the pilot price, pilot target, and inactivity
+threshold only with genuine positive integers. Booleans, floats, and numeric
+strings fail before issue parsing so a malformed assumption cannot enter the
+schema-7 revenue report and then fail or distort joined growth validation.
+
 Resolved annual conversions require the same explicit payment milestone. A
 `pilot-converted` issue without `pilot-paid` remains visibly converted and
 retains its skipped-stage warning, but contributes zero annual conversions to
