@@ -120,10 +120,14 @@ site release:
 
    ```bash
    npm ci
+   npm run audit:dependencies
    npm test
    npm run lint
    ```
 
+   The dependency audit must report zero vulnerabilities. Do not use
+   `npm audit fix --force` when it proposes a framework downgrade; review and
+   test a supported patch or explicit transitive override instead.
 2. Build and package that exact committed source, push the same commit to the
    existing Sites source repository, and reuse the existing Sites project in
    `.openai/hosting.json`. Do not create a replacement project for a version

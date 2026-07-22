@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after preparing the tested public-site deployment handoff: 204 / 1,000 (20.4%).
-- Remaining after preparing the tested public-site deployment handoff: 796 commits.
+- Progress after hardening the audited site dependency chain: 205 / 1,000 (20.5%).
+- Remaining after hardening the audited site dependency chain: 795 commits.
 
 ## Commit Standard
 

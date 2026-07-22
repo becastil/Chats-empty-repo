@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 204 of
-1,000, with 796 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 205 of
+1,000, with 795 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -84,8 +84,12 @@ alignment take priority over commit volume.
 - A contract-tested public-site deployment handoff that binds the exact tested
   source to the existing Sites project, keeps saved versions distinct from live
   production, requires explicit owner approval, and immediately audits a
-  successful publish. The `v0.3.51` source is saved as Sites version 46 but is
-  not yet live.
+  successful publish. Sites version 46 is superseded and must not be published.
+- A zero-vulnerability site dependency lock with a supported Next security
+  patch, current Cloudflare and Vite build tooling, advisory-fixed PostCSS and
+  Sharp overrides, and a release-handoff audit covering the complete install.
+  The security-hardened candidate is prepared for an exact-source replacement
+  save in the existing Sites project; production is unchanged.
 - Tag-driven wheel and source releases with strict version alignment and exact artifact validation.
 - Hash-locked release build tooling, deterministic SHA-256 manifests, and clean-environment command smoke tests.
 - GitHub build-provenance attestations and immutable-action release automation.
@@ -438,11 +442,12 @@ python3 scripts/audit_pilot_labels.py --repo becastil/Chats-empty-repo
 
 ## Next Small Task
 
-The public site still advertises `v0.3.50`. Sites version 46 is prepared from
-the exact tested `v0.3.51` source in the existing project. Obtain explicit
-owner approval, deploy that saved version to the public site, and immediately
-run `python3 scripts/audit_production_site.py`. Do not describe the saved
-version as live before both steps pass.
+The public site still advertises `v0.3.50`. Sites version 46 is superseded and
+must not be deployed. Confirm that an exact-source replacement from the audited,
+security-hardened commit is the newest saved version, obtain explicit owner
+approval, deploy only that version, and immediately run
+`python3 scripts/audit_production_site.py`. Do not describe the saved version as
+live before both steps pass.
 
 Then human-review the first complete owner-only bundle in the ignored private
 workspace, record the decision with its content-bound `--approve-next` or

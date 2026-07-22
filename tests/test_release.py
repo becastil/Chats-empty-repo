@@ -120,6 +120,37 @@ class ReleaseManifestTests(unittest.TestCase):
         )
         self.assertNotIn("PYTHONPATH=src python3 -m repo_scout", readme)
 
+    def test_site_dependency_security_contract_is_locked(self) -> None:
+        package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
+        lock = json.loads(
+            (ROOT / "package-lock.json").read_text(encoding="utf-8")
+        )["packages"]
+
+        self.assertEqual(package["dependencies"]["next"], "16.2.11")
+        self.assertEqual(package["devDependencies"]["eslint-config-next"], "16.2.11")
+        self.assertEqual(
+            package["devDependencies"]["@cloudflare/vite-plugin"],
+            "1.46.0",
+        )
+        self.assertEqual(package["devDependencies"]["vite"], "8.1.5")
+        self.assertEqual(package["devDependencies"]["wrangler"], "4.113.0")
+        self.assertEqual(
+            package["scripts"]["audit:dependencies"],
+            "npm audit",
+        )
+        self.assertEqual(
+            package["overrides"],
+            {"postcss": "8.5.22", "sharp": "0.35.3"},
+        )
+        self.assertEqual(lock["node_modules/next"]["version"], "16.2.11")
+        self.assertEqual(lock["node_modules/postcss"]["version"], "8.5.22")
+        self.assertEqual(lock["node_modules/sharp"]["version"], "0.35.3")
+        self.assertEqual(
+            lock["node_modules/vite"]["dependencies"]["postcss"],
+            "^8.5.17",
+        )
+        self.assertNotIn("node_modules/next/node_modules/postcss", lock)
+
     def test_release_verification_docs_cover_every_artifact(self) -> None:
         documentation = (ROOT / "docs" / "releases.md").read_text(
             encoding="utf-8"
@@ -252,7 +283,12 @@ class ReleaseManifestTests(unittest.TestCase):
         self.assertTrue(audit_heading)
 
         normalized = " ".join(deployment.split())
-        for command in ("npm ci", "npm test", "npm run lint"):
+        for command in (
+            "npm ci",
+            "npm run audit:dependencies",
+            "npm test",
+            "npm run lint",
+        ):
             self.assertIn(command, deployment)
         for requirement in (
             "exact committed source",
@@ -263,6 +299,8 @@ class ReleaseManifestTests(unittest.TestCase):
             "explicit owner approval",
             "Only after the approved deployment succeeds",
             "immediately run the production audit",
+            "dependency audit must report zero vulnerabilities",
+            "Do not use `npm audit fix --force`",
         ):
             self.assertIn(requirement, normalized, requirement)
         self.assertIn("python3 scripts/audit_production_site.py", audit)

@@ -259,11 +259,15 @@ The same check now runs daily in a read-only GitHub workflow and remains
 manually dispatchable after deployment. It receives no secrets and changes no
 release, site, customer record, or commercial evidence.
 The release handoff now requires lockfile installation, a tested production
-build, lint, an exact-source save against the existing Sites project, explicit
-owner approval before public deployment, and an immediate live audit afterward.
-The `v0.3.51` source is prepared as Sites version 46, while production remains
-on `v0.3.50` until that approval and deployment succeed. A saved version is not
-a visitor, customer activation, demand, payment, or revenue event.
+build, a zero-vulnerability dependency audit, lint, an exact-source save against
+the existing Sites project, explicit owner approval before public deployment,
+and an immediate live audit afterward. The audited lock advances Next to its
+`16.2.11` security patch, current supported Cloudflare and Vite tooling, and
+advisory-fixed PostCSS and Sharp releases without changing the offer. Sites
+version 46 is superseded; the audited replacement candidate is prepared for an
+exact-source save, while production remains on `v0.3.50` until approval and
+deployment succeed. A clean audit or saved version is not a visitor, customer
+activation, demand, payment, or revenue event.
 The audit also requires exactly one $299 USD founding-team service at the
 production pilot section and at least one website-attributed link to the public
 application form. This detects a broken paid conversion path; it does not submit

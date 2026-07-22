@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- Patched Next and its matching lint rules to `16.2.11`, Cloudflare's Vite
+  plugin to `1.46.0`, Vite to `8.1.5`, and Wrangler to `4.113.0` without
+  changing the public site or offer.
+- Forced the advisory-fixed PostCSS `8.5.22` and Sharp `0.35.3` releases across
+  the dependency tree, then refreshed remaining vulnerable transitive packages
+  within their supported ranges.
+- Added a complete dependency-audit command and release-contract coverage that
+  requires a zero-vulnerability result before a public site version is built,
+  saved, approved, or deployed, plus runtime compatibility checks for the
+  patched Sharp override and Miniflare.
+- Marked unpublished Sites version 46 as superseded and prepared the exact
+  security-hardened source for a replacement save while preserving the
+  explicit public-publish approval boundary.
 - Detected that the public site still advertises `v0.3.50` while the released
   download and paid-CI trust pins are on immutable `v0.3.51`.
 - Built, tested, linted, and packaged the exact `v0.3.51` site source, pushed

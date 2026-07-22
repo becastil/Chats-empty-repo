@@ -2494,3 +2494,31 @@ Preparing a deployable version closes part of a demonstrated distribution gap;
 it does not create a visit, install, outreach attempt, pilot request, payment,
 or revenue event, and it does not justify silently crossing the public publish
 boundary.
+
+## 2026-07-22: Require A Clean Site Dependency Tree Before Publication
+
+The clean site install exposed known vulnerabilities in the public framework,
+image-processing, CSS-processing, local-worker, and development-server paths.
+The production subset included a high-severity Sharp advisory and a moderate
+PostCSS advisory. The complete build tree also included supported fixes in
+Next, Cloudflare's Vite plugin, Wrangler, Vite, and transitive tooling. npm's
+automatic forced remedy proposed an incompatible Next downgrade, so it was not
+used.
+
+The site now uses the current stable Next security patch and matching lint
+rules, supported Cloudflare and Vite toolchain updates, and root overrides for
+the advisory-fixed PostCSS and Sharp versions. A non-forced lockfile refresh
+updated the remaining affected transitive packages within their declared
+ranges. The complete 498-package install reports zero vulnerabilities, and the
+release handoff now requires that audit before a version can be saved or
+approved. Executable contracts pin the direct versions, override values,
+resolved lock entries, and audit command. A runtime smoke test processes an
+image with the newer Sharp release and starts Miniflare because those parent
+packages have not yet widened their declared Sharp ranges.
+
+The dependency update passes the production build and rendered-offer suite on
+the minimum supported Node `22.13.0`. Sites version 46 is therefore superseded
+and must not be published; only an exact-source save of the security-hardened
+commit may cross the separate owner-approval boundary. This reduces buyer-path
+supply-chain risk but does not create a visit, install, request, payment, or
+revenue event.
