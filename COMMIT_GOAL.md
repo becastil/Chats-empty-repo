@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after preparing the v0.3.50 release: 191 / 1,000 (19.1%).
-- Remaining after preparing the v0.3.50 release: 809 commits.
+- Progress after promoting verified v0.3.50 into paid CI: 192 / 1,000 (19.2%).
+- Remaining after promoting verified v0.3.50 into paid CI: 808 commits.
 
 ## Commit Standard
 

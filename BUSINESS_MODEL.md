@@ -112,7 +112,7 @@ This is useful free CI enforcement; the paid work remains agreeing on the
 right rules and rolling the same reviewed policy across uneven repositories.
 Versions 1 and 2 remain readable so verified CI upgrades can be staged safely.
 The dogfood and copy-ready gates now install the independently verified
-`v0.3.49` wheel, so v4 policies can run locally and in CI
+`v0.3.50` wheel, so v4 policies can run locally and in CI
 without source checkout, mutable package resolution, or a team-managed secret.
 Maintainer pin upgrades now preflight and update the dogfood workflow,
 copy-ready customer example, buyer-facing README, commercial model and
@@ -470,14 +470,17 @@ sending, or counting outreach as pilot demand or revenue.
 
 Version `0.3.50` packages that guarded-ledger cleanup boundary so the human
 approval and send-recording workflow does not depend on a source checkout. The
-source suite must prove the dual mutation-and-cleanup failure preserves current
+source suite proved the dual mutation-and-cleanup failure preserves current
 ledger bytes, owner-only staging permissions, the original error, and private
-identity redaction. The installed lifecycle smoke must still prove the complete
-guarded path before release. Customer and dogfood CI stay on independently
-verified `v0.3.49` until the new manifest, source commit, signer workflow, and
-attestations are reconciled separately. Publishing this safeguard does not
-review or send outreach, create a pilot request, collect payment, or record
-revenue.
+identity redaction. The installed lifecycle smoke proved the complete guarded
+path before release. After separate public-artifact verification, customer and
+dogfood CI now pin source commit
+`371d6fd8da0dc33f60b5c808ca3a3c516125cd7b` and wheel SHA-256
+`a684e16240c0d50357ba552e8b56fa9024c32e80b9ae7b23bd44a874eec1df24`.
+The manifest, annotated tag ancestry, release workflow, all three provenance
+attestations, exact signer workflow, and GitHub-hosted-runner restriction passed
+before the pins changed. Publishing and pinning this safeguard does not review
+or send outreach, create a pilot request, collect payment, or record revenue.
 
 Version `0.3.49` packages that truthful cleanup boundary so future owner-only
 review bundles do not depend on a source checkout. The installed lifecycle
