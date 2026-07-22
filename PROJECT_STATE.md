@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 201 of
-1,000, with 799 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 202 of
+1,000, with 798 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -354,6 +354,8 @@ alignment take priority over commit volume.
   staging cleanup failures through the installable distribution.
 - `v0.3.50` patch-release boundary for truthful, identity-safe private-ledger
   staging cleanup failures through the installable outreach command.
+- `v0.3.51` patch-release boundary for an immutable public tag and artifact set
+  before the separately reviewed paid-CI trust pins can advance.
 - Public `v0.3.34` release of strict schema-5 outreach operations in the wheel
   and source archive alongside the portable CLI, checksums, and provenance.
 - `v0.3.35` patch-release boundary for guarded outreach operations, complete
@@ -423,7 +425,7 @@ alignment take priority over commit volume.
 ## How To Run
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.50/repo-scout-0.3.50.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.51/repo-scout-0.3.51.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 python3 -m unittest discover -s tests
 python3 scripts/audit_pilot_labels.py --repo becastil/Chats-empty-repo
@@ -431,10 +433,10 @@ python3 scripts/audit_pilot_labels.py --repo becastil/Chats-empty-repo
 
 ## Next Small Task
 
-Publish the next patch release through the enabled immutable-release setting,
-require its GitHub API evidence to report `immutable: true`, and only then
-advance paid-CI pins. The current `v0.3.50` release predates enforcement and is
-still protected by its pinned digest and provenance, but it is not immutable.
+Independently reconcile the public `v0.3.51` manifest, annotated tag, main
+ancestry, and all three provenance attestations after its GitHub API evidence
+reports `immutable: true`; only then advance paid-CI pins from the separately
+verified but mutable `v0.3.50` release.
 
 The first complete owner-only bundle is prepared in the ignored private
 workspace from the verified `v0.3.48` wheel. Human-review that private file and

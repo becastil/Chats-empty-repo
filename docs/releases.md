@@ -13,12 +13,12 @@ The checksum file detects accidental or malicious byte changes after download.
 The provenance attestation separately verifies that GitHub Actions built the
 artifact from this repository's tagged source.
 
-Repository-level release immutability is enabled for future publications. It
-locks a published release's tag and assets against modification or deletion.
-The release workflow queries the exact tag after publication and fails unless
-GitHub reports `immutable: true`. The current `v0.3.50` release predates this
-setting, so its pinned checksum and provenance remain the trust boundary until
-the next immutable patch release is published.
+Repository-level release immutability locks a published release's tag and
+assets against modification or deletion. The release workflow queries the
+exact tag after publication and fails unless GitHub reports `immutable: true`.
+The `v0.3.51` publication is the first release boundary protected by this
+setting. Paid CI remains pinned to independently verified `v0.3.50` artifacts
+until the new manifest, tag, source, and provenance are reviewed separately.
 
 ## Install A Release
 
@@ -26,7 +26,7 @@ The shortest path downloads one executable Python file and does not modify the
 Python environment:
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.50/repo-scout-0.3.50.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.51/repo-scout-0.3.51.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 ```
 
@@ -35,12 +35,12 @@ wheel when the distribution, policy-template, rollout-summary, pilot-funnel, or
 maintainer outreach-audit commands are also needed:
 
 ```bash
-gh release download v0.3.50 \
+gh release download v0.3.51 \
   --repo becastil/Chats-empty-repo \
   --pattern "repo_scout-*" \
   --pattern "repo-scout-*.pyz" \
   --pattern SHA256SUMS
-python3 -m pip install ./repo_scout-0.3.50-py3-none-any.whl
+python3 -m pip install ./repo_scout-0.3.51-py3-none-any.whl
 ```
 
 Repo Scout requires Python 3.11 or newer and has no runtime dependencies.
@@ -55,7 +55,7 @@ files:
   set -euo pipefail
 
   REPO_SCOUT_REPOSITORY="becastil/Chats-empty-repo"
-  REPO_SCOUT_VERSION="0.3.50"
+  REPO_SCOUT_VERSION="0.3.51"
   REPO_SCOUT_TAG="v${REPO_SCOUT_VERSION}"
   REPO_SCOUT_SIGNER_WORKFLOW="${REPO_SCOUT_REPOSITORY}/.github/workflows/release.yml"
 

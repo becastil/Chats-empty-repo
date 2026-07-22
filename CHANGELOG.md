@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.51 - 2026-07-22
+
 - Enabled GitHub release immutability for future repository releases.
 - Required the release job to query the exact published tag and fail unless
   GitHub returns `immutable: true` under the current REST API contract.

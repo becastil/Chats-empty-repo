@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after enforcing future release immutability: 201 / 1,000 (20.1%).
-- Remaining after enforcing future release immutability: 799 commits.
+- Progress after preparing the first immutable release: 202 / 1,000 (20.2%).
+- Remaining after preparing the first immutable release: 798 commits.
 
 ## Commit Standard
 

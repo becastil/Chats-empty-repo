@@ -2432,3 +2432,23 @@ exactly `true`. Executable tests cover true, false, malformed, and failed API
 responses. Because GitHub does not apply this setting retroactively, the guide
 and project state retain an explicit `v0.3.50` caveat until the next immutable
 patch release is published and independently pinned.
+
+## 2026-07-22: Release The First Immutable Artifact Set As v0.3.51
+
+The paid-CI gates still depend on a mutable `v0.3.50` release even though their
+fixed source commit, wheel digest, manifest, and provenance checks protect the
+accepted wheel identity. Deletion or replacement at the release layer could
+still interrupt a new team activation, so the next distributable boundary must
+exercise the repository-level immutable-release setting before those pins move.
+
+Version `0.3.51` advances package, portable, website, verification-guide, and
+installed commercial-fixture identities together. Its tag must remain on
+`main`, pass the complete source and installed-wheel contracts, publish all
+three attested artifacts plus their checksum manifest, and make the exact
+GitHub release API report `immutable: true` before the release job succeeds.
+
+Customer and dogfood CI remain pinned to independently verified `v0.3.50` in
+this change. The new manifest, annotated tag, source commit, signer workflow,
+hosted-runner rule, and all three attestations require a separate reconciliation
+before the atomic six-target pin update. Publishing creates no customer install,
+pilot request, payment, or revenue.

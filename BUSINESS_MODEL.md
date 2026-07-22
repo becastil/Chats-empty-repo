@@ -41,13 +41,12 @@ attestation to that repository, semantic tag, commit, release workflow, and a
 GitHub-hosted runner. Executable documentation tests require all five identity
 constraints for every artifact. This keeps the buyer-facing trust procedure
 aligned with paid CI without proving activation, demand, payment, or revenue.
-Repository-level release immutability is now enabled for future publications.
-After publishing, the release job queries the exact semantic tag through the
-versioned GitHub API and fails unless its release object reports
-`immutable: true`. The current `v0.3.50` release predates that setting and
-remains pinned by digest, source commit, and provenance rather than by GitHub's
-immutable-release lock. The next paid-CI pin must move only after a new release
-passes the immutable evidence check.
+Repository-level release immutability is enabled. After publishing, the release
+job queries the exact semantic tag through the versioned GitHub API and fails
+unless its release object reports `immutable: true`. Version `0.3.51` is the
+first release boundary required to pass that lock. The paid-CI gates remain
+pinned to separately verified `v0.3.50` artifacts until the new manifest, tag,
+source, and provenance are independently reconciled.
 The wheel adoption path now reports all 7 packaged commands, and its release
 test derives complete version-smoke coverage from `[project.scripts]` instead
 of a second hardcoded command list. This keeps the paid CI activation surface
@@ -497,6 +496,16 @@ the destination-derived name or the cleanup exception, either of which could
 contain private ledger identity. A failed replacement leaves the current ledger
 unchanged. This protects the bounded acquisition workflow without approving,
 sending, or counting outreach as pilot demand or revenue.
+
+Version `0.3.51` packages the paid-CI activation hardening, exact public
+provenance constraints, payment-backed conversion accounting, strict commercial
+inputs and dates, configured-price recommendations, and post-publication
+immutable-release evidence accumulated since `v0.3.50`. Its release must pass
+the complete source and installed-command contracts before publication.
+Customer and dogfood CI remain on independently verified `v0.3.50` until the
+new manifest, source commit, tag, signer workflow, attestations, and immutable
+state are reconciled in a separate review. Publishing does not establish a
+customer install, outreach attempt, pilot request, payment, or revenue.
 
 Version `0.3.50` packages that guarded-ledger cleanup boundary so the human
 approval and send-recording workflow does not depend on a source checkout. The
