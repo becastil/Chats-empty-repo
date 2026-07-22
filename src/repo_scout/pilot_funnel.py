@@ -167,7 +167,7 @@ def build_funnel(
         or stale_days < 1
     ):
         raise FunnelInputError("stale days must be a positive integer")
-    report_date = as_of or _utc_today()
+    report_date = _utc_today() if as_of is None else as_of
     if isinstance(report_date, datetime) or not isinstance(report_date, date):
         raise FunnelInputError("as-of must be a date")
 

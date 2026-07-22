@@ -117,9 +117,7 @@ class OutreachInputError(ValueError):
 
 
 def load_outreach_report(path: Path, *, as_of: date | None = None) -> dict[str, Any]:
-    report_date = as_of or _utc_today()
-    if type(report_date) is not date:
-        raise OutreachInputError("as-of must be a date")
+    report_date = _resolve_report_date(as_of)
 
     return build_outreach_report(_load_outreach_rows(path), as_of=report_date)
 
@@ -131,9 +129,7 @@ def load_next_outreach_review(
     include_private_evidence: bool = False,
     private_drafts_path: Path | None = None,
 ) -> dict[str, Any]:
-    report_date = as_of or _utc_today()
-    if type(report_date) is not date:
-        raise OutreachInputError("as-of must be a date")
+    report_date = _resolve_report_date(as_of)
 
     _require_private_live_path(path, label="outreach ledger")
     if private_drafts_path is not None:
@@ -161,9 +157,7 @@ def approve_next_outreach_draft(
     reviewed_private_drafts_path: Path | None = None,
     as_of: date | None = None,
 ) -> dict[str, Any]:
-    report_date = as_of or _utc_today()
-    if type(report_date) is not date:
-        raise OutreachInputError("as-of must be a date")
+    report_date = _resolve_report_date(as_of)
     if type(approved_on) is not date:
         raise OutreachInputError("approved-on must be a date")
     if review_confirmed is not True:
@@ -240,9 +234,7 @@ def decline_next_outreach_draft(
     reviewed_private_drafts_path: Path | None = None,
     as_of: date | None = None,
 ) -> dict[str, Any]:
-    report_date = as_of or _utc_today()
-    if type(report_date) is not date:
-        raise OutreachInputError("as-of must be a date")
+    report_date = _resolve_report_date(as_of)
     if decline_confirmed is not True:
         raise OutreachInputError(
             "--decline-next requires --confirm-not-send after a human decides "
@@ -318,9 +310,7 @@ def record_next_outreach_contact(
     send_confirmed: bool,
     as_of: date | None = None,
 ) -> dict[str, Any]:
-    report_date = as_of or _utc_today()
-    if type(report_date) is not date:
-        raise OutreachInputError("as-of must be a date")
+    report_date = _resolve_report_date(as_of)
     if type(contacted_on) is not date:
         raise OutreachInputError("contacted-on must be a date")
     if send_confirmed is not True:
@@ -383,9 +373,7 @@ def record_next_outreach_follow_up(
     send_confirmed: bool,
     as_of: date | None = None,
 ) -> dict[str, Any]:
-    report_date = as_of or _utc_today()
-    if type(report_date) is not date:
-        raise OutreachInputError("as-of must be a date")
+    report_date = _resolve_report_date(as_of)
     if type(followed_up_on) is not date:
         raise OutreachInputError("followed-up-on must be a date")
     if send_confirmed is not True:
@@ -447,9 +435,7 @@ def record_outreach_outcome(
     outcome_confirmed: bool,
     as_of: date | None = None,
 ) -> dict[str, Any]:
-    report_date = as_of or _utc_today()
-    if type(report_date) is not date:
-        raise OutreachInputError("as-of must be a date")
+    report_date = _resolve_report_date(as_of)
     if type(outcome_on) is not date:
         raise OutreachInputError("outcome-on must be a date")
     if outcome_on > report_date:
@@ -2377,6 +2363,14 @@ def _canonical_date(value: str) -> date:
     if parsed.isoformat() != value:
         raise ValueError("date must use canonical YYYY-MM-DD form")
     return parsed
+
+
+def _resolve_report_date(as_of: date | None) -> date:
+    if as_of is None:
+        return _utc_today()
+    if type(as_of) is not date:
+        raise OutreachInputError("as-of must be a date")
+    return as_of
 
 
 def _utc_today() -> date:

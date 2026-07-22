@@ -3880,6 +3880,87 @@ class OutreachReportTests(unittest.TestCase):
                 self.assertEqual(raised.exception.code, 2)
                 self.assertIn("must be YYYY-MM-DD", stderr.getvalue())
 
+    def test_api_wrappers_reject_falsey_non_date_as_of_before_path_access(
+        self,
+    ) -> None:
+        import repo_scout.outreach as outreach_module
+
+        missing_ledger = Path("missing-outreach-ledger.csv")
+        event_date = date(2026, 7, 22)
+        operations = (
+            (
+                "load report",
+                lambda value: outreach_module.load_outreach_report(
+                    missing_ledger, as_of=value
+                ),
+            ),
+            (
+                "load review",
+                lambda value: outreach_module.load_next_outreach_review(
+                    missing_ledger, as_of=value
+                ),
+            ),
+            (
+                "approve",
+                lambda value: outreach_module.approve_next_outreach_draft(
+                    missing_ledger,
+                    prospect_id="prospect-001",
+                    approved_on=event_date,
+                    review_confirmed=True,
+                    as_of=value,
+                ),
+            ),
+            (
+                "decline",
+                lambda value: outreach_module.decline_next_outreach_draft(
+                    missing_ledger,
+                    prospect_id="prospect-001",
+                    decline_confirmed=True,
+                    as_of=value,
+                ),
+            ),
+            (
+                "record contact",
+                lambda value: outreach_module.record_next_outreach_contact(
+                    missing_ledger,
+                    prospect_id="prospect-001",
+                    contacted_on=event_date,
+                    send_confirmed=True,
+                    as_of=value,
+                ),
+            ),
+            (
+                "record follow-up",
+                lambda value: outreach_module.record_next_outreach_follow_up(
+                    missing_ledger,
+                    prospect_id="prospect-001",
+                    followed_up_on=event_date,
+                    send_confirmed=True,
+                    as_of=value,
+                ),
+            ),
+            (
+                "record outcome",
+                lambda value: outreach_module.record_outreach_outcome(
+                    missing_ledger,
+                    prospect_id="prospect-001",
+                    outcome="replied",
+                    outcome_on=event_date,
+                    outcome_confirmed=True,
+                    as_of=value,
+                ),
+            ),
+        )
+
+        for operation, call in operations:
+            for value in (False, 0, ""):
+                with self.subTest(operation=operation, value=value):
+                    with self.assertRaisesRegex(
+                        OutreachInputError,
+                        "as-of must be a date",
+                    ):
+                        call(value)
+
     def test_cli_defaults_to_the_current_utc_calendar_date(self) -> None:
         with TemporaryDirectory() as tmp:
             ledger = Path(tmp) / "ledger.csv"

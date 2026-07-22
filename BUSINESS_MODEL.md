@@ -277,6 +277,10 @@ Every nonblank ledger date and CLI date option must also use canonical,
 zero-padded `YYYY-MM-DD`. Compact and ISO week spellings fail before queue
 selection or mutation so textual due-date ordering cannot contradict calendar
 ordering.
+Across the pilot and outreach Python APIs, only `as_of=None` selects the
+current UTC date. Falsey booleans, numbers, and strings fail before funnel
+evidence is built or a private outreach path is inspected, preventing a caller
+mistake from silently moving the operating window to today.
 Schema-3 outreach reports separate drafts from sent attempts. Schema 5 adds an
 explicit `approved` checkpoint and requires its private approval date
 to survive every later status. Drafted and approved rows require a permitted

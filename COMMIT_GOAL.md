@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after enforcing integer revenue controls: 198 / 1,000 (19.8%).
-- Remaining after enforcing integer revenue controls: 802 commits.
+- Progress after making commercial report dates explicit: 199 / 1,000 (19.9%).
+- Remaining after making commercial report dates explicit: 801 commits.
 
 ## Commit Standard
 

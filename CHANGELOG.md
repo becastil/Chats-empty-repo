@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Made `None` the only current-UTC default sentinel for pilot and outreach API
+  report dates instead of treating every falsey value as omitted.
+- Added cross-entry-point rejection coverage proving falsey non-date values fail
+  before funnel construction or private outreach path access.
 - Required genuine positive integers for direct pilot price, target-pilot, and
   stale-day controls before building revenue or follow-up evidence.
 - Added controlled rejection coverage for boolean, float, and numeric-string

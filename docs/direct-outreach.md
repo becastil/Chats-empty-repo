@@ -111,6 +111,8 @@ Every nonblank ledger date and every CLI date option must use the exact,
 zero-padded `YYYY-MM-DD` form. Compact dates and ISO week dates are rejected
 before queue selection or file mutation. This keeps lexical due-date ordering
 identical to calendar ordering when the recorder selects the next follow-up.
+For Python API calls, only `as_of=None` selects the current UTC date. A supplied
+falsey non-date value is rejected before any private path is inspected.
 
 Map every declared signal to the source reviewed for that claim in
 `fit_evidence`, using semicolon-separated `signal=https://...` entries. For

@@ -66,6 +66,10 @@ When calling `build_funnel` directly, `pilot_price_usd`, `target_pilots`, and
 strings fail before issue parsing so the emitted pricing and follow-up schema
 remains compatible with joined growth validation.
 
+For direct API calls, only `as_of=None` selects the current UTC date. Any
+supplied `as_of` value must be a real `date`; falsey booleans, numbers, and
+strings fail instead of silently changing the report window to today.
+
 Funnel JSON declares `schema_version: 7`. Its `follow_up` object records the
 UTC `as_of` date, the inactivity threshold, and a deterministic deal list.
 Omit `--as-of` to use the current UTC date. `--stale-days` changes the default

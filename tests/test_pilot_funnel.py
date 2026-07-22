@@ -992,6 +992,15 @@ class PilotFunnelTests(unittest.TestCase):
                 ):
                     build_funnel([], **{argument: value})
 
+    def test_build_funnel_rejects_falsey_non_date_as_of(self) -> None:
+        for value in (False, 0, ""):
+            with self.subTest(value=value):
+                with self.assertRaisesRegex(
+                    FunnelInputError,
+                    "as-of must be a date",
+                ):
+                    build_funnel([], as_of=value)
+
     def test_follow_up_handles_boundaries_offsets_and_data_quality(self) -> None:
         payload = [
             {

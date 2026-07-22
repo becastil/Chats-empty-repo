@@ -2388,3 +2388,18 @@ numeric-string inputs for each control and requires the existing
 `FunnelInputError` messages. This keeps pilot pricing, revenue targets, and
 follow-up thresholds internally consistent without changing the $299 offer,
 creating demand, or touching private outreach evidence.
+
+## 2026-07-22: Use None As The Only Commercial Report-Date Default
+
+Pilot and outreach APIs selected their report date with `as_of or today` before
+validating its type. Valid dates behaved correctly, but falsey non-date values
+such as `False`, `0`, and an empty string silently became the current UTC date.
+That could shift stale-deal, follow-up, and outcome windows while making the
+caller believe an explicit historical value had been checked.
+
+The pilot reporter now defaults only when `as_of is None`. All seven outreach
+load and guarded-mutation wrappers use one resolver with the same rule and
+reject any supplied non-date before ledger access. Regressions cover each
+wrapper and all three falsey value classes, plus direct pilot funnel use. This
+keeps commercial chronology explicit without reading private outreach data,
+changing public funnel state, or creating demand or revenue.
