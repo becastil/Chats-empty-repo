@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Refreshed public distribution, schema-7 pilot, and joined growth baselines
+  after the independently verified `v0.3.49` release and paid-CI promotion.
+- Recorded 50 additional primary artifact requests across four new releases
+  and later `v0.3.45` activity: 45 wheel requests versus 5 portable requests.
+- Preserved a warning-free zero-pilot, zero-revenue checkpoint that keeps
+  acquisition and the bounded human outreach queue as the commercial bottleneck.
 - Independently reconciled the public `v0.3.49` manifest, annotated tag, main
   ancestry, release workflow, and all three provenance attestations.
 - Measured the released wheel digest separately and matched every downloaded

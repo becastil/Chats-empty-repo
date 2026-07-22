@@ -3,49 +3,49 @@
   "latest": {
     "assets": [
       {
-        "download_count": 4,
+        "download_count": 3,
         "name": "SHA256SUMS"
       },
       {
-        "download_count": 3,
-        "name": "repo-scout-0.3.45.pyz"
-      },
-      {
-        "download_count": 4,
-        "name": "repo_scout-0.3.45-py3-none-any.whl"
+        "download_count": 2,
+        "name": "repo-scout-0.3.49.pyz"
       },
       {
         "download_count": 3,
-        "name": "repo_scout-0.3.45.tar.gz"
+        "name": "repo_scout-0.3.49-py3-none-any.whl"
+      },
+      {
+        "download_count": 2,
+        "name": "repo_scout-0.3.49.tar.gz"
       }
     ],
     "contract": {
       "complete": true,
       "expected_artifacts": [
         "SHA256SUMS",
-        "repo-scout-0.3.45.pyz",
-        "repo_scout-0.3.45-py3-none-any.whl",
-        "repo_scout-0.3.45.tar.gz"
+        "repo-scout-0.3.49.pyz",
+        "repo_scout-0.3.49-py3-none-any.whl",
+        "repo_scout-0.3.49.tar.gz"
       ],
       "missing_artifacts": [],
       "unexpected_artifacts": []
     },
     "downloads": {
-      "manifest": 4,
-      "portable": 3,
-      "primary": 7,
-      "source": 3,
-      "total": 14,
+      "manifest": 3,
+      "portable": 2,
+      "primary": 5,
+      "source": 2,
+      "total": 10,
       "unknown": 0,
-      "wheel": 4
+      "wheel": 3
     },
-    "published_at": "2026-07-18T09:51:33Z",
-    "tag": "v0.3.45",
-    "url": "https://github.com/becastil/Chats-empty-repo/releases/tag/v0.3.45",
+    "published_at": "2026-07-21T22:21:35Z",
+    "tag": "v0.3.49",
+    "url": "https://github.com/becastil/Chats-empty-repo/releases/tag/v0.3.49",
     "version": [
       0,
       3,
-      45
+      49
     ]
   },
   "measurement_note": "GitHub asset download counts are cumulative requests and can include CI jobs, maintainer verification, and retries; they are not unique installs, active users, pilot requests, or revenue.",
@@ -53,7 +53,199 @@
     {
       "assets": [
         {
-          "download_count": 4,
+          "download_count": 3,
+          "name": "SHA256SUMS"
+        },
+        {
+          "download_count": 2,
+          "name": "repo-scout-0.3.49.pyz"
+        },
+        {
+          "download_count": 3,
+          "name": "repo_scout-0.3.49-py3-none-any.whl"
+        },
+        {
+          "download_count": 2,
+          "name": "repo_scout-0.3.49.tar.gz"
+        }
+      ],
+      "contract": {
+        "complete": true,
+        "expected_artifacts": [
+          "SHA256SUMS",
+          "repo-scout-0.3.49.pyz",
+          "repo_scout-0.3.49-py3-none-any.whl",
+          "repo_scout-0.3.49.tar.gz"
+        ],
+        "missing_artifacts": [],
+        "unexpected_artifacts": []
+      },
+      "downloads": {
+        "manifest": 3,
+        "portable": 2,
+        "primary": 5,
+        "source": 2,
+        "total": 10,
+        "unknown": 0,
+        "wheel": 3
+      },
+      "published_at": "2026-07-21T22:21:35Z",
+      "tag": "v0.3.49",
+      "url": "https://github.com/becastil/Chats-empty-repo/releases/tag/v0.3.49",
+      "version": [
+        0,
+        3,
+        49
+      ]
+    },
+    {
+      "assets": [
+        {
+          "download_count": 5,
+          "name": "SHA256SUMS"
+        },
+        {
+          "download_count": 1,
+          "name": "repo-scout-0.3.48.pyz"
+        },
+        {
+          "download_count": 6,
+          "name": "repo_scout-0.3.48-py3-none-any.whl"
+        },
+        {
+          "download_count": 1,
+          "name": "repo_scout-0.3.48.tar.gz"
+        }
+      ],
+      "contract": {
+        "complete": true,
+        "expected_artifacts": [
+          "SHA256SUMS",
+          "repo-scout-0.3.48.pyz",
+          "repo_scout-0.3.48-py3-none-any.whl",
+          "repo_scout-0.3.48.tar.gz"
+        ],
+        "missing_artifacts": [],
+        "unexpected_artifacts": []
+      },
+      "downloads": {
+        "manifest": 5,
+        "portable": 1,
+        "primary": 7,
+        "source": 1,
+        "total": 13,
+        "unknown": 0,
+        "wheel": 6
+      },
+      "published_at": "2026-07-21T18:16:32Z",
+      "tag": "v0.3.48",
+      "url": "https://github.com/becastil/Chats-empty-repo/releases/tag/v0.3.48",
+      "version": [
+        0,
+        3,
+        48
+      ]
+    },
+    {
+      "assets": [
+        {
+          "download_count": 8,
+          "name": "SHA256SUMS"
+        },
+        {
+          "download_count": 1,
+          "name": "repo-scout-0.3.47.pyz"
+        },
+        {
+          "download_count": 8,
+          "name": "repo_scout-0.3.47-py3-none-any.whl"
+        },
+        {
+          "download_count": 1,
+          "name": "repo_scout-0.3.47.tar.gz"
+        }
+      ],
+      "contract": {
+        "complete": true,
+        "expected_artifacts": [
+          "SHA256SUMS",
+          "repo-scout-0.3.47.pyz",
+          "repo_scout-0.3.47-py3-none-any.whl",
+          "repo_scout-0.3.47.tar.gz"
+        ],
+        "missing_artifacts": [],
+        "unexpected_artifacts": []
+      },
+      "downloads": {
+        "manifest": 8,
+        "portable": 1,
+        "primary": 9,
+        "source": 1,
+        "total": 18,
+        "unknown": 0,
+        "wheel": 8
+      },
+      "published_at": "2026-07-20T23:34:42Z",
+      "tag": "v0.3.47",
+      "url": "https://github.com/becastil/Chats-empty-repo/releases/tag/v0.3.47",
+      "version": [
+        0,
+        3,
+        47
+      ]
+    },
+    {
+      "assets": [
+        {
+          "download_count": 7,
+          "name": "SHA256SUMS"
+        },
+        {
+          "download_count": 1,
+          "name": "repo-scout-0.3.46.pyz"
+        },
+        {
+          "download_count": 7,
+          "name": "repo_scout-0.3.46-py3-none-any.whl"
+        },
+        {
+          "download_count": 1,
+          "name": "repo_scout-0.3.46.tar.gz"
+        }
+      ],
+      "contract": {
+        "complete": true,
+        "expected_artifacts": [
+          "SHA256SUMS",
+          "repo-scout-0.3.46.pyz",
+          "repo_scout-0.3.46-py3-none-any.whl",
+          "repo_scout-0.3.46.tar.gz"
+        ],
+        "missing_artifacts": [],
+        "unexpected_artifacts": []
+      },
+      "downloads": {
+        "manifest": 7,
+        "portable": 1,
+        "primary": 8,
+        "source": 1,
+        "total": 16,
+        "unknown": 0,
+        "wheel": 7
+      },
+      "published_at": "2026-07-20T17:30:15Z",
+      "tag": "v0.3.46",
+      "url": "https://github.com/becastil/Chats-empty-repo/releases/tag/v0.3.46",
+      "version": [
+        0,
+        3,
+        46
+      ]
+    },
+    {
+      "assets": [
+        {
+          "download_count": 25,
           "name": "SHA256SUMS"
         },
         {
@@ -61,7 +253,7 @@
           "name": "repo-scout-0.3.45.pyz"
         },
         {
-          "download_count": 4,
+          "download_count": 25,
           "name": "repo_scout-0.3.45-py3-none-any.whl"
         },
         {
@@ -81,13 +273,13 @@
         "unexpected_artifacts": []
       },
       "downloads": {
-        "manifest": 4,
+        "manifest": 25,
         "portable": 3,
-        "primary": 7,
+        "primary": 28,
         "source": 3,
-        "total": 14,
+        "total": 56,
         "unknown": 0,
-        "wheel": 4
+        "wheel": 25
       },
       "published_at": "2026-07-18T09:51:33Z",
       "tag": "v0.3.45",
@@ -2370,19 +2562,19 @@
   ],
   "schema_version": 2,
   "summary": {
-    "complete_releases": 49,
+    "complete_releases": 53,
     "draft_releases": 0,
-    "input_releases": 49,
-    "manifest_downloads": 177,
-    "portable_downloads": 31,
-    "portable_primary_share_percent": 14.2,
+    "input_releases": 53,
+    "manifest_downloads": 221,
+    "portable_downloads": 36,
+    "portable_primary_share_percent": 13.4,
     "prerelease_releases": 0,
-    "primary_artifact_downloads": 218,
-    "source_downloads": 34,
-    "stable_releases": 49,
+    "primary_artifact_downloads": 268,
+    "source_downloads": 39,
+    "stable_releases": 53,
     "unknown_downloads": 0,
     "warning_count": 0,
-    "wheel_downloads": 187
+    "wheel_downloads": 232
   },
   "warnings": []
 }

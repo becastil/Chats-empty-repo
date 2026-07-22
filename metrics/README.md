@@ -2,7 +2,7 @@
 
 These generated reports preserve public or privacy-safe starting points for
 future commercial comparisons. Distribution, pilot, and growth reports were
-refreshed on 2026-07-18 at 11:44 UTC. The outreach draft report was captured on
+refreshed on 2026-07-22 at 00:21 UTC. The outreach draft report was captured on
 2026-07-14, and the traffic report was captured on 2026-07-17 at 18:40 UTC,
 from:
 
@@ -14,12 +14,12 @@ from:
 
 ## Current Readout
 
-- 49 stable releases, all satisfying their version-aware artifact contracts.
-- 218 cumulative primary artifact requests: 31 portable and 187 wheel.
-- 177 manifest requests, 34 source requests, and 0 unknown requests.
-- 17 additional primary artifact requests since the prior checkpoint: 3
-  portable and 14 wheel. The new `v0.3.45` release accounts for 7 requests,
-  while `v0.3.44` gained 10 wheel requests.
+- 53 stable releases, all satisfying their version-aware artifact contracts.
+- 268 cumulative primary artifact requests: 36 portable and 232 wheel.
+- 221 manifest requests, 39 source requests, and 0 unknown requests.
+- 50 additional primary artifact requests since the prior checkpoint: 5
+  portable and 45 wheel. The four new releases account for 29 requests, while
+  `v0.3.45` gained 21 additional wheel requests.
 - 0 tracked pilot requests, 0 booked pilots, and $0 booked revenue.
 - 0 evidence warnings in the distribution, pilot, and joined growth reports.
 - 5 qualified outreach drafts backed by 16 fit-evidence links, with 0 approvals,
@@ -29,9 +29,10 @@ from:
 
 GitHub reports cumulative asset requests, not unique people or installations.
 The wheel and manifest totals include Repo Scout's own CI and maintainer
-verification, so they are directional reach evidence only. The 17-request
-increase did not produce a pilot request; the joined report correctly keeps
-acquisition as the commercial bottleneck.
+verification, so they are directional reach evidence only. The 50-request
+increase includes 45 wheel and 44 manifest requests but only 5 portable and 5
+source requests. It did not produce a pilot request; the joined report correctly
+keeps acquisition as the commercial bottleneck.
 The prior overlapping window contained 1 view from 1 unique viewer, 119 unique
 cloners, and 310 clone events. The new window adds only 2 views and no unique
 viewer while clone activity rises by 652 events and 174 unique cloners. That
@@ -46,7 +47,7 @@ partial rankings rather than exhaustive traffic reconciliations.
   per-channel deltas and release-set changes.
 - `pilot-baseline.json` is the schema-7 aggregate from the empty public pilot
   queue.
-- `growth-baseline.json` joins the signed 17-request movement from the prior
+- `growth-baseline.json` joins the signed 50-request movement from the prior
   distribution checkpoint with the schema-7 pilot baseline.
 - `github-traffic-baseline.json` preserves the owner-visible 14-day aggregate,
   daily series, partial top referrers, and partial popular paths without visitor

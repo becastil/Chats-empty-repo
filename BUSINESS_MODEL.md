@@ -812,13 +812,15 @@ experiments comparable over time, but they retain the same CI and maintainer
 confounders and therefore remain directional until a buyer self-reports a source
 or enters the paid funnel.
 
-The latest 2026-07-18 UTC public checkpoint records 218 cumulative primary
-artifact requests across 49 contract-complete releases: 31 portable and 187
-wheel. That is 17 more primary requests than the prior checkpoint: 7 on the new
-`v0.3.45` release and 10 additional `v0.3.44` wheel requests. Repo Scout's own
-release, independent verification, pinning, and CI activity materially confound
-those counts. The same checkpoint records zero pilot requests, zero outreach
-attempts, and $0 booked revenue, so acquisition remains the honest bottleneck.
+The latest 2026-07-22 UTC public checkpoint records 268 cumulative primary
+artifact requests across 53 contract-complete releases: 36 portable and 232
+wheel. That is 50 more primary requests than the prior checkpoint. The four new
+releases account for 29 requests, while `v0.3.45` gained 21 additional wheel
+requests. The same period added 45 wheel and 44 manifest requests but only 5
+portable and 5 source requests, so Repo Scout's own release, verification,
+pinning, and CI activity materially confound the movement. The checkpoint still
+records zero pilot requests, zero outreach attempts, and $0 booked revenue, so
+acquisition remains the honest bottleneck.
 
 The refreshed owner-visible 14-day GitHub traffic checkpoint ending 2026-07-16
 records 3 views from one unique repository viewer, 293 unique cloners, and 962

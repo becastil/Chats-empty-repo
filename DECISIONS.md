@@ -2214,3 +2214,19 @@ executable contract together. This strengthens paid-CI supply-chain integrity
 while leaving the existing owner-only review bundle and required human decision
 untouched. It does not establish a customer install, outreach attempt, pilot
 request, payment, or revenue.
+
+## 2026-07-22: Treat Post-Release Requests As Confounded Reach, Not Demand
+
+Four complete releases and the verified paid-CI promotion landed after the last
+deliberate commercial checkpoint. That is enough distribution change to refresh
+the public release, pilot, and joined growth evidence without creating another
+acquisition asset or touching the private review queue.
+
+The warning-free comparison records 50 additional primary artifact requests:
+45 wheel and 5 portable. It also records 44 manifest and 5 source requests,
+four new releases, zero pilot requests, and $0 booked revenue. The concentration
+in wheels and manifests is consistent with release verification, pinning, and
+CI activity, so the movement remains directional reach rather than users,
+installs, leads, or willingness to pay. Acquisition remains the commercial
+bottleneck, and the next action remains human review of the prepared outreach
+queue rather than another product or acquisition feature.

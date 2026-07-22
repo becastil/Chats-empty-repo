@@ -6,16 +6,19 @@
   },
   "decision_criteria": [],
   "distribution_change": {
-    "manifest_downloads_delta": 14,
+    "manifest_downloads_delta": 44,
     "new_releases": [
-      "v0.3.45"
+      "v0.3.49",
+      "v0.3.48",
+      "v0.3.47",
+      "v0.3.46"
     ],
-    "portable_downloads_delta": 3,
-    "primary_artifact_downloads_delta": 17,
+    "portable_downloads_delta": 5,
+    "primary_artifact_downloads_delta": 50,
     "removed_releases": [],
-    "source_downloads_delta": 3,
+    "source_downloads_delta": 5,
     "unknown_downloads_delta": 0,
-    "wheel_downloads_delta": 14
+    "wheel_downloads_delta": 45
   },
   "evidence_quality": {
     "decision_criterion_reporting_available": true,
