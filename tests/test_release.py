@@ -703,6 +703,93 @@ class ReleaseWorkflowTests(unittest.TestCase):
         for action in actions:
             self.assertRegex(action, r"^[\w.-]+/[\w.-]+@[0-9a-f]{40}$")
 
+    def test_release_tag_guard_requires_an_annotated_exact_commit(self) -> None:
+        workflow = (ROOT / ".github/workflows/release.yml").read_text(
+            encoding="utf-8"
+        )
+        marker = "      - name: Require an annotated release tag\n"
+        next_marker = "      - name: Require a main-branch release commit\n"
+        self.assertIn(marker, workflow)
+        self.assertIn(next_marker, workflow)
+        self.assertLess(workflow.index(marker), workflow.index(next_marker))
+
+        guard_step = workflow[
+            workflow.index(marker) : workflow.index(next_marker)
+        ]
+        self.assertIn("        run: |\n", guard_step)
+        guard_script = textwrap.dedent(
+            guard_step.split("        run: |\n", 1)[1]
+        )
+        self.assertIn('git cat-file -t "$tag_ref"', guard_script)
+        self.assertIn('git rev-parse "${tag_ref}^{commit}"', guard_script)
+        self.assertIn("must be an annotated tag", guard_script)
+        self.assertIn("instead of push commit", guard_script)
+        self.assertNotIn("|| true", guard_script)
+
+        with TemporaryDirectory() as tmp:
+            repository = Path(tmp) / "repository"
+            subprocess.run(
+                ["git", "init", "--quiet", str(repository)],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+
+            def run_git(*args: str) -> str:
+                return subprocess.run(
+                    ["git", *args],
+                    cwd=repository,
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                ).stdout.strip()
+
+            def run_guard(expected_sha: str) -> subprocess.CompletedProcess[str]:
+                environment = os.environ.copy()
+                environment["GITHUB_REF_NAME"] = "v1.2.3"
+                environment["GITHUB_SHA"] = expected_sha
+                return subprocess.run(
+                    ["bash", "-e"],
+                    input=guard_script,
+                    cwd=repository,
+                    env=environment,
+                    capture_output=True,
+                    text=True,
+                )
+
+            run_git("config", "user.name", "Repo Scout Tests")
+            run_git("config", "user.email", "tests@example.com")
+            tracked = repository / "tracked.txt"
+            tracked.write_text("first\n", encoding="utf-8")
+            run_git("add", "tracked.txt")
+            run_git("commit", "--quiet", "-m", "first")
+            first_commit = run_git("rev-parse", "HEAD")
+
+            tracked.write_text("second\n", encoding="utf-8")
+            run_git("commit", "--quiet", "-am", "second")
+            second_commit = run_git("rev-parse", "HEAD")
+            run_git(
+                "tag",
+                "--annotate",
+                "v1.2.3",
+                first_commit,
+                "--message",
+                "Repo Scout v1.2.3",
+            )
+
+            annotated = run_guard(first_commit)
+            self.assertEqual(annotated.returncode, 0, annotated.stderr)
+
+            wrong_commit = run_guard(second_commit)
+            self.assertNotEqual(wrong_commit.returncode, 0)
+            self.assertIn("instead of push commit", wrong_commit.stderr)
+
+            run_git("tag", "--delete", "v1.2.3")
+            run_git("tag", "v1.2.3", first_commit)
+            lightweight = run_guard(first_commit)
+            self.assertNotEqual(lightweight.returncode, 0)
+            self.assertIn("must be an annotated tag", lightweight.stderr)
+
     def test_release_publication_requires_immutable_release_evidence(self) -> None:
         workflow = (ROOT / ".github/workflows/release.yml").read_text(
             encoding="utf-8"

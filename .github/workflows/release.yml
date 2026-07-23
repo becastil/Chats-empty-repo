@@ -30,6 +30,22 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Require an annotated release tag
+        run: |
+          tag_ref="refs/tags/${GITHUB_REF_NAME}"
+          tag_type="$(git cat-file -t "$tag_ref")"
+          if [[ "$tag_type" != "tag" ]]; then
+            printf 'Release ref %s must be an annotated tag; found %s.\n' \
+              "$tag_ref" "$tag_type" >&2
+            exit 1
+          fi
+          peeled_commit="$(git rev-parse "${tag_ref}^{commit}")"
+          if [[ "$peeled_commit" != "$GITHUB_SHA" ]]; then
+            printf 'Release tag %s peels to %s instead of push commit %s.\n' \
+              "$tag_ref" "$peeled_commit" "$GITHUB_SHA" >&2
+            exit 1
+          fi
+
       - name: Require a main-branch release commit
         run: git merge-base --is-ancestor "$GITHUB_SHA" refs/remotes/origin/main
 

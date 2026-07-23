@@ -170,9 +170,11 @@ candidate zipapp, wheel, source, and checksum artifacts in runner temp. It
 cannot use secrets, upload or attest artifacts, write repository content, or
 publish a release.
 
-The release workflow runs only for `vMAJOR.MINOR.PATCH` tags. It rejects a tag
-unless it exactly matches both `project.version` in `pyproject.toml` and
-`repo_scout.__version__`, and the tagged commit must be on `main`.
+The release workflow runs only for `vMAJOR.MINOR.PATCH` tags. Before tests or
+builds, it rejects a lightweight tag, an annotated tag whose peeled commit does
+not exactly match the GitHub push commit, or a tagged commit outside `main`.
+The tag must also exactly match both `project.version` in `pyproject.toml` and
+`repo_scout.__version__`.
 
 Before publication, the workflow:
 

@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after hosting pre-tag release proof: 214 / 1,000 (21.4%).
-- Remaining after hosting pre-tag release proof: 786 commits.
+- Progress after enforcing annotated release identity: 215 / 1,000 (21.5%).
+- Remaining after enforcing annotated release identity: 785 commits.
 
 ## Commit Standard
 

@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 214 of
-1,000, with 786 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 215 of
+1,000, with 785 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -136,6 +136,9 @@ alignment take priority over commit volume.
 - Repository-level release immutability enabled for future publications, with
   executable proof that the release job rejects any exact tagged release whose
   GitHub API evidence is not `immutable: true`.
+- A pre-publication tag guard that requires an annotated Git tag whose peeled
+  commit exactly matches the GitHub push commit before main-branch ancestry,
+  tests, artifact builds, attestations, or release creation can begin.
 - Explicit MIT license text included in packaged distributions.
 - Required self-reported discovery channels in founding-team pilot intake.
 - Schema-3 source attribution for qualification, offers, booked revenue, conversion, loss, and follow-up.

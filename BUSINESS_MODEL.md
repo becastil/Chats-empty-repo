@@ -62,6 +62,12 @@ first release boundary required to pass that lock. After a separate public-
 artifact reconciliation, both paid-CI gates now pin its exact source commit and
 wheel digest alongside the manifest, tag, signer workflow, hosted runner, and
 provenance constraints.
+Before any release work begins, the publishing workflow also requires the
+semantic ref to be an annotated Git tag whose peeled commit exactly matches the
+GitHub push commit. Lightweight tags and annotated tags aimed at another commit
+stop before main-branch ancestry, tests, builds, attestations, or publication.
+This keeps the public peel-and-verify procedure available to paid-CI operators;
+it does not create a release, install, demand, payment, or revenue event.
 The wheel adoption path now reports all 7 packaged commands, and its release
 test derives complete version-smoke coverage from `[project.scripts]` instead
 of a second hardcoded command list. This keeps the paid CI activation surface

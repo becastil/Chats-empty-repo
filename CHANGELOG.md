@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Required the publishing workflow to reject lightweight release tags and
+  annotated tags whose peeled commit differs from the GitHub push commit before
+  main ancestry, tests, builds, attestations, or publication.
+- Added executable success, wrong-commit, and lightweight-tag regressions using
+  real temporary Git repositories.
 - Added a dedicated pre-tag release-tooling workflow for relevant source,
   packaging, lock, test, and release-workflow changes plus manual checks.
 - Required read-only Python 3.11 execution, exact self-testing release

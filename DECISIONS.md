@@ -2723,3 +2723,23 @@ repository content, attest or upload artifacts, or create a release. The
 tag-driven release job remains the only publication boundary. A passing
 candidate build protects paid-CI distribution trust but is not a public
 artifact, customer install, demand, payment, or revenue event.
+
+## 2026-07-23: Bind Publication To An Annotated Exact-Commit Tag
+
+The public verification procedure resolves `refs/tags/vX.Y.Z^{}` so operators
+can bind checksums and attestations to the tag's peeled source commit. The
+publishing workflow required a matching semantic tag and main ancestry, but it
+did not require an annotated tag object. A lightweight tag could therefore
+reach the build while making the documented remote peel check impossible.
+
+Before main-branch ancestry, tests, builds, attestations, or release creation,
+the release job now requires `refs/tags/$GITHUB_REF_NAME` to be a Git tag object
+and requires its peeled commit to exactly equal the GitHub push commit. An
+executable contract runs the guard in temporary repositories and proves one
+annotated exact-commit tag passes while a wrong-commit annotation and a
+lightweight tag fail.
+
+The guard does not create, move, sign, or publish a tag. Maintainers retain the
+human release decision, and the immutable-release check remains the
+post-publication boundary. Passing the guard is distribution-integrity
+evidence, not a release, customer install, demand, payment, or revenue event.
