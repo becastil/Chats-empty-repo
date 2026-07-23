@@ -167,10 +167,11 @@ workflow runs when release inputs change or when manually dispatched. It tests
 the release contracts on Python 3.11, force-installs every hash-locked build
 tool into a fresh runner-temp virtual environment, runs `pip check`, and builds
 candidate zipapp, wheel, source, and checksum artifacts in runner temp. It
-then installs the exact candidate wheel without dependencies into a separate
-smoke environment, reconciles every packaged command version, and directly
-executes the zipapp for help and a JSON repository scan. It cannot use secrets,
-upload or attest artifacts, write repository content, or publish a release.
+then installs the exact candidate wheel into a separate smoke environment with
+package indexes, dependency resolution, and pip's remote version check
+disabled, reconciles every packaged command version, and directly executes the
+zipapp for help and a JSON repository scan. It cannot use secrets, upload or
+attest artifacts, write repository content, or publish a release.
 
 The release workflow runs only for `vMAJOR.MINOR.PATCH` tags. Before tests or
 builds, it rejects a lightweight tag, an annotated tag whose peeled commit does
@@ -186,9 +187,10 @@ Before publication, the workflow:
 3. Uses only that isolated interpreter to build one portable zipapp, one wheel,
    one source distribution, and the checksum manifest.
 4. Rejects missing, extra, or incorrectly named artifacts.
-5. Runs the zipapp directly, then installs the wheel in a fresh virtual
-   environment, reconciles all command versions to the tag, exercises all
-   seven commands, verifies every starter-
+5. Installs the exact canonical wheel in a fresh package-index-free virtual
+   environment with dependency resolution and pip's remote version check
+   disabled, reconciles all command versions to the tag, exercises all seven
+   commands, then directly runs the zipapp and verifies every starter-
    recommendation route plus Node policy enforcement, and checks the guarded
    outreach review-to-observed-outcome lifecycle and its privacy boundaries.
 6. Revalidates all three built artifacts against the deterministic SHA-256

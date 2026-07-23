@@ -852,6 +852,45 @@ class ReleaseWorkflowTests(unittest.TestCase):
             self.assertNotEqual(rejected.returncode, 0)
             self.assertIn("FAILED", rejected.stdout + rejected.stderr)
 
+    def test_release_smoke_installs_only_the_exact_local_wheel(self) -> None:
+        workflow = (ROOT / ".github/workflows/release.yml").read_text(
+            encoding="utf-8"
+        )
+        smoke_marker = "      - name: Smoke test the built wheel\n"
+        next_marker = "      - name: Smoke test the portable zipapp\n"
+        self.assertIn(smoke_marker, workflow)
+        self.assertIn(next_marker, workflow)
+        smoke_step = workflow[
+            workflow.index(smoke_marker) : workflow.index(next_marker)
+        ]
+        self.assertIn("        run: |\n", smoke_step)
+        smoke_script = textwrap.dedent(
+            smoke_step.split("        run: |\n", 1)[1]
+        )
+
+        version_marker = 'version="${GITHUB_REF_NAME#v}"'
+        install_marker = (
+            '"$RUNNER_TEMP/repo-scout-release/bin/python" -m pip install \\\n'
+        )
+        self.assertIn(version_marker, smoke_script)
+        self.assertIn(install_marker, smoke_script)
+        self.assertLess(
+            smoke_script.index(version_marker),
+            smoke_script.index(install_marker),
+        )
+        self.assertIn("--disable-pip-version-check", smoke_script)
+        self.assertIn("--no-index", smoke_script)
+        self.assertIn("--no-deps", smoke_script)
+        self.assertIn(
+            '"dist/repo_scout-${version}-py3-none-any.whl"',
+            smoke_script,
+        )
+        self.assertNotIn("dist/*.whl", smoke_script)
+        self.assertNotIn("--index-url", smoke_script)
+        self.assertNotIn("--extra-index-url", smoke_script)
+        self.assertNotIn("--find-links", smoke_script)
+        self.assertEqual(smoke_script.count("pip install"), 1)
+
     def test_release_build_uses_a_force_verified_isolated_toolchain(self) -> None:
         workflow = (ROOT / ".github/workflows/release.yml").read_text(
             encoding="utf-8"

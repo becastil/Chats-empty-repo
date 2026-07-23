@@ -45,13 +45,13 @@ A separate read-only pre-tag workflow now runs the exact release contracts,
 force-verifies the hash-locked tools in a fresh environment, checks dependency
 compatibility, and builds candidate wheel, source, portable, and checksum
 artifacts on Python 3.11 whenever release inputs change. Candidate artifacts
-remain in runner temp, but the exact wheel is installed without dependencies
-into a separate smoke environment, all seven packaged command versions are
-reconciled, and the zipapp performs a real repository scan. The workflow also
-watches every release smoke helper it protects. Nothing is uploaded or
-attested. This moves build and packaging execution failures before tag creation
-while leaving the tag-only publication and immutable-release boundary
-unchanged.
+remain in runner temp, but the exact wheel is installed into a separate smoke
+environment with package indexes, dependency resolution, and pip's remote
+version check disabled. All seven packaged command versions are reconciled,
+and the zipapp performs a real repository scan. The workflow also watches every
+release smoke helper it protects. Nothing is uploaded or attested. This moves
+build and packaging execution failures before tag creation while leaving the
+tag-only publication and immutable-release boundary unchanged.
 The tag-only publisher now repeats that isolation at the release boundary. It
 creates a new runner-temp environment, force-verifies every locked wheel, checks
 dependency compatibility, and uses only that interpreter to build and validate
@@ -59,7 +59,9 @@ the portable CLI, wheel, source archive, and checksum manifest. Ambient
 hosted-runner build packages can no longer satisfy the lock without a verified
 reinstall or remain visible to the package backend. This strengthens paid-CI
 artifact trust without creating a release, install, demand, payment, or revenue
-event.
+event. Its separate publication smoke environment also installs only the
+canonical wheel derived from the validated tag, with package indexes,
+dependency resolution, and the remote version check disabled.
 After the wheel and portable smoke tests read the built artifacts, the
 publisher now revalidates every manifest entry immediately before passing that
 same `SHA256SUMS` file to provenance attestation. An executable contract proves

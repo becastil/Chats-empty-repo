@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Made both pre-tag and tag-time wheel smoke installs package-index-free, with
+  dependency resolution and pip's remote version check disabled.
+- Replaced the publishing workflow's wheel wildcard with the exact canonical
+  filename derived from the validated release tag.
 - Installed every pre-tag candidate wheel into a separate smoke environment,
   reconciled all seven packaged command versions, and directly exercised the
   candidate zipapp before a maintainer can create a release tag.

@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after executing pre-tag candidates: 218 / 1,000 (21.8%).
-- Remaining after executing pre-tag candidates: 782 commits.
+- Progress after isolating release smoke installs: 219 / 1,000 (21.9%).
+- Remaining after isolating release smoke installs: 781 commits.
 
 ## Commit Standard
 

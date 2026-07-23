@@ -98,6 +98,7 @@ jobs:
           python -m venv "$smoke_venv"
           "$smoke_venv/bin/python" -m pip install \
             --disable-pip-version-check \
+            --no-index \
             --no-deps \
             "$dist/repo_scout-${version}-py3-none-any.whl"
           for command in \

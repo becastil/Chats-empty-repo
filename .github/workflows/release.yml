@@ -81,9 +81,13 @@ jobs:
 
       - name: Smoke test the built wheel
         run: |
-          python -m venv "$RUNNER_TEMP/repo-scout-release"
-          "$RUNNER_TEMP/repo-scout-release/bin/python" -m pip install --no-deps dist/*.whl
           version="${GITHUB_REF_NAME#v}"
+          python -m venv "$RUNNER_TEMP/repo-scout-release"
+          "$RUNNER_TEMP/repo-scout-release/bin/python" -m pip install \
+            --disable-pip-version-check \
+            --no-index \
+            --no-deps \
+            "dist/repo_scout-${version}-py3-none-any.whl"
           for command in \
             repo-scout \
             repo-scout-distribution \

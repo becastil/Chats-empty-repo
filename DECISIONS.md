@@ -2805,3 +2805,24 @@ smoke ordering. Candidate files remain in runner temp with read-only workflow
 permissions and no upload, attestation, tag, or publication authority. Passing
 this check strengthens paid-CI distribution readiness; it is not a customer
 install, demand, payment, or revenue event.
+
+## 2026-07-23: Keep Release Smoke Installs Offline And Exact
+
+The customer and dogfood policy gates already installed one independently
+verified local wheel without package indexes, dependency resolution, or pip's
+remote version check. The pre-tag candidate smoke disabled dependencies and the
+version check but still allowed index access, while the publication smoke used
+`dist/*.whl` and left pip's version service enabled.
+
+Both release smoke environments now install one canonical
+`repo_scout-VERSION-py3-none-any.whl` path derived from the candidate version or
+validated tag. `--no-index`, `--no-deps`, and
+`--disable-pip-version-check` prevent the smoke proof from consulting a mutable
+registry or accepting an ambiguous wheel set. The build-tool installation
+remains separately hash-locked because it intentionally downloads the release
+toolchain.
+
+Executable contracts reject a missing flag, wildcard path, alternate index, or
+find-links escape and preserve the build-before-smoke order. This narrows the
+paid-CI publication trust path without creating a tag, release, customer
+install, demand, payment, or revenue evidence.

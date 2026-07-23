@@ -151,7 +151,12 @@ class ReleaseToolingWorkflowContractTests(unittest.TestCase):
             smoke_step,
         )
         self.assertIn("--disable-pip-version-check", smoke_step)
+        self.assertIn("--no-index", smoke_step)
         self.assertIn("--no-deps", smoke_step)
+        self.assertNotIn("--index-url", smoke_step)
+        self.assertNotIn("--extra-index-url", smoke_step)
+        self.assertNotIn("--find-links", smoke_step)
+        self.assertNotIn("*.whl", smoke_step)
         self.assertIn(
             '"$dist/repo_scout-${version}-py3-none-any.whl"',
             smoke_step,
