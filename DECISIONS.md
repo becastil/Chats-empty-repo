@@ -2700,3 +2700,26 @@ reported no broken requirements, and rebuilt the source archive, wheel,
 portable CLI, and checksum manifest without isolation. This repairs release
 infrastructure only: no tag or release was created, no public artifact changed,
 and no customer install, demand, payment, or revenue was recorded.
+
+## 2026-07-23: Prove Release Tooling Before A Tag Exists
+
+The tag-driven release job safely installs the hash-locked builder before
+publishing, but a bad lock digest or incompatible build-tool change would be
+discovered only after creating a release tag. Reusing the site dependency job
+would mix Python publication inputs with the Node production-site lock and make
+both contracts less legible.
+
+A dedicated pre-tag workflow now watches the release lock, release workflows,
+packaging metadata, packaged source and tests, license, README, and build
+scripts. On pull requests, `main`, or manual dispatch, one five-minute
+read-only job checks out the exact candidate without credentials, sets up
+Python 3.11, runs the release and workflow contracts, creates a fresh
+runner-temp virtual environment, force-installs the builder with
+`--require-hashes`, checks dependency compatibility, and generates the portable
+CLI, wheel, source archive, and checksum manifest in runner temp.
+
+The workflow cannot trigger from a tag, use repository secrets, write
+repository content, attest or upload artifacts, or create a release. The
+tag-driven release job remains the only publication boundary. A passing
+candidate build protects paid-CI distribution trust but is not a public
+artifact, customer install, demand, payment, or revenue event.

@@ -41,6 +41,13 @@ package/version pair to its specific hash, and clean-environment evidence
 rebuilds the wheel, source archive, portable CLI, and checksum manifest without
 isolation. This protects the paid-CI trust path; updating build infrastructure
 does not publish a release or establish an install, demand, payment, or revenue.
+A separate read-only pre-tag workflow now runs the exact release contracts,
+force-verifies the hash-locked tools in a fresh environment, checks dependency
+compatibility, and builds candidate wheel, source, portable, and checksum
+artifacts on Python 3.11 whenever release inputs change. Candidate artifacts
+remain in runner temp and are neither uploaded nor attested. This moves
+deterministic build failure before tag creation while leaving the tag-only
+publication and immutable-release boundary unchanged.
 The public verification guide reconciles its downloaded-file, checksum, and
 provenance-command counts to the three artifacts defined by the release builder.
 It also resolves the annotated tag's exact source commit and constrains every
@@ -302,13 +309,13 @@ after confirming that both versions use Node 24, Repo Scout uses only the
 unchanged `python-version` input, and the removed `pip-install` input appears
 nowhere in its workflows. Hosted proposal evidence set up CPython 3.11.15 and
 completed the verified release download, provenance check, index-free install,
-policy enforcement, rollout upload, and pilot contract. All four hosted Python
+policy enforcement, rollout upload, and pilot contract. All five hosted Python
 workflows, the copy-ready customer example, and their independent pin contracts
 now accept the same identity. Together these reviews prove the proposal queue
 can preserve paid-CI trust boundaries without auto-merging, deploying the site,
 or creating customer or revenue evidence.
 A repository-wide action-pin audit now discovers every external `uses:`
-reference across all five hosted workflows and the copy-ready customer gate.
+reference across all six hosted workflows and the copy-ready customer gate.
 It rejects mutable refs, missing exact release annotations, multiple accepted
 identities for one action, and dogfood/customer action-sequence drift. This
 covers the pilot-intake pins that had no direct identity contract and makes

@@ -1,0 +1,80 @@
+name: Release tooling contract
+
+on:
+  pull_request:
+    paths:
+      - ".github/release-requirements.txt"
+      - ".github/workflows/release-tooling.yml"
+      - ".github/workflows/release.yml"
+      - "LICENSE"
+      - "README.md"
+      - "pyproject.toml"
+      - "scripts/build_zipapp.py"
+      - "scripts/prepare_release.py"
+      - "src/**"
+      - "tests/**"
+  push:
+    branches: [main]
+    paths:
+      - ".github/release-requirements.txt"
+      - ".github/workflows/release-tooling.yml"
+      - ".github/workflows/release.yml"
+      - "LICENSE"
+      - "README.md"
+      - "pyproject.toml"
+      - "scripts/build_zipapp.py"
+      - "scripts/prepare_release.py"
+      - "src/**"
+      - "tests/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: repo-scout-release-tooling-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out candidate source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Set up release Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+
+      - name: Test release contracts
+        run: >-
+          python -m unittest
+          tests.test_release
+          tests.test_release_tooling_workflow
+
+      - name: Verify hash-locked release tools
+        run: |
+          release_venv="$RUNNER_TEMP/repo-scout-release-venv"
+          python -m venv "$release_venv"
+          "$release_venv/bin/python" -m pip install \
+            --disable-pip-version-check \
+            --require-hashes \
+            --force-reinstall \
+            -r .github/release-requirements.txt
+          "$release_venv/bin/python" -m pip check
+
+      - name: Build candidate artifacts
+        run: |
+          dist="$RUNNER_TEMP/repo-scout-release-dist"
+          release_python="$RUNNER_TEMP/repo-scout-release-venv/bin/python"
+          "$release_python" scripts/build_zipapp.py --dist "$dist"
+          "$release_python" -m build --no-isolation --sdist --wheel --outdir "$dist"
+          version="$(
+            "$release_python" -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])'
+          )"
+          "$release_python" scripts/prepare_release.py --tag "v${version}" --dist "$dist"

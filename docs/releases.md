@@ -162,6 +162,14 @@ secrets and does not change the site, a release, or any commercial evidence.
 
 ## Maintainer Release Contract
 
+Before a maintainer creates a tag, the read-only `Release tooling contract`
+workflow runs when release inputs change or when manually dispatched. It tests
+the release contracts on Python 3.11, force-installs every hash-locked build
+tool into a fresh runner-temp virtual environment, runs `pip check`, and builds
+candidate zipapp, wheel, source, and checksum artifacts in runner temp. It
+cannot use secrets, upload or attest artifacts, write repository content, or
+publish a release.
+
 The release workflow runs only for `vMAJOR.MINOR.PATCH` tags. It rejects a tag
 unless it exactly matches both `project.version` in `pyproject.toml` and
 `repo_scout.__version__`, and the tagged commit must be on `main`.

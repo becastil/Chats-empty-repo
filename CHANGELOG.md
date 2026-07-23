@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added a dedicated pre-tag release-tooling workflow for relevant source,
+  packaging, lock, test, and release-workflow changes plus manual checks.
+- Required read-only Python 3.11 execution, exact self-testing release
+  contracts, a fresh virtual environment that force-verifies every hash-locked
+  tool, a dependency check, and complete candidate artifact and checksum
+  generation in runner temp without publishing or uploading anything.
 - Advanced the hash-locked release builder from vulnerable `setuptools`
   `80.9.0` to the advisory-fixed `83.0.0` wheel and its independently verified
   SHA-256 digest.
@@ -19,8 +25,8 @@
 - Invoked the audit explicitly before Node setup and general test discovery so
   deleting or renaming its unit contract cannot silently disable hosted pin
   enforcement.
-- Added a repository-wide immutable-action audit for all 15 external references
-  across the five hosted workflows and copy-ready customer gate, including the
+- Added a repository-wide immutable-action audit for all 17 external references
+  across the six hosted workflows and copy-ready customer gate, including the
   previously uncovered pilot-intake pins.
 - Required full lowercase commit SHAs, exact semantic release annotations, one
   identity per action, and matching dogfood/customer action sequences so future

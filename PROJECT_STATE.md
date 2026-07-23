@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 213 of
-1,000, with 787 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 214 of
+1,000, with 786 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -106,15 +106,15 @@ alignment take priority over commit volume.
   changes, and allow at most two open version-update pull requests. Nothing
   auto-merges or deploys.
 - Advanced `actions/checkout` from `v7.0.0` to the verified full-commit pin for
-  `v7.0.1` across all five hosted workflows and the copy-ready customer gate.
+  `v7.0.1` across all six hosted workflows and the copy-ready customer gate.
   Executable pin contracts moved with the runtime references.
 - Advanced `actions/setup-python` from `v6.3.0` to the verified full-commit pin
-  for `v7.0.0` across all four Python workflows and the copy-ready customer
+  for `v7.0.0` across all five Python workflows and the copy-ready customer
   gate. The used `python-version` input and Node 24 runtime are unchanged, the
   removed `pip-install` input is unused, and hosted evidence confirms Python
   3.11.15 through the complete paid-CI activation path.
-- A repository-wide action-pin audit covering all 15 external references across
-  the five hosted workflows and copy-ready customer gate. It rejects mutable
+- A repository-wide action-pin audit covering all 17 external references across
+  the six hosted workflows and copy-ready customer gate. It rejects mutable
   refs, missing exact release annotations, split identities for one action, and
   dogfood/customer action-sequence drift, including the previously uncovered
   pilot-intake pins.
@@ -127,6 +127,11 @@ alignment take priority over commit volume.
   `83.0.0` wheel digest, exact package/version/hash contract evidence,
   deterministic SHA-256 manifests, and clean-environment build and command
   smoke tests.
+- A dedicated read-only pre-tag release-tooling workflow that runs exact
+  release contracts on Python 3.11, force-verifies the hash-locked builder in a
+  fresh virtual environment, checks dependency compatibility, and produces
+  candidate wheel, source, portable, and checksum artifacts in runner temp
+  whenever release inputs change. It has no publication authority.
 - GitHub build-provenance attestations and immutable-action release automation.
 - Repository-level release immutability enabled for future publications, with
   executable proof that the release job rejects any exact tagged release whose

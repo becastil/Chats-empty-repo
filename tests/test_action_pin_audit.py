@@ -41,9 +41,9 @@ class ActionPinAuditTests(unittest.TestCase):
             },
             {
                 "actions/attest-build-provenance": ("v4.1.1", 1),
-                CHECKOUT: ("v7.0.1", 6),
+                CHECKOUT: ("v7.0.1", 7),
                 "actions/setup-node": ("v6.4.0", 1),
-                SETUP_PYTHON: ("v7.0.0", 5),
+                SETUP_PYTHON: ("v7.0.0", 6),
                 UPLOAD_ARTIFACT: ("v7.0.1", 2),
             },
         )
@@ -186,7 +186,7 @@ class ActionPinAuditTests(unittest.TestCase):
         self.assertEqual(status, 0)
         self.assertEqual(
             stdout.getvalue().strip(),
-            "action pin audit passed: actions=5, references=15, surfaces=6",
+            "action pin audit passed: actions=5, references=17, surfaces=7",
         )
 
     def test_main_fails_closed_on_an_unpinned_reference(self) -> None:

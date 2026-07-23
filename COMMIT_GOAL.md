@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after patching hash-locked release tooling: 213 / 1,000 (21.3%).
-- Remaining after patching hash-locked release tooling: 787 commits.
+- Progress after hosting pre-tag release proof: 214 / 1,000 (21.4%).
+- Remaining after hosting pre-tag release proof: 786 commits.
 
 ## Commit Standard
 
