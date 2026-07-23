@@ -34,6 +34,13 @@ The free CLI should be good enough to adopt without a sales conversation.
 Verified GitHub releases remove source-checkout trust and installation friction
 from pilot onboarding. PyPI distribution, billing, and license enforcement stay
 deferred until paid demand justifies their operational cost.
+The hash-locked release builder now pins the advisory-fixed `setuptools`
+`83.0.0` wheel and its exact PyPI SHA-256 digest before producing either public
+wheel or source artifacts. The executable lock contract binds every release
+package/version pair to its specific hash, and clean-environment evidence
+rebuilds the wheel, source archive, portable CLI, and checksum manifest without
+isolation. This protects the paid-CI trust path; updating build infrastructure
+does not publish a release or establish an install, demand, payment, or revenue.
 The public verification guide reconciles its downloaded-file, checksum, and
 provenance-command counts to the three artifacts defined by the release builder.
 It also resolves the annotated tag's exact source commit and constrains every

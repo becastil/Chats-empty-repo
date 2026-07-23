@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Advanced the hash-locked release builder from vulnerable `setuptools`
+  `80.9.0` to the advisory-fixed `83.0.0` wheel and its independently verified
+  SHA-256 digest.
+- Strengthened the release lock contract to bind every package and version to
+  its exact hash, then clean-installed the lock and rebuilt the source, wheel,
+  portable, and checksum artifacts without publishing a release.
 - Added a dedicated fail-closed contract for the public pilot-intake workflow's
   triggers, read-only permissions, immutable actions, bounded runtime, exact
   tests, and non-repairing live-label audit.

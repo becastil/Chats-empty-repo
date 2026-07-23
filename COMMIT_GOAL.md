@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after protecting the hosted pilot-intake workflow: 212 / 1,000 (21.2%).
-- Remaining after protecting the hosted pilot-intake workflow: 788 commits.
+- Progress after patching hash-locked release tooling: 213 / 1,000 (21.3%).
+- Remaining after patching hash-locked release tooling: 787 commits.
 
 ## Commit Standard
 

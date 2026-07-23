@@ -788,19 +788,24 @@ class ReleaseWorkflowTests(unittest.TestCase):
         requirements = (
             ROOT / ".github/release-requirements.txt"
         ).read_text(encoding="utf-8")
-        packages = re.findall(r"^([\w-]+)==([^\s\\]+)", requirements, re.MULTILINE)
-        hashes = re.findall(r"--hash=sha256:([0-9a-f]{64})", requirements)
 
         self.assertEqual(
-            packages,
-            [
-                ("build", "1.3.0"),
-                ("packaging", "25.0"),
-                ("pyproject-hooks", "1.2.0"),
-                ("setuptools", "80.9.0"),
-            ],
+            requirements,
+            "# Release-only build dependencies. Every downloaded wheel is "
+            "hash-verified.\n"
+            "build==1.3.0 \\\n"
+            "    --hash=sha256:"
+            "7145f0b5061ba90a1500d60bd1b13ca0a8a4cebdd0cc16ed8adf1c0e739f43b4\n"
+            "packaging==25.0 \\\n"
+            "    --hash=sha256:"
+            "29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484\n"
+            "pyproject-hooks==1.2.0 \\\n"
+            "    --hash=sha256:"
+            "9e5c6bfa8dcc30091c74b0cf803c81fdd29d94f01992a7707bc97babb1141913\n"
+            "setuptools==83.0.0 \\\n"
+            "    --hash=sha256:"
+            "29b23c360f22f414dc7336bb39178cc7bcbf6021ed2733cde173f09dba19abb3\n",
         )
-        self.assertEqual(len(hashes), len(packages))
 
 
 if __name__ == "__main__":

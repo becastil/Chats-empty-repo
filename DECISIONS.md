@@ -2680,3 +2680,23 @@ This protects the existing public conversion path without adding another
 acquisition asset, making a qualification decision, changing a label, or
 contacting anyone. A passing contract proves intake infrastructure consistency,
 not a lead, demand, payment, or revenue.
+
+## 2026-07-23: Patch The Source-Distribution Builder Before Another Release
+
+GitHub advisory `GHSA-h35f-9h28-mq5c` marks `setuptools` versions below
+`83.0.0` vulnerable to a Unicode-normalization mismatch in `MANIFEST.in`
+exclusions. Repo Scout pinned `80.9.0` in its release-only requirements and
+publishes a source archive, so the affected behavior sat directly on the public
+artifact trust path even though the dependency is not installed by CLI users.
+
+The release lock now uses the non-yanked `setuptools` `83.0.0` wheel and exact
+SHA-256 digest published by PyPI. Its Python `>=3.10` requirement includes the
+release workflow's Python 3.11 runtime. The contract test now compares the
+complete canonical lock text, binding all four package names and versions to
+their specific hashes instead of accepting any four well-shaped hashes.
+
+A fresh environment installed the complete lock with `--require-hashes`,
+reported no broken requirements, and rebuilt the source archive, wheel,
+portable CLI, and checksum manifest without isolation. This repairs release
+infrastructure only: no tag or release was created, no public artifact changed,
+and no customer install, demand, payment, or revenue was recorded.

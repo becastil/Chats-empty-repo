@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 212 of
-1,000, with 788 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 213 of
+1,000, with 787 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -123,7 +123,10 @@ alignment take priority over commit volume.
   and general test discovery, so deleting its test cannot silently remove the
   paid-CI supply-chain gate.
 - Tag-driven wheel and source releases with strict version alignment and exact artifact validation.
-- Hash-locked release build tooling, deterministic SHA-256 manifests, and clean-environment command smoke tests.
+- Hash-locked release build tooling with the advisory-fixed `setuptools`
+  `83.0.0` wheel digest, exact package/version/hash contract evidence,
+  deterministic SHA-256 manifests, and clean-environment build and command
+  smoke tests.
 - GitHub build-provenance attestations and immutable-action release automation.
 - Repository-level release immutability enabled for future publications, with
   executable proof that the release job rejects any exact tagged release whose
