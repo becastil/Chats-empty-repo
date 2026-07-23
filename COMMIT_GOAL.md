@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after isolating release smoke installs: 219 / 1,000 (21.9%).
-- Remaining after isolating release smoke installs: 781 commits.
+- Progress after moving acceptance before tags: 220 / 1,000 (22.0%).
+- Remaining after moving acceptance before tags: 780 commits.
 
 ## Commit Standard
 

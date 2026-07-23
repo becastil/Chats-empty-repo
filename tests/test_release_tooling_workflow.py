@@ -8,6 +8,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "release-tooling.yml"
+RELEASE_WORKFLOW = ROOT / ".github" / "workflows" / "release.yml"
 
 CHECKOUT_ACTION = (
     "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1"
@@ -30,6 +31,12 @@ TRIGGER_PATHS = (
     "scripts/smoke_test_rollout_summary.py",
     "src/**",
     "tests/**",
+)
+ACCEPTANCE_SCRIPTS = (
+    "smoke_test_policy_activation.py",
+    "smoke_test_outreach_lifecycle.py",
+    "smoke_test_pilot_funnel.py",
+    "smoke_test_rollout_summary.py",
 )
 
 
@@ -232,6 +239,45 @@ class ReleaseToolingWorkflowContractTests(unittest.TestCase):
         self.assertNotIn("upload-artifact", workflow)
         self.assertNotIn("continue-on-error", workflow)
         self.assertNotIn("|| true", workflow)
+
+    def test_candidate_smoke_matches_publication_acceptance_scripts(self) -> None:
+        candidate_workflow = WORKFLOW.read_text(encoding="utf-8")
+        release_workflow = RELEASE_WORKFLOW.read_text(encoding="utf-8")
+        script_pattern = r"python scripts/(smoke_test_[a-z_]+\.py) \\"
+        smoke_marker = "      - name: Smoke test candidate artifacts\n"
+        smoke_step = candidate_workflow[
+            candidate_workflow.index(smoke_marker) :
+        ]
+
+        publication_scripts = re.findall(script_pattern, release_workflow)
+        candidate_scripts = re.findall(script_pattern, smoke_step)
+        self.assertEqual(publication_scripts, list(ACCEPTANCE_SCRIPTS))
+        self.assertEqual(candidate_scripts, publication_scripts)
+
+        install_marker = (
+            '"$smoke_venv/bin/python" -m pip install \\\n'
+        )
+        portable_marker = (
+            'test "$(python "$dist/repo-scout-${version}.pyz" --version)"'
+        )
+        self.assertIn(install_marker, smoke_step)
+        self.assertIn(portable_marker, smoke_step)
+        self.assertLess(
+            smoke_step.index(install_marker),
+            smoke_step.index(f"python scripts/{ACCEPTANCE_SCRIPTS[0]}"),
+        )
+        self.assertLess(
+            smoke_step.index(f"python scripts/{ACCEPTANCE_SCRIPTS[-1]}"),
+            smoke_step.index(portable_marker),
+        )
+        self.assertEqual(
+            smoke_step.count('--python "$smoke_venv/bin/python"'),
+            len(ACCEPTANCE_SCRIPTS),
+        )
+        self.assertEqual(
+            smoke_step.count('--command-directory "$smoke_venv/bin"'),
+            len(ACCEPTANCE_SCRIPTS),
+        )
 
 
 if __name__ == "__main__":

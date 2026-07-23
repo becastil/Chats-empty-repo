@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 219 of
-1,000, with 781 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 220 of
+1,000, with 780 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -132,7 +132,8 @@ alignment take priority over commit volume.
   fresh virtual environment, checks dependency compatibility, produces
   candidate wheel, source, portable, and checksum artifacts in runner temp,
   installs the exact wheel into a separate smoke environment, reconciles all
-  seven packaged commands, and directly exercises the zipapp whenever release
+  seven packaged commands, runs the same four installed-wheel acceptance
+  journeys as publication, and directly exercises the zipapp whenever release
   inputs change. It has no publication authority.
 - A matching isolated tag-time build that force-verifies every hash-locked
   release tool, checks dependency compatibility, and uses only that fresh

@@ -2826,3 +2826,24 @@ Executable contracts reject a missing flag, wildcard path, alternate index, or
 find-links escape and preserve the build-before-smoke order. This narrows the
 paid-CI publication trust path without creating a tag, release, customer
 install, demand, payment, or revenue evidence.
+
+## 2026-07-23: Move Installed-Wheel Acceptance Before Tags
+
+The pre-tag workflow installed the candidate wheel, reconciled all seven entry
+points, and executed the portable CLI, but the deepest business-workflow smoke
+tests still ran only after a maintainer created a publication tag. A candidate
+could therefore package correctly while breaking paid policy activation,
+guarded outreach, pilot-funnel accounting, or rollout evidence.
+
+The candidate smoke now runs the same four scripts, in the same order, against
+its isolated installed wheel: `smoke_test_policy_activation.py`,
+`smoke_test_outreach_lifecycle.py`, `smoke_test_pilot_funnel.py`, and
+`smoke_test_rollout_summary.py`. Each script receives the candidate
+interpreter and command directory, preserving the package-index-free install
+boundary.
+
+An executable parity contract derives the ordered script list independently
+from both workflows and fails if either side adds, removes, or reorders an
+acceptance journey. This moves paid-workflow packaging failures before the
+human tagging decision without granting publication authority or creating a
+release, customer install, demand, payment, or revenue evidence.

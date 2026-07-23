@@ -170,8 +170,11 @@ candidate zipapp, wheel, source, and checksum artifacts in runner temp. It
 then installs the exact candidate wheel into a separate smoke environment with
 package indexes, dependency resolution, and pip's remote version check
 disabled, reconciles every packaged command version, and directly executes the
-zipapp for help and a JSON repository scan. It cannot use secrets, upload or
-attest artifacts, write repository content, or publish a release.
+same four installed-wheel acceptance journeys used by publication: policy
+activation, guarded outreach, pilot-funnel accounting, and rollout summary. It
+then executes the zipapp for help and a JSON repository scan. It cannot use
+secrets, upload or attest artifacts, write repository content, or publish a
+release.
 
 The release workflow runs only for `vMAJOR.MINOR.PATCH` tags. Before tests or
 builds, it rejects a lightweight tag, an annotated tag whose peeled commit does

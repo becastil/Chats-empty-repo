@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Ran the publication workflow's policy-activation, outreach-lifecycle,
+  pilot-funnel, and rollout-summary acceptance journeys against every installed
+  pre-tag candidate wheel.
+- Added an executable parity contract that keeps the ordered pre-tag and
+  publication acceptance-script sets identical as paid workflows evolve.
 - Made both pre-tag and tag-time wheel smoke installs package-index-free, with
   dependency resolution and pip's remote version check disabled.
 - Replaced the publishing workflow's wheel wildcard with the exact canonical

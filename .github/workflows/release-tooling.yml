@@ -113,6 +113,24 @@ jobs:
             test "$actual" = "$command $version"
           done
           "$smoke_venv/bin/repo-scout" --help
+          "$smoke_venv/bin/repo-scout-distribution" --help
+          "$smoke_venv/bin/repo-scout-growth" --help
+          "$smoke_venv/bin/repo-scout-outreach" --help
+          "$smoke_venv/bin/repo-scout-policy" list --format json
+          python scripts/smoke_test_policy_activation.py \
+            --python "$smoke_venv/bin/python" \
+            --command-directory "$smoke_venv/bin"
+          python scripts/smoke_test_outreach_lifecycle.py \
+            --python "$smoke_venv/bin/python" \
+            --command-directory "$smoke_venv/bin"
+          "$smoke_venv/bin/repo-scout-pilot" --help
+          python scripts/smoke_test_pilot_funnel.py \
+            --python "$smoke_venv/bin/python" \
+            --command-directory "$smoke_venv/bin"
+          "$smoke_venv/bin/repo-scout-rollout" --help
+          python scripts/smoke_test_rollout_summary.py \
+            --python "$smoke_venv/bin/python" \
+            --command-directory "$smoke_venv/bin"
           test "$(python "$dist/repo-scout-${version}.pyz" --version)" = "repo-scout $version"
           python "$dist/repo-scout-${version}.pyz" --help
           python "$dist/repo-scout-${version}.pyz" --format json . > "$RUNNER_TEMP/repo-scout-candidate-snapshot.json"

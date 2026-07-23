@@ -48,10 +48,13 @@ artifacts on Python 3.11 whenever release inputs change. Candidate artifacts
 remain in runner temp, but the exact wheel is installed into a separate smoke
 environment with package indexes, dependency resolution, and pip's remote
 version check disabled. All seven packaged command versions are reconciled,
-and the zipapp performs a real repository scan. The workflow also watches every
-release smoke helper it protects. Nothing is uploaded or attested. This moves
-build and packaging execution failures before tag creation while leaving the
-tag-only publication and immutable-release boundary unchanged.
+then the installed wheel runs the same policy-activation, guarded-outreach,
+pilot-funnel, and rollout-summary acceptance journeys required during
+publication. The zipapp also performs a real repository scan. An executable
+parity contract keeps those four ordered scripts aligned as paid workflows
+evolve. Nothing is uploaded or attested. This moves build, packaging, and
+commercial-workflow failures before tag creation while leaving the tag-only
+publication and immutable-release boundary unchanged.
 The tag-only publisher now repeats that isolation at the release boundary. It
 creates a new runner-temp environment, force-verifies every locked wheel, checks
 dependency compatibility, and uses only that interpreter to build and validate
