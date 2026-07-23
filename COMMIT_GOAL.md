@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after revalidating release artifacts: 217 / 1,000 (21.7%).
-- Remaining after revalidating release artifacts: 783 commits.
+- Progress after executing pre-tag candidates: 218 / 1,000 (21.8%).
+- Remaining after executing pre-tag candidates: 782 commits.
 
 ## Commit Standard
 

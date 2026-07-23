@@ -2783,3 +2783,25 @@ An executable contract extracts the exact workflow script, proves three intact
 artifacts pass, mutates the wheel after manifest creation, and proves the
 release stops. This strengthens paid-CI distribution integrity only; no tag,
 release, customer install, demand, payment, or revenue evidence was created.
+
+## 2026-07-23: Execute Release Candidates Before Tagging
+
+The pre-tag workflow proved the release contracts and built all four candidate
+files, but it discarded them without installation or execution. Packaging or
+entry-point failures could therefore remain hidden until a maintainer created a
+tag and entered the publication workflow.
+
+After the isolated build, the pre-tag workflow now creates a second virtual
+environment and installs the exact candidate wheel with dependency resolution
+and pip's remote version check disabled. It reconciles every command declared
+in `[project.scripts]` to the candidate version, runs the primary help path,
+then executes the candidate zipapp for its version, help, and a real JSON
+repository scan. The trigger surface now includes all four release smoke
+helpers consumed by the release contracts.
+
+The executable workflow contract requires the separate environments, exact
+local wheel path, complete command set, portable execution, and build-before-
+smoke ordering. Candidate files remain in runner temp with read-only workflow
+permissions and no upload, attestation, tag, or publication authority. Passing
+this check strengthens paid-CI distribution readiness; it is not a customer
+install, demand, payment, or revenue event.

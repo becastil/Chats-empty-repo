@@ -167,8 +167,10 @@ workflow runs when release inputs change or when manually dispatched. It tests
 the release contracts on Python 3.11, force-installs every hash-locked build
 tool into a fresh runner-temp virtual environment, runs `pip check`, and builds
 candidate zipapp, wheel, source, and checksum artifacts in runner temp. It
-cannot use secrets, upload or attest artifacts, write repository content, or
-publish a release.
+then installs the exact candidate wheel without dependencies into a separate
+smoke environment, reconciles every packaged command version, and directly
+executes the zipapp for help and a JSON repository scan. It cannot use secrets,
+upload or attest artifacts, write repository content, or publish a release.
 
 The release workflow runs only for `vMAJOR.MINOR.PATCH` tags. Before tests or
 builds, it rejects a lightweight tag, an annotated tag whose peeled commit does

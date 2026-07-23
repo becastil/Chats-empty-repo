@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import re
+import tomllib
 import unittest
 
 
@@ -23,6 +24,10 @@ TRIGGER_PATHS = (
     "pyproject.toml",
     "scripts/build_zipapp.py",
     "scripts/prepare_release.py",
+    "scripts/smoke_test_outreach_lifecycle.py",
+    "scripts/smoke_test_pilot_funnel.py",
+    "scripts/smoke_test_policy_activation.py",
+    "scripts/smoke_test_rollout_summary.py",
     "src/**",
     "tests/**",
 )
@@ -133,13 +138,68 @@ class ReleaseToolingWorkflowContractTests(unittest.TestCase):
         self.assertEqual(workflow.count(test_command), 1)
         self.assertEqual(workflow.count(install_command), 1)
         self.assertEqual(workflow.count(build_command), 1)
-        self.assertEqual(workflow.count("pip install"), 1)
+        smoke_marker = "      - name: Smoke test candidate artifacts\n"
+        self.assertIn(smoke_marker, workflow)
+        smoke_step = workflow[workflow.index(smoke_marker) :]
+        self.assertIn(
+            'smoke_venv="$RUNNER_TEMP/repo-scout-release-smoke"',
+            smoke_step,
+        )
+        self.assertIn('python -m venv "$smoke_venv"', smoke_step)
+        self.assertIn(
+            '"$smoke_venv/bin/python" -m pip install \\\n',
+            smoke_step,
+        )
+        self.assertIn("--disable-pip-version-check", smoke_step)
+        self.assertIn("--no-deps", smoke_step)
+        self.assertIn(
+            '"$dist/repo_scout-${version}-py3-none-any.whl"',
+            smoke_step,
+        )
+        self.assertIn(
+            '"$smoke_venv/bin/$command" --version',
+            smoke_step,
+        )
+        self.assertIn('test "$actual" = "$command $version"', smoke_step)
+        _, loop_heading, command_tail = smoke_step.partition(
+            "          for command in \\\n"
+        )
+        command_block, loop_end, _ = command_tail.partition("; do")
+        self.assertTrue(loop_heading)
+        self.assertTrue(loop_end)
+        smoke_commands = re.findall(
+            r"^            (repo-scout(?:-[a-z]+)*)",
+            command_block,
+            re.MULTILINE,
+        )
+        with (ROOT / "pyproject.toml").open("rb") as project_file:
+            packaged_commands = set(
+                tomllib.load(project_file)["project"]["scripts"]
+            )
+        self.assertEqual(len(smoke_commands), len(set(smoke_commands)))
+        self.assertEqual(set(smoke_commands), packaged_commands)
+        self.assertIn(
+            'test "$(python "$dist/repo-scout-${version}.pyz" --version)" '
+            '= "repo-scout $version"',
+            smoke_step,
+        )
+        self.assertIn(
+            'python "$dist/repo-scout-${version}.pyz" --help',
+            smoke_step,
+        )
+        self.assertIn(
+            'python "$dist/repo-scout-${version}.pyz" --format json . > '
+            '"$RUNNER_TEMP/repo-scout-candidate-snapshot.json"',
+            smoke_step,
+        )
+
+        self.assertEqual(workflow.count("pip install"), 2)
         self.assertEqual(workflow.count("--force-reinstall"), 1)
         self.assertEqual(workflow.count("pip check"), 1)
         self.assertNotIn("source ", workflow)
         self.assertEqual(
             len(re.findall(r"^\s+run:", workflow, re.MULTILINE)),
-            3,
+            4,
         )
         self.assertLess(
             workflow.index(f"uses: {CHECKOUT_ACTION}"),
@@ -156,6 +216,10 @@ class ReleaseToolingWorkflowContractTests(unittest.TestCase):
         self.assertLess(
             workflow.index(install_command),
             workflow.index(build_command),
+        )
+        self.assertLess(
+            workflow.index(build_command),
+            workflow.index(smoke_marker),
         )
 
         self.assertNotIn("gh release", workflow)

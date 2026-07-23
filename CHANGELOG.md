@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Installed every pre-tag candidate wheel into a separate smoke environment,
+  reconciled all seven packaged command versions, and directly exercised the
+  candidate zipapp before a maintainer can create a release tag.
+- Expanded the pre-tag trigger contract to include all four release smoke
+  helpers so changing release-boundary behavior selects the same hosted proof.
 - Revalidated every release artifact against `SHA256SUMS` after wheel and
   zipapp smoke tests and immediately before provenance attestation.
 - Added executable workflow proof that intact artifacts pass while any
