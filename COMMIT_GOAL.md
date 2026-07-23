@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after isolating the publishing build: 216 / 1,000 (21.6%).
-- Remaining after isolating the publishing build: 784 commits.
+- Progress after revalidating release artifacts: 217 / 1,000 (21.7%).
+- Remaining after revalidating release artifacts: 783 commits.
 
 ## Commit Standard
 

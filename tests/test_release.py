@@ -787,6 +787,71 @@ class ReleaseWorkflowTests(unittest.TestCase):
             self.assertNotEqual(lightweight.returncode, 0)
             self.assertIn("must be an annotated tag", lightweight.stderr)
 
+    def test_release_checksums_are_revalidated_after_smoke_tests(self) -> None:
+        workflow = (ROOT / ".github/workflows/release.yml").read_text(
+            encoding="utf-8"
+        )
+        smoke_marker = "      - name: Smoke test the portable zipapp\n"
+        verify_marker = "      - name: Revalidate release checksums\n"
+        attest_marker = "      - name: Attest release provenance\n"
+        for marker in (smoke_marker, verify_marker, attest_marker):
+            self.assertIn(marker, workflow)
+        self.assertLess(
+            workflow.index(smoke_marker), workflow.index(verify_marker)
+        )
+        self.assertLess(
+            workflow.index(verify_marker), workflow.index(attest_marker)
+        )
+
+        verify_step = workflow[
+            workflow.index(verify_marker) : workflow.index(attest_marker)
+        ]
+        self.assertIn("        working-directory: dist\n", verify_step)
+        self.assertIn("        run: |\n", verify_step)
+        verify_script = textwrap.dedent(
+            verify_step.split("        run: |\n", 1)[1]
+        )
+        self.assertIn("sha256sum --check SHA256SUMS", verify_script)
+        self.assertIn("shasum -a 256 -c SHA256SUMS", verify_script)
+        self.assertNotIn("--ignore-missing", verify_script)
+        self.assertNotIn("|| true", verify_script)
+
+        with TemporaryDirectory() as tmp:
+            dist = Path(tmp)
+            artifacts = {
+                "repo-scout-1.2.3.pyz": b"portable artifact\n",
+                "repo_scout-1.2.3-py3-none-any.whl": b"wheel artifact\n",
+                "repo_scout-1.2.3.tar.gz": b"source artifact\n",
+            }
+            for name, contents in artifacts.items():
+                (dist / name).write_bytes(contents)
+            manifest = "".join(
+                f"{hashlib.sha256(contents).hexdigest()}  {name}\n"
+                for name, contents in artifacts.items()
+            )
+            (dist / "SHA256SUMS").write_text(manifest, encoding="utf-8")
+
+            verified = subprocess.run(
+                ["bash", "-e"],
+                input=verify_script,
+                cwd=dist,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(verified.returncode, 0, verified.stderr)
+
+            mutated = dist / "repo_scout-1.2.3-py3-none-any.whl"
+            mutated.write_bytes(mutated.read_bytes() + b"post-manifest mutation\n")
+            rejected = subprocess.run(
+                ["bash", "-e"],
+                input=verify_script,
+                cwd=dist,
+                capture_output=True,
+                text=True,
+            )
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn("FAILED", rejected.stdout + rejected.stderr)
+
     def test_release_build_uses_a_force_verified_isolated_toolchain(self) -> None:
         workflow = (ROOT / ".github/workflows/release.yml").read_text(
             encoding="utf-8"

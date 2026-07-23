@@ -2765,3 +2765,21 @@ disposable Python 3.11 source copy also rebuilt the zipapp, wheel, source
 archive, and checksum manifest through the isolated environment. This changes
 publication infrastructure only; it creates no tag, release, customer install,
 demand, payment, or revenue evidence.
+
+## 2026-07-23: Revalidate Release Artifacts At The Attestation Boundary
+
+The isolated release builder wrote `SHA256SUMS` before the wheel and portable
+smoke tests exercised the artifacts. Provenance attestation later consumed that
+manifest without a final byte check, leaving a narrow integrity gap if a
+current or future smoke step changed an artifact after its digest was recorded.
+
+The publishing workflow now revalidates every manifest entry from `dist` after
+both smoke steps and immediately before attestation. It uses `sha256sum` when
+available and the macOS-compatible `shasum` fallback, without ignoring missing
+files or masking a failure. The same manifest then becomes the attestation
+input.
+
+An executable contract extracts the exact workflow script, proves three intact
+artifacts pass, mutates the wheel after manifest creation, and proves the
+release stops. This strengthens paid-CI distribution integrity only; no tag,
+release, customer install, demand, payment, or revenue evidence was created.

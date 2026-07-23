@@ -56,6 +56,12 @@ hosted-runner build packages can no longer satisfy the lock without a verified
 reinstall or remain visible to the package backend. This strengthens paid-CI
 artifact trust without creating a release, install, demand, payment, or revenue
 event.
+After the wheel and portable smoke tests read the built artifacts, the
+publisher now revalidates every manifest entry immediately before passing that
+same `SHA256SUMS` file to provenance attestation. An executable contract proves
+that intact artifacts pass and any post-manifest byte mutation fails closed.
+This protects paid-CI distribution evidence without creating a release,
+customer install, demand, payment, or revenue event.
 The public verification guide reconciles its downloaded-file, checksum, and
 provenance-command counts to the three artifacts defined by the release builder.
 It also resolves the annotated tag's exact source commit and constrains every

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Revalidated every release artifact against `SHA256SUMS` after wheel and
+  zipapp smoke tests and immediately before provenance attestation.
+- Added executable workflow proof that intact artifacts pass while any
+  post-manifest byte mutation stops the release before attestation.
 - Moved the actual tag-time artifact build into a fresh runner-temp Python
   environment instead of trusting packages already present on the hosted
   runner.

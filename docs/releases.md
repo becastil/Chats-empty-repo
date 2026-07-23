@@ -189,7 +189,9 @@ Before publication, the workflow:
    seven commands, verifies every starter-
    recommendation route plus Node policy enforcement, and checks the guarded
    outreach review-to-observed-outcome lifecycle and its privacy boundaries.
-6. Generates deterministic SHA-256 checksums and GitHub provenance attestations.
+6. Revalidates all three built artifacts against the deterministic SHA-256
+   manifest after smoke tests, then submits that same manifest for GitHub
+   provenance attestations.
 7. Creates the GitHub Release, queries the exact published tag through GitHub's
    versioned REST API, and fails unless the release reports `immutable: true`.
 

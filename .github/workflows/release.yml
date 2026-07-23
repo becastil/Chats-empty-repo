@@ -122,6 +122,15 @@ jobs:
           python "dist/repo-scout-${version}.pyz" --help
           python "dist/repo-scout-${version}.pyz" --format json . > "$RUNNER_TEMP/zipapp-snapshot.json"
 
+      - name: Revalidate release checksums
+        working-directory: dist
+        run: |
+          if command -v sha256sum >/dev/null 2>&1; then
+            sha256sum --check SHA256SUMS
+          else
+            shasum -a 256 -c SHA256SUMS
+          fi
+
       - name: Attest release provenance
         uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
         with:
