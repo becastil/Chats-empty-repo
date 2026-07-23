@@ -36,7 +36,9 @@ class SiteDependencyWorkflowContractTests(unittest.TestCase):
             "package-lock.json",
             ".github/dependabot.yml",
             '".github/workflows/**"',
+            "scripts/audit_action_pins.py",
             "tests/dependency-compatibility.test.mjs",
+            "tests/test_action_pin_audit.py",
             "tests/test_dependabot_contract.py",
             "tests/test_site_dependency_workflow.py",
         ):
@@ -73,6 +75,10 @@ class SiteDependencyWorkflowContractTests(unittest.TestCase):
         self.assertIn("persist-credentials: false", workflow)
         self.assertIn('node-version: "22.13.0"', workflow)
         self.assertIn("package-manager-cache: false", workflow)
+        self.assertLess(
+            workflow.index("run: python3 scripts/audit_action_pins.py"),
+            workflow.index(f"uses: {SETUP_NODE_ACTION}"),
+        )
 
         run_commands = re.findall(
             r"^\s+run:\s*(\S.*?)\s*$",
@@ -82,6 +88,7 @@ class SiteDependencyWorkflowContractTests(unittest.TestCase):
         self.assertEqual(
             run_commands,
             [
+                "python3 scripts/audit_action_pins.py",
                 "python3 -m unittest discover -s tests",
                 "npm ci",
                 "npm run audit:dependencies",

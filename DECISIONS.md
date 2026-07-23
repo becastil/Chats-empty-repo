@@ -2635,3 +2635,25 @@ major version preserves the used inputs, or that hosted behavior remains
 compatible. Those remain explicit review decisions backed by upstream and
 hosted evidence. Passing the audit does not merge a proposal, publish or deploy
 the site, create a customer install, or record demand, payment, or revenue.
+
+## 2026-07-23: Run The Action Audit Explicitly In Hosted CI
+
+The repository-wide action audit was executable and covered by the local unit
+suite, but its first push did not select the hosted dependency workflow. The
+audit script and its test were outside that workflow's path filters. Relying
+only on test discovery also meant deleting the test could remove hosted
+enforcement while allowing the remaining suite to pass.
+
+The dependency workflow now watches both audit files on pull requests and
+`main`, in addition to every workflow definition. It invokes the audit directly
+after credential-free checkout and before Node setup or general test discovery,
+then continues through the existing locked install, zero-vulnerability
+dependency check, production build, runtime compatibility tests, and lint. The
+workflow contract requires both trigger paths and the explicit command in that
+order.
+
+This closes the hosted selection and test-deletion gaps without granting write
+permission, exposing secrets, automating upstream pin approval, saving a site
+version, or deploying production. A passing run proves only that the reviewed
+repository surfaces remain internally consistent; it is not customer usage,
+demand, payment, or revenue evidence.

@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 210 of
-1,000, with 790 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 211 of
+1,000, with 789 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -113,6 +113,10 @@ alignment take priority over commit volume.
   refs, missing exact release annotations, split identities for one action, and
   dogfood/customer action-sequence drift, including the previously uncovered
   pilot-intake pins.
+- Direct hosted enforcement of that action audit whenever its script, test, or
+  any workflow changes. The dependency job invokes the audit before Node setup
+  and general test discovery, so deleting its test cannot silently remove the
+  paid-CI supply-chain gate.
 - Tag-driven wheel and source releases with strict version alignment and exact artifact validation.
 - Hash-locked release build tooling, deterministic SHA-256 manifests, and clean-environment command smoke tests.
 - GitHub build-provenance attestations and immutable-action release automation.

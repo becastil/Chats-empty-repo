@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after auditing every hosted and customer action pin: 210 / 1,000 (21.0%).
-- Remaining after auditing every hosted and customer action pin: 790 commits.
+- Progress after enforcing the action audit in hosted CI: 211 / 1,000 (21.1%).
+- Remaining after enforcing the action audit in hosted CI: 789 commits.
 
 ## Commit Standard
 

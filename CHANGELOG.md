@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Wired the action-pin audit script and test into the hosted dependency
+  workflow's pull-request and `main` path filters.
+- Invoked the audit explicitly before Node setup and general test discovery so
+  deleting or renaming its unit contract cannot silently disable hosted pin
+  enforcement.
 - Added a repository-wide immutable-action audit for all 15 external references
   across the five hosted workflows and copy-ready customer gate, including the
   previously uncovered pilot-intake pins.

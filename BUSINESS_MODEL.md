@@ -308,6 +308,12 @@ covers the pilot-intake pins that had no direct identity contract and makes
 future partial Dependabot proposals fail closed. Repository consistency does
 not verify an upstream tag, establish input or runtime compatibility, approve
 an upgrade, or create customer, demand, payment, or revenue evidence.
+The hosted dependency contract invokes this audit explicitly before Node setup
+and general test discovery, and runs when either the audit script or its unit
+contract changes. Removing the discoverable test therefore cannot silently
+bypass the paid-CI supply-chain gate. The job remains read-only and secret-free,
+and a passing run remains maintenance evidence rather than customer or revenue
+evidence.
 The audit also requires exactly one $299 USD founding-team service at the
 production pilot section and at least one website-attributed link to the public
 application form. This detects a broken paid conversion path; it does not submit
