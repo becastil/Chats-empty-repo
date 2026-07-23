@@ -5,15 +5,21 @@ on:
     paths:
       - package.json
       - package-lock.json
+      - .github/dependabot.yml
+      - ".github/workflows/**"
       - tests/dependency-compatibility.test.mjs
-      - .github/workflows/site-dependencies.yml
+      - tests/test_dependabot_contract.py
+      - tests/test_site_dependency_workflow.py
   push:
     branches: [main]
     paths:
       - package.json
       - package-lock.json
+      - .github/dependabot.yml
+      - ".github/workflows/**"
       - tests/dependency-compatibility.test.mjs
-      - .github/workflows/site-dependencies.yml
+      - tests/test_dependabot_contract.py
+      - tests/test_site_dependency_workflow.py
   schedule:
     - cron: "23 15 * * 1"
   workflow_dispatch:
@@ -41,6 +47,9 @@ jobs:
         with:
           node-version: "22.13.0"
           package-manager-cache: false
+
+      - name: Validate repository contracts
+        run: python3 -m unittest discover -s tests
 
       - name: Install locked dependencies
         run: npm ci

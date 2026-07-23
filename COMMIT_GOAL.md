@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after enforcing the site dependency contract in hosted CI: 206 / 1,000 (20.6%).
-- Remaining after enforcing the site dependency contract in hosted CI: 794 commits.
+- Progress after enabling bounded dependency update proposals: 207 / 1,000 (20.7%).
+- Remaining after enabling bounded dependency update proposals: 793 commits.
 
 ## Commit Standard
 

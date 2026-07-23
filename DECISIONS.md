@@ -2544,3 +2544,25 @@ the public site remains on `v0.3.50` behind the existing owner-approval gate.
 The hosted contract reduces the chance that vulnerable buyer-path dependencies
 reach that gate; neither a passing run nor a saved version is evidence of a
 visit, install, pilot request, payment, or revenue.
+
+## 2026-07-23: Turn Dependency Findings Into Bounded Review Proposals
+
+The hosted contract detects newly disclosed dependency risk, but repository
+vulnerability alerts and automated security-fix proposals were disabled. A
+failed weekly audit would therefore still depend on a maintainer noticing the
+run, identifying the affected transitive path, and manually preparing an update
+before the buyer path could recover.
+
+Repository vulnerability alerts and automated security fixes are now enabled.
+The committed Dependabot policy groups all npm security updates while setting
+the npm version-update limit to zero, so ordinary package releases do not flood
+the commercial execution queue. Pinned GitHub Actions are checked weekly;
+minor and patch changes are grouped, while at most two version-update pull
+requests may remain open. No rule auto-merges, publishes, or deploys anything.
+
+The hosted dependency workflow now runs when either policy, its contract test,
+or any workflow changes. It runs the full repository suite before the clean
+install, zero-vulnerability audit, build, runtime compatibility checks, and
+lint. This turns a supply-chain signal into a bounded, reviewable repair path
+without crossing the public-site approval boundary or pretending maintenance
+is buyer demand, payment, or revenue.

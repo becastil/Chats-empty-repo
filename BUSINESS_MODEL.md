@@ -276,6 +276,14 @@ builds and exercises the patched Sharp and Miniflare path, and lints. It has no
 repository secrets or write permission and cannot save or deploy a site. A
 passing contract protects the buyer path; it does not prove a visit, install,
 pilot request, payment, or revenue.
+Repository vulnerability alerts and automated security-fix proposals are now
+enabled. The committed Dependabot policy disables routine npm version-update
+pull requests while grouping npm security fixes, and checks pinned GitHub
+Actions weekly with at most two open version-update pull requests. Every change
+proposal remains review-only and triggers the dependency contract; nothing
+auto-merges, saves a Sites version, or deploys production. This shortens
+security response for the buyer path without treating maintenance activity as
+demand or revenue.
 The audit also requires exactly one $299 USD founding-team service at the
 production pilot section and at least one website-attributed link to the public
 application form. This detects a broken paid conversion path; it does not submit

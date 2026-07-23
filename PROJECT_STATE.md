@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 206 of
-1,000, with 794 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 207 of
+1,000, with 793 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -95,6 +95,11 @@ alignment take priority over commit volume.
   exact lock on Node `22.13.0`, requires zero reported vulnerabilities, builds
   and exercises the patched runtime, and lints without repository secrets or
   write permissions.
+- Enabled repository vulnerability alerts and review-only automated security
+  fixes, backed by a low-noise Dependabot policy. npm proposals are grouped and
+  security-only; pinned GitHub Actions updates run weekly, group minor and patch
+  changes, and allow at most two open version-update pull requests. Nothing
+  auto-merges or deploys.
 - Tag-driven wheel and source releases with strict version alignment and exact artifact validation.
 - Hash-locked release build tooling, deterministic SHA-256 manifests, and clean-environment command smoke tests.
 - GitHub build-provenance attestations and immutable-action release automation.

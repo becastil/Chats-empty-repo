@@ -34,8 +34,11 @@ class SiteDependencyWorkflowContractTests(unittest.TestCase):
         for path in (
             "package.json",
             "package-lock.json",
+            ".github/dependabot.yml",
+            '".github/workflows/**"',
             "tests/dependency-compatibility.test.mjs",
-            ".github/workflows/site-dependencies.yml",
+            "tests/test_dependabot_contract.py",
+            "tests/test_site_dependency_workflow.py",
         ):
             self.assertEqual(workflow.count(f"- {path}"), 2, path)
 
@@ -79,6 +82,7 @@ class SiteDependencyWorkflowContractTests(unittest.TestCase):
         self.assertEqual(
             run_commands,
             [
+                "python3 -m unittest discover -s tests",
                 "npm ci",
                 "npm run audit:dependencies",
                 "npm test",

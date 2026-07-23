@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Enabled GitHub vulnerability alerts and automated security-fix pull requests
+  without enabling automatic merges or deployment.
+- Added a contract-tested Dependabot policy that groups npm security updates,
+  disables routine npm version-update noise, and caps weekly pinned-action
+  update proposals at two open pull requests.
+- Extended the hosted site dependency contract to validate the Dependabot and
+  every workflow change through the full repository suite before installing,
+  auditing, building, testing, and linting the site dependency tree.
 - Added a read-only hosted site dependency contract for relevant changes,
   manual checks, and weekly advisory refreshes using immutable checkout and
   Node setup actions.
