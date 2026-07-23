@@ -2,12 +2,18 @@
 
 ## Unreleased
 
+- Advanced every hosted and copy-ready `actions/setup-python` reference to the
+  verified `v7.0.0` commit after confirming the used input and action runtime
+  remain compatible with the existing workflows.
+- Reconciled the major pin with independent customer-example, production-audit,
+  and release expectations after hosted evidence set up Python 3.11.15 and ran
+  the complete verified-wheel policy path successfully.
 - Advanced every hosted and copy-ready `actions/checkout` reference to the
   verified `v7.0.1` commit, carrying its checkout-safety and Git-config fixes
   through the existing immutable-pin contract.
 - Updated all independent workflow, release, and customer-example expectations
-  with the pin so a partial Dependabot edit still fails review; the unrelated
-  `actions/setup-python` major proposal remains separate and unaccepted.
+  with the checkout pin so a partial Dependabot edit still fails review; the
+  setup-python major remained a separate compatibility transaction.
 - Enabled GitHub vulnerability alerts and automated security-fix pull requests
   without enabling automatic merges or deployment.
 - Added a contract-tested Dependabot policy that groups npm security updates,

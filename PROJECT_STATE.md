@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 208 of
-1,000, with 792 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 209 of
+1,000, with 791 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -102,8 +102,12 @@ alignment take priority over commit volume.
   auto-merges or deploys.
 - Advanced `actions/checkout` from `v7.0.0` to the verified full-commit pin for
   `v7.0.1` across all five hosted workflows and the copy-ready customer gate.
-  Executable pin contracts moved with the runtime references, while the
-  separate `actions/setup-python` major proposal remains unaccepted.
+  Executable pin contracts moved with the runtime references.
+- Advanced `actions/setup-python` from `v6.3.0` to the verified full-commit pin
+  for `v7.0.0` across all four Python workflows and the copy-ready customer
+  gate. The used `python-version` input and Node 24 runtime are unchanged, the
+  removed `pip-install` input is unused, and hosted evidence confirms Python
+  3.11.15 through the complete paid-CI activation path.
 - Tag-driven wheel and source releases with strict version alignment and exact artifact validation.
 - Hash-locked release build tooling, deterministic SHA-256 manifests, and clean-environment command smoke tests.
 - GitHub build-provenance attestations and immutable-action release automation.

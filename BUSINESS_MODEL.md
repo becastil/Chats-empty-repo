@@ -288,9 +288,18 @@ The first bounded action review advanced `actions/checkout` to the full commit
 behind `v7.0.1` only after the upstream tag resolved to a GitHub-verified commit
 and every hosted workflow, copy-ready customer example, and executable pin
 expectation moved together. The separately proposed `actions/setup-python`
-major remains unaccepted for an independent compatibility review. This proves
-the proposal queue can preserve paid-CI trust boundaries without auto-merging,
-deploying the site, or creating customer or revenue evidence.
+major was left for an independent compatibility review rather than bundled into
+that patch transaction.
+That review advanced `actions/setup-python` to the full commit behind `v7.0.0`
+after confirming that both versions use Node 24, Repo Scout uses only the
+unchanged `python-version` input, and the removed `pip-install` input appears
+nowhere in its workflows. Hosted proposal evidence set up CPython 3.11.15 and
+completed the verified release download, provenance check, index-free install,
+policy enforcement, rollout upload, and pilot contract. All four hosted Python
+workflows, the copy-ready customer example, and their independent pin contracts
+now accept the same identity. Together these reviews prove the proposal queue
+can preserve paid-CI trust boundaries without auto-merging, deploying the site,
+or creating customer or revenue evidence.
 The audit also requires exactly one $299 USD founding-team service at the
 production pilot section and at least one website-attributed link to the public
 application form. This detects a broken paid conversion path; it does not submit

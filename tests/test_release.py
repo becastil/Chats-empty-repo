@@ -693,7 +693,7 @@ class ReleaseWorkflowTests(unittest.TestCase):
 
         expected_actions = {
             "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
-            "actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1",
+            "actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97",
             "actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373",
         }
         actions = set(
