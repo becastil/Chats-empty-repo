@@ -7,6 +7,7 @@ on:
       - ".github/ISSUE_TEMPLATE/founding-team-pilot.yml"
       - ".github/workflows/pilot-intake.yml"
       - "BUSINESS_MODEL.md"
+      - "DISTRIBUTION.md"
       - "docs/github-actions.md"
       - "docs/pilot-rollout.md"
       - "docs/pilot-tracking.md"
@@ -15,6 +16,7 @@ on:
       - "scripts/audit_pilot_labels.py"
       - "src/repo_scout/pilot_funnel.py"
       - "tests/test_pilot_delivery_contract.py"
+      - "tests/test_pilot_intake_workflow.py"
       - "tests/test_pilot_label_audit.py"
   push:
     branches: [main]
@@ -23,6 +25,7 @@ on:
       - ".github/ISSUE_TEMPLATE/founding-team-pilot.yml"
       - ".github/workflows/pilot-intake.yml"
       - "BUSINESS_MODEL.md"
+      - "DISTRIBUTION.md"
       - "docs/github-actions.md"
       - "docs/pilot-rollout.md"
       - "docs/pilot-tracking.md"
@@ -31,6 +34,7 @@ on:
       - "scripts/audit_pilot_labels.py"
       - "src/repo_scout/pilot_funnel.py"
       - "tests/test_pilot_delivery_contract.py"
+      - "tests/test_pilot_intake_workflow.py"
       - "tests/test_pilot_label_audit.py"
   workflow_dispatch:
 
@@ -56,6 +60,7 @@ jobs:
       - name: Test the pilot intake and delivery contracts
         run: >-
           python -m unittest
+          tests.test_pilot_intake_workflow
           tests.test_pilot_label_audit
           tests.test_pilot_delivery_contract
 

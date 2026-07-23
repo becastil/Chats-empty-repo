@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 211 of
-1,000, with 789 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 212 of
+1,000, with 788 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -60,6 +60,11 @@ alignment take priority over commit volume.
 - Cumulative GitHub labels for lead, qualification, offer, payment, activation, conversion, and loss.
 - A dependency-free live audit and conservative repair command for the seven public pilot lifecycle labels.
 - A dedicated GitHub check that detects intake-label drift without deleting unexpected labels.
+- A dedicated pilot-intake workflow contract covering both trigger blocks,
+  read-only permissions, immutable actions, bounded runtime, exact test and
+  live-label commands, test-before-audit ordering, and the absence of repair,
+  secrets, or failure masking. The workflow runs and watches its own contract
+  plus every commercial document read by the paid-delivery tests.
 - Label-drift warnings and tested $299 pilot / $897 target accounting semantics.
 - Exact `pilot-paid` revenue recognition that keeps later-stage label drift
   visible without treating missing payment evidence as booked revenue.

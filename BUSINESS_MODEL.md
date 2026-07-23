@@ -883,6 +883,15 @@ their color and description, but it never deletes an unexpected `pilot-*`
 label. A dedicated read-only GitHub check catches drift before the public issue
 form and revenue reporter silently disagree. Passing this check proves intake
 configuration readiness only; it does not create a lead or establish demand.
+That hosted check now has a dedicated fail-closed workflow contract covering
+both trigger blocks, read-only permissions, immutable actions, bounded runtime,
+the exact workflow, intake-label, and delivery tests, test-before-live-audit
+ordering, and the absence of repair, secrets, or failure masking. The workflow
+runs and watches its own contract, and watches `DISTRIBUTION.md` because the
+delivery test reads it, so weakening conversion evidence or its protection
+selects the same hosted check.
+This protects conversion infrastructure; it does not submit, qualify, or
+contact a lead and does not create payment or revenue evidence.
 
 Open lead, qualified, and offered issues inactive for seven UTC calendar days
 appear in the funnel's follow-up list. This is an operating prompt based on

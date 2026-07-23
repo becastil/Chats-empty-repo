@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after enforcing the action audit in hosted CI: 211 / 1,000 (21.1%).
-- Remaining after enforcing the action audit in hosted CI: 789 commits.
+- Progress after protecting the hosted pilot-intake workflow: 212 / 1,000 (21.2%).
+- Remaining after protecting the hosted pilot-intake workflow: 788 commits.
 
 ## Commit Standard
 

@@ -2657,3 +2657,26 @@ permission, exposing secrets, automating upstream pin approval, saving a site
 version, or deploying production. A passing run proves only that the reviewed
 repository surfaces remain internally consistent; it is not customer usage,
 demand, payment, or revenue evidence.
+
+## 2026-07-23: Contract-Test The Public Pilot Intake Workflow
+
+The public issue form, delivery documents, label definitions, and funnel logic
+already selected a read-only hosted check. The workflow itself had no dedicated
+contract, however. A change could weaken its trigger coverage, permissions,
+immutable action identities, runtime bound, exact test set, or non-repairing
+live-label command while the underlying unit tests continued to pass locally.
+
+A dedicated workflow contract now requires pull-request, `main`, and manual
+triggers; every intake and delivery dependency in both path blocks; one
+read-only `contents` and `issues` permission map; full action commit pins; a
+two-minute job bound; the exact workflow, label, and delivery test modules
+before the live audit; and the repository token without repository secrets.
+Both trigger blocks include `DISTRIBUTION.md`, which the paid-delivery contract
+reads. Repair mode, failure masking, unapproved events, extra run commands, and
+write permissions remain forbidden. The workflow runs and watches the contract
+file itself on both code paths.
+
+This protects the existing public conversion path without adding another
+acquisition asset, making a qualification decision, changing a label, or
+contacting anyone. A passing contract proves intake infrastructure consistency,
+not a lead, demand, payment, or revenue.

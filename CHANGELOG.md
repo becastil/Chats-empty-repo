@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added a dedicated fail-closed contract for the public pilot-intake workflow's
+  triggers, read-only permissions, immutable actions, bounded runtime, exact
+  tests, and non-repairing live-label audit.
+- Made the hosted command run that contract itself and added the contract plus
+  `DISTRIBUTION.md` to both path filters so changing conversion evidence or its
+  protection selects the same hosted check.
 - Wired the action-pin audit script and test into the hosted dependency
   workflow's pull-request and `main` path filters.
 - Invoked the audit explicitly before Node setup and general test discovery so
