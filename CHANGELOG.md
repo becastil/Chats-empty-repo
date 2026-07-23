@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Moved the actual tag-time artifact build into a fresh runner-temp Python
+  environment instead of trusting packages already present on the hosted
+  runner.
+- Required forced hash verification, a clean dependency check, and the same
+  isolated interpreter for portable, wheel, source, and checksum generation.
 - Required the publishing workflow to reject lightweight release tags and
   annotated tags whose peeled commit differs from the GitHub push commit before
   main ancestry, tests, builds, attestations, or publication.

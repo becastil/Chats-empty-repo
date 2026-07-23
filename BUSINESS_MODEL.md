@@ -48,6 +48,14 @@ artifacts on Python 3.11 whenever release inputs change. Candidate artifacts
 remain in runner temp and are neither uploaded nor attested. This moves
 deterministic build failure before tag creation while leaving the tag-only
 publication and immutable-release boundary unchanged.
+The tag-only publisher now repeats that isolation at the release boundary. It
+creates a new runner-temp environment, force-verifies every locked wheel, checks
+dependency compatibility, and uses only that interpreter to build and validate
+the portable CLI, wheel, source archive, and checksum manifest. Ambient
+hosted-runner build packages can no longer satisfy the lock without a verified
+reinstall or remain visible to the package backend. This strengthens paid-CI
+artifact trust without creating a release, install, demand, payment, or revenue
+event.
 The public verification guide reconciles its downloaded-file, checksum, and
 provenance-command counts to the three artifacts defined by the release builder.
 It also resolves the annotated tag's exact source commit and constrains every

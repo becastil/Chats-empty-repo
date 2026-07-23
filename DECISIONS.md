@@ -2743,3 +2743,25 @@ The guard does not create, move, sign, or publish a tag. Maintainers retain the
 human release decision, and the immutable-release check remains the
 post-publication boundary. Passing the guard is distribution-integrity
 evidence, not a release, customer install, demand, payment, or revenue event.
+
+## 2026-07-23: Isolate The Actual Publication Build
+
+The pre-tag workflow force-verified every hash-locked build wheel in a fresh
+virtual environment, but the tag-only publisher still installed into the
+ambient setup-python environment. A matching package already present on the
+runner could satisfy pip without rechecking its artifact hash, and unrelated
+ambient packages remained visible to the no-isolation backend build.
+
+The release job now creates a dedicated runner-temp build environment,
+force-installs the complete hash-locked release requirements, and requires
+`pip check` to report no broken dependencies. The portable builder, package
+builder, and checksum preparer all run through that exact interpreter. The
+separate wheel-smoke environment remains unchanged so installation evidence
+does not share the build environment.
+
+An executable workflow contract requires the fresh environment, forced hash
+verification, dependency check, exact interpreter reuse, and step ordering. A
+disposable Python 3.11 source copy also rebuilt the zipapp, wheel, source
+archive, and checksum manifest through the isolated environment. This changes
+publication infrastructure only; it creates no tag, release, customer install,
+demand, payment, or revenue evidence.

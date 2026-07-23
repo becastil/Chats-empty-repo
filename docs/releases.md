@@ -179,8 +179,10 @@ The tag must also exactly match both `project.version` in `pyproject.toml` and
 Before publication, the workflow:
 
 1. Runs the complete Python test suite.
-2. Installs hash-locked release-only build dependencies.
-3. Builds one portable zipapp, one wheel, and one source distribution.
+2. Creates a fresh runner-temp build environment, force-installs every
+   hash-locked release-only dependency, and requires `pip check` to pass.
+3. Uses only that isolated interpreter to build one portable zipapp, one wheel,
+   one source distribution, and the checksum manifest.
 4. Rejects missing, extra, or incorrectly named artifacts.
 5. Runs the zipapp directly, then installs the wheel in a fresh virtual
    environment, reconciles all command versions to the tag, exercises all

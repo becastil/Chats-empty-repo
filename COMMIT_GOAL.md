@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after enforcing annotated release identity: 215 / 1,000 (21.5%).
-- Remaining after enforcing annotated release identity: 785 commits.
+- Progress after isolating the publishing build: 216 / 1,000 (21.6%).
+- Remaining after isolating the publishing build: 784 commits.
 
 ## Commit Standard
 

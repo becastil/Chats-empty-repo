@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 215 of
-1,000, with 785 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 216 of
+1,000, with 784 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -132,6 +132,10 @@ alignment take priority over commit volume.
   fresh virtual environment, checks dependency compatibility, and produces
   candidate wheel, source, portable, and checksum artifacts in runner temp
   whenever release inputs change. It has no publication authority.
+- A matching isolated tag-time build that force-verifies every hash-locked
+  release tool, checks dependency compatibility, and uses only that fresh
+  runner-temp interpreter for the portable, wheel, source, and checksum build
+  before smoke tests, attestations, or publication.
 - GitHub build-provenance attestations and immutable-action release automation.
 - Repository-level release immutability enabled for future publications, with
   executable proof that the release job rejects any exact tagged release whose

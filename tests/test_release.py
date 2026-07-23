@@ -605,9 +605,6 @@ class ReleaseWorkflowTests(unittest.TestCase):
         self.assertIn("persist-credentials: false", workflow)
         self.assertIn("git merge-base --is-ancestor", workflow)
         self.assertIn("python -m unittest discover -s tests", workflow)
-        self.assertIn("pip install --require-hashes", workflow)
-        self.assertIn("python -m build --no-isolation --sdist --wheel", workflow)
-        self.assertIn("python scripts/build_zipapp.py --dist dist", workflow)
         self.assertIn("subject-checksums: dist/SHA256SUMS", workflow)
         self.assertIn('version="${GITHUB_REF_NAME#v}"', workflow)
         self.assertIn(
@@ -789,6 +786,82 @@ class ReleaseWorkflowTests(unittest.TestCase):
             lightweight = run_guard(first_commit)
             self.assertNotEqual(lightweight.returncode, 0)
             self.assertIn("must be an annotated tag", lightweight.stderr)
+
+    def test_release_build_uses_a_force_verified_isolated_toolchain(self) -> None:
+        workflow = (ROOT / ".github/workflows/release.yml").read_text(
+            encoding="utf-8"
+        )
+        install_marker = "      - name: Verify hash-locked build tools\n"
+        zipapp_marker = "      - name: Build portable zipapp\n"
+        package_marker = "      - name: Build wheel and source distribution\n"
+        validate_marker = "      - name: Validate version and write checksums\n"
+        smoke_marker = "      - name: Smoke test the built wheel\n"
+        for marker in (
+            install_marker,
+            zipapp_marker,
+            package_marker,
+            validate_marker,
+            smoke_marker,
+        ):
+            self.assertIn(marker, workflow)
+        self.assertLess(workflow.index(install_marker), workflow.index(zipapp_marker))
+        self.assertLess(workflow.index(zipapp_marker), workflow.index(package_marker))
+        self.assertLess(workflow.index(package_marker), workflow.index(validate_marker))
+        self.assertLess(workflow.index(validate_marker), workflow.index(smoke_marker))
+
+        install_step = workflow[
+            workflow.index(install_marker) : workflow.index(zipapp_marker)
+        ]
+        self.assertIn("        run: |\n", install_step)
+        install_script = textwrap.dedent(
+            install_step.split("        run: |\n", 1)[1]
+        )
+        self.assertIn(
+            'build_venv="$RUNNER_TEMP/repo-scout-release-build"',
+            install_script,
+        )
+        self.assertIn('python -m venv "$build_venv"', install_script)
+        self.assertIn(
+            '"$build_venv/bin/python" -m pip install \\\n',
+            install_script,
+        )
+        self.assertIn("--disable-pip-version-check", install_script)
+        self.assertIn("--require-hashes", install_script)
+        self.assertIn("--force-reinstall", install_script)
+        self.assertIn("-r .github/release-requirements.txt", install_script)
+        self.assertIn(
+            '"$build_venv/bin/python" -m pip check',
+            install_script,
+        )
+        self.assertEqual(install_script.count("pip install"), 1)
+        self.assertNotIn("source ", install_script)
+
+        build_python = (
+            '"$RUNNER_TEMP/repo-scout-release-build/bin/python"'
+        )
+        zipapp_step = workflow[
+            workflow.index(zipapp_marker) : workflow.index(package_marker)
+        ]
+        package_step = workflow[
+            workflow.index(package_marker) : workflow.index(validate_marker)
+        ]
+        validate_step = workflow[
+            workflow.index(validate_marker) : workflow.index(smoke_marker)
+        ]
+        self.assertIn(
+            f"{build_python}\n          scripts/build_zipapp.py --dist dist",
+            zipapp_step,
+        )
+        self.assertIn(
+            f"{build_python} -m build\n"
+            "          --no-isolation --sdist --wheel --outdir dist",
+            package_step,
+        )
+        self.assertIn(
+            f"{build_python}\n          scripts/prepare_release.py",
+            validate_step,
+        )
+        self.assertEqual(workflow.count(build_python), 3)
 
     def test_release_publication_requires_immutable_release_evidence(self) -> None:
         workflow = (ROOT / ".github/workflows/release.yml").read_text(
