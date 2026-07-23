@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after validating the setup-python major action pin: 209 / 1,000 (20.9%).
-- Remaining after validating the setup-python major action pin: 791 commits.
+- Progress after auditing every hosted and customer action pin: 210 / 1,000 (21.0%).
+- Remaining after auditing every hosted and customer action pin: 790 commits.
 
 ## Commit Standard
 

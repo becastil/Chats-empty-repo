@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 209 of
-1,000, with 791 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 210 of
+1,000, with 790 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -108,6 +108,11 @@ alignment take priority over commit volume.
   gate. The used `python-version` input and Node 24 runtime are unchanged, the
   removed `pip-install` input is unused, and hosted evidence confirms Python
   3.11.15 through the complete paid-CI activation path.
+- A repository-wide action-pin audit covering all 15 external references across
+  the five hosted workflows and copy-ready customer gate. It rejects mutable
+  refs, missing exact release annotations, split identities for one action, and
+  dogfood/customer action-sequence drift, including the previously uncovered
+  pilot-intake pins.
 - Tag-driven wheel and source releases with strict version alignment and exact artifact validation.
 - Hash-locked release build tooling, deterministic SHA-256 manifests, and clean-environment command smoke tests.
 - GitHub build-provenance attestations and immutable-action release automation.
@@ -455,6 +460,7 @@ alignment take priority over commit volume.
 curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.51/repo-scout-0.3.51.pyz -o /tmp/repo-scout.pyz
 python3 /tmp/repo-scout.pyz --languages .
 python3 -m unittest discover -s tests
+python3 scripts/audit_action_pins.py
 python3 scripts/audit_pilot_labels.py --repo becastil/Chats-empty-repo
 ```
 

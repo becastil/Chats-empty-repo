@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added a repository-wide immutable-action audit for all 15 external references
+  across the five hosted workflows and copy-ready customer gate, including the
+  previously uncovered pilot-intake pins.
+- Required full lowercase commit SHAs, exact semantic release annotations, one
+  identity per action, and matching dogfood/customer action sequences so future
+  partial Dependabot proposals fail without automating upstream approval.
 - Advanced every hosted and copy-ready `actions/setup-python` reference to the
   verified `v7.0.0` commit after confirming the used input and action runtime
   remain compatible with the existing workflows.

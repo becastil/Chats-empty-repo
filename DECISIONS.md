@@ -2611,3 +2611,27 @@ outside their normal boundaries; their unchanged input and exact action identity
 remain statically contract-tested until those jobs next run normally.
 This closes the bounded action-review queue without auto-merging, publishing,
 deploying, creating a customer install, or recording demand or revenue.
+
+## 2026-07-23: Audit Every Action Surface Without Automating Approval
+
+The checkout and setup-python reviews proved that independent pin expectations
+can stop partial Dependabot proposals. Those exact contracts covered 13 of the
+15 external action references, however. The checkout and Python setup steps in
+the hosted pilot-intake workflow had no direct action-identity contract, so a
+maintainer could reconcile every previously tested surface while leaving that
+paid-conversion workflow stale.
+
+A repository-wide audit now discovers external `uses:` references in all five
+hosted workflows and the copy-ready customer gate. Every reference must use a
+40-character lowercase commit SHA and one exact semantic release annotation.
+One action cannot resolve to multiple SHA/version identities anywhere in those
+surfaces, and the dogfood and customer policy gates must retain the same action
+sequence. The existing action-specific contracts still assert the exact
+accepted commits and workflow behavior.
+
+The audit deliberately does not update pins or contact GitHub. A consistent
+repository cannot prove that a tag resolves to the expected commit, that a
+major version preserves the used inputs, or that hosted behavior remains
+compatible. Those remain explicit review decisions backed by upstream and
+hosted evidence. Passing the audit does not merge a proposal, publish or deploy
+the site, create a customer install, or record demand, payment, or revenue.

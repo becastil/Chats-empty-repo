@@ -300,6 +300,14 @@ workflows, the copy-ready customer example, and their independent pin contracts
 now accept the same identity. Together these reviews prove the proposal queue
 can preserve paid-CI trust boundaries without auto-merging, deploying the site,
 or creating customer or revenue evidence.
+A repository-wide action-pin audit now discovers every external `uses:`
+reference across all five hosted workflows and the copy-ready customer gate.
+It rejects mutable refs, missing exact release annotations, multiple accepted
+identities for one action, and dogfood/customer action-sequence drift. This
+covers the pilot-intake pins that had no direct identity contract and makes
+future partial Dependabot proposals fail closed. Repository consistency does
+not verify an upstream tag, establish input or runtime compatibility, approve
+an upgrade, or create customer, demand, payment, or revenue evidence.
 The audit also requires exactly one $299 USD founding-team service at the
 production pilot section and at least one website-attributed link to the public
 application form. This detects a broken paid conversion path; it does not submit
