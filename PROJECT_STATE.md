@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 207 of
-1,000, with 793 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 208 of
+1,000, with 792 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -100,6 +100,10 @@ alignment take priority over commit volume.
   security-only; pinned GitHub Actions updates run weekly, group minor and patch
   changes, and allow at most two open version-update pull requests. Nothing
   auto-merges or deploys.
+- Advanced `actions/checkout` from `v7.0.0` to the verified full-commit pin for
+  `v7.0.1` across all five hosted workflows and the copy-ready customer gate.
+  Executable pin contracts moved with the runtime references, while the
+  separate `actions/setup-python` major proposal remains unaccepted.
 - Tag-driven wheel and source releases with strict version alignment and exact artifact validation.
 - Hash-locked release build tooling, deterministic SHA-256 manifests, and clean-environment command smoke tests.
 - GitHub build-provenance attestations and immutable-action release automation.

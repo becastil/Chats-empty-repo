@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "site-dependencies.yml"
 
 CHECKOUT_ACTION = (
-    "actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0"
+    "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1"
 )
 SETUP_NODE_ACTION = (
     "actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e"

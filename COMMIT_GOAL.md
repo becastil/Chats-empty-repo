@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after enabling bounded dependency update proposals: 207 / 1,000 (20.7%).
-- Remaining after enabling bounded dependency update proposals: 793 commits.
+- Progress after advancing the reviewed checkout action pin: 208 / 1,000 (20.8%).
+- Remaining after advancing the reviewed checkout action pin: 792 commits.
 
 ## Commit Standard
 

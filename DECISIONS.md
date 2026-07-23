@@ -2566,3 +2566,23 @@ install, zero-vulnerability audit, build, runtime compatibility checks, and
 lint. This turns a supply-chain signal into a bounded, reviewable repair path
 without crossing the public-site approval boundary or pretending maintenance
 is buyer demand, payment, or revenue.
+
+## 2026-07-23: Advance Action Pins Only Through Their Full Contract
+
+The first weekly action proposals demonstrated the intended review boundary.
+Dependabot changed the runtime workflow references, while independent tests and
+the copy-ready customer gate retained the previously accepted identities and
+made the hosted dependency contract fail. That failure was evidence of a
+partial update, not permission to weaken the expectations or merge around them.
+
+The `actions/checkout` patch was reviewed first because `v7.0.1` retains the
+same major interface while adding checkout-safety and Git-config handling fixes.
+Its upstream tag resolves to GitHub-verified commit
+`3d3c42e5aac5ba805825da76410c181273ba90b1`. All five hosted workflows, the
+customer example, and four executable pin expectations now accept that exact
+identity together. The unrelated `actions/setup-python` 7 major proposal stays
+open for a separate compatibility decision.
+
+This keeps action updates bounded, reviewable, and fail-closed across the paid
+CI activation surface. It does not auto-merge a proposal, publish or deploy the
+site, establish customer use, or create demand, payment, or revenue evidence.

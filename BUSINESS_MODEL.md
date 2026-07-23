@@ -284,6 +284,13 @@ proposal remains review-only and triggers the dependency contract; nothing
 auto-merges, saves a Sites version, or deploys production. This shortens
 security response for the buyer path without treating maintenance activity as
 demand or revenue.
+The first bounded action review advanced `actions/checkout` to the full commit
+behind `v7.0.1` only after the upstream tag resolved to a GitHub-verified commit
+and every hosted workflow, copy-ready customer example, and executable pin
+expectation moved together. The separately proposed `actions/setup-python`
+major remains unaccepted for an independent compatibility review. This proves
+the proposal queue can preserve paid-CI trust boundaries without auto-merging,
+deploying the site, or creating customer or revenue evidence.
 The audit also requires exactly one $299 USD founding-team service at the
 production pilot section and at least one website-attributed link to the public
 application form. This detects a broken paid conversion path; it does not submit

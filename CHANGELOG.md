@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Advanced every hosted and copy-ready `actions/checkout` reference to the
+  verified `v7.0.1` commit, carrying its checkout-safety and Git-config fixes
+  through the existing immutable-pin contract.
+- Updated all independent workflow, release, and customer-example expectations
+  with the pin so a partial Dependabot edit still fails review; the unrelated
+  `actions/setup-python` major proposal remains separate and unaccepted.
 - Enabled GitHub vulnerability alerts and automated security-fix pull requests
   without enabling automatic merges or deployment.
 - Added a contract-tested Dependabot policy that groups npm security updates,

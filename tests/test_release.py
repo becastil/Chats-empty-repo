@@ -692,7 +692,7 @@ class ReleaseWorkflowTests(unittest.TestCase):
         self.assertNotIn("|| true", workflow)
 
         expected_actions = {
-            "actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0",
+            "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
             "actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1",
             "actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373",
         }
