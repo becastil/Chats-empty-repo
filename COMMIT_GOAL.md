@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after self-testing the production audit: 224 / 1,000 (22.4%).
-- Remaining after self-testing the production audit: 776 commits.
+- Progress after binding the visible production download: 225 / 1,000 (22.5%).
+- Remaining after binding the visible production download: 775 commits.
 
 ## Commit Standard
 

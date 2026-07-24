@@ -173,6 +173,11 @@ def audit_production_html(
         raise ProductionSiteAuditError(
             "free software offer must use price 0 and the current download URL"
         )
+    if expected_download not in parser.anchor_urls:
+        raise ProductionSiteAuditError(
+            "production must link to the current portable release: "
+            f"{expected_download}"
+        )
 
     if len(services) != 1:
         raise ProductionSiteAuditError(
@@ -220,6 +225,7 @@ def audit_production_html(
         "canonical",
         "software-version",
         "download-url",
+        "download-link",
         "free-offer",
         "paid-service",
         "pilot-application",

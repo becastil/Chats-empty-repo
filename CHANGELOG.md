@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Required the production audit to find the current portable release in a
+  visitor-visible link, with controlled failures for missing or stale anchors
+  even when the structured download metadata remains current.
 - Required the daily production-site workflow to run its workflow contract and
   complete auditor behavior suite before trusting the live release, $299
   service, or pilot-application checks.

@@ -2926,3 +2926,20 @@ drift.
 This strengthens the existing buyer-path monitor without changing or deploying
 the site. A passing self-test or live audit is operational evidence only; it is
 not a visit, pilot request, payment, or revenue event.
+
+## 2026-07-24: Audit The Visible Production Download
+
+The production audit reconciled the current portable release only through
+`SoftwareApplication.downloadUrl` and its structured free offer. Those fields
+could remain correct while the visitor-facing anchor was removed or left on an
+older release, allowing the monitored buyer path to pass without offering a
+clickable current download.
+
+The audit now requires the exact current portable release URL among the page's
+anchors and reports that check separately from structured metadata. Regression
+tests reject both missing and stale visible links while holding the structured
+release identity current.
+
+This closes an activation-path blind spot without changing or deploying the
+site. The saved Sites version remains subject to explicit owner approval, and a
+passing audit creates no visit, pilot request, payment, or revenue evidence.

@@ -38,11 +38,14 @@ def page(
     pilot_price: str = "299",
     pilot_service_count: int = 1,
     pilot_application_url: str | None = PILOT_APPLICATION_URL,
+    include_download_link: bool = True,
+    visible_download_url: str | None = None,
 ) -> str:
     resolved_download = download_url or (
         "https://github.com/becastil/Chats-empty-repo/releases/download/"
         f"v{software_version}/repo-scout-{software_version}.pyz"
     )
+    resolved_visible_download = visible_download_url or resolved_download
     software = {
         "@type": "SoftwareApplication",
         "url": canonical_url,
@@ -80,12 +83,19 @@ def page(
             "Apply for the Repo Scout Founding Team Pilot"
             "</a>"
         )
+    download_link = ""
+    if include_download_link:
+        download_link = (
+            f'<a href="{escape(resolved_visible_download, quote=True)}">'
+            f"Download v{software_version}"
+            "</a>"
+        )
     return (
         "<!doctype html><html><head>"
         f'<link rel="canonical" href="{canonical_url}">'
         '<script type="application/ld+json">'
         f"{json.dumps(structured_data)}"
-        f"</script></head><body>{pilot_application_link}</body></html>"
+        f"</script></head><body>{download_link}{pilot_application_link}</body></html>"
     )
 
 
@@ -103,6 +113,7 @@ class ProductionSiteAuditTests(unittest.TestCase):
                 "canonical",
                 "software-version",
                 "download-url",
+                "download-link",
                 "free-offer",
                 "paid-service",
                 "pilot-application",
@@ -188,6 +199,29 @@ class ProductionSiteAuditTests(unittest.TestCase):
                 expected_version=VERSION,
             )
 
+    def test_rejects_missing_or_stale_visible_download_link(self) -> None:
+        stale_download = (
+            "https://github.com/becastil/Chats-empty-repo/releases/download/"
+            "v0.3.44/repo-scout-0.3.44.pyz"
+        )
+        cases = (
+            ("missing", {"include_download_link": False}),
+            ("stale", {"visible_download_url": stale_download}),
+        )
+        for label, page_options in cases:
+            with (
+                self.subTest(case=label),
+                self.assertRaisesRegex(
+                    audit_production_site.ProductionSiteAuditError,
+                    "current portable release",
+                ),
+            ):
+                audit_production_site.audit_production_html(
+                    page(**page_options),
+                    production_url=URL,
+                    expected_version=VERSION,
+                )
+
     def test_rejects_missing_structured_software_offer(self) -> None:
         html = f'<link rel="canonical" href="{URL}">'
         with self.assertRaisesRegex(
@@ -213,6 +247,7 @@ class ProductionSiteAuditTests(unittest.TestCase):
         self.assertEqual(result, 0)
         self.assertIn("version=0.3.51", stdout.getvalue())
         self.assertIn("software-version", stdout.getvalue())
+        self.assertIn("download-link", stdout.getvalue())
         self.assertIn("paid-service", stdout.getvalue())
         self.assertIn("pilot-application", stdout.getvalue())
 
