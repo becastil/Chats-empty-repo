@@ -2979,3 +2979,27 @@ rejects every wildcard in that step.
 This makes final upload authority match the checksummed and attested artifact
 set. It does not create a tag, release, customer install, demand, payment, or
 revenue evidence.
+
+## 2026-07-24: Repair Newly Disclosed Buyer-Path Dependency Risk Without Audit Suppression
+
+The exact-SHA hosted checks for the release-publication change selected the site
+dependency contract. That contract failed on two high-severity denial-of-service
+advisories reviewed by GitHub on July 24: the installed React Server Components
+19.2 line before `19.2.8`, and every `brace-expansion` release through `5.0.7`.
+The second finding reached both ESLint and TypeScript lint paths. This was
+current supply-chain evidence, not a flaky runner or permission to omit
+development dependencies from `npm audit`.
+
+React, React DOM, and `react-server-dom-webpack` now use `19.2.8`.
+`brace-expansion` is pinned to its only patched release, `5.0.8`. Because the
+legacy `eslint-config-next` bundle still required minimatch lines that could not
+consume that release, it was replaced with direct ESLint 10, TypeScript, React
+Hooks, and official Next core-web-vitals rule sets. The executable lock contract
+requires those exact packages, rejects the legacy bundle, and proves every
+resolved `brace-expansion` copy is `5.0.8`.
+
+A fresh lock install reports zero vulnerabilities and passes the production
+build, eight site and runtime tests, lint, 299 Python tests, and the immutable
+action-pin audit. Sites version 47 contains the prior vulnerable lock and is
+therefore superseded before deployment. No Sites version was saved or deployed,
+and no visit, pilot request, payment, or revenue evidence was created.

@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after binding exact release uploads: 227 / 1,000 (22.7%).
-- Remaining after binding exact release uploads: 773 commits.
+- Progress after remediating hosted dependency advisories: 228 / 1,000 (22.8%).
+- Remaining after remediating hosted dependency advisories: 772 commits.
 
 ## Commit Standard
 

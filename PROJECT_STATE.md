@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 227 of
-1,000, with 773 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 228 of
+1,000, with 772 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -94,11 +94,12 @@ alignment take priority over commit volume.
   source to the existing Sites project, keeps saved versions distinct from live
   production, requires explicit owner approval, and immediately audits a
   successful publish. Sites version 46 is superseded and must not be published.
-- A zero-vulnerability site dependency lock with a supported Next security
-  patch, current Cloudflare and Vite build tooling, advisory-fixed PostCSS and
-  Sharp overrides, and a release-handoff audit covering the complete install.
-  The exact security-hardened source commit is saved as Sites version 47;
-  production is unchanged.
+- A zero-vulnerability site dependency lock with Next `16.2.11`, React and
+  React Server Components `19.2.8`, `brace-expansion` `5.0.8`, current
+  Cloudflare and Vite tooling, and advisory-fixed PostCSS and Sharp overrides.
+  Direct ESLint 10, TypeScript, React Hooks, and Next rule sets preserve linting
+  without the vulnerable legacy config bundle. Sites version 47 contains the
+  prior lock and is superseded; production is unchanged.
 - A read-only hosted site dependency contract that runs on relevant lock and
   workflow changes, manual dispatch, and a weekly schedule. It installs the
   exact lock on Node `22.13.0`, requires zero reported vulnerabilities, builds
@@ -513,12 +514,15 @@ python3 scripts/audit_pilot_labels.py --repo becastil/Chats-empty-repo
 
 ## Next Small Task
 
-The public site still advertises `v0.3.50`. Sites version 46 is superseded and
-must not be deployed. Version 47 is the exact-source replacement from audited
-security-hardened commit `4d0053f63a19d7a9113e263d2b1c242c0e2c1d6f`.
-Obtain explicit owner approval, deploy only version 47, and immediately run
-`python3 scripts/audit_production_site.py`. Do not describe the saved version as
-live before both steps pass.
+The public site still advertises `v0.3.50`. Sites versions 46 and 47 are
+superseded and must not be deployed; version 47 predates the July 24 React
+Server Components and `brace-expansion` advisories. Run the deployment handoff
+against the exact patched `main` commit and save only that tested source as a
+new candidate in the existing Sites project. Record its opaque version and
+source identity, but do not deploy it without explicit owner approval. After
+approval, deploy only that replacement and immediately run
+`python3 scripts/audit_production_site.py`; do not describe it as live before
+both steps pass.
 
 Then human-review the first complete owner-only bundle in the ignored private
 workspace, record the decision with its content-bound `--approve-next` or

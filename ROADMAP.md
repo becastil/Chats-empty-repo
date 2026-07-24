@@ -7,6 +7,10 @@
 
 ## Near Term
 
+- Save a new exact-source Sites candidate from the patched `main` dependency
+  lock. Versions 46 and 47 are superseded and must not be deployed. Keep the
+  replacement behind explicit owner approval and the immediate post-deployment
+  production audit.
 - Human-review the five prepared, publicly qualified drafts. The first
   owner-only `--write-review` bundle is ready in the ignored private workspace;
   use its content-bound `--approve-next` or

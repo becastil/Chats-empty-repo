@@ -137,9 +137,33 @@ class ReleaseManifestTests(unittest.TestCase):
         lock = json.loads(
             (ROOT / "package-lock.json").read_text(encoding="utf-8")
         )["packages"]
+        eslint_config = (ROOT / "eslint.config.mjs").read_text(
+            encoding="utf-8"
+        )
 
         self.assertEqual(package["dependencies"]["next"], "16.2.11")
-        self.assertEqual(package["devDependencies"]["eslint-config-next"], "16.2.11")
+        self.assertEqual(package["dependencies"]["react"], "19.2.8")
+        self.assertEqual(package["dependencies"]["react-dom"], "19.2.8")
+        self.assertEqual(
+            package["devDependencies"]["react-server-dom-webpack"],
+            "19.2.8",
+        )
+        self.assertEqual(package["devDependencies"]["eslint"], "10.8.0")
+        self.assertEqual(package["devDependencies"]["@eslint/js"], "10.0.1")
+        self.assertEqual(
+            package["devDependencies"]["@next/eslint-plugin-next"],
+            "16.2.11",
+        )
+        self.assertEqual(
+            package["devDependencies"]["eslint-plugin-react-hooks"],
+            "7.1.1",
+        )
+        self.assertEqual(package["devDependencies"]["globals"], "17.7.0")
+        self.assertEqual(
+            package["devDependencies"]["typescript-eslint"],
+            "8.65.0",
+        )
+        self.assertNotIn("eslint-config-next", package["devDependencies"])
         self.assertEqual(
             package["devDependencies"]["@cloudflare/vite-plugin"],
             "1.46.0",
@@ -152,9 +176,27 @@ class ReleaseManifestTests(unittest.TestCase):
         )
         self.assertEqual(
             package["overrides"],
-            {"postcss": "8.5.22", "sharp": "0.35.3"},
+            {
+                "brace-expansion": "5.0.8",
+                "postcss": "8.5.22",
+                "sharp": "0.35.3",
+            },
         )
         self.assertEqual(lock["node_modules/next"]["version"], "16.2.11")
+        self.assertEqual(lock["node_modules/react"]["version"], "19.2.8")
+        self.assertEqual(lock["node_modules/react-dom"]["version"], "19.2.8")
+        self.assertEqual(
+            lock["node_modules/react-server-dom-webpack"]["version"],
+            "19.2.8",
+        )
+        self.assertEqual(lock["node_modules/eslint"]["version"], "10.8.0")
+        brace_versions = {
+            metadata["version"]
+            for path, metadata in lock.items()
+            if path.endswith("node_modules/brace-expansion")
+        }
+        self.assertEqual(brace_versions, {"5.0.8"})
+        self.assertNotIn("node_modules/eslint-config-next", lock)
         self.assertEqual(lock["node_modules/postcss"]["version"], "8.5.22")
         self.assertEqual(lock["node_modules/sharp"]["version"], "0.35.3")
         self.assertEqual(
@@ -162,6 +204,22 @@ class ReleaseManifestTests(unittest.TestCase):
             "^8.5.17",
         )
         self.assertNotIn("node_modules/next/node_modules/postcss", lock)
+        for dependency in (
+            "@eslint/js",
+            "@next/eslint-plugin-next",
+            "eslint-plugin-react-hooks",
+            "globals",
+            "typescript-eslint",
+        ):
+            self.assertIn(f'from "{dependency}"', eslint_config)
+        self.assertIn("js.configs.recommended", eslint_config)
+        self.assertIn("tseslint.configs.recommended", eslint_config)
+        self.assertIn("reactHooks.configs.flat.recommended", eslint_config)
+        self.assertIn(
+            'nextPlugin.configs["core-web-vitals"]',
+            eslint_config,
+        )
+        self.assertNotIn("eslint-config-next", eslint_config)
 
     def test_release_verification_docs_cover_every_artifact(self) -> None:
         documentation = (ROOT / "docs" / "releases.md").read_text(

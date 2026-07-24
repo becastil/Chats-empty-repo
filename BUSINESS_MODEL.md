@@ -332,10 +332,12 @@ the existing Sites project, explicit owner approval before public deployment,
 and an immediate live audit afterward. The audited lock advances Next to its
 `16.2.11` security patch, current supported Cloudflare and Vite tooling, and
 advisory-fixed PostCSS and Sharp releases without changing the offer. Sites
-version 46 is superseded; exact security-hardened commit `4d0053f` is saved as
-version 47, while production remains on `v0.3.50` until approval and deployment
-succeed. A clean audit or saved version is not a visitor, customer activation,
-demand, payment, or revenue event.
+version 46 is superseded; exact-source commit `4d0053f` was saved as version 47,
+but newly published July 24 dependency advisories supersede that undeployed
+candidate too. Production remains on `v0.3.50` until a newly tested replacement
+is saved, explicitly approved, deployed, and audited. A clean audit or saved
+version is not a visitor, customer activation, demand, payment, or revenue
+event.
 A separate read-only hosted dependency contract runs for relevant lock and
 workflow changes, on manual dispatch, and weekly so a newly published advisory
 does not wait for another package edit. It uses the minimum supported Node
@@ -344,6 +346,15 @@ builds and exercises the patched Sharp and Miniflare path, and lints. It has no
 repository secrets or write permission and cannot save or deploy a site. A
 passing contract protects the buyer path; it does not prove a visit, install,
 pilot request, payment, or revenue.
+That hosted contract caught high-severity denial-of-service advisories in React
+Server Components and every installed pre-`5.0.8` `brace-expansion` line on the
+day GitHub reviewed them. The repaired lock advances React, React DOM, and the
+server-components package to `19.2.8`, pins `brace-expansion` `5.0.8`, and
+replaces the legacy lint bundle with direct ESLint 10, TypeScript, React Hooks,
+and Next rule sets. The complete lock still receives an unsuppressed
+zero-vulnerability audit, build, runtime compatibility test, and lint check.
+This is operational protection for the paid buyer path, not evidence of demand,
+payment, or revenue.
 Repository vulnerability alerts and automated security-fix proposals are now
 enabled. The committed Dependabot policy disables routine npm version-update
 pull requests while grouping npm security fixes, and checks pinned GitHub

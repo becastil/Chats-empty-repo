@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Remediated newly published high-severity React Server Components and
+  `brace-expansion` denial-of-service advisories without suppressing the full
+  dependency audit, and replaced the legacy Next lint bundle with direct
+  ESLint 10, TypeScript, React Hooks, and Next rule sets.
 - Bound the final GitHub Release upload to the exact tag-derived wheel, source
   archive, and portable CLI names, with executable proof that no artifact glob
   can widen the checksummed and attested publication set.
