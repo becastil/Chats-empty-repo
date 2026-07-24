@@ -945,9 +945,11 @@ That hosted check now has a dedicated fail-closed workflow contract covering
 both trigger blocks, read-only permissions, immutable actions, bounded runtime,
 the exact workflow, intake-label, and delivery tests, test-before-live-audit
 ordering, and the absence of repair, secrets, or failure masking. The workflow
-runs and watches its own contract, and watches `DISTRIBUTION.md` because the
-delivery test reads it, so weakening conversion evidence or its protection
-selects the same hosted check.
+runs the complete pilot-funnel behavioral suite before the live label audit,
+including direct proof that annual conversion requires explicit payment. Both
+trigger blocks watch that suite and its revenue fixture, while
+`DISTRIBUTION.md` remains watched because the delivery test reads it, so
+weakening conversion evidence or its protection selects the same hosted check.
 This protects conversion infrastructure; it does not submit, qualify, or
 contact a lead and does not create payment or revenue evidence.
 

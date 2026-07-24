@@ -15,7 +15,9 @@ on:
       - "pyproject.toml"
       - "scripts/audit_pilot_labels.py"
       - "src/repo_scout/pilot_funnel.py"
+      - "tests/fixtures/pilot_issues.json"
       - "tests/test_pilot_delivery_contract.py"
+      - "tests/test_pilot_funnel.py"
       - "tests/test_pilot_intake_workflow.py"
       - "tests/test_pilot_label_audit.py"
   push:
@@ -33,7 +35,9 @@ on:
       - "pyproject.toml"
       - "scripts/audit_pilot_labels.py"
       - "src/repo_scout/pilot_funnel.py"
+      - "tests/fixtures/pilot_issues.json"
       - "tests/test_pilot_delivery_contract.py"
+      - "tests/test_pilot_funnel.py"
       - "tests/test_pilot_intake_workflow.py"
       - "tests/test_pilot_label_audit.py"
   workflow_dispatch:
@@ -63,6 +67,7 @@ jobs:
           tests.test_pilot_intake_workflow
           tests.test_pilot_label_audit
           tests.test_pilot_delivery_contract
+          tests.test_pilot_funnel
 
       - name: Audit live pilot labels
         env:

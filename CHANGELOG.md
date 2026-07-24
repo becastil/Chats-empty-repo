@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added the complete pilot-funnel behavioral suite to the dedicated hosted
+  intake contract before its live label audit, and added both the suite and its
+  revenue fixture to pull-request and `main` trigger paths.
 - Made release checksum publication reject symlinked or other non-regular
   `SHA256SUMS` paths and replace regular manifests through a flushed,
   same-directory staging file, preserving the prior manifest when atomic

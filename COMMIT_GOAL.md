@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after hardening release manifest writes: 222 / 1,000 (22.2%).
-- Remaining after hardening release manifest writes: 778 commits.
+- Progress after enforcing hosted funnel behavior: 223 / 1,000 (22.3%).
+- Remaining after enforcing hosted funnel behavior: 777 commits.
 
 ## Commit Standard
 

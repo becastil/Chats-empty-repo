@@ -27,7 +27,9 @@ TRIGGER_PATHS = (
     "pyproject.toml",
     "scripts/audit_pilot_labels.py",
     "src/repo_scout/pilot_funnel.py",
+    "tests/fixtures/pilot_issues.json",
     "tests/test_pilot_delivery_contract.py",
+    "tests/test_pilot_funnel.py",
     "tests/test_pilot_intake_workflow.py",
     "tests/test_pilot_label_audit.py",
 )
@@ -105,7 +107,8 @@ class PilotIntakeWorkflowContractTests(unittest.TestCase):
             "          python -m unittest\n"
             "          tests.test_pilot_intake_workflow\n"
             "          tests.test_pilot_label_audit\n"
-            "          tests.test_pilot_delivery_contract"
+            "          tests.test_pilot_delivery_contract\n"
+            "          tests.test_pilot_funnel"
         )
         label_audit_command = (
             'run: python scripts/audit_pilot_labels.py --repo '

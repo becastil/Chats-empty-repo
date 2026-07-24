@@ -2890,3 +2890,21 @@ Regression tests prove a symlink cannot redirect checksum bytes and a failed
 replacement cannot destroy prior evidence. This hardens the paid-CI
 distribution trust boundary only; no tag, release, customer install, demand,
 payment, or revenue evidence was created.
+
+## 2026-07-24: Run Funnel Behavior In Pilot Intake CI
+
+The dedicated pilot-intake workflow selected changes to the funnel reporter but
+ran only its workflow, label-audit, and delivery-contract tests. Its complete
+behavioral suite was absent, so a regression such as counting
+`pilot-converted` without explicit `pilot-paid` evidence could leave the
+revenue-focused hosted check green.
+
+The hosted test step now runs `tests.test_pilot_funnel` before the live label
+audit. Both pull-request and `main` trigger blocks watch the behavioral test and
+its `pilot_issues.json` revenue fixture, and the workflow contract requires the
+exact expanded command and trigger surface.
+
+This closes a conversion-accounting blind spot without changing the reporter,
+labels, public intake, or human sales process. Passing the hosted check remains
+infrastructure evidence only; it does not create a lead, payment, conversion,
+or revenue event.
