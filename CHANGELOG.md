@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Bound the final GitHub Release upload to the exact tag-derived wheel, source
+  archive, and portable CLI names, with executable proof that no artifact glob
+  can widen the checksummed and attested publication set.
 - Required the website-attributed production application CTA to disclose the
   exact $299 pilot price, with controlled failures for unpriced and mispriced
   labels even when the structured paid offer remains correct.
@@ -31,7 +34,7 @@
   publication acceptance-script sets identical as paid workflows evolve.
 - Made both pre-tag and tag-time wheel smoke installs package-index-free, with
   dependency resolution and pip's remote version check disabled.
-- Replaced the publishing workflow's wheel wildcard with the exact canonical
+- Replaced the publication smoke step's wheel wildcard with the exact canonical
   filename derived from the validated release tag.
 - Installed every pre-tag candidate wheel into a separate smoke environment,
   reconciled all seven packaged command versions, and directly exercised the

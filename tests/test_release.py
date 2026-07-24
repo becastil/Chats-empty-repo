@@ -875,7 +875,7 @@ class ReleaseWorkflowTests(unittest.TestCase):
             'python "dist/repo-scout-${version}.pyz" --version',
             workflow,
         )
-        self.assertIn("dist/repo-scout-*.pyz", workflow)
+        self.assertIn('"dist/repo-scout-${version}.pyz"', workflow)
         self.assertIn('gh release create "$GITHUB_REF_NAME"', workflow)
         self.assertIn("--verify-tag", workflow)
         self.assertNotIn("pull_request_target", workflow)
@@ -1228,7 +1228,21 @@ class ReleaseWorkflowTests(unittest.TestCase):
             publish_step.split("        run: |\n", 1)[1]
         )
 
+        version_marker = 'version="${GITHUB_REF_NAME#v}"'
+        self.assertIn(version_marker, publish_script)
         self.assertIn('gh release create "$GITHUB_REF_NAME"', publish_script)
+        self.assertLess(
+            publish_script.index(version_marker),
+            publish_script.index("gh release create"),
+        )
+        for artifact in (
+            '"dist/repo_scout-${version}-py3-none-any.whl"',
+            '"dist/repo_scout-${version}.tar.gz"',
+            '"dist/repo-scout-${version}.pyz"',
+            "dist/SHA256SUMS",
+        ):
+            self.assertEqual(publish_script.count(artifact), 1)
+        self.assertNotIn("*", publish_script)
         self.assertIn(
             '"repos/${GITHUB_REPOSITORY}/releases/tags/${GITHUB_REF_NAME}"',
             publish_script,
@@ -1296,6 +1310,14 @@ class ReleaseWorkflowTests(unittest.TestCase):
                     calls = log.read_text(encoding="utf-8").splitlines()
                     self.assertEqual(len(calls), 2)
                     self.assertTrue(calls[0].startswith("release create "))
+                    for artifact in (
+                        "dist/repo_scout-0.3.50-py3-none-any.whl",
+                        "dist/repo_scout-0.3.50.tar.gz",
+                        "dist/repo-scout-0.3.50.pyz",
+                        "dist/SHA256SUMS",
+                    ):
+                        self.assertEqual(calls[0].count(artifact), 1)
+                    self.assertNotIn("*", calls[0])
                     self.assertTrue(calls[1].startswith("api "))
 
     def test_release_requirements_are_exactly_pinned_and_hashed(self) -> None:

@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after binding the visible pilot price: 226 / 1,000 (22.6%).
-- Remaining after binding the visible pilot price: 774 commits.
+- Progress after binding exact release uploads: 227 / 1,000 (22.7%).
+- Remaining after binding exact release uploads: 773 commits.
 
 ## Commit Standard
 

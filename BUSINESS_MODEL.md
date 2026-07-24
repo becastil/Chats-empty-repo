@@ -86,6 +86,12 @@ same `SHA256SUMS` file to provenance attestation. An executable contract proves
 that intact artifacts pass and any post-manifest byte mutation fails closed.
 This protects paid-CI distribution evidence without creating a release,
 customer install, demand, payment, or revenue event.
+The final GitHub Release command now names the tag-derived wheel, source
+archive, and portable CLI paths explicitly alongside `SHA256SUMS`. Shell globs
+cannot add a later matching file outside the exact artifact set already
+validated, smoke-tested, checksummed, and attested. This narrows publication
+authority without creating a release, install, demand, payment, or revenue
+event.
 The public verification guide reconciles its downloaded-file, checksum, and
 provenance-command counts to the three artifacts defined by the release builder.
 It also resolves the annotated tag's exact source commit and constrains every

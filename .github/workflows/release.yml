@@ -162,9 +162,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
           gh release create "$GITHUB_REF_NAME" \
-            dist/repo_scout-*.whl dist/repo_scout-*.tar.gz \
-            dist/repo-scout-*.pyz dist/SHA256SUMS \
+            "dist/repo_scout-${version}-py3-none-any.whl" \
+            "dist/repo_scout-${version}.tar.gz" \
+            "dist/repo-scout-${version}.pyz" \
+            dist/SHA256SUMS \
             --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes \
             --title "Repo Scout $GITHUB_REF_NAME"
           immutable="$(

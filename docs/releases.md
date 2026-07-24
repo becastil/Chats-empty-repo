@@ -215,8 +215,10 @@ Before publication, the workflow:
 7. Revalidates all three built artifacts against the deterministic SHA-256
    manifest after smoke tests, then submits that same manifest for GitHub
    provenance attestations.
-8. Creates the GitHub Release, queries the exact published tag through GitHub's
-   versioned REST API, and fails unless the release reports `immutable: true`.
+8. Uploads only the exact tag-derived wheel, source, portable, and checksum
+   paths to the GitHub Release without shell globs, queries the exact published
+   tag through GitHub's versioned REST API, and fails unless the release reports
+   `immutable: true`.
 
 All actions use full commit pins. Release permissions are limited to creating
 the release, requesting the short-lived identity token, and writing artifact

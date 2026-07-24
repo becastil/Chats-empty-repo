@@ -2960,3 +2960,22 @@ proving an unpriced label and a $399 label both fail.
 This protects price clarity at the conversion point without changing or
 deploying the site. It creates no visit, application, payment, or revenue
 evidence, and Sites version 47 remains subject to explicit owner approval.
+
+## 2026-07-24: Publish Only The Exact Release Artifact Set
+
+Release preparation rejected missing, extra, and incorrectly named artifacts,
+then the workflow smoke-tested and revalidated the exact manifest. The final
+`gh release create` command nevertheless rediscovered the wheel, source
+archive, and portable CLI through shell globs. A matching file introduced after
+preparation could therefore widen the upload beyond the names that the command
+intended to publish.
+
+The publisher now derives the version from the already validated semantic tag
+and names all three canonical artifact paths explicitly alongside
+`SHA256SUMS`. The executable publication contract requires each path exactly
+once in both workflow source and the expanded fake-GitHub invocation, and
+rejects every wildcard in that step.
+
+This makes final upload authority match the checksummed and attested artifact
+set. It does not create a tag, release, customer install, demand, payment, or
+revenue evidence.
