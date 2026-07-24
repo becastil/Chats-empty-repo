@@ -6,9 +6,12 @@ from __future__ import annotations
 import argparse
 import ast
 import hashlib
+import os
 from pathlib import Path
 import re
+import stat
 import sys
+from tempfile import NamedTemporaryFile
 import tomllib
 
 
@@ -99,8 +102,48 @@ def prepare_release(project_root: Path, dist_dir: Path, tag: str) -> Path:
 
     manifest = dist_dir / CHECKSUMS_NAME
     lines = [f"{_sha256(artifact)}  {artifact.name}\n" for artifact in artifacts]
-    manifest.write_text("".join(lines), encoding="ascii")
+    _write_checksum_manifest(manifest, "".join(lines))
     return manifest
+
+
+def _write_checksum_manifest(manifest: Path, content: str) -> None:
+    try:
+        existing = manifest.lstat()
+    except FileNotFoundError:
+        mode = 0o644
+    except OSError as exc:
+        raise ReleaseError(f"cannot inspect checksum manifest: {exc}") from exc
+    else:
+        if not stat.S_ISREG(existing.st_mode):
+            raise ReleaseError(
+                f"checksum manifest must be a regular file: {manifest.name}"
+            )
+        mode = stat.S_IMODE(existing.st_mode)
+
+    temporary_path: Path | None = None
+    try:
+        with NamedTemporaryFile(
+            "w",
+            encoding="ascii",
+            newline="\n",
+            dir=manifest.parent,
+            prefix=f".{manifest.name}.",
+            delete=False,
+        ) as temporary:
+            temporary_path = Path(temporary.name)
+            os.chmod(temporary_path, mode)
+            temporary.write(content)
+            temporary.flush()
+            os.fsync(temporary.fileno())
+        os.replace(temporary_path, manifest)
+    except OSError as exc:
+        raise ReleaseError(f"cannot write checksum manifest: {exc}") from exc
+    finally:
+        if temporary_path is not None:
+            try:
+                temporary_path.unlink(missing_ok=True)
+            except OSError:
+                pass
 
 
 def _sha256(path: Path) -> str:

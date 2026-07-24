@@ -179,6 +179,12 @@ rollout summary. It then executes the zipapp for help and a JSON repository
 scan. It cannot use secrets, upload or attest artifacts, write repository
 content, or publish a release.
 
+At both build boundaries, release preparation refuses a symlinked or other
+non-regular `SHA256SUMS` path. It writes the deterministic manifest through a
+flushed and synced same-directory staging file, then atomically replaces the
+destination. Revalidation preserves the mode of an existing regular manifest,
+and a failed replacement leaves its prior bytes intact.
+
 The release workflow runs only for `vMAJOR.MINOR.PATCH` tags. Before tests or
 builds, it rejects a lightweight tag, an annotated tag whose peeled commit does
 not exactly match the GitHub push commit, or a tagged commit outside `main`.

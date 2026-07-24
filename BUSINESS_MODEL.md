@@ -41,6 +41,12 @@ package/version pair to its specific hash, and clean-environment evidence
 rebuilds the wheel, source archive, portable CLI, and checksum manifest without
 isolation. This protects the paid-CI trust path; updating build infrastructure
 does not publish a release or establish an install, demand, payment, or revenue.
+Release preparation now refuses to write `SHA256SUMS` through a symlink or
+other non-regular path. It preserves the mode of an existing regular manifest
+and publishes new checksum bytes through a flushed, synced, same-directory
+staging file and atomic replacement, so a replacement failure leaves the
+previous manifest intact. This protects the release evidence consumed by paid
+CI without creating a release, install, demand, payment, or revenue event.
 A separate read-only pre-tag workflow now runs the exact release contracts,
 force-verifies the hash-locked tools in a fresh environment, checks dependency
 compatibility, and builds candidate wheel, source, portable, and checksum

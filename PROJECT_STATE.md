@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 221 of
-1,000, with 779 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 222 of
+1,000, with 778 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -127,6 +127,10 @@ alignment take priority over commit volume.
   `83.0.0` wheel digest, exact package/version/hash contract evidence,
   deterministic SHA-256 manifests, and clean-environment build and command
   smoke tests.
+- Fail-closed checksum manifest publication that rejects symlinked or other
+  non-regular `SHA256SUMS` paths, preserves an existing regular file's mode,
+  and atomically replaces it only after a same-directory staging file is
+  flushed and synced. A failed replacement leaves the prior manifest intact.
 - A dedicated read-only pre-tag release-tooling workflow that runs exact
   release contracts on Python 3.11, force-verifies the hash-locked builder in a
   fresh virtual environment, checks dependency compatibility, produces

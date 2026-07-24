@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after verifying source distribution parity: 221 / 1,000 (22.1%).
-- Remaining after verifying source distribution parity: 779 commits.
+- Progress after hardening release manifest writes: 222 / 1,000 (22.2%).
+- Remaining after hardening release manifest writes: 778 commits.
 
 ## Commit Standard
 

@@ -14,6 +14,7 @@ from tempfile import TemporaryDirectory
 import textwrap
 import tomllib
 import unittest
+from unittest import mock
 import zipfile
 
 
@@ -478,6 +479,45 @@ class ReleaseManifestTests(unittest.TestCase):
                     ]
                 ),
             )
+
+    def test_rejects_symlinked_checksum_manifest_without_touching_target(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, dist = self._project(Path(tmp), version="1.2.3")
+            self._write_artifacts(dist, "1.2.3")
+            outside = root.parent / "outside-checksums"
+            outside.write_text("trusted\n", encoding="ascii")
+            manifest = dist / prepare_release.CHECKSUMS_NAME
+            try:
+                manifest.symlink_to(outside)
+            except OSError as exc:
+                self.skipTest(f"cannot create symlinks on this platform: {exc}")
+
+            with self.assertRaisesRegex(
+                prepare_release.ReleaseError,
+                "checksum manifest must be a regular file",
+            ):
+                prepare_release.prepare_release(root, dist, "v1.2.3")
+
+            self.assertTrue(manifest.is_symlink())
+            self.assertEqual(outside.read_text(encoding="ascii"), "trusted\n")
+
+    def test_preserves_checksum_manifest_when_atomic_replace_fails(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, dist = self._project(Path(tmp), version="1.2.3")
+            self._write_artifacts(dist, "1.2.3")
+            manifest = dist / prepare_release.CHECKSUMS_NAME
+            manifest.write_text("trusted\n", encoding="ascii")
+
+            with mock.patch(
+                "os.replace", side_effect=OSError("replace blocked")
+            ), self.assertRaisesRegex(
+                prepare_release.ReleaseError,
+                "cannot write checksum manifest",
+            ):
+                prepare_release.prepare_release(root, dist, "v1.2.3")
+
+            self.assertEqual(manifest.read_text(encoding="ascii"), "trusted\n")
+            self.assertEqual(list(dist.glob(".SHA256SUMS.*")), [])
 
     def test_rejects_tag_or_runtime_version_drift(self) -> None:
         with TemporaryDirectory() as tmp:

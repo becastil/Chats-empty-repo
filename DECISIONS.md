@@ -2871,3 +2871,22 @@ published. The direct wheel continues through the complete installed-command
 acceptance suite, and the original source archive remains the attested artifact.
 Passing this gate proves source-distribution parity only; it creates no tag,
 release, customer install, demand, payment, or revenue evidence.
+
+## 2026-07-24: Publish Release Checksums Without Following Paths
+
+Release preparation allowed an existing `SHA256SUMS` entry but wrote it
+directly. If that entry was a symlink, the write followed it outside the
+validated release directory; an interrupted direct write could also truncate a
+previously valid manifest.
+
+The checksum writer now inspects the destination without following links and
+accepts only an absent path or an existing regular file. It preserves the mode
+of an existing manifest, writes the complete ASCII payload to a unique
+same-directory staging file, flushes and syncs that file, and publishes it with
+atomic replacement. Failed writes clean up their staging file and leave the
+previous manifest intact.
+
+Regression tests prove a symlink cannot redirect checksum bytes and a failed
+replacement cannot destroy prior evidence. This hardens the paid-CI
+distribution trust boundary only; no tag, release, customer install, demand,
+payment, or revenue evidence was created.

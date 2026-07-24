@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Made release checksum publication reject symlinked or other non-regular
+  `SHA256SUMS` paths and replace regular manifests through a flushed,
+  same-directory staging file, preserving the prior manifest when atomic
+  replacement fails.
 - Rebuilt the exact candidate and publication source archives without package
   indexes, dependency resolution, or a second build environment before either
   release boundary can advance.
