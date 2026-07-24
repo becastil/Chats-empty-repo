@@ -145,7 +145,8 @@ site release:
 After publishing the site, maintainers can verify that its canonical metadata,
 free software offer, release version, structured and visitor-visible portable
 download URLs, $299 founding-team service, and website-attributed pilot
-application link match the current commercial contract:
+application link with the same visible $299 price match the current commercial
+contract:
 
 ```bash
 python3 scripts/audit_production_site.py
@@ -153,9 +154,9 @@ python3 scripts/audit_production_site.py
 
 The audit reads the public HTML without changing production. A stale version,
 stale structured download URL, missing or stale visible download link,
-malformed free or paid offer, missing pilot application link, unexpected
-content type, or network failure exits nonzero instead of accepting a partial
-check.
+malformed free or paid offer, missing pilot application link, unpriced or
+mispriced application CTA, unexpected content type, or network failure exits
+nonzero instead of accepting a partial check.
 
 The read-only `Production site audit` workflow runs the same command once per
 day and can be dispatched manually after a deployment. Before the live request,

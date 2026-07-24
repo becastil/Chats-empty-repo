@@ -318,8 +318,8 @@ The same check now runs daily in a read-only GitHub workflow and remains
 manually dispatchable after deployment. Before requesting the live page, the
 workflow runs its own permission and command-order contract plus the auditor's
 behavior suite for stale releases, malformed free and paid offers, and missing
-website-attributed pilot links. It receives no secrets and changes no release,
-site, customer record, or commercial evidence.
+or incorrectly priced website-attributed pilot links. It receives no secrets
+and changes no release, site, customer record, or commercial evidence.
 The release handoff now requires lockfile installation, a tested production
 build, a zero-vulnerability dependency audit, lint, an exact-source save against
 the existing Sites project, explicit owner approval before public deployment,
@@ -378,8 +378,9 @@ and a passing run remains maintenance evidence rather than customer or revenue
 evidence.
 The audit also requires exactly one $299 USD founding-team service at the
 production pilot section and at least one website-attributed link to the public
-application form. This detects a broken paid conversion path; it does not submit
-the form, create a request, or establish willingness to pay.
+application form whose CTA discloses the same $299 price. This detects a broken
+or misleading paid conversion path; it does not submit the form, create a
+request, or establish willingness to pay.
 
 The first direct-acquisition batch is deliberately small: 10 qualified
 engineering leads, personalized from relevant public evidence, with one initial

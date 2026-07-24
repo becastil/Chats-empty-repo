@@ -2943,3 +2943,20 @@ release identity current.
 This closes an activation-path blind spot without changing or deploying the
 site. The saved Sites version remains subject to explicit owner approval, and a
 passing audit creates no visit, pilot request, payment, or revenue evidence.
+
+## 2026-07-24: Bind The Visible Pilot Price To Its Application
+
+The production audit required the structured service to cost $299 and required
+a website-attributed application URL, but it treated those as independent
+facts. The public page could therefore leave the CTA unpriced or label it with a
+different price while the monitor remained green.
+
+The HTML parser now retains normalized anchor labels. The audit requires at
+least one website-attributed application link to disclose the exact $299 price
+and reports that visitor-facing check separately from the structured service
+and destination URL. Regressions hold the structured offer constant while
+proving an unpriced label and a $399 label both fail.
+
+This protects price clarity at the conversion point without changing or
+deploying the site. It creates no visit, application, payment, or revenue
+evidence, and Sites version 47 remains subject to explicit owner approval.

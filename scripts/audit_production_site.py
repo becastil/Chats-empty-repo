@@ -4,6 +4,7 @@ import argparse
 from html.parser import HTMLParser
 import json
 from pathlib import Path
+import re
 import sys
 import tomllib
 from typing import Sequence
@@ -22,9 +23,12 @@ class ProductionSiteAuditError(RuntimeError):
 class _PageParser(HTMLParser):
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
+        self.anchor_links: list[tuple[str, str]] = []
         self.anchor_urls: list[str] = []
         self.canonical_urls: list[str] = []
         self.json_ld_scripts: list[str] = []
+        self._anchor_href: str | None = None
+        self._anchor_parts: list[str] | None = None
         self._json_ld_parts: list[str] | None = None
 
     def handle_starttag(
@@ -35,6 +39,8 @@ class _PageParser(HTMLParser):
             href = attributes.get("href")
             if href is not None:
                 self.anchor_urls.append(href)
+                self._anchor_href = href
+                self._anchor_parts = []
         if tag == "link" and attributes.get("rel") == "canonical":
             href = attributes.get("href")
             if href is not None:
@@ -48,8 +54,19 @@ class _PageParser(HTMLParser):
     def handle_data(self, data: str) -> None:
         if self._json_ld_parts is not None:
             self._json_ld_parts.append(data)
+        if self._anchor_parts is not None:
+            self._anchor_parts.append(data)
 
     def handle_endtag(self, tag: str) -> None:
+        if (
+            tag == "a"
+            and self._anchor_href is not None
+            and self._anchor_parts is not None
+        ):
+            label = " ".join("".join(self._anchor_parts).split())
+            self.anchor_links.append((self._anchor_href, label))
+            self._anchor_href = None
+            self._anchor_parts = None
         if tag == "script" and self._json_ld_parts is not None:
             self.json_ld_scripts.append("".join(self._json_ld_parts))
             self._json_ld_parts = None
@@ -220,6 +237,15 @@ def audit_production_html(
             "production must link to the website-attributed founding-team "
             f"pilot application: {expected_application}"
         )
+    application_labels = [
+        label
+        for href, label in parser.anchor_links
+        if href == expected_application
+    ]
+    if not any(re.search(r"\$\s*299\b", label) for label in application_labels):
+        raise ProductionSiteAuditError(
+            "production pilot application link must disclose the $299 price"
+        )
 
     return (
         "canonical",
@@ -229,6 +255,7 @@ def audit_production_html(
         "free-offer",
         "paid-service",
         "pilot-application",
+        "pilot-application-price",
     )
 
 

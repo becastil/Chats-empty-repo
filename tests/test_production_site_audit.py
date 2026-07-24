@@ -38,6 +38,7 @@ def page(
     pilot_price: str = "299",
     pilot_service_count: int = 1,
     pilot_application_url: str | None = PILOT_APPLICATION_URL,
+    pilot_application_label: str = "Apply for the $299 pilot",
     include_download_link: bool = True,
     visible_download_url: str | None = None,
 ) -> str:
@@ -80,7 +81,7 @@ def page(
     if pilot_application_url is not None:
         pilot_application_link = (
             f'<a href="{escape(pilot_application_url, quote=True)}">'
-            "Apply for the Repo Scout Founding Team Pilot"
+            f"{escape(pilot_application_label)}"
             "</a>"
         )
     download_link = ""
@@ -117,6 +118,7 @@ class ProductionSiteAuditTests(unittest.TestCase):
                 "free-offer",
                 "paid-service",
                 "pilot-application",
+                "pilot-application-price",
             ),
         )
 
@@ -169,6 +171,24 @@ class ProductionSiteAuditTests(unittest.TestCase):
             ):
                 audit_production_site.audit_production_html(
                     page(pilot_application_url=application_url),
+                    production_url=URL,
+                    expected_version=VERSION,
+                )
+
+    def test_rejects_unpriced_or_mispriced_pilot_application_link(self) -> None:
+        for application_label in (
+            "Apply for the founding-team pilot",
+            "Apply for the $399 pilot",
+        ):
+            with (
+                self.subTest(application_label=application_label),
+                self.assertRaisesRegex(
+                    audit_production_site.ProductionSiteAuditError,
+                    r"disclose the \$299 price",
+                ),
+            ):
+                audit_production_site.audit_production_html(
+                    page(pilot_application_label=application_label),
                     production_url=URL,
                     expected_version=VERSION,
                 )
@@ -249,6 +269,7 @@ class ProductionSiteAuditTests(unittest.TestCase):
         self.assertIn("software-version", stdout.getvalue())
         self.assertIn("download-link", stdout.getvalue())
         self.assertIn("paid-service", stdout.getvalue())
+        self.assertIn("pilot-application-price", stdout.getvalue())
         self.assertIn("pilot-application", stdout.getvalue())
 
     def test_main_fails_without_hiding_stale_production(self) -> None:

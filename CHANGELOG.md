@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Required the website-attributed production application CTA to disclose the
+  exact $299 pilot price, with controlled failures for unpriced and mispriced
+  labels even when the structured paid offer remains correct.
 - Required the production audit to find the current portable release in a
   visitor-visible link, with controlled failures for missing or stale anchors
   even when the structured download metadata remains current.
