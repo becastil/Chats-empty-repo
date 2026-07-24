@@ -55,6 +55,15 @@ parity contract keeps those four ordered scripts aligned as paid workflows
 evolve. Nothing is uploaded or attested. This moves build, packaging, and
 commercial-workflow failures before tag creation while leaving the tag-only
 publication and immutable-release boundary unchanged.
+Both release boundaries also rebuild the exact generated source archive into a
+wheel with the same hash-locked interpreter, no package indexes or wheel cache,
+no dependency resolution, and no isolated replacement toolchain. A structured
+wheel comparison rejects duplicate entries and requires the rebuilt artifact
+to match every direct-wheel path, byte, and stored mode; archive timestamps,
+ordering, and compression are intentionally non-semantic. This proves the
+attested source artifact can reproduce the already smoke-tested installable
+contents without counting the rebuild as an install, demand, payment, or
+revenue event.
 The tag-only publisher now repeats that isolation at the release boundary. It
 creates a new runner-temp environment, force-verifies every locked wheel, checks
 dependency compatibility, and uses only that interpreter to build and validate

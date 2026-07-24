@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after moving acceptance before tags: 220 / 1,000 (22.0%).
-- Remaining after moving acceptance before tags: 780 commits.
+- Progress after verifying source distribution parity: 221 / 1,000 (22.1%).
+- Remaining after verifying source distribution parity: 779 commits.
 
 ## Commit Standard
 

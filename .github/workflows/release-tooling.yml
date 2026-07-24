@@ -10,6 +10,7 @@ on:
       - "README.md"
       - "pyproject.toml"
       - "scripts/build_zipapp.py"
+      - "scripts/compare_wheel_contents.py"
       - "scripts/prepare_release.py"
       - "scripts/smoke_test_outreach_lifecycle.py"
       - "scripts/smoke_test_pilot_funnel.py"
@@ -27,6 +28,7 @@ on:
       - "README.md"
       - "pyproject.toml"
       - "scripts/build_zipapp.py"
+      - "scripts/compare_wheel_contents.py"
       - "scripts/prepare_release.py"
       - "scripts/smoke_test_outreach_lifecycle.py"
       - "scripts/smoke_test_pilot_funnel.py"
@@ -86,6 +88,26 @@ jobs:
             "$release_python" -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])'
           )"
           "$release_python" scripts/prepare_release.py --tag "v${version}" --dist "$dist"
+
+      - name: Verify source distribution rebuild
+        run: |
+          dist="$RUNNER_TEMP/repo-scout-release-dist"
+          release_python="$RUNNER_TEMP/repo-scout-release-venv/bin/python"
+          rebuilt_wheels="$RUNNER_TEMP/repo-scout-sdist-wheels"
+          version="$(
+            "$release_python" -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])'
+          )"
+          "$release_python" -m pip wheel \
+            --disable-pip-version-check \
+            --no-cache-dir \
+            --no-index \
+            --no-deps \
+            --no-build-isolation \
+            --wheel-dir "$rebuilt_wheels" \
+            "$dist/repo_scout-${version}.tar.gz"
+          "$release_python" scripts/compare_wheel_contents.py \
+            "$dist/repo_scout-${version}-py3-none-any.whl" \
+            "$rebuilt_wheels/repo_scout-${version}-py3-none-any.whl"
 
       - name: Smoke test candidate artifacts
         run: |

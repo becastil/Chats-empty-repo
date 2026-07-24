@@ -2847,3 +2847,27 @@ from both workflows and fails if either side adds, removes, or reorders an
 acceptance journey. This moves paid-workflow packaging failures before the
 human tagging decision without granting publication authority or creating a
 release, customer install, demand, payment, or revenue evidence.
+
+## 2026-07-23: Prove The Source Archive Rebuilds The Tested Wheel
+
+The release contracts validated, checksummed, attested, and published one source
+archive, but only the separately built wheel and portable artifact were
+executed. A source archive could therefore remain well named and
+cryptographically bound while omitting package files, entry points, policy
+templates, or mode metadata required to reproduce the installable distribution.
+
+Both the read-only pre-tag workflow and tag-only publisher now ask the same
+hash-locked release interpreter to rebuild the exact versioned source archive.
+The rebuild disables package indexes, wheel caches, dependency resolution, and
+build isolation, so it cannot replace the reviewed toolchain or fill a missing
+source file from a registry or prior build. A structured ZIP comparison rejects
+duplicate members and requires the rebuilt wheel to match every direct-wheel
+member name, byte digest, size, and stored 16-bit mode. ZIP timestamps,
+ordering, and compression remain intentionally irrelevant because they do not
+change installed contents.
+
+The rebuilt wheel stays in runner temp and is neither added to `SHA256SUMS` nor
+published. The direct wheel continues through the complete installed-command
+acceptance suite, and the original source archive remains the attested artifact.
+Passing this gate proves source-distribution parity only; it creates no tag,
+release, customer install, demand, payment, or revenue evidence.

@@ -79,6 +79,23 @@ jobs:
           scripts/prepare_release.py
           --tag "$GITHUB_REF_NAME" --dist dist
 
+      - name: Verify source distribution rebuild
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          rebuilt_wheels="$RUNNER_TEMP/repo-scout-release-sdist-wheels"
+          "$RUNNER_TEMP/repo-scout-release-build/bin/python" -m pip wheel \
+            --disable-pip-version-check \
+            --no-cache-dir \
+            --no-index \
+            --no-deps \
+            --no-build-isolation \
+            --wheel-dir "$rebuilt_wheels" \
+            "dist/repo_scout-${version}.tar.gz"
+          "$RUNNER_TEMP/repo-scout-release-build/bin/python" \
+            scripts/compare_wheel_contents.py \
+            "dist/repo_scout-${version}-py3-none-any.whl" \
+            "$rebuilt_wheels/repo_scout-${version}-py3-none-any.whl"
+
       - name: Smoke test the built wheel
         run: |
           version="${GITHUB_REF_NAME#v}"

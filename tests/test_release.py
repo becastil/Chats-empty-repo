@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from contextlib import redirect_stderr
 import hashlib
 import importlib.util
+from io import StringIO
 import json
 import os
 from pathlib import Path
@@ -76,6 +78,15 @@ assert ROLLOUT_SMOKE_SPEC is not None and ROLLOUT_SMOKE_SPEC.loader is not None
 smoke_test_rollout_summary = importlib.util.module_from_spec(ROLLOUT_SMOKE_SPEC)
 sys.modules[ROLLOUT_SMOKE_SPEC.name] = smoke_test_rollout_summary
 ROLLOUT_SMOKE_SPEC.loader.exec_module(smoke_test_rollout_summary)
+
+WHEEL_COMPARE_SCRIPT_PATH = ROOT / "scripts" / "compare_wheel_contents.py"
+WHEEL_COMPARE_SPEC = importlib.util.spec_from_file_location(
+    "compare_wheel_contents", WHEEL_COMPARE_SCRIPT_PATH
+)
+assert WHEEL_COMPARE_SPEC is not None and WHEEL_COMPARE_SPEC.loader is not None
+compare_wheel_contents = importlib.util.module_from_spec(WHEEL_COMPARE_SPEC)
+sys.modules[WHEEL_COMPARE_SPEC.name] = compare_wheel_contents
+WHEEL_COMPARE_SPEC.loader.exec_module(compare_wheel_contents)
 
 
 class ReleaseManifestTests(unittest.TestCase):
@@ -579,6 +590,149 @@ class ZipappDistributionTests(unittest.TestCase):
             build_zipapp.build_zipapp(Path(tmp), Path(tmp) / "dist")
 
 
+class WheelContentComparisonTests(unittest.TestCase):
+    def _write_wheel(
+        self,
+        path: Path,
+        members: list[tuple[str, bytes, int]],
+        *,
+        timestamp: tuple[int, int, int, int, int, int],
+        compression: int = zipfile.ZIP_STORED,
+    ) -> None:
+        with zipfile.ZipFile(path, "w") as archive:
+            for name, contents, mode in members:
+                info = zipfile.ZipInfo(name, timestamp)
+                info.compress_type = compression
+                info.external_attr = mode << 16
+                archive.writestr(info, contents)
+
+    def test_matches_logical_contents_across_archive_metadata(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            reference = root / "reference.whl"
+            rebuilt = root / "rebuilt.whl"
+            members = [
+                ("repo_scout/__init__.py", b'__version__ = "1.2.3"\n', 0o100644),
+                (
+                    "repo_scout-1.2.3.dist-info/entry_points.txt",
+                    b"[console_scripts]\nrepo-scout = repo_scout.cli:main\n",
+                    0o100644,
+                ),
+            ]
+            self._write_wheel(
+                reference,
+                members,
+                timestamp=(2026, 1, 1, 0, 0, 0),
+            )
+            self._write_wheel(
+                rebuilt,
+                list(reversed(members)),
+                timestamp=(2026, 7, 24, 0, 0, 0),
+                compression=zipfile.ZIP_DEFLATED,
+            )
+
+            self.assertEqual(
+                compare_wheel_contents.compare_wheel_contents(
+                    reference,
+                    rebuilt,
+                ),
+                2,
+            )
+
+    def test_rejects_missing_unexpected_changed_and_mode_drift(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            reference = root / "reference.whl"
+            rebuilt = root / "rebuilt.whl"
+            timestamp = (2026, 7, 24, 0, 0, 0)
+            reference_members = [
+                ("repo_scout/cli.py", b"contents\n", 0o100644),
+                ("repo_scout/policy.py", b"policy\n", 0o100644),
+            ]
+            self._write_wheel(
+                reference,
+                reference_members,
+                timestamp=timestamp,
+            )
+
+            cases = (
+                (
+                    [("repo_scout/cli.py", b"contents\n", 0o100644)],
+                    "missing members: repo_scout/policy.py",
+                ),
+                (
+                    reference_members
+                    + [("repo_scout/extra.py", b"extra\n", 0o100644)],
+                    "unexpected members: repo_scout/extra.py",
+                ),
+                (
+                    [
+                        ("repo_scout/cli.py", b"changed\n", 0o100644),
+                        reference_members[1],
+                    ],
+                    "member content or mode differs: repo_scout/cli.py",
+                ),
+                (
+                    [
+                        ("repo_scout/cli.py", b"contents\n", 0o100600),
+                        reference_members[1],
+                    ],
+                    "member content or mode differs: repo_scout/cli.py",
+                ),
+            )
+            for members, message in cases:
+                with self.subTest(message=message):
+                    self._write_wheel(
+                        rebuilt,
+                        members,
+                        timestamp=timestamp,
+                    )
+                    with self.assertRaisesRegex(
+                        compare_wheel_contents.WheelComparisonError,
+                        re.escape(message),
+                    ):
+                        compare_wheel_contents.compare_wheel_contents(
+                            reference,
+                            rebuilt,
+                        )
+
+    def test_rejects_duplicate_members_and_invalid_archives(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            reference = root / "reference.whl"
+            rebuilt = root / "rebuilt.whl"
+            member = ("repo_scout/cli.py", b"contents\n", 0o100644)
+            self._write_wheel(
+                reference,
+                [member],
+                timestamp=(2026, 7, 24, 0, 0, 0),
+            )
+            with (
+                self.assertWarns(UserWarning),
+                zipfile.ZipFile(rebuilt, "w") as archive,
+            ):
+                archive.writestr(member[0], member[1])
+                archive.writestr(member[0], member[1])
+
+            with self.assertRaisesRegex(
+                compare_wheel_contents.WheelComparisonError,
+                "rebuilt wheel contains duplicate members: repo_scout/cli.py",
+            ):
+                compare_wheel_contents.compare_wheel_contents(
+                    reference,
+                    rebuilt,
+                )
+
+            rebuilt.write_text("not a wheel\n", encoding="utf-8")
+            stderr = StringIO()
+            with redirect_stderr(stderr):
+                self.assertEqual(
+                    compare_wheel_contents.main([str(reference), str(rebuilt)]),
+                    2,
+                )
+            self.assertIn("cannot read rebuilt wheel", stderr.getvalue())
+
+
 class ReleaseWorkflowTests(unittest.TestCase):
     def test_declared_mit_license_has_distribution_text(self) -> None:
         pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
@@ -891,6 +1045,59 @@ class ReleaseWorkflowTests(unittest.TestCase):
         self.assertNotIn("--find-links", smoke_script)
         self.assertEqual(smoke_script.count("pip install"), 1)
 
+    def test_release_rebuilds_exact_source_distribution_offline(self) -> None:
+        workflow = (ROOT / ".github/workflows/release.yml").read_text(
+            encoding="utf-8"
+        )
+        validate_marker = "      - name: Validate version and write checksums\n"
+        source_marker = "      - name: Verify source distribution rebuild\n"
+        smoke_marker = "      - name: Smoke test the built wheel\n"
+        for marker in (validate_marker, source_marker, smoke_marker):
+            self.assertIn(marker, workflow)
+        self.assertLess(workflow.index(validate_marker), workflow.index(source_marker))
+        self.assertLess(workflow.index(source_marker), workflow.index(smoke_marker))
+
+        source_step = workflow[
+            workflow.index(source_marker) : workflow.index(smoke_marker)
+        ]
+        self.assertIn("        run: |\n", source_step)
+        source_script = textwrap.dedent(
+            source_step.split("        run: |\n", 1)[1]
+        )
+        build_python = '"$RUNNER_TEMP/repo-scout-release-build/bin/python"'
+        self.assertIn('version="${GITHUB_REF_NAME#v}"', source_script)
+        self.assertIn(
+            'rebuilt_wheels="$RUNNER_TEMP/repo-scout-release-sdist-wheels"',
+            source_script,
+        )
+        self.assertIn(f"{build_python} -m pip wheel \\\n", source_script)
+        self.assertIn("--disable-pip-version-check", source_script)
+        self.assertIn("--no-cache-dir", source_script)
+        self.assertIn("--no-index", source_script)
+        self.assertIn("--no-deps", source_script)
+        self.assertIn("--no-build-isolation", source_script)
+        self.assertIn('--wheel-dir "$rebuilt_wheels"', source_script)
+        self.assertIn('"dist/repo_scout-${version}.tar.gz"', source_script)
+        self.assertIn(
+            f"{build_python} \\\n"
+            "  scripts/compare_wheel_contents.py \\\n",
+            source_script,
+        )
+        self.assertIn(
+            '"dist/repo_scout-${version}-py3-none-any.whl" \\\n',
+            source_script,
+        )
+        self.assertIn(
+            '"$rebuilt_wheels/repo_scout-${version}-py3-none-any.whl"',
+            source_script,
+        )
+        self.assertNotIn("*.tar.gz", source_script)
+        self.assertNotIn("*.whl", source_script)
+        self.assertNotIn("--index-url", source_script)
+        self.assertNotIn("--extra-index-url", source_script)
+        self.assertNotIn("--find-links", source_script)
+        self.assertNotIn("|| true", source_script)
+
     def test_release_build_uses_a_force_verified_isolated_toolchain(self) -> None:
         workflow = (ROOT / ".github/workflows/release.yml").read_text(
             encoding="utf-8"
@@ -899,19 +1106,22 @@ class ReleaseWorkflowTests(unittest.TestCase):
         zipapp_marker = "      - name: Build portable zipapp\n"
         package_marker = "      - name: Build wheel and source distribution\n"
         validate_marker = "      - name: Validate version and write checksums\n"
+        source_marker = "      - name: Verify source distribution rebuild\n"
         smoke_marker = "      - name: Smoke test the built wheel\n"
         for marker in (
             install_marker,
             zipapp_marker,
             package_marker,
             validate_marker,
+            source_marker,
             smoke_marker,
         ):
             self.assertIn(marker, workflow)
         self.assertLess(workflow.index(install_marker), workflow.index(zipapp_marker))
         self.assertLess(workflow.index(zipapp_marker), workflow.index(package_marker))
         self.assertLess(workflow.index(package_marker), workflow.index(validate_marker))
-        self.assertLess(workflow.index(validate_marker), workflow.index(smoke_marker))
+        self.assertLess(workflow.index(validate_marker), workflow.index(source_marker))
+        self.assertLess(workflow.index(source_marker), workflow.index(smoke_marker))
 
         install_step = workflow[
             workflow.index(install_marker) : workflow.index(zipapp_marker)
@@ -950,7 +1160,7 @@ class ReleaseWorkflowTests(unittest.TestCase):
             workflow.index(package_marker) : workflow.index(validate_marker)
         ]
         validate_step = workflow[
-            workflow.index(validate_marker) : workflow.index(smoke_marker)
+            workflow.index(validate_marker) : workflow.index(source_marker)
         ]
         self.assertIn(
             f"{build_python}\n          scripts/build_zipapp.py --dist dist",
@@ -965,7 +1175,7 @@ class ReleaseWorkflowTests(unittest.TestCase):
             f"{build_python}\n          scripts/prepare_release.py",
             validate_step,
         )
-        self.assertEqual(workflow.count(build_python), 3)
+        self.assertEqual(workflow.count(build_python), 5)
 
     def test_release_publication_requires_immutable_release_evidence(self) -> None:
         workflow = (ROOT / ".github/workflows/release.yml").read_text(

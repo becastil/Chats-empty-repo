@@ -24,6 +24,7 @@ TRIGGER_PATHS = (
     "README.md",
     "pyproject.toml",
     "scripts/build_zipapp.py",
+    "scripts/compare_wheel_contents.py",
     "scripts/prepare_release.py",
     "scripts/smoke_test_outreach_lifecycle.py",
     "scripts/smoke_test_pilot_funnel.py",
@@ -208,10 +209,10 @@ class ReleaseToolingWorkflowContractTests(unittest.TestCase):
         self.assertEqual(workflow.count("pip install"), 2)
         self.assertEqual(workflow.count("--force-reinstall"), 1)
         self.assertEqual(workflow.count("pip check"), 1)
-        self.assertNotIn("source ", workflow)
+        self.assertNotRegex(workflow, r"(?m)^\s+source\s+")
         self.assertEqual(
             len(re.findall(r"^\s+run:", workflow, re.MULTILINE)),
-            4,
+            5,
         )
         self.assertLess(
             workflow.index(f"uses: {CHECKOUT_ACTION}"),
@@ -278,6 +279,58 @@ class ReleaseToolingWorkflowContractTests(unittest.TestCase):
             smoke_step.count('--command-directory "$smoke_venv/bin"'),
             len(ACCEPTANCE_SCRIPTS),
         )
+
+    def test_candidate_rebuilds_exact_source_distribution_offline(self) -> None:
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        build_marker = "      - name: Build candidate artifacts\n"
+        source_marker = "      - name: Verify source distribution rebuild\n"
+        smoke_marker = "      - name: Smoke test candidate artifacts\n"
+        for marker in (build_marker, source_marker, smoke_marker):
+            self.assertIn(marker, workflow)
+        self.assertLess(workflow.index(build_marker), workflow.index(source_marker))
+        self.assertLess(workflow.index(source_marker), workflow.index(smoke_marker))
+
+        source_step = workflow[
+            workflow.index(source_marker) : workflow.index(smoke_marker)
+        ]
+        self.assertIn("        run: |\n", source_step)
+        self.assertIn(
+            'release_python="$RUNNER_TEMP/repo-scout-release-venv/bin/python"',
+            source_step,
+        )
+        self.assertIn(
+            'rebuilt_wheels="$RUNNER_TEMP/repo-scout-sdist-wheels"',
+            source_step,
+        )
+        self.assertIn('"$release_python" -m pip wheel \\\n', source_step)
+        self.assertIn("--disable-pip-version-check", source_step)
+        self.assertIn("--no-cache-dir", source_step)
+        self.assertIn("--no-index", source_step)
+        self.assertIn("--no-deps", source_step)
+        self.assertIn("--no-build-isolation", source_step)
+        self.assertIn('--wheel-dir "$rebuilt_wheels"', source_step)
+        self.assertIn(
+            '"$dist/repo_scout-${version}.tar.gz"',
+            source_step,
+        )
+        self.assertIn(
+            '"$release_python" scripts/compare_wheel_contents.py \\\n',
+            source_step,
+        )
+        self.assertIn(
+            '"$dist/repo_scout-${version}-py3-none-any.whl" \\\n',
+            source_step,
+        )
+        self.assertIn(
+            '"$rebuilt_wheels/repo_scout-${version}-py3-none-any.whl"',
+            source_step,
+        )
+        self.assertNotIn("*.tar.gz", source_step)
+        self.assertNotIn("*.whl", source_step)
+        self.assertNotIn("--index-url", source_step)
+        self.assertNotIn("--extra-index-url", source_step)
+        self.assertNotIn("--find-links", source_step)
+        self.assertNotIn("|| true", source_step)
 
 
 if __name__ == "__main__":

@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 220 of
-1,000, with 780 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 221 of
+1,000, with 779 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -142,6 +142,10 @@ alignment take priority over commit volume.
 - Exact package-index-free wheel smoke installs at both pre-tag and publication
   boundaries, bound to the canonical versioned filename with dependency
   resolution and pip's remote version check disabled.
+- Package-index-free rebuilds of the exact source archive at both pre-tag and
+  publication boundaries, using the hash-locked release environment without
+  build isolation and requiring identical wheel members, bytes, and stored
+  modes before the already tested wheel can advance.
 - A post-smoke release checksum gate that revalidates every built artifact
   against `SHA256SUMS` immediately before provenance attestation, with
   executable proof that any post-manifest byte mutation stops publication.

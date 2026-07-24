@@ -167,14 +167,17 @@ workflow runs when release inputs change or when manually dispatched. It tests
 the release contracts on Python 3.11, force-installs every hash-locked build
 tool into a fresh runner-temp virtual environment, runs `pip check`, and builds
 candidate zipapp, wheel, source, and checksum artifacts in runner temp. It
-then installs the exact candidate wheel into a separate smoke environment with
-package indexes, dependency resolution, and pip's remote version check
-disabled, reconciles every packaged command version, and directly executes the
-same four installed-wheel acceptance journeys used by publication: policy
-activation, guarded outreach, pilot-funnel accounting, and rollout summary. It
-then executes the zipapp for help and a JSON repository scan. It cannot use
-secrets, upload or attest artifacts, write repository content, or publish a
-release.
+then rebuilds the exact source archive without package indexes, a wheel cache,
+dependency resolution, build isolation, or a second toolchain. Every
+rebuilt-wheel member path, byte, and stored mode must match the direct wheel
+before the workflow installs that direct wheel into a separate smoke
+environment with package indexes, dependency resolution, and pip's remote
+version check disabled. It reconciles every packaged command version and
+directly executes the same four installed-wheel acceptance journeys used by
+publication: policy activation, guarded outreach, pilot-funnel accounting, and
+rollout summary. It then executes the zipapp for help and a JSON repository
+scan. It cannot use secrets, upload or attest artifacts, write repository
+content, or publish a release.
 
 The release workflow runs only for `vMAJOR.MINOR.PATCH` tags. Before tests or
 builds, it rejects a lightweight tag, an annotated tag whose peeled commit does
@@ -190,16 +193,19 @@ Before publication, the workflow:
 3. Uses only that isolated interpreter to build one portable zipapp, one wheel,
    one source distribution, and the checksum manifest.
 4. Rejects missing, extra, or incorrectly named artifacts.
-5. Installs the exact canonical wheel in a fresh package-index-free virtual
+5. Rebuilds the exact source distribution without package indexes, a wheel
+   cache, dependency resolution, or build isolation, then requires its wheel to
+   match every member path, byte, and stored mode in the direct wheel.
+6. Installs the exact canonical wheel in a fresh package-index-free virtual
    environment with dependency resolution and pip's remote version check
    disabled, reconciles all command versions to the tag, exercises all seven
    commands, then directly runs the zipapp and verifies every starter-
    recommendation route plus Node policy enforcement, and checks the guarded
    outreach review-to-observed-outcome lifecycle and its privacy boundaries.
-6. Revalidates all three built artifacts against the deterministic SHA-256
+7. Revalidates all three built artifacts against the deterministic SHA-256
    manifest after smoke tests, then submits that same manifest for GitHub
    provenance attestations.
-7. Creates the GitHub Release, queries the exact published tag through GitHub's
+8. Creates the GitHub Release, queries the exact published tag through GitHub's
    versioned REST API, and fails unless the release reports `immutable: true`.
 
 All actions use full commit pins. Release permissions are limited to creating

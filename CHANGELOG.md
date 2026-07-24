@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Rebuilt the exact candidate and publication source archives without package
+  indexes, dependency resolution, or a second build environment before either
+  release boundary can advance.
+- Added duplicate-safe wheel parity checks requiring the source-rebuilt wheel
+  to match every direct-wheel member path, byte, and stored mode while ignoring
+  only archive ordering, compression, and timestamps.
 - Ran the publication workflow's policy-activation, outreach-lifecycle,
   pilot-funnel, and rollout-summary acceptance journeys against every installed
   pre-tag candidate wheel.
