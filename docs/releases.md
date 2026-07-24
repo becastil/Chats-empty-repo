@@ -115,28 +115,40 @@ A release identity change is not complete on the public site until the exact
 committed source is built, saved, approved, deployed, and audited. For every
 site release:
 
-1. Install the lockfile dependencies and validate the production build and
-   source before packaging it:
+1. From a clean `main` checkout whose `HEAD` matches `origin/main`, use the
+   hosted Node `22.13.0` runtime to validate and package the exact source:
 
    ```bash
-   npm ci
-   npm run audit:dependencies
-   npm test
-   npm run lint
+   python3 scripts/prepare_site_candidate.py \
+     --package-script "$SITES_PACKAGE_SCRIPT" \
+     --archive /tmp/repo-scout-site.tar.gz \
+     --receipt /tmp/repo-scout-site-receipt.json
    ```
 
-   The dependency audit must report zero vulnerabilities. Do not use
-   `npm audit fix --force` when it proposes a framework downgrade; review and
-   test a supported patch or explicit transitive override instead.
-2. Build and package that exact committed source, push the same commit to the
-   existing Sites source repository, and reuse the existing Sites project in
+   `SITES_PACKAGE_SCRIPT` must name the trusted Sites `package-site.sh` helper.
+   The preflight runs `npm ci`, `npm run audit:dependencies`, `npm test`, and
+   `npm run lint` in order. The complete dependency audit must report zero
+   vulnerabilities. The command refuses dirty or unsynchronized source,
+   runtime drift, and an archive whose embedded commit, lock digest, Sites
+   project, or Node version differs from the tested source. Its receipt records
+   the resulting archive digest. Do not use `npm audit fix --force` when it
+   proposes a framework downgrade; review and test a supported patch or
+   explicit transitive override instead.
+2. Obtain explicit owner approval before pushing the exact committed source to
+   the separate Sites source repository. This source-export approval is
+   separate from deployment approval, and the source export does not authorize
+   production deployment.
+3. Push the receipt's exact source commit to the separate Sites source
+   repository (the existing Sites source repository for this project), and
+   reuse the existing Sites project in
    `.openai/hosting.json`. Do not create a replacement project for a version
    update.
-3. Save the packaged version against that same source commit. Saving a version
-   does not make that version live.
-4. Obtain explicit owner approval before deploying the saved version to the
-   existing public production site.
-5. Only after the approved deployment succeeds, immediately run the production
+4. Save the preflight archive against that same source commit. Confirm its
+   archive digest and embedded project identity match the receipt. Saving a
+   version does not make that version live.
+5. Obtain separate explicit owner approval before deploying the saved version
+   to the existing public production site.
+6. Only after the approved deployment succeeds, immediately run the production
    audit in the next section. A prepared or saved version must not be described
    as deployed before both steps finish.
 

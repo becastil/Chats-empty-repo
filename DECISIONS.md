@@ -3003,3 +3003,35 @@ build, eight site and runtime tests, lint, 299 Python tests, and the immutable
 action-pin audit. Sites version 47 contains the prior vulnerable lock and is
 therefore superseded before deployment. No Sites version was saved or deployed,
 and no visit, pilot request, payment, or revenue evidence was created.
+
+## 2026-07-24: Bind Sites Candidates And Separate Export Approval
+
+Preparing a replacement for superseded Sites version 47 reached the existing
+Sites project's source handoff. Saving a version requires pushing the complete
+repository state to a separate Sites-managed source repository. The documented
+handoff gated only production deployment, so it did not establish explicit
+consent for that earlier source export. The push was refused before repository
+contents left the existing origin.
+
+Repo Scout's paid offer targets security-conscious teams and promises local
+operation without source-code uploads. Source export is therefore a material
+trust boundary even when the destination only prepares a non-live version.
+
+The existing packaging helper also accepted ignored `dist/` output without
+proving it came from the current tested source. A stale build could therefore
+be saved against a newer commit identity. The repository now owns a fail-closed
+preflight that requires a clean checkout synchronized with `origin/main`, exact
+hosted Node `22.13.0`, locked installation, the unsuppressed dependency audit,
+the production test build, and lint. It embeds the commit, lock digest, runtime,
+and existing Sites project in the archive, verifies the package, and writes a
+receipt containing the archive digest.
+
+The handoff now orders that preflight, explicit source-export approval, the
+receipt's exact source push, receipt-matched version saving, separate deployment
+approval, production deployment, and the immediate live audit. Its executable
+contract requires the export approval before the push and the deployment
+approval afterward. Export consent explicitly cannot authorize production.
+
+No source was pushed to Sites, no replacement version was saved, production was
+not changed, and no visit, pilot request, payment, or revenue evidence was
+created.

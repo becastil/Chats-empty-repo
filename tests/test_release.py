@@ -363,16 +363,38 @@ class ReleaseManifestTests(unittest.TestCase):
         for requirement in (
             "exact committed source",
             "existing Sites source repository",
+            "separate Sites source repository",
             "existing Sites project",
             "`.openai/hosting.json`",
             "Saving a version does not make that version live",
             "explicit owner approval",
+            "source-export approval is separate from deployment approval",
+            "source export does not authorize production deployment",
             "Only after the approved deployment succeeds",
             "immediately run the production audit",
+            "python3 scripts/prepare_site_candidate.py",
+            "Node `22.13.0`",
             "dependency audit must report zero vulnerabilities",
+            "receipt records the resulting archive digest",
             "Do not use `npm audit fix --force`",
         ):
             self.assertIn(requirement, normalized, requirement)
+        source_approval = "Obtain explicit owner approval before pushing"
+        source_push = (
+            "Push the receipt's exact source commit to the separate Sites "
+            "source repository"
+        )
+        deployment_approval = (
+            "Obtain separate explicit owner approval before deploying"
+        )
+        self.assertLess(
+            normalized.index(source_approval),
+            normalized.index(source_push),
+        )
+        self.assertLess(
+            normalized.index(source_push),
+            normalized.index(deployment_approval),
+        )
         self.assertIn("python3 scripts/audit_production_site.py", audit)
 
     def test_distribution_path_counts_every_packaged_command(self) -> None:

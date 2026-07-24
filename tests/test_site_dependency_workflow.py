@@ -37,9 +37,11 @@ class SiteDependencyWorkflowContractTests(unittest.TestCase):
             ".github/dependabot.yml",
             '".github/workflows/**"',
             "scripts/audit_action_pins.py",
+            "scripts/prepare_site_candidate.py",
             "tests/dependency-compatibility.test.mjs",
             "tests/test_action_pin_audit.py",
             "tests/test_dependabot_contract.py",
+            "tests/test_site_candidate.py",
             "tests/test_site_dependency_workflow.py",
         ):
             self.assertEqual(workflow.count(f"- {path}"), 2, path)

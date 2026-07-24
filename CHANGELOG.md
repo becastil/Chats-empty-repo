@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added a fail-closed Sites candidate preflight that rejects dirty,
+  unsynchronized, or runtime-drifted source and binds the tested commit,
+  lockfile, Sites project, Node runtime, and archive digest in a receipt.
+- Split Sites source-export approval from production-deployment approval, with
+  executable ordering proof that source cannot leave its existing origin
+  before consent and that export consent cannot authorize publication.
 - Remediated newly published high-severity React Server Components and
   `brace-expansion` denial-of-service advisories without suppressing the full
   dependency audit, and replaced the legacy Next lint bundle with direct

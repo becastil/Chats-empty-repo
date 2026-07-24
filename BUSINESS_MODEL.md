@@ -327,17 +327,19 @@ behavior suite for stale releases, malformed free and paid offers, and missing
 or incorrectly priced website-attributed pilot links. It receives no secrets
 and changes no release, site, customer record, or commercial evidence.
 The release handoff now requires lockfile installation, a tested production
-build, a zero-vulnerability dependency audit, lint, an exact-source save against
-the existing Sites project, explicit owner approval before public deployment,
-and an immediate live audit afterward. The audited lock advances Next to its
-`16.2.11` security patch, current supported Cloudflare and Vite tooling, and
-advisory-fixed PostCSS and Sharp releases without changing the offer. Sites
-version 46 is superseded; exact-source commit `4d0053f` was saved as version 47,
-but newly published July 24 dependency advisories supersede that undeployed
-candidate too. Production remains on `v0.3.50` until a newly tested replacement
-is saved, explicitly approved, deployed, and audited. A clean audit or saved
-version is not a visitor, customer activation, demand, payment, or revenue
-event.
+build, a zero-vulnerability dependency audit, lint, a candidate receipt binding
+the source commit, lockfile, hosted Node runtime, Sites project, and archive
+digest, explicit source-export approval before pushing to the separate Sites
+source repository, an exact-source save against the existing Sites project,
+separate owner approval before public deployment, and an immediate live audit
+afterward. The audited lock advances Next to its `16.2.11` security patch,
+current supported Cloudflare and Vite tooling, and advisory-fixed PostCSS and
+Sharp releases without changing the offer. Sites version 46 is superseded;
+exact-source commit `4d0053f` was saved as version 47, but newly published July
+24 dependency advisories supersede that undeployed candidate too. Production
+remains on `v0.3.50` until a newly tested replacement is saved, explicitly
+approved, deployed, and audited. A clean audit or saved version is not a
+visitor, customer activation, demand, payment, or revenue event.
 A separate read-only hosted dependency contract runs for relevant lock and
 workflow changes, on manual dispatch, and weekly so a newly published advisory
 does not wait for another package edit. It uses the minimum supported Node
@@ -355,6 +357,17 @@ and Next rule sets. The complete lock still receives an unsuppressed
 zero-vulnerability audit, build, runtime compatibility test, and lint check.
 This is operational protection for the paid buyer path, not evidence of demand,
 payment, or revenue.
+Preparing the replacement for superseded Sites version 47 exposed a second
+boundary: saving a candidate requires pushing the repository to a separate
+Sites-managed source repository. That source export stopped before any push
+because it lacked explicit owner approval. The handoff now requires export
+approval before source transfer, then a distinct deployment approval after a
+version is saved. Before either action, a fail-closed preflight requires the
+hosted Node runtime, a clean `origin/main` checkout, the complete dependency
+and build checks, and a provenance-bound archive receipt. Export consent cannot
+authorize production. This protects the local-first promise made to
+security-conscious buyers; it does not create a saved version, deployment,
+visit, pilot request, payment, or revenue event.
 Repository vulnerability alerts and automated security-fix proposals are now
 enabled. The committed Dependabot policy disables routine npm version-update
 pull requests while grouping npm security fixes, and checks pinned GitHub

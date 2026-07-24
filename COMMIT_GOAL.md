@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after remediating hosted dependency advisories: 228 / 1,000 (22.8%).
-- Remaining after remediating hosted dependency advisories: 772 commits.
+- Progress after hardening the Sites candidate handoff: 229 / 1,000 (22.9%).
+- Remaining after hardening the Sites candidate handoff: 771 commits.
 
 ## Commit Standard
 

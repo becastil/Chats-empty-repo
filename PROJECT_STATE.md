@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 228 of
-1,000, with 772 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 229 of
+1,000, with 771 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -91,9 +91,12 @@ alignment take priority over commit volume.
   behavior contracts before the live release-identity and $299 conversion-path
   audit, with immutable action pins and no repository secrets.
 - A contract-tested public-site deployment handoff that binds the exact tested
-  source to the existing Sites project, keeps saved versions distinct from live
-  production, requires explicit owner approval, and immediately audits a
-  successful publish. Sites version 46 is superseded and must not be published.
+  source, lockfile, hosted Node runtime, archive digest, and existing Sites
+  project in a fail-closed candidate receipt; requires explicit source-export
+  approval before any push to the separate Sites source repository; keeps saved
+  versions distinct from live production; requires separate deployment
+  approval; and immediately audits a successful publish. Sites versions 46 and
+  47 are superseded and must not be published.
 - A zero-vulnerability site dependency lock with Next `16.2.11`, React and
   React Server Components `19.2.8`, `brace-expansion` `5.0.8`, current
   Cloudflare and Vite tooling, and advisory-fixed PostCSS and Sharp overrides.
@@ -517,10 +520,14 @@ python3 scripts/audit_pilot_labels.py --repo becastil/Chats-empty-repo
 The public site still advertises `v0.3.50`. Sites versions 46 and 47 are
 superseded and must not be deployed; version 47 predates the July 24 React
 Server Components and `brace-expansion` advisories. Run the deployment handoff
-against the exact patched `main` commit and save only that tested source as a
-new candidate in the existing Sites project. Record its opaque version and
-source identity, but do not deploy it without explicit owner approval. After
-approval, deploy only that replacement and immediately run
+from Node `22.13.0` with `scripts/prepare_site_candidate.py`, then obtain
+explicit owner approval before pushing the receipt's exact patched `main`
+source to the separate Sites source repository. Only after that approval, push
+and save the receipt-bound source and archive as a new candidate in the existing
+Sites project. Source-export approval does not authorize production; record the
+saved version, source identity, and archive digest, then obtain separate owner
+approval before deployment. After deployment approval, publish that replacement
+and run
 `python3 scripts/audit_production_site.py`; do not describe it as live before
 both steps pass.
 
