@@ -314,8 +314,11 @@ current project version. This protects the existing buyer path from sending a
 visitor to an obsolete artifact; it does not add a campaign, prove a visit,
 create demand, or record revenue.
 The same check now runs daily in a read-only GitHub workflow and remains
-manually dispatchable after deployment. It receives no secrets and changes no
-release, site, customer record, or commercial evidence.
+manually dispatchable after deployment. Before requesting the live page, the
+workflow runs its own permission and command-order contract plus the auditor's
+behavior suite for stale releases, malformed free and paid offers, and missing
+website-attributed pilot links. It receives no secrets and changes no release,
+site, customer record, or commercial evidence.
 The release handoff now requires lockfile installation, a tested production
 build, a zero-vulnerability dependency audit, lint, an exact-source save against
 the existing Sites project, explicit owner approval before public deployment,

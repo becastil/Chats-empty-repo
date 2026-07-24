@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Required the daily production-site workflow to run its workflow contract and
+  complete auditor behavior suite before trusting the live release, $299
+  service, or pilot-application checks.
 - Added the complete pilot-funnel behavioral suite to the dedicated hosted
   intake contract before its live label audit, and added both the suite and its
   revenue fixture to pull-request and `main` trigger paths.

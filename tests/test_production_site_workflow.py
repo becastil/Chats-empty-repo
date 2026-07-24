@@ -73,7 +73,13 @@ class ProductionSiteWorkflowContractTests(unittest.TestCase):
         )
         self.assertEqual(
             run_commands,
-            ["python3 scripts/audit_production_site.py"],
+            [
+                (
+                    "python3 -m unittest tests.test_production_site_workflow "
+                    "tests.test_production_site_audit"
+                ),
+                "python3 scripts/audit_production_site.py",
+            ],
         )
 
 

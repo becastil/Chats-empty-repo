@@ -157,8 +157,10 @@ link, unexpected content type, or network failure exits nonzero instead of
 accepting a partial check.
 
 The read-only `Production site audit` workflow runs the same command once per
-day and can be dispatched manually after a deployment. It uses no repository
-secrets and does not change the site, a release, or any commercial evidence.
+day and can be dispatched manually after a deployment. Before the live request,
+it runs the workflow contract and complete auditor behavior suite. It uses no
+repository secrets and does not change the site, a release, or any commercial
+evidence.
 
 ## Maintainer Release Contract
 

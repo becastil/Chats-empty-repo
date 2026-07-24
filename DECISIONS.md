@@ -2908,3 +2908,21 @@ This closes a conversion-accounting blind spot without changing the reporter,
 labels, public intake, or human sales process. Passing the hosted check remains
 infrastructure evidence only; it does not create a lead, payment, conversion,
 or revenue event.
+
+## 2026-07-24: Self-Test The Production Conversion Audit
+
+The scheduled production workflow executed the live auditor directly. If a
+parser or assertion regression made the auditor accept stale release metadata,
+an incorrect $299 service, or a broken website-attributed application link, the
+daily job could remain green without proving its detector still worked.
+
+The workflow now runs `tests.test_production_site_workflow` and
+`tests.test_production_site_audit` before requesting the public page. Those
+contracts prove the read-only workflow shape and exercise accepted production
+HTML plus stale release, malformed offer, and missing conversion-link failures.
+The live audit remains the final step and still fails on network or production
+drift.
+
+This strengthens the existing buyer-path monitor without changing or deploying
+the site. A passing self-test or live audit is operational evidence only; it is
+not a visit, pilot request, payment, or revenue event.

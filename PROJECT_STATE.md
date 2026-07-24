@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 223 of
-1,000, with 777 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 224 of
+1,000, with 776 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -86,8 +86,9 @@ alignment take priority over commit volume.
 - A dependency-free production audit that reconciles canonical metadata, the
   free structured offer, project release version, portable download URL, paid
   pilot service, and website-attributed application link.
-- A read-only daily production workflow that runs the release-identity audit
-  with immutable action pins and no repository secrets.
+- A read-only daily production workflow that runs its workflow and auditor
+  behavior contracts before the live release-identity and $299 conversion-path
+  audit, with immutable action pins and no repository secrets.
 - A contract-tested public-site deployment handoff that binds the exact tested
   source to the existing Sites project, keeps saved versions distinct from live
   production, requires explicit owner approval, and immediately audits a
