@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 246 of
-1,000, with 754 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 247 of
+1,000, with 753 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -143,6 +143,10 @@ alignment take priority over commit volume.
   staged archive, and atomically links the archive and synced receipt into
   their requested paths only when absent. A destination claimed after
   preflight remains unchanged and withholds approval-ready success.
+- Symlink-visible Sites evidence paths that resolve parent directories without
+  dereferencing the requested archive or receipt leaf. Initial and dangling
+  leaf symlinks fail before commands or evidence reads, while an existing
+  symlinked parent that resolves inside the repository fails containment.
 - Receipt-stable Sites verification that parses one exact byte buffer and
   requires the same regular receipt and digest after archive and source
   validation. Mutation or replacement with a link during verification
@@ -593,7 +597,11 @@ Server Components and `brace-expansion` advisories. Run `nvm install` and
 `nvm use` to select the repository's exact Node `22.13.0` pin, then run the
 deployment handoff with `scripts/prepare_site_candidate.py`, using fresh
 outside-repository archive and receipt paths so any previously reviewed pair
-remains unchanged. Obtain independent `--verify-only` evidence for its
+remains unchanged. Both requested paths must be direct regular-file leaves,
+not symlinks. Before treating a new pair as approval-ready, bind evidence reads
+and publication to stable parent and file identities so concurrent parent or
+leaf replacement cannot cross the remaining check-to-open windows. Then obtain
+independent `--verify-only` evidence for its
 schema-4 complete-tree, duplicate-free,
 branch-bound, archive-stable, receipt-stable, test-bracketed evidence before
 recording the printed `receipt_sha256`, canonical remote Sites repository

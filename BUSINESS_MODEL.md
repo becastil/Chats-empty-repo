@@ -470,6 +470,15 @@ of replacing evidence. A late receipt collision can leave the validated
 archive published without an approval-ready receipt, so that unpaired archive
 must not advance the handoff. This changes no schema-4 evidence, authorizes no
 source export or deployment, and creates no customer or revenue evidence.
+Archive and receipt path normalization now resolves each parent directory while
+preserving the requested leaf. Preparation therefore rejects initial and
+dangling output symlinks instead of following them to an unapproved evidence
+location, and verification rejects a link before reading candidate bytes.
+Resolving the parent still rejects an existing symlinked directory that points
+back into the protected checkout. This keeps paid-
+distribution approval attached to the exact evidence leaf an operator supplied
+without exporting source, saving or deploying a version, or creating customer
+or revenue evidence.
 A separate read-only hosted dependency contract runs for relevant lock and
 workflow changes, on manual dispatch, and weekly so a newly published advisory
 does not wait for another package edit. It uses the minimum supported Node

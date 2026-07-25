@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Preserved requested Sites evidence leaf paths during path normalization so
+  initial or dangling archive and receipt symlinks fail closed, while resolving
+  parent directories still rejects an existing symlink routed into the
+  repository.
 - Made the approved receipt digest and both exported-source repository
   arguments an atomic pre-save verification mode, preventing digest-only
   success from omitting the network source and commit checks.

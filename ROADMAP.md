@@ -13,7 +13,10 @@
   duplicate-free, branch-bound, archive-stable, receipt-stable, test-bracketed,
   scope-constrained, atomically no-clobber-published archive and receipt while
   `refs/heads/main`, the same synchronized source commit, and the same archive
-  and receipt digests survive every acceptance checkpoint, before asking for
+  and receipt digests survive every acceptance checkpoint. The requested
+  evidence leaves must remain direct regular files rather than initial or
+  dangling symlinks. Bind evidence reads and publication to stable parent and
+  file identities across the remaining check-to-open windows before asking for
   explicit source-export approval that records the printed `receipt_sha256`.
   After approval, push its receipt-bound source to the separate Sites source
   repository, verify the unchanged archive and receipt again while requiring

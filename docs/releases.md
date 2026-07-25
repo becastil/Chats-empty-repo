@@ -164,9 +164,13 @@ site release:
    the packaged archive before structural validation, publishes the archive
    and receipt without replacing existing paths, then repeats synchronized
    source, archive digest, and exact staged receipt digest checks before
-   reporting success. Persistent drift during receipt publication therefore
-   leaves no approval-ready result. The success output includes
-   `receipt_sha256`; retain that digest with the candidate evidence.
+   reporting success. Requested archive and receipt leaf paths remain
+   unresolved so initial or dangling symlinks are rejected instead of silently
+   redirecting evidence; their parent directories are resolved so an existing
+   symlink that points into the repository fails the containment check.
+   Persistent drift during receipt publication therefore leaves no
+   approval-ready result. The success output includes `receipt_sha256`; retain
+   that digest with the candidate evidence.
    Do not use `npm audit fix --force` when it proposes a framework downgrade;
    review and test a supported patch or explicit transitive override instead.
 2. Verify the archive and receipt immediately before asking for source-export
@@ -184,10 +188,12 @@ site release:
    synchronized with `origin/main`, reconciles its commit, lockfile, and Sites
    project with the strict receipt, recomputes the archive digest, validates
    the embedded manifest, and then proves the same branch and synchronized
-   commit still hold. It requires the same regular archive and digest once more
-   at that final acceptance checkpoint before reporting success. Record the
-   printed `receipt_sha256` with the source-export approval so later
-   verification can require the exact receipt bytes the owner reviewed.
+   commit still hold. The supplied archive and receipt paths must themselves
+   name regular files rather than symlinks. It requires the same regular
+   archive and digest once more at that final acceptance checkpoint before
+   reporting success. Record the printed `receipt_sha256` with the source-export
+   approval so later verification can require the exact receipt bytes the
+   owner reviewed.
    Resolve the existing Sites source repository's credential-free remote URL
    before approval, confirm that it is not the local checkout or the repository
    configured as `origin`, and record that canonical identity as

@@ -112,8 +112,8 @@ def prepare_site_candidate(
     run_command: CommandRunner | None = None,
 ) -> SiteCandidateResult:
     project_root = root.expanduser().resolve()
-    archive_path = archive.expanduser().resolve()
-    receipt_path = receipt.expanduser().resolve()
+    archive_path = _candidate_evidence_path(archive)
+    receipt_path = _candidate_evidence_path(receipt)
     package_path = package_script.expanduser().resolve()
     runner = run_command or _run_command
 
@@ -277,8 +277,8 @@ def verify_site_candidate(
     run_command: CommandRunner | None = None,
 ) -> SiteCandidateResult:
     project_root = root.expanduser().resolve()
-    archive_path = archive.expanduser().resolve()
-    receipt_path = receipt.expanduser().resolve()
+    archive_path = _candidate_evidence_path(archive)
+    receipt_path = _candidate_evidence_path(receipt)
     runner = run_command or _run_command
 
     if (
@@ -735,6 +735,11 @@ def _exported_source_commit(
             f"exported source repository returned an invalid {source_ref}"
         )
     return _validated_sha(fields[0], f"exported source {source_ref}")
+
+
+def _candidate_evidence_path(path: Path) -> Path:
+    absolute = Path(os.path.abspath(path.expanduser()))
+    return absolute.parent.resolve() / absolute.name
 
 
 def _require_regular_file(path: Path, label: str) -> None:

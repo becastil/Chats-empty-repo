@@ -406,6 +406,9 @@ class ReleaseManifestTests(unittest.TestCase):
             "same branch and synchronized commit still hold",
             "same regular archive and digest",
             "exact staged receipt digest",
+            "initial or dangling symlinks are rejected",
+            "supplied archive and receipt paths must themselves name regular "
+            "files rather than symlinks",
             "`receipt_sha256`",
             "receipt bytes the owner reviewed",
             "--expected-receipt-sha256 APPROVED_RECEIPT_SHA256",

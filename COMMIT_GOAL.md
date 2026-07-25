@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after making Sites approval verification atomic: 246 / 1,000 (24.6%).
-- Remaining after making Sites approval verification atomic: 754 commits.
+- Progress after rejecting linked Sites evidence paths: 247 / 1,000 (24.7%).
+- Remaining after rejecting linked Sites evidence paths: 753 commits.
 
 ## Commit Standard
 

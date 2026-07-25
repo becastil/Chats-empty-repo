@@ -3428,3 +3428,29 @@ pre-approval operation and continues to print the receipt digest for review.
 This removes an ambiguous weaker success mode while following the project's
 CI/CD integrity guidance. It performs no source export, version save,
 deployment, approval, customer contact, or revenue event.
+
+## 2026-07-25: Preserve Sites Evidence Leaves During Normalization
+
+Candidate preparation and verification called `Path.resolve()` on requested
+archive and receipt paths before applying their no-clobber and regular-file
+checks. That dereferenced an initial symlink and replaced the operator-supplied
+leaf with its target. Verification therefore accepted symlinked evidence, and
+preparation could follow a dangling output symlink to a different location
+without recognizing that the requested path already existed.
+
+Candidate evidence normalization now makes the path absolute, resolves its
+parent directory, and appends the unresolved leaf name. Initial and dangling
+leaf symlinks remain visible to `lexists` and regular-file checks, while
+resolving the parent retains the prior defense against an existing symlinked
+directory that points an apparently external output back inside the repository.
+Regression coverage rejects archive and receipt verification links, preserves a
+dangling output link and its absent target, and keeps parent-alias rejection.
+
+This change closes stable initial-leaf redirection. It does not claim to pin a
+parent directory against concurrent replacement or make every type-check and
+file-open pair atomic; those stronger filesystem-identity guarantees remain a
+separate approval-boundary task.
+
+This protects the exact evidence leaf reviewed for paid distribution while
+following the project's CI/CD integrity guidance. It performs no source export,
+version save, deployment, approval, customer contact, or revenue event.

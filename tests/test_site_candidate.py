@@ -420,6 +420,60 @@ class SiteCandidateTests(unittest.TestCase):
                 ],
             )
 
+    def test_verification_rejects_an_initial_archive_symlink(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+            archive_link = Path(tmp) / "candidate-link.tar.gz"
+            archive_link.symlink_to(archive)
+            runner = FakeCommandRunner(root, archive)
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "Sites candidate archive must be a regular file",
+            ):
+                prepare_site_candidate.verify_site_candidate(
+                    root,
+                    archive_link,
+                    receipt,
+                    run_command=runner,
+                )
+
+            self.assertEqual(runner.commands, [])
+
+    def test_verification_rejects_an_initial_receipt_symlink(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+            receipt_link = Path(tmp) / "candidate-link.json"
+            receipt_link.symlink_to(receipt)
+            runner = FakeCommandRunner(root, archive)
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "Sites candidate receipt must be a regular file",
+            ):
+                prepare_site_candidate.verify_site_candidate(
+                    root,
+                    archive,
+                    receipt_link,
+                    run_command=runner,
+                )
+
+            self.assertEqual(runner.commands, [])
+
     def test_payload_binding_includes_the_drizzle_overlay(self) -> None:
         with TemporaryDirectory() as tmp:
             root, archive, receipt, package_script = self._fixture(Path(tmp))
@@ -2340,6 +2394,63 @@ class SiteCandidateTests(unittest.TestCase):
 
             self.assertFalse(archive.exists())
             self.assertEqual(receipt.read_bytes(), existing_evidence)
+            self.assertEqual(runner.commands, [])
+
+    def test_rejects_dangling_evidence_symlinks_without_writing_targets(
+        self,
+    ) -> None:
+        for label in ("archive", "receipt"):
+            with self.subTest(label=label), TemporaryDirectory() as tmp:
+                root, archive, receipt, package_script = self._fixture(
+                    Path(tmp)
+                )
+                output = archive if label == "archive" else receipt
+                other = receipt if label == "archive" else archive
+                symlink_target = Path(tmp) / f"redirected-{output.name}"
+                output.symlink_to(symlink_target)
+                runner = FakeCommandRunner(root, archive)
+
+                with self.assertRaisesRegex(
+                    prepare_site_candidate.SiteCandidateError,
+                    rf"{label} output already exists; refusing to overwrite",
+                ):
+                    prepare_site_candidate.prepare_site_candidate(
+                        root,
+                        archive,
+                        receipt,
+                        package_script,
+                        run_command=runner,
+                    )
+
+                self.assertTrue(output.is_symlink())
+                self.assertFalse(symlink_target.exists())
+                self.assertFalse(other.exists())
+                self.assertEqual(runner.commands, [])
+
+    def test_rejects_an_output_parent_symlinked_into_the_repository(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, _, receipt, package_script = self._fixture(Path(tmp))
+            repository_alias = Path(tmp) / "repository-alias"
+            repository_alias.symlink_to(root, target_is_directory=True)
+            archive = repository_alias / "candidate.tar.gz"
+            runner = FakeCommandRunner(root, archive)
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "archive must be written outside the repository",
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=runner,
+                )
+
+            self.assertFalse(root.joinpath("candidate.tar.gz").exists())
+            self.assertFalse(receipt.exists())
             self.assertEqual(runner.commands, [])
 
     def test_preserves_an_archive_claimed_after_preflight(self) -> None:
