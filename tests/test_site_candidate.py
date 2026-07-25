@@ -37,6 +37,8 @@ class FakeCommandRunner:
         *,
         status: str = "",
         origin_sha: str = COMMIT_SHA,
+        head_shas: tuple[str, ...] | None = None,
+        origin_shas: tuple[str, ...] | None = None,
         node_version: str = "v22.13.0",
         include_manifest: bool = True,
         extra_member_name: str | None = None,
@@ -46,7 +48,8 @@ class FakeCommandRunner:
         self.root = root
         self.archive = archive
         self.status = status
-        self.origin_sha = origin_sha
+        self.head_shas = list(head_shas or (COMMIT_SHA,))
+        self.origin_shas = list(origin_shas or (origin_sha,))
         self.node_version = node_version
         self.include_manifest = include_manifest
         self.extra_member_name = extra_member_name
@@ -66,9 +69,9 @@ class FakeCommandRunner:
         ):
             return self.status
         if normalized == ("git", "rev-parse", "HEAD"):
-            return COMMIT_SHA
+            return self._next_sha(self.head_shas)
         if normalized == ("git", "rev-parse", "origin/main"):
-            return self.origin_sha
+            return self._next_sha(self.origin_shas)
         if normalized == ("node", "--version"):
             return self.node_version
         if normalized == ("npm", "test"):
@@ -96,6 +99,12 @@ class FakeCommandRunner:
     def assert_root(self, root: Path) -> None:
         if root != self.root:
             raise AssertionError(f"unexpected command root: {root}")
+
+    @staticmethod
+    def _next_sha(values: list[str]) -> str:
+        if len(values) > 1:
+            return values.pop(0)
+        return values[0]
 
     def _package(self) -> None:
         self.archive.parent.mkdir(parents=True, exist_ok=True)
@@ -201,6 +210,8 @@ class SiteCandidateTests(unittest.TestCase):
                         "--porcelain",
                         "--untracked-files=all",
                     ),
+                    ("git", "rev-parse", "HEAD"),
+                    ("git", "rev-parse", "origin/main"),
                     (
                         *prepare_site_candidate.PACKAGING_ENV,
                         str(package_script),
@@ -213,6 +224,8 @@ class SiteCandidateTests(unittest.TestCase):
                         "--porcelain",
                         "--untracked-files=all",
                     ),
+                    ("git", "rev-parse", "HEAD"),
+                    ("git", "rev-parse", "origin/main"),
                 ],
             )
 
@@ -242,6 +255,14 @@ class SiteCandidateTests(unittest.TestCase):
             self.assertEqual(
                 verify_runner.commands,
                 [
+                    (
+                        "git",
+                        "status",
+                        "--porcelain",
+                        "--untracked-files=all",
+                    ),
+                    ("git", "rev-parse", "HEAD"),
+                    ("git", "rev-parse", "origin/main"),
                     (
                         "git",
                         "status",
@@ -672,6 +693,127 @@ class SiteCandidateTests(unittest.TestCase):
                     receipt,
                     package_script,
                     run_command=runner,
+                )
+
+    def test_rejects_synchronized_source_moving_after_validation(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            moved_sha = "b" * 40
+            runner = FakeCommandRunner(
+                root,
+                archive,
+                head_shas=(COMMIT_SHA, moved_sha),
+                origin_shas=(COMMIT_SHA, moved_sha),
+            )
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "synchronized source moved during candidate operation",
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=runner,
+                )
+
+            self.assertFalse(archive.exists())
+            self.assertFalse(receipt.exists())
+
+    def test_rejects_synchronized_source_moving_during_packaging(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            moved_sha = "b" * 40
+            runner = FakeCommandRunner(
+                root,
+                archive,
+                head_shas=(COMMIT_SHA, COMMIT_SHA, moved_sha),
+                origin_shas=(COMMIT_SHA, COMMIT_SHA, moved_sha),
+            )
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "synchronized source moved during candidate operation",
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=runner,
+                )
+
+            self.assertTrue(archive.exists())
+            self.assertFalse(receipt.exists())
+
+    def test_rejects_synchronized_source_moving_during_archive_hashing(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            moved_sha = "b" * 40
+            runner = FakeCommandRunner(root, archive)
+            real_sha256 = prepare_site_candidate._sha256
+
+            def hash_and_move_source(path: Path) -> str:
+                digest = real_sha256(path)
+                if path == archive.resolve():
+                    runner.head_shas[:] = [moved_sha]
+                    runner.origin_shas[:] = [moved_sha]
+                return digest
+
+            with (
+                patch.object(
+                    prepare_site_candidate,
+                    "_sha256",
+                    side_effect=hash_and_move_source,
+                ),
+                self.assertRaisesRegex(
+                    prepare_site_candidate.SiteCandidateError,
+                    "synchronized source moved during candidate operation",
+                ),
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=runner,
+                )
+
+            self.assertTrue(archive.exists())
+            self.assertFalse(receipt.exists())
+
+    def test_verification_rejects_synchronized_source_moving_mid_check(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+            moved_sha = "b" * 40
+            verify_runner = FakeCommandRunner(
+                root,
+                archive,
+                head_shas=(COMMIT_SHA, moved_sha),
+                origin_shas=(COMMIT_SHA, moved_sha),
+            )
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "synchronized source moved during candidate operation",
+            ):
+                prepare_site_candidate.verify_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    run_command=verify_runner,
                 )
 
     def test_rejects_runtime_drift_from_hosted_validation(self) -> None:

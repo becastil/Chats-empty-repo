@@ -127,7 +127,11 @@ def prepare_site_candidate(
 
     for command in VALIDATION_COMMANDS:
         runner(command, project_root)
-    _require_clean_worktree(project_root, runner)
+    _require_same_synchronized_commit(
+        project_root,
+        commit_sha,
+        runner,
+    )
 
     server_entry = project_root / "dist" / "server" / "index.js"
     _require_regular_file(server_entry, "built Sites server entry")
@@ -152,7 +156,6 @@ def prepare_site_candidate(
         ),
         project_root,
     )
-    _require_clean_worktree(project_root, runner)
     _require_regular_file(archive_path, "Sites candidate archive")
     _verify_archive(
         archive_path,
@@ -161,6 +164,11 @@ def prepare_site_candidate(
     )
 
     archive_sha256 = _sha256(archive_path)
+    _require_same_synchronized_commit(
+        project_root,
+        commit_sha,
+        runner,
+    )
     receipt_payload = {
         "schema_version": SCHEMA_VERSION,
         "candidate": manifest,
@@ -267,6 +275,11 @@ def verify_site_candidate(
         candidate,
         recorded_payload_digest,
     )
+    _require_same_synchronized_commit(
+        project_root,
+        commit_sha,
+        runner,
+    )
     return SiteCandidateResult(
         commit_sha=commit_sha,
         archive_sha256=archive_sha256,
@@ -326,6 +339,19 @@ def _synchronized_commit(
             f"HEAD {commit_sha} does not match origin/main {origin_sha}"
         )
     return commit_sha
+
+
+def _require_same_synchronized_commit(
+    root: Path,
+    expected_commit_sha: str,
+    run_command: CommandRunner,
+) -> None:
+    current_commit_sha = _synchronized_commit(root, run_command)
+    if current_commit_sha != expected_commit_sha:
+        raise SiteCandidateError(
+            "synchronized source moved during candidate operation: "
+            f"expected {expected_commit_sha}; found {current_commit_sha}"
+        )
 
 
 def _validated_sha(value: str, label: str) -> str:

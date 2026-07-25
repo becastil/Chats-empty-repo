@@ -364,6 +364,15 @@ suppresses AppleDouble metadata so portability does not weaken archive scope.
 This closes the gap between a passing build and the artifact awaiting approval;
 it does not authorize export, save or deploy a version, or create customer or
 revenue evidence.
+Candidate preparation now also repeats the complete clean
+`HEAD == origin/main` check after validation and packaging, requiring both
+observations to retain the original synchronized commit. Read-only verification
+repeats the same proof after validating the archive and receipt. A concurrent
+clean commit or remote-tracking ref move that persists to an acceptance
+checkpoint can no longer leave an approval-ready result labeled with an earlier
+source identity. This strengthens paid distribution evidence; it does not
+authorize source export, version saving, deployment, or create customer or
+revenue evidence.
 A separate read-only hosted dependency contract runs for relevant lock and
 workflow changes, on manual dispatch, and weekly so a newly published advisory
 does not wait for another package edit. It uses the minimum supported Node

@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after binding tested candidate payloads: 233 / 1,000 (23.3%).
-- Remaining after binding tested candidate payloads: 767 commits.
+- Progress after holding one candidate source commit: 234 / 1,000 (23.4%).
+- Remaining after holding one candidate source commit: 766 commits.
 
 ## Commit Standard
 

@@ -383,6 +383,8 @@ class ReleaseManifestTests(unittest.TestCase):
             "path, mode, and bytes",
             "tested build payload",
             "`COPYFILE_DISABLE=1`",
+            "same synchronized commit at every acceptance checkpoint",
+            "same synchronized commit still holds",
             "Do not use `npm audit fix --force`",
         ):
             self.assertIn(requirement, normalized, requirement)

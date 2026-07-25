@@ -3125,3 +3125,22 @@ same strict artifact on macOS and hosted Linux.
 The receipt now proves that the artifact awaiting approval is the tested build,
 not only a source label. No source was exported, no Sites version was saved or
 deployed, and no visit, pilot request, payment, or revenue evidence was created.
+
+## 2026-07-24: Hold One Synchronized Commit Across Candidate Operations
+
+Candidate preparation required a clean `HEAD == origin/main` checkout at entry
+and rechecked worktree cleanliness after validation and packaging. A concurrent
+clean commit, reset, or remote-tracking ref move could therefore leave those
+later checks green while the receipt retained the original commit identity.
+Read-only verification had the same entry-only source observation.
+
+Preparation now repeats the full clean synchronized-source proof after the long
+validation phase and after packaging, and both observations must retain the
+original commit SHA before a receipt is written. Independent verification
+repeats that proof after reconciling the archive and receipt before reporting
+success. Persistent worktree, `HEAD`, or `origin/main` drift fails closed.
+
+This brackets each approval-evidence operation with the same source identity
+instead of describing only its starting instant. It does not lock the
+repository, approve source export, save or deploy a Sites version, or create a
+visit, pilot request, payment, or revenue event.

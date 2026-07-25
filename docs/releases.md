@@ -143,7 +143,10 @@ site release:
    packaged payload must match. The receipt records the resulting archive
    digest and the pre-package payload digest for later read-only verification.
    Packaging sets `COPYFILE_DISABLE=1` so macOS cannot inject AppleDouble
-   metadata outside the allowed archive root.
+   metadata outside the allowed archive root. The preflight also repeats the
+   clean `HEAD == origin/main` check after validation and after packaging,
+   requiring the same synchronized commit at every acceptance checkpoint
+   before it writes a receipt.
    Do not use `npm audit fix --force` when it proposes a framework downgrade;
    review and test a supported patch or explicit transitive override instead.
 2. Verify the archive and receipt immediately before asking for source-export
@@ -159,7 +162,8 @@ site release:
    export, version save, or deployment operation. It requires the checkout to
    remain clean and synchronized with `origin/main`, reconciles its commit,
    lockfile, and Sites project with the strict receipt, recomputes the archive
-   digest, and validates the embedded manifest.
+   digest, validates the embedded manifest, and then proves the same
+   synchronized commit still holds before reporting success.
 3. Obtain explicit owner approval before pushing the exact committed source to
    the separate Sites source repository. This source-export approval is
    separate from deployment approval, and the source export does not authorize

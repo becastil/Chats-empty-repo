@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Required the same clean `HEAD == origin/main` commit at every Sites
+  validation, packaged-archive, and read-only verification checkpoint,
+  rejecting persistent ref moves before a receipt or approval-ready success.
 - Bound every Sites candidate payload file's canonical path, permission mode,
   and bytes before the external packaging helper runs, requiring schema-2
   receipts and later read-only verification to reproduce the tested digest.
