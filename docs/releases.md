@@ -135,7 +135,7 @@ site release:
    `npm run lint`, and `npm run build`, binds the candidate payload, then runs
    `npm run test:site` against the exact existing `dist/` without rebuilding.
    The complete dependency audit must report zero vulnerabilities. The command
-   refuses dirty or unsynchronized source,
+   refuses a detached or non-`main` branch, dirty or unsynchronized source,
    runtime-pin or active-runtime drift, and an archive whose embedded commit,
    lock digest, Sites project, or Node version differs from the tested source.
    Archive members outside `dist/`, path aliases, links, devices, pipes, and
@@ -158,9 +158,10 @@ site release:
    never depends on a decoder selecting the first or last value.
    Packaging sets `COPYFILE_DISABLE=1` so macOS cannot inject AppleDouble
    metadata outside the allowed archive root. The preflight also repeats the
-   clean `HEAD == origin/main` check after validation and after packaging,
-   requiring the same synchronized commit at every acceptance checkpoint
-   before it writes a receipt.
+   active `refs/heads/main` and clean `HEAD == origin/main` checks after
+   validation and after packaging, requiring the same synchronized commit at
+   every acceptance checkpoint while remaining on the same branch before it
+   writes a receipt.
    Do not use `npm audit fix --force` when it proposes a framework downgrade;
    review and test a supported patch or explicit transitive override instead.
 2. Verify the archive and receipt immediately before asking for source-export
@@ -174,10 +175,11 @@ site release:
 
    Verification is read-only and runs no Node, npm, packaging, network, source
    export, version save, or deployment operation. It requires the checkout to
-   remain clean and synchronized with `origin/main`, reconciles its commit,
-   lockfile, and Sites project with the strict receipt, recomputes the archive
-   digest, validates the embedded manifest, and then proves the same
-   synchronized commit still holds before reporting success.
+   remain on `refs/heads/main`, clean, and synchronized with `origin/main`,
+   reconciles its commit, lockfile, and Sites project with the strict receipt,
+   recomputes the archive digest, validates the embedded manifest, and then
+   proves the same branch and synchronized commit still hold before reporting
+   success.
 3. Obtain explicit owner approval before pushing the exact committed source to
    the separate Sites source repository. This source-export approval is
    separate from deployment approval, and the source export does not authorize

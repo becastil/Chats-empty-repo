@@ -39,6 +39,7 @@ class FakeCommandRunner:
         origin_sha: str = COMMIT_SHA,
         head_shas: tuple[str, ...] | None = None,
         origin_shas: tuple[str, ...] | None = None,
+        branches: tuple[str, ...] | None = None,
         node_version: str = "v22.13.0",
         include_manifest: bool = True,
         extra_member_name: str | None = None,
@@ -53,6 +54,7 @@ class FakeCommandRunner:
         self.status = status
         self.head_shas = list(head_shas or (COMMIT_SHA,))
         self.origin_shas = list(origin_shas or (origin_sha,))
+        self.branches = list(branches or ("main",))
         self.node_version = node_version
         self.include_manifest = include_manifest
         self.extra_member_name = extra_member_name
@@ -78,10 +80,12 @@ class FakeCommandRunner:
             "--untracked-files=all",
         ):
             return self.status
+        if normalized == ("git", "branch", "--show-current"):
+            return self._next_value(self.branches)
         if normalized == ("git", "rev-parse", "HEAD"):
-            return self._next_sha(self.head_shas)
+            return self._next_value(self.head_shas)
         if normalized == ("git", "rev-parse", "origin/main"):
-            return self._next_sha(self.origin_shas)
+            return self._next_value(self.origin_shas)
         if normalized == ("node", "--version"):
             return self.node_version
         if normalized == ("npm", "run", "build"):
@@ -144,7 +148,7 @@ class FakeCommandRunner:
             raise AssertionError(f"unexpected command root: {root}")
 
     @staticmethod
-    def _next_sha(values: list[str]) -> str:
+    def _next_value(values: list[str]) -> str:
         if len(values) > 1:
             return values.pop(0)
         return values[0]
@@ -274,6 +278,7 @@ class SiteCandidateTests(unittest.TestCase):
                         "--porcelain",
                         "--untracked-files=all",
                     ),
+                    ("git", "branch", "--show-current"),
                     ("git", "rev-parse", "HEAD"),
                     ("git", "rev-parse", "origin/main"),
                     ("node", "--version"),
@@ -284,6 +289,7 @@ class SiteCandidateTests(unittest.TestCase):
                         "--porcelain",
                         "--untracked-files=all",
                     ),
+                    ("git", "branch", "--show-current"),
                     ("git", "rev-parse", "HEAD"),
                     ("git", "rev-parse", "origin/main"),
                     (
@@ -298,6 +304,7 @@ class SiteCandidateTests(unittest.TestCase):
                         "--porcelain",
                         "--untracked-files=all",
                     ),
+                    ("git", "branch", "--show-current"),
                     ("git", "rev-parse", "HEAD"),
                     ("git", "rev-parse", "origin/main"),
                 ],
@@ -335,6 +342,7 @@ class SiteCandidateTests(unittest.TestCase):
                         "--porcelain",
                         "--untracked-files=all",
                     ),
+                    ("git", "branch", "--show-current"),
                     ("git", "rev-parse", "HEAD"),
                     ("git", "rev-parse", "origin/main"),
                     (
@@ -343,6 +351,7 @@ class SiteCandidateTests(unittest.TestCase):
                         "--porcelain",
                         "--untracked-files=all",
                     ),
+                    ("git", "branch", "--show-current"),
                     ("git", "rev-parse", "HEAD"),
                     ("git", "rev-parse", "origin/main"),
                 ],
@@ -868,6 +877,81 @@ class SiteCandidateTests(unittest.TestCase):
                     package_script,
                     run_command=runner,
                 )
+
+    def test_rejects_non_main_branch_at_synchronized_commit(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            runner = FakeCommandRunner(
+                root,
+                archive,
+                branches=("release",),
+            )
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "candidate operations require refs/heads/main; "
+                "found refs/heads/release",
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=runner,
+                )
+
+            self.assertFalse(archive.exists())
+            self.assertFalse(receipt.exists())
+
+    def test_rejects_detached_head_at_synchronized_commit(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            runner = FakeCommandRunner(
+                root,
+                archive,
+                branches=("",),
+            )
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "candidate operations require refs/heads/main; "
+                "found detached HEAD",
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=runner,
+                )
+
+            self.assertFalse(archive.exists())
+            self.assertFalse(receipt.exists())
+
+    def test_rejects_branch_change_after_validation(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            runner = FakeCommandRunner(
+                root,
+                archive,
+                branches=("main", "release"),
+            )
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "candidate operations require refs/heads/main; "
+                "found refs/heads/release",
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=runner,
+                )
+
+            self.assertFalse(archive.exists())
+            self.assertFalse(receipt.exists())
 
     def test_rejects_synchronized_source_moving_after_validation(self) -> None:
         with TemporaryDirectory() as tmp:

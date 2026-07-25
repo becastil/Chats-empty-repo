@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Required every Sites candidate source checkpoint to remain on
+  `refs/heads/main`, rejecting detached or alternate-branch checkouts even when
+  their commit still matches `origin/main`.
 - Rejected duplicate JSON keys throughout Sites source metadata, candidate
   receipts, and archived manifests, even when repeated values match, so
   approval evidence cannot depend on parser-specific key selection.

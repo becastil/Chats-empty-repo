@@ -351,6 +351,12 @@ def _synchronized_commit(
     run_command: CommandRunner,
 ) -> str:
     _require_clean_worktree(root, run_command)
+    branch = run_command(("git", "branch", "--show-current"), root).strip()
+    current_ref = f"refs/heads/{branch}" if branch else "detached HEAD"
+    if current_ref != SOURCE_REF:
+        raise SiteCandidateError(
+            f"candidate operations require {SOURCE_REF}; found {current_ref}"
+        )
     commit_sha = _validated_sha(
         run_command(("git", "rev-parse", "HEAD"), root),
         "HEAD",

@@ -3214,3 +3214,23 @@ This removes parser-dependent interpretation from the paid-distribution
 approval boundary. It does not export source, save or deploy a Sites version,
 approve either controlled action, or create a visit, pilot request, payment, or
 revenue event.
+
+## 2026-07-25: Bind The Sites Source Ref To The Actual Checkout
+
+Every candidate manifest recorded `source_ref` as `refs/heads/main`, while the
+source preflight proved only that a clean checkout's commit SHA matched
+`origin/main`. A detached HEAD or another local branch pointing at that commit
+could therefore pass and produce approval evidence claiming a branch that was
+not actually checked out.
+
+The shared synchronized-source proof now reads the active branch before either
+commit SHA. Preparation repeats that exact `refs/heads/main` requirement after
+the test phase and after packaging; read-only verification repeats it after
+validating the receipt and archive. Detached and alternate-branch checkouts fail
+before a receipt or approval-ready result, including when their commit bytes
+are otherwise identical to `origin/main`.
+
+The schema remains at version 4 because valid receipts already record the
+required source ref; this change enforces that existing claim. It does not
+export source, save or deploy a Sites version, approve either controlled action,
+or create a visit, pilot request, payment, or revenue event.

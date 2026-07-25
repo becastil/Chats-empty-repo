@@ -388,6 +388,8 @@ class ReleaseManifestTests(unittest.TestCase):
             "Node `22.13.0`",
             "dependency audit must report zero vulnerabilities",
             "receipt records the resulting archive digest",
+            "detached or non-`main` branch",
+            "active `refs/heads/main`",
             "outside `dist/`",
             "regular files and directories",
             "canonical path, entry type, and permission mode",
@@ -401,7 +403,7 @@ class ReleaseManifestTests(unittest.TestCase):
             "Duplicate JSON keys fail even when repeated values match",
             "`COPYFILE_DISABLE=1`",
             "same synchronized commit at every acceptance checkpoint",
-            "same synchronized commit still holds",
+            "same branch and synchronized commit still hold",
             "Do not use `npm audit fix --force`",
         ):
             self.assertIn(requirement, normalized, requirement)

@@ -399,6 +399,12 @@ checkpoint can no longer leave an approval-ready result labeled with an earlier
 source identity. This strengthens paid distribution evidence; it does not
 authorize source export, version saving, deployment, or create customer or
 revenue evidence.
+Those synchronized-source checks now also require the checkout's active branch
+to remain `refs/heads/main`. A detached HEAD or alternate local branch at the
+same `origin/main` commit can no longer receive a manifest that claims the main
+source ref. This makes the approval identity truthful without changing valid
+schema-4 receipts, granting source-export or deployment approval, or creating
+customer or revenue evidence.
 A separate read-only hosted dependency contract runs for relevant lock and
 workflow changes, on manual dispatch, and weekly so a newly published advisory
 does not wait for another package edit. It uses the minimum supported Node

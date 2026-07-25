@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after rejecting ambiguous Sites JSON: 237 / 1,000 (23.7%).
-- Remaining after rejecting ambiguous Sites JSON: 763 commits.
+- Progress after enforcing the Sites source branch: 238 / 1,000 (23.8%).
+- Remaining after enforcing the Sites source branch: 762 commits.
 
 ## Commit Standard
 
