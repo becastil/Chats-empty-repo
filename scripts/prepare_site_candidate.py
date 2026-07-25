@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
 import hashlib
 import json
@@ -13,7 +14,7 @@ import subprocess
 import sys
 import tarfile
 from tempfile import NamedTemporaryFile, TemporaryDirectory
-from typing import Callable, Iterable, Protocol, Sequence
+from typing import Callable, Iterable, Iterator, Protocol, Sequence
 from urllib.parse import urlsplit
 
 
@@ -103,6 +104,11 @@ class SiteCandidateResult:
     receipt: Path
 
 
+@dataclass(frozen=True)
+class _OutputParent:
+    fd: int
+
+
 def prepare_site_candidate(
     root: Path,
     archive: Path,
@@ -139,11 +145,11 @@ def prepare_site_candidate(
         project_root,
         "archive",
     )
-    output_parent_identities: dict[str, os.stat_result] = {}
-    for output_path, label in (
+    output_paths = (
         (archive_path, "archive"),
         (receipt_path, "receipt"),
-    ):
+    )
+    for output_path, label in output_paths:
         if _path_is_within_repository(
             output_path,
             project_root,
@@ -158,13 +164,32 @@ def prepare_site_candidate(
                 f"{label} output already exists; refusing to overwrite: "
                 f"{output_path}"
             )
-        output_parent_identities[label] = _output_parent_identity(
-            output_path,
-            label,
-            repository_identities,
-        )
     _require_descriptor_relative_publication()
 
+    with _open_output_parents(
+        output_paths,
+        repository_identities,
+    ) as output_parents:
+        return _prepare_site_candidate_with_open_parents(
+            project_root,
+            archive_path,
+            receipt_path,
+            package_path,
+            expected_node_version,
+            runner,
+            output_parents,
+        )
+
+
+def _prepare_site_candidate_with_open_parents(
+    project_root: Path,
+    archive_path: Path,
+    receipt_path: Path,
+    package_path: Path,
+    expected_node_version: str,
+    runner: CommandRunner,
+    output_parents: dict[str, _OutputParent],
+) -> SiteCandidateResult:
     commit_sha = _synchronized_commit(project_root, runner)
 
     node_output = runner(("node", "--version"), project_root).strip()
@@ -237,7 +262,7 @@ def prepare_site_candidate(
             staged_archive,
             archive_path,
             "archive",
-            output_parent_identities["archive"],
+            output_parents["archive"].fd,
         )
         _require_same_archive(
             archive_path,
@@ -256,7 +281,7 @@ def prepare_site_candidate(
         receipt_path,
         receipt_payload,
         "receipt",
-        output_parent_identities["receipt"],
+        output_parents["receipt"].fd,
     )
     _require_same_synchronized_commit(
         project_root,
@@ -831,35 +856,104 @@ def _repository_directory_identities(
     return tuple(identities)
 
 
-def _output_parent_identity(
+@contextmanager
+def _open_output_parents(
+    output_paths: Sequence[tuple[Path, str]],
+    repository_identities: tuple[os.stat_result, ...],
+) -> Iterator[dict[str, _OutputParent]]:
+    parents: dict[str, _OutputParent] = {}
+    opened_by_path: dict[Path, _OutputParent] = {}
+    with ExitStack() as stack:
+        for output_path, label in output_paths:
+            parent_path = output_path.parent
+            parent = opened_by_path.get(parent_path)
+            if parent is None:
+                parent = _open_output_parent(
+                    output_path,
+                    label,
+                    repository_identities,
+                )
+                stack.callback(_close_descriptor, parent.fd)
+                opened_by_path[parent_path] = parent
+            _require_absent_output(parent.fd, output_path, label)
+            parents[label] = parent
+        yield parents
+
+
+def _open_output_parent(
     output_path: Path,
     label: str,
     repository_identities: tuple[os.stat_result, ...],
-) -> os.stat_result:
-    parent = output_path.parent
+) -> _OutputParent:
+    parent_path = output_path.parent
+    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+    if hasattr(os, "O_CLOEXEC"):
+        flags |= os.O_CLOEXEC
+
     try:
-        details = parent.stat(follow_symlinks=False)
+        parent_fd = os.open(parent_path, flags)
     except FileNotFoundError as exc:
         raise SiteCandidateError(
-            f"{label} parent directory must already exist: {parent}"
+            f"{label} parent directory must already exist: {parent_path}"
         ) from exc
     except OSError as exc:
         raise SiteCandidateError(
-            f"could not verify {label} output parent: {exc}"
+            f"could not open {label} output parent {parent_path}: {exc}"
         ) from exc
 
-    if not stat.S_ISDIR(details.st_mode):
-        raise SiteCandidateError(
-            f"{label} parent must be a directory: {parent}"
+    try:
+        try:
+            details = os.fstat(parent_fd)
+        except OSError as exc:
+            raise SiteCandidateError(
+                f"could not verify {label} output parent: {exc}"
+            ) from exc
+        if not stat.S_ISDIR(details.st_mode):
+            raise SiteCandidateError(
+                f"{label} parent must be a directory: {parent_path}"
+            )
+        if any(
+            os.path.samestat(details, repository_identity)
+            for repository_identity in repository_identities
+        ):
+            raise SiteCandidateError(
+                f"{label} must be written outside the repository: "
+                f"{output_path}"
+            )
+    except BaseException:
+        _close_descriptor(parent_fd)
+        raise
+
+    return _OutputParent(fd=parent_fd)
+
+
+def _require_absent_output(
+    parent_fd: int,
+    output_path: Path,
+    label: str,
+) -> None:
+    try:
+        os.stat(
+            output_path.name,
+            dir_fd=parent_fd,
+            follow_symlinks=False,
         )
-    if any(
-        os.path.samestat(details, repository_identity)
-        for repository_identity in repository_identities
-    ):
+    except FileNotFoundError:
+        return
+    except OSError as exc:
         raise SiteCandidateError(
-            f"{label} must be written outside the repository: {output_path}"
-        )
-    return details
+            f"could not verify {label} output {output_path}: {exc}"
+        ) from exc
+    raise SiteCandidateError(
+        f"{label} output already exists; refusing to overwrite: {output_path}"
+    )
+
+
+def _close_descriptor(descriptor: int) -> None:
+    try:
+        os.close(descriptor)
+    except OSError:
+        pass
 
 
 def _require_descriptor_relative_publication() -> None:
@@ -867,6 +961,8 @@ def _require_descriptor_relative_publication() -> None:
         os.name != "posix"
         or not hasattr(os, "O_DIRECTORY")
         or not hasattr(os, "O_NOFOLLOW")
+        or os.stat not in getattr(os, "supports_dir_fd", ())
+        or os.stat not in getattr(os, "supports_follow_symlinks", ())
         or os.link not in getattr(os, "supports_dir_fd", ())
         or os.link not in getattr(os, "supports_follow_symlinks", ())
     ):
@@ -1160,7 +1256,7 @@ def _atomic_create_json(
     path: Path,
     payload: dict[str, object],
     label: str,
-    expected_parent_identity: os.stat_result,
+    parent_fd: int,
 ) -> str:
     serialized = _serialize_json(payload)
     temporary_path: Path | None = None
@@ -1189,7 +1285,7 @@ def _atomic_create_json(
             temporary_path,
             path,
             label,
-            expected_parent_identity,
+            parent_fd,
         )
     except SiteCandidateError:
         _remove_staged_file(temporary_path)
@@ -1209,40 +1305,9 @@ def _publish_new_output(
     staged_path: Path,
     output_path: Path,
     label: str,
-    expected_parent_identity: os.stat_result,
+    parent_fd: int,
 ) -> None:
-    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
-    if hasattr(os, "O_CLOEXEC"):
-        flags |= os.O_CLOEXEC
-
     try:
-        parent_fd = os.open(output_path.parent, flags)
-    except OSError as exc:
-        raise SiteCandidateError(
-            f"could not open {label} output parent for publication "
-            f"{output_path.parent}: {exc}"
-        ) from exc
-
-    try:
-        try:
-            actual_parent_identity = os.fstat(parent_fd)
-        except OSError as exc:
-            raise SiteCandidateError(
-                f"could not verify {label} output parent before "
-                f"publication: {exc}"
-            ) from exc
-        if (
-            not stat.S_ISDIR(actual_parent_identity.st_mode)
-            or not os.path.samestat(
-                actual_parent_identity,
-                expected_parent_identity,
-            )
-        ):
-            raise SiteCandidateError(
-                f"{label} output parent changed during candidate operation; "
-                f"refusing publication: {output_path.parent}"
-            )
-
         os.link(
             staged_path,
             output_path.name,
@@ -1258,11 +1323,6 @@ def _publish_new_output(
         raise SiteCandidateError(
             f"could not publish {label} output {output_path}: {exc}"
         ) from exc
-    finally:
-        try:
-            os.close(parent_fd)
-        except OSError:
-            pass
 
 
 def _remove_staged_file(path: Path | None) -> None:

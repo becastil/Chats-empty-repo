@@ -413,8 +413,12 @@ class ReleaseManifestTests(unittest.TestCase):
             "whole-repository or subdirectory-only aliases",
             "Both output parent directories must already exist",
             "descriptor-relative hard-link support",
-            "links the output leaf relative to that descriptor",
-            "staging, staged-file reads, post-publication reads, and cleanup "
+            "opens each unique direct parent without following a symlink",
+            "keeps the descriptor open and non-inheritable",
+            "outputs in one parent reuse the same descriptor",
+            "Each final no-clobber link names its leaf relative to that held "
+            "descriptor",
+            "Staging, staged-file reads, post-publication reads, and cleanup "
             "remain path-based",
             "those operations are descriptor-bound",
             "supplied archive and receipt paths must themselves name regular "

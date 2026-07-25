@@ -491,15 +491,15 @@ paid distribution evidence without exporting source, saving or deploying a
 version, or creating customer or revenue evidence.
 Final candidate publication now narrows the concurrent replacement boundary
 too. Both direct output parents must already exist on a POSIX host with
-descriptor-relative hard-link support. Preparation records their identities
-before running commands, then opens each parent without following a symlink,
-verifies that descriptor against the recorded identity, and creates the
-archive or receipt leaf relative to it. A pre-open replacement fails, and a
-rename after verification cannot redirect publication into a replacement
-directory. The descriptor is not held from preflight, while staging,
-staged-file reads, post-publication reads, and cleanup remain path-based;
-identity remapping and inode reuse across the reopen interval remain outside
-the guarantee. The replacement candidate therefore remains blocked on those
+descriptor-relative hard-link support. Preparation opens each unique parent
+without following a symlink before running commands, verifies repository
+containment and requested-leaf absence through that descriptor, and keeps it
+non-inheritable and live through validation and publication. Archive and
+receipt paths sharing one parent reuse one descriptor, preventing two opens
+from binding one candidate pair to different directory instances. Each leaf is
+created relative to its held parent, so later path replacement cannot redirect
+publication. Staging, staged-file reads, post-publication reads, and cleanup
+remain path-based, and the replacement candidate remains blocked on those
 descriptor-bound operations. This strengthens paid-distribution integrity
 without exporting source, saving or deploying a version, or creating customer
 or revenue evidence.

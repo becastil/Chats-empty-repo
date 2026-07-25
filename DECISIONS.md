@@ -3533,3 +3533,30 @@ remain outside this guarantee. Those operations must become descriptor-bound
 before a replacement candidate is approval-ready. The change performs no
 source export, version save, deployment, approval, customer contact, or
 revenue event.
+
+## 2026-07-25: Hold Sites Publication Parents From Preflight
+
+Opening an output parent only at final publication and comparing its device and
+inode with a preflight stat closed ordinary replacement, but it retained a
+reopen interval. Inode reuse during the long build and validation phase could
+make a different directory satisfy that comparison, and opening archive and
+receipt parents independently could bind two outputs to different directory
+instances when both requested paths shared one parent.
+
+Candidate preparation now opens every unique direct output parent before the
+first Git or Node command with directory-only, no-follow, close-on-exec
+semantics. It verifies repository containment and each requested leaf relative
+to the opened descriptor, reuses one descriptor when archive and receipt share
+a parent, and keeps those descriptors live and non-inheritable through all
+validation and final no-clobber links. Context-managed ownership closes every
+descriptor after success, runner failure, or partial acquisition when a later
+parent cannot be opened. A parent path replaced after preflight cannot change
+the directory that receives publication.
+
+Staging directories and files, staged-file hashing and validation,
+post-publication evidence reads, and staging cleanup still resolve paths.
+Replacing a parent can therefore leave correctly anchored evidence in the
+displaced original directory while a later path-based check rejects the
+candidate. Those operations remain required before replacement evidence is
+approval-ready. This change performs no source export, version save,
+deployment, approval, customer contact, or revenue event.

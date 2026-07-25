@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Held each unique validated Sites output-parent descriptor from preflight
+  through archive and receipt publication, reusing shared parents and closing
+  every descriptor on success, command failure, or partial acquisition.
 - Anchored final Sites archive and receipt publication to each prevalidated
   output parent's open descriptor, rejecting parent replacement before the
   no-clobber link and preventing a rename after verification from redirecting

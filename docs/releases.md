@@ -176,15 +176,17 @@ site release:
    identity lookup failures stop preparation. Both output parent directories
    must already exist, and candidate preparation requires POSIX
    descriptor-relative hard-link support. Before any Git or Node command, it
-   records each direct parent's filesystem identity. At final no-clobber
-   publication it opens that parent without following a symlink, verifies the
-   opened descriptor still has the recorded identity, and links the output leaf
-   relative to that descriptor. A replacement before the open is rejected, and
-   renaming the parent after the identity check cannot redirect the link into a
-   replacement directory. This anchors only the final destination operation;
-   the parent descriptor is not held from preflight, and staging, staged-file
-   reads, post-publication reads, and cleanup remain path-based. Do not treat a
-   candidate as approval-ready until those operations are descriptor-bound.
+   opens each unique direct parent without following a symlink, verifies its
+   filesystem identity and both requested leaves through that descriptor, and
+   keeps the descriptor open and non-inheritable through validation and
+   publication. Archive and receipt outputs in one parent reuse the same
+   descriptor. Each final no-clobber link names its leaf relative to that held
+   descriptor, so replacing or renaming the parent path after preflight cannot
+   redirect publication into a different directory. Existing path-based final
+   checks still reject the overall candidate if its requested path no longer
+   names the published evidence. Staging, staged-file reads, post-publication
+   reads, and cleanup remain path-based. Do not treat a candidate as
+   approval-ready until those operations are descriptor-bound.
    Persistent drift during receipt publication therefore leaves no
    approval-ready result. The success output includes `receipt_sha256`; retain
    that digest with the candidate evidence.

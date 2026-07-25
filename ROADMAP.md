@@ -19,10 +19,11 @@
   whole-repository or subdirectory-only aliases must fail by filesystem
   identity. Final archive and receipt publication must retain its existing
   no-clobber semantics while requiring existing output parents and creating
-  each leaf relative to a verified open parent descriptor. Bind evidence
-  staging, staged-file and post-publication reads, and cleanup to descriptors
-  held from preflight across the remaining check-to-open windows before asking
-  for explicit source-export approval that records the printed
+  each leaf relative to a parent descriptor held from preflight through the
+  complete candidate operation, reusing that descriptor when both outputs
+  share a parent. Bind evidence staging, staged-file and post-publication reads,
+  and cleanup to descriptors across the remaining check-to-open windows before
+  asking for explicit source-export approval that records the printed
   `receipt_sha256`.
   After approval, push its receipt-bound source to the separate Sites source
   repository, verify the unchanged archive and receipt again while requiring
