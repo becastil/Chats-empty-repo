@@ -139,8 +139,10 @@ def prepare_site_candidate(
         (archive_path, "archive"),
         (receipt_path, "receipt"),
     ):
-        if output_path == project_root or output_path.is_relative_to(
-            project_root
+        if _path_is_within_repository(
+            output_path,
+            project_root,
+            label,
         ):
             raise SiteCandidateError(
                 f"{label} must be written outside the repository: {output_path}"
@@ -740,6 +742,39 @@ def _exported_source_commit(
 def _candidate_evidence_path(path: Path) -> Path:
     absolute = Path(os.path.abspath(path.expanduser()))
     return absolute.parent.resolve() / absolute.name
+
+
+def _path_is_within_repository(
+    path: Path,
+    project_root: Path,
+    label: str,
+) -> bool:
+    if path == project_root or path.is_relative_to(project_root):
+        return True
+
+    try:
+        project_identity = project_root.stat()
+    except OSError as exc:
+        raise SiteCandidateError(
+            f"could not verify {label} repository containment: {exc}"
+        ) from exc
+
+    ancestor = path.parent
+    while True:
+        try:
+            ancestor_identity = ancestor.stat()
+            if os.path.samestat(ancestor_identity, project_identity):
+                return True
+        except FileNotFoundError:
+            pass
+        except OSError as exc:
+            raise SiteCandidateError(
+                f"could not verify {label} repository containment: {exc}"
+            ) from exc
+
+        if ancestor == ancestor.parent:
+            return False
+        ancestor = ancestor.parent
 
 
 def _require_regular_file(path: Path, label: str) -> None:

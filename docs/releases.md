@@ -168,6 +168,10 @@ site release:
    unresolved so initial or dangling symlinks are rejected instead of silently
    redirecting evidence; their parent directories are resolved so an existing
    symlink that points into the repository fails the containment check.
+   Containment also rejects an output parent whose existing ancestor has the
+   repository's filesystem identity, including stable alternate case or
+   Unicode spellings and whole-repository aliases even when lexical paths
+   differ. An ambiguous identity lookup fails closed.
    Persistent drift during receipt publication therefore leaves no
    approval-ready result. The success output includes `receipt_sha256`; retain
    that digest with the candidate evidence.

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Rejected Sites archive and receipt parents whose existing ancestor has the
+  repository's filesystem identity, closing stable case-folded, Unicode, and
+  whole-repository aliases while failing closed on ambiguous identity checks.
 - Preserved requested Sites evidence leaf paths during path normalization so
   initial or dangling archive and receipt symlinks fail closed, while resolving
   parent directories still rejects an existing symlink routed into the

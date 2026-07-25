@@ -3454,3 +3454,28 @@ separate approval-boundary task.
 This protects the exact evidence leaf reviewed for paid distribution while
 following the project's CI/CD integrity guidance. It performs no source export,
 version save, deployment, approval, customer contact, or revenue event.
+
+## 2026-07-25: Compare Sites Output Ancestry By Filesystem Identity
+
+Resolving each requested evidence parent removed symlink aliases before the
+outside-repository check, but containment still compared path text. On a
+case-insensitive or Unicode-normalizing filesystem, an alternate spelling can
+identify the checkout while remaining lexically unrelated. A stable
+whole-repository alias can have the same effect, and an ignored in-repository
+output would not necessarily make the final source check dirty.
+
+Candidate preparation now walks each requested archive and receipt parent's
+ancestors and compares their filesystem identity with the checkout root after
+the existing lexical check. Missing intermediate directories do not stop the
+walk, while permission and other ambiguous identity failures stop preparation
+before any source, build, test, or packaging command. Regression coverage
+proves both evidence labels, a missing intermediate directory, and fail-closed
+lookup errors.
+
+This closes stable alternate-spelling and whole-repository aliases only. A
+mount exposing one checkout subdirectory may report a different root identity,
+and a checked parent can still be replaced before a later path-based operation.
+Descriptor-bound evidence reads and publication therefore remain required
+before a replacement candidate is approval-ready. The change performs no
+source export, version save, deployment, approval, customer contact, or revenue
+event.

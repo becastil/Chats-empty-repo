@@ -2453,6 +2453,103 @@ class SiteCandidateTests(unittest.TestCase):
             self.assertFalse(receipt.exists())
             self.assertEqual(runner.commands, [])
 
+    def test_rejects_evidence_under_a_repository_identity_alias(self) -> None:
+        for label in ("archive", "receipt"):
+            with self.subTest(label=label), TemporaryDirectory() as tmp:
+                root, archive, receipt, package_script = self._fixture(
+                    Path(tmp)
+                )
+                repository_alias = Path(tmp) / "repository-identity-alias"
+                repository_alias.mkdir()
+                repository_alias = repository_alias.resolve()
+                output = (
+                    repository_alias
+                    / "missing"
+                    / ("candidate.tar.gz" if label == "archive" else "receipt")
+                )
+                if label == "archive":
+                    archive = output
+                else:
+                    receipt = output
+                runner = FakeCommandRunner(root, archive)
+                real_samestat = prepare_site_candidate.os.path.samestat
+                alias_identity = repository_alias.stat()
+                root_identity = root.stat()
+
+                def samestat(left: object, right: object) -> bool:
+                    if (
+                        real_samestat(left, alias_identity)
+                        and real_samestat(right, root_identity)
+                    ):
+                        return True
+                    return real_samestat(left, right)
+
+                with patch.object(
+                    prepare_site_candidate.os.path,
+                    "samestat",
+                    side_effect=samestat,
+                ):
+                    with self.assertRaisesRegex(
+                        prepare_site_candidate.SiteCandidateError,
+                        rf"{label} must be written outside the repository",
+                    ):
+                        prepare_site_candidate.prepare_site_candidate(
+                            root,
+                            archive,
+                            receipt,
+                            package_script,
+                            run_command=runner,
+                        )
+
+                self.assertFalse(archive.exists())
+                self.assertFalse(receipt.exists())
+                self.assertEqual(runner.commands, [])
+
+    def test_fails_closed_when_containment_identity_is_unavailable(
+        self,
+    ) -> None:
+        for identity in ("repository", "output parent"):
+            with self.subTest(identity=identity), TemporaryDirectory() as tmp:
+                root, archive, receipt, package_script = self._fixture(
+                    Path(tmp)
+                )
+                runner = FakeCommandRunner(root, archive)
+                real_stat = prepare_site_candidate.Path.stat
+                blocked_path = (
+                    root if identity == "repository" else archive.parent
+                )
+
+                def stat(
+                    path: Path,
+                    *args: object,
+                    **kwargs: object,
+                ) -> object:
+                    if path == blocked_path:
+                        raise PermissionError("identity denied")
+                    return real_stat(path, *args, **kwargs)
+
+                with patch.object(
+                    prepare_site_candidate.Path,
+                    "stat",
+                    stat,
+                ):
+                    with self.assertRaisesRegex(
+                        prepare_site_candidate.SiteCandidateError,
+                        "could not verify archive repository containment: "
+                        "identity denied",
+                    ):
+                        prepare_site_candidate.prepare_site_candidate(
+                            root,
+                            archive,
+                            receipt,
+                            package_script,
+                            run_command=runner,
+                        )
+
+                self.assertFalse(archive.exists())
+                self.assertFalse(receipt.exists())
+                self.assertEqual(runner.commands, [])
+
     def test_preserves_an_archive_claimed_after_preflight(self) -> None:
         with TemporaryDirectory() as tmp:
             root, archive, receipt, package_script = self._fixture(Path(tmp))

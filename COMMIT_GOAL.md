@@ -8,8 +8,9 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after rejecting linked Sites evidence paths: 247 / 1,000 (24.7%).
-- Remaining after rejecting linked Sites evidence paths: 753 commits.
+- Progress after rejecting Sites repository identity aliases: 248 / 1,000
+  (24.8%).
+- Remaining after rejecting Sites repository identity aliases: 752 commits.
 
 ## Commit Standard
 

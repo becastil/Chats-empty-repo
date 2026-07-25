@@ -407,6 +407,8 @@ class ReleaseManifestTests(unittest.TestCase):
             "same regular archive and digest",
             "exact staged receipt digest",
             "initial or dangling symlinks are rejected",
+            "repository's filesystem identity",
+            "ambiguous identity lookup fails closed",
             "supplied archive and receipt paths must themselves name regular "
             "files rather than symlinks",
             "`receipt_sha256`",
