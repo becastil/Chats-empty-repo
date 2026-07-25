@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Bracketed the exact Sites candidate receipt bytes parsed during read-only
+  verification through the final acceptance checkpoint, rejecting later
+  mutation or replacement before reporting approval-ready success.
 - Published newly prepared Sites archives and synced receipts through atomic
   no-clobber links from private same-filesystem staging paths, preserving any
   destination claimed after preflight and withholding approval-ready success

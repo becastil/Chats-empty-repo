@@ -525,6 +525,86 @@ class SiteCandidateTests(unittest.TestCase):
                     run_command=FakeCommandRunner(root, archive),
                 )
 
+    def test_verification_rejects_receipt_changed_after_validation(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+            validate_archive = prepare_site_candidate._verify_archive
+
+            def validate_then_mutate(
+                path: Path,
+                manifest: dict[str, object],
+                payload_sha256: str,
+            ) -> None:
+                validate_archive(path, manifest, payload_sha256)
+                with receipt.open("ab") as target:
+                    target.write(b"changed after validation\n")
+
+            with (
+                patch.object(
+                    prepare_site_candidate,
+                    "_verify_archive",
+                    side_effect=validate_then_mutate,
+                ),
+                self.assertRaisesRegex(
+                    prepare_site_candidate.SiteCandidateError,
+                    "Sites candidate receipt changed during candidate "
+                    "operation",
+                ),
+            ):
+                prepare_site_candidate.verify_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+
+    def test_verification_rejects_receipt_replaced_after_validation(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+            validate_archive = prepare_site_candidate._verify_archive
+
+            def validate_then_replace(
+                path: Path,
+                manifest: dict[str, object],
+                payload_sha256: str,
+            ) -> None:
+                validate_archive(path, manifest, payload_sha256)
+                receipt.unlink()
+                receipt.symlink_to(archive)
+
+            with (
+                patch.object(
+                    prepare_site_candidate,
+                    "_verify_archive",
+                    side_effect=validate_then_replace,
+                ),
+                self.assertRaisesRegex(
+                    prepare_site_candidate.SiteCandidateError,
+                    "Sites candidate receipt changed during candidate "
+                    "operation",
+                ),
+            ):
+                prepare_site_candidate.verify_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+
     def test_verification_rejects_payload_digest_drift(self) -> None:
         with TemporaryDirectory() as tmp:
             root, archive, receipt, package_script = self._fixture(Path(tmp))

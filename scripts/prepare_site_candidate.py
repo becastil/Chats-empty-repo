@@ -262,7 +262,7 @@ def verify_site_candidate(
         commit_sha,
         read_node_runtime_pin(project_root),
     )
-    receipt_payload = _read_json_object(
+    receipt_payload, receipt_sha256 = _read_json_object_with_sha256(
         receipt_path,
         "Sites candidate receipt",
     )
@@ -331,6 +331,11 @@ def verify_site_candidate(
     _require_same_archive(
         archive_path,
         archive_sha256,
+    )
+    _require_same_regular_file(
+        receipt_path,
+        receipt_sha256,
+        "Sites candidate receipt",
     )
     return SiteCandidateResult(
         commit_sha=commit_sha,
@@ -427,16 +432,25 @@ def _require_regular_file(path: Path, label: str) -> None:
 
 
 def _read_json_object(path: Path, label: str) -> dict[str, object]:
+    payload, _ = _read_json_object_with_sha256(path, label)
+    return payload
+
+
+def _read_json_object_with_sha256(
+    path: Path,
+    label: str,
+) -> tuple[dict[str, object], str]:
     try:
+        content = path.read_bytes()
         payload = _load_json_with_unique_keys(
-            path.read_text(encoding="utf-8"),
+            content.decode("utf-8"),
             label,
         )
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         raise SiteCandidateError(f"could not read {label}: {exc}") from exc
     if not isinstance(payload, dict):
         raise SiteCandidateError(f"{label} must contain a JSON object")
-    return payload
+    return payload, hashlib.sha256(content).hexdigest()
 
 
 def _load_json_with_unique_keys(content: str, label: str) -> object:
@@ -535,13 +549,25 @@ def _sha256(path: Path) -> str:
 
 
 def _require_same_archive(path: Path, expected_sha256: str) -> None:
+    _require_same_regular_file(
+        path,
+        expected_sha256,
+        "Sites candidate archive",
+    )
+
+
+def _require_same_regular_file(
+    path: Path,
+    expected_sha256: str,
+    label: str,
+) -> None:
     if path.is_symlink() or not path.is_file():
         raise SiteCandidateError(
-            "Sites candidate archive changed during candidate operation"
+            f"{label} changed during candidate operation"
         )
     if _sha256(path) != expected_sha256:
         raise SiteCandidateError(
-            "Sites candidate archive changed during candidate operation"
+            f"{label} changed during candidate operation"
         )
 
 

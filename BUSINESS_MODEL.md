@@ -412,6 +412,13 @@ receipt. Read-only verification repeats the receipt-bound digest after archive
 validation and its final source proof before reporting success. This closes a
 mutation window in approval evidence without changing schema 4, granting an
 approval, or creating customer or revenue evidence.
+Read-only verification now brackets receipt identity too. It parses one exact
+receipt byte buffer, retains that buffer's digest through archive and
+synchronized-source validation, then requires the receipt path to remain the
+same regular file with the same bytes before reporting success. A later edit
+or replacement with a link fails closed. This strengthens paid-distribution
+evidence without changing schema 4, granting approval, exporting source,
+deploying a version, or creating customer or revenue evidence.
 Candidate preparation also refuses any pre-existing requested archive or
 receipt before source checks or build commands begin. It gives the packaging
 helper a private staging path on the archive destination's filesystem,

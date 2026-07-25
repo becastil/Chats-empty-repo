@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 241 of
-1,000, with 759 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 242 of
+1,000, with 758 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -142,6 +142,10 @@ alignment take priority over commit volume.
   staged archive, and atomically links the archive and synced receipt into
   their requested paths only when absent. A destination claimed after
   preflight remains unchanged and withholds approval-ready success.
+- Receipt-stable Sites verification that parses one exact byte buffer and
+  requires the same regular receipt and digest after archive and source
+  validation. Mutation or replacement with a link during verification
+  withholds approval-ready success.
 - A zero-vulnerability site dependency lock with Next `16.2.11`, React and
   React Server Components `19.2.8`, `brace-expansion` `5.0.8`, current
   Cloudflare and Vite tooling, and advisory-fixed PostCSS and Sharp overrides.
@@ -570,10 +574,10 @@ deployment handoff with `scripts/prepare_site_candidate.py`, using fresh
 outside-repository archive and receipt paths so any previously reviewed pair
 remains unchanged. Obtain independent `--verify-only` evidence for its
 schema-4 complete-tree, duplicate-free,
-branch-bound, archive-stable, test-bracketed receipt before asking for explicit
-owner approval to push the receipt's exact patched `main` source
-to the separate Sites source repository. Only after that approval, push the
-source, verify the unchanged archive and receipt again, and save that matched
+branch-bound, archive-stable, receipt-stable, test-bracketed evidence before
+asking for explicit owner approval to push the receipt's exact patched `main`
+source to the separate Sites source repository. Only after that approval, push
+the source, verify the unchanged archive and receipt again, and save that matched
 candidate in the existing Sites project. Source-export approval does not
 authorize production; record the saved version, source identity, and archive
 digest, then obtain separate owner approval before deployment. After deployment

@@ -3302,3 +3302,24 @@ unpaired archive and retry with fresh paths. Valid schema-4 bytes are unchanged,
 so no migration is needed. This boundary exports no source, saves or deploys no
 Sites version, grants no controlled approval, and creates no visit, pilot
 request, payment, or revenue event.
+
+## 2026-07-25: Bracket Sites Receipt Identity Through Verification
+
+Read-only candidate verification parsed the requested receipt before archive
+and synchronized-source validation, but did not recheck the receipt path before
+reporting success. A concurrent process could therefore change the receipt
+bytes or replace the path after its trusted fields were read, leaving an
+approval-ready result whose visible receipt no longer matched the evidence
+that was validated.
+
+Verification now reads and parses one exact receipt byte buffer, retains its
+SHA-256 digest, and requires the requested path to remain a regular file with
+the same digest after archive and source validation. Persistent byte changes,
+symlink replacement, and non-file replacement fail before success. Regression
+tests force both a post-parse edit and post-parse link replacement through the
+acceptance window.
+
+Schema-4 receipt bytes remain unchanged, so no migration is needed. This
+strengthens the source-export and version-save evidence boundary; it does not
+export source, save or deploy a Sites version, approve either controlled
+action, or create a visit, pilot request, payment, or revenue event.

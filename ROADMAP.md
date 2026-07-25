@@ -10,7 +10,7 @@
 - Select the exact Node `22.13.0` runtime from `.nvmrc` with `nvm install` and
   `nvm use`, run the fail-closed preflight for patched `main`, then obtain
   read-only independent verification of its schema-4 complete-tree,
-  duplicate-free, branch-bound, archive-stable, test-bracketed,
+  duplicate-free, branch-bound, archive-stable, receipt-stable, test-bracketed,
   scope-constrained, atomically no-clobber-published archive and receipt while
   `refs/heads/main`, the same synchronized source commit, and the same archive
   digest survive every acceptance checkpoint, before asking for explicit
