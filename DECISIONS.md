@@ -3367,3 +3367,26 @@ The repository identity must not embed an access token; authentication remains
 in the same per-command Git credential context used for the approved push. The
 check follows the project's CI/CD integrity guidance while performing no source
 export, version save, deployment, approval, customer contact, or revenue event.
+
+## 2026-07-25: Pin The Sites Repository In Export Approval
+
+The exported-ref verifier accepted any caller-selected repository containing
+the receipt commit. Because Repo Scout already requires local
+`HEAD == origin/main`, passing `origin`, the local checkout, or an unrelated
+fork with the same commit could report pre-save success without proving that
+the approved source reached the existing Sites project. Repeating that lookup
+proved stability only for the wrong repository.
+
+Source-export approval now records the credential-free canonical Sites
+repository identity alongside the receipt digest, source ref, and commit. The
+pre-save command takes that approved identity separately from its operational
+URL or configured remote alias. It resolves and canonicalizes the operational
+argument, requires a genuinely remote repository matching approval, rejects
+the local checkout and anything equivalent to `origin`, and repeats identity
+resolution before its final exported-ref check. An unrelated fork or repointed
+alias therefore fails even when `refs/heads/main` contains the expected commit.
+
+Authentication remains outside both identity arguments, and malformed remote
+URLs fail with a controlled error. The change follows the project's CI/CD
+integrity guidance while performing no source export, version save, deployment,
+approval, customer contact, or revenue event.

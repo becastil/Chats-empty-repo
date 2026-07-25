@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after binding the exported Sites source: 244 / 1,000 (24.4%).
-- Remaining after binding the exported Sites source: 756 commits.
+- Progress after pinning the approved Sites repository: 245 / 1,000 (24.5%).
+- Remaining after pinning the approved Sites repository: 755 commits.
 
 ## Commit Standard
 

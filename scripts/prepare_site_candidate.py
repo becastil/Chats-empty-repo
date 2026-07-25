@@ -53,6 +53,10 @@ NODE_VERSION_PATTERN = re.compile(
     r"(?:0|[1-9][0-9]*)\."
     r"(?:0|[1-9][0-9]*)(?:\n)?\Z"
 )
+SCP_REPOSITORY_PATTERN = re.compile(
+    r"(?:[^/@:\s]+@)?(?P<host>[^/:\s]+):(?P<path>[^\\].+)\Z"
+)
+REMOTE_REPOSITORY_SCHEMES = frozenset(("git", "http", "https", "ssh"))
 RECEIPT_KEYS = frozenset(("schema_version", "candidate", "archive"))
 CANDIDATE_KEYS = frozenset(
     (
@@ -263,6 +267,7 @@ def verify_site_candidate(
     *,
     expected_receipt_sha256: str | None = None,
     exported_source_repository: str | None = None,
+    expected_exported_source_repository: str | None = None,
     run_command: CommandRunner | None = None,
 ) -> SiteCandidateResult:
     project_root = root.expanduser().resolve()
@@ -277,11 +282,67 @@ def verify_site_candidate(
         raise SiteCandidateError(
             "exported source verification requires an approved receipt digest"
         )
+    if (
+        exported_source_repository is None
+        and expected_exported_source_repository is not None
+    ):
+        raise SiteCandidateError(
+            "expected exported source repository requires exported source "
+            "verification"
+        )
+    if (
+        exported_source_repository is not None
+        and expected_exported_source_repository is None
+    ):
+        raise SiteCandidateError(
+            "exported source verification requires the approved Sites "
+            "repository identity"
+        )
     source_repository = (
         _validated_source_repository(exported_source_repository)
         if exported_source_repository is not None
         else None
     )
+    approved_source_repository_identity: str | None = None
+    if expected_exported_source_repository is not None:
+        approved_source_repository = _validated_source_repository(
+            expected_exported_source_repository
+        )
+        _require_remote_repository_identity(
+            approved_source_repository,
+            "approved Sites source repository",
+        )
+        approved_source_repository_identity = (
+            _canonical_repository_identity(
+                approved_source_repository,
+                "approved Sites source repository",
+            )
+        )
+    source_repository_identity: str | None = None
+    if source_repository is not None:
+        source_repository_identity = _resolved_repository_identity(
+            source_repository,
+            "exported source repository",
+            project_root,
+            runner,
+        )
+        if (
+            source_repository_identity
+            != approved_source_repository_identity
+        ):
+            raise SiteCandidateError(
+                "repository does not match approved Sites repository"
+            )
+        origin_repository_identity = _resolved_repository_identity(
+            "origin",
+            "origin repository",
+            project_root,
+            runner,
+        )
+        _require_separate_repository(
+            source_repository_identity,
+            origin_repository_identity,
+        )
 
     _require_regular_file(project_root / "package-lock.json", "package lock")
     _require_regular_file(project_root / ".nvmrc", "Node runtime pin")
@@ -388,6 +449,37 @@ def verify_site_candidate(
         "Sites candidate receipt",
     )
     if source_repository is not None:
+        final_source_repository_identity = _resolved_repository_identity(
+            source_repository,
+            "exported source repository",
+            project_root,
+            runner,
+        )
+        if (
+            final_source_repository_identity
+            != source_repository_identity
+        ):
+            raise SiteCandidateError(
+                "exported source repository identity moved during candidate "
+                "operation"
+            )
+        if (
+            final_source_repository_identity
+            != approved_source_repository_identity
+        ):
+            raise SiteCandidateError(
+                "repository does not match approved Sites repository"
+            )
+        final_origin_repository_identity = _resolved_repository_identity(
+            "origin",
+            "origin repository",
+            project_root,
+            runner,
+        )
+        _require_separate_repository(
+            final_source_repository_identity,
+            final_origin_repository_identity,
+        )
         final_exported_commit_sha = _exported_source_commit(
             source_repository,
             SOURCE_REF,
@@ -506,14 +598,93 @@ def _validated_source_repository(value: str) -> str:
             "exported source repository must be a non-empty Git repository "
             "identity without control characters"
         )
+    parsed = urlsplit(value)
     if (
-        value.lower().startswith(("http://", "https://"))
-        and urlsplit(value).username is not None
+        parsed.password is not None
+        or parsed.query
+        or parsed.fragment
+        or (
+            parsed.scheme.lower() in {"http", "https"}
+            and parsed.username is not None
+        )
     ):
         raise SiteCandidateError(
-            "exported source repository must not embed credentials"
+            "exported source repository must not embed credentials or URL "
+            "parameters"
         )
     return value
+
+
+def _resolved_repository_identity(
+    repository: str,
+    label: str,
+    root: Path,
+    run_command: CommandRunner,
+) -> str:
+    output = run_command(
+        ("git", "ls-remote", "--get-url", repository),
+        root,
+    )
+    lines = output.splitlines()
+    if len(lines) != 1:
+        raise SiteCandidateError(
+            f"{label} must resolve to exactly one Git repository identity"
+        )
+    resolved = _validated_source_repository(lines[0])
+    _require_remote_repository_identity(resolved, label)
+    return _canonical_repository_identity(resolved, label)
+
+
+def _require_remote_repository_identity(value: str, label: str) -> None:
+    parsed = urlsplit(value)
+    if (
+        parsed.scheme.lower() in REMOTE_REPOSITORY_SCHEMES
+        and parsed.hostname
+    ):
+        return
+    if SCP_REPOSITORY_PATTERN.fullmatch(value) is not None:
+        return
+    raise SiteCandidateError(
+        f"{label} must resolve to a remote Git repository"
+    )
+
+
+def _canonical_repository_identity(value: str, label: str) -> str:
+    parsed = urlsplit(value)
+    if (
+        parsed.scheme.lower() in REMOTE_REPOSITORY_SCHEMES
+        and parsed.hostname
+    ):
+        host = (parsed.hostname or "").lower()
+        try:
+            parsed.port
+        except ValueError as exc:
+            raise SiteCandidateError(
+                f"{label} must be a valid remote Git repository identity"
+            ) from exc
+        path = parsed.path.rstrip("/")
+        if path.endswith(".git"):
+            path = path[:-4]
+        return f"{host}/{path.lstrip('/')}"
+    scp_match = SCP_REPOSITORY_PATTERN.fullmatch(value)
+    if scp_match is None:
+        raise SiteCandidateError(
+            f"{label} must be a valid remote Git repository identity"
+        )
+    path = scp_match.group("path").rstrip("/")
+    if path.endswith(".git"):
+        path = path[:-4]
+    return f"{scp_match.group('host').lower()}/{path.lstrip('/')}"
+
+
+def _require_separate_repository(
+    source_repository_identity: str,
+    origin_repository_identity: str,
+) -> None:
+    if source_repository_identity == origin_repository_identity:
+        raise SiteCandidateError(
+            "exported source repository must be separate from origin"
+        )
 
 
 def _exported_source_commit(
@@ -1095,9 +1266,19 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--exported-source-repository",
         help=(
-            "Existing Sites Git repository URL or remote name to verify "
-            "read-only before saving. Requires --verify-only and "
-            "--expected-receipt-sha256."
+            "Existing Sites Git repository URL or configured remote name to "
+            "verify read-only before saving. It must resolve to the approved "
+            "remote identity, separate from origin. Requires --verify-only, "
+            "--expected-receipt-sha256, and "
+            "--expected-exported-source-repository."
+        ),
+    )
+    parser.add_argument(
+        "--expected-exported-source-repository",
+        help=(
+            "Credential-free remote Sites repository identity recorded in "
+            "source-export approval. Requires --verify-only and "
+            "--exported-source-repository."
         ),
     )
     return parser
@@ -1120,6 +1301,22 @@ def main(argv: Sequence[str] | None = None) -> int:
                     "--exported-source-repository requires "
                     "--expected-receipt-sha256"
                 )
+            if (
+                args.exported_source_repository is None
+                and args.expected_exported_source_repository is not None
+            ):
+                parser.error(
+                    "--expected-exported-source-repository requires "
+                    "--exported-source-repository"
+                )
+            if (
+                args.exported_source_repository is not None
+                and args.expected_exported_source_repository is None
+            ):
+                parser.error(
+                    "--exported-source-repository requires "
+                    "--expected-exported-source-repository"
+                )
             result = verify_site_candidate(
                 args.root,
                 args.archive,
@@ -1127,6 +1324,9 @@ def main(argv: Sequence[str] | None = None) -> int:
                 expected_receipt_sha256=args.expected_receipt_sha256,
                 exported_source_repository=(
                     args.exported_source_repository
+                ),
+                expected_exported_source_repository=(
+                    args.expected_exported_source_repository
                 ),
             )
             action = "verified"
@@ -1142,6 +1342,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             if args.exported_source_repository is not None:
                 parser.error(
                     "--exported-source-repository requires --verify-only"
+                )
+            if args.expected_exported_source_repository is not None:
+                parser.error(
+                    "--expected-exported-source-repository requires "
+                    "--verify-only"
                 )
             result = prepare_site_candidate(
                 args.root,

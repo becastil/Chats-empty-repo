@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 244 of
-1,000, with 756 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 245 of
+1,000, with 755 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -94,13 +94,14 @@ alignment take priority over commit volume.
   source, lockfile, hosted Node runtime, archive digest, and existing Sites
   project in a fail-closed candidate receipt. A read-only independent mode
   strictly verifies the receipt against clean synchronized source and the
-  archive before source-export approval and again before version saving,
-  without running Node, npm, packaging, network, export, save, or deployment
-  operations. The handoff requires explicit source-export approval before any
-  push to the separate Sites source repository, keeps saved versions distinct
-  from live production, requires separate deployment approval, and immediately
-  audits a successful publish. Sites versions 46 and 47 are superseded and must
-  not be published.
+  archive before source-export approval without running Node, npm, packaging,
+  network, export, save, or deployment operations. The later pre-save form
+  performs read-only network checks against the approval-bound Sites source
+  repository. The handoff requires explicit source-export approval before any
+  push to that separate repository, keeps saved versions distinct from live
+  production, requires separate deployment approval, and immediately audits a
+  successful publish. Sites versions 46 and 47 are superseded and must not be
+  published.
 - A canonical `.nvmrc` pin for exact Node `22.13.0` candidate builds, shared by
   local preflight, candidate receipts, and the hosted dependency contract.
   Strict parsing rejects malformed pins before commands run, while package
@@ -152,10 +153,12 @@ alignment take priority over commit volume.
   pre-save check require the digest the owner approved. Semantically equivalent
   reserialization therefore fails closed across the approval interval.
 - Export-bound Sites pre-save verification that requires the owner-approved
-  receipt digest plus the credential-free identity of the existing Sites
-  repository, resolves its `refs/heads/main` twice with read-only
-  `git ls-remote`, and rejects a wrong or moving exported commit before a
-  version can be saved. The earlier pre-approval verification remains offline.
+  receipt digest plus the canonical remote identity of the existing Sites
+  repository recorded in the same approval. It resolves operational aliases,
+  rejects local source, `origin`, unrelated forks, equivalent aliases, and
+  repository identity drift, then checks the approval-bound
+  `refs/heads/main` twice with read-only `git ls-remote` before version saving.
+  The earlier pre-approval verification remains offline.
 - A zero-vulnerability site dependency lock with Next `16.2.11`, React and
   React Server Components `19.2.8`, `brace-expansion` `5.0.8`, current
   Cloudflare and Vite tooling, and advisory-fixed PostCSS and Sharp overrides.
@@ -585,13 +588,16 @@ outside-repository archive and receipt paths so any previously reviewed pair
 remains unchanged. Obtain independent `--verify-only` evidence for its
 schema-4 complete-tree, duplicate-free,
 branch-bound, archive-stable, receipt-stable, test-bracketed evidence before
-recording the printed `receipt_sha256` in an explicit owner approval to push
-the receipt's exact patched `main` source to the separate Sites source
-repository. Only after that approval, push the source, then verify the
-unchanged archive and receipt with `--expected-receipt-sha256` set to the
-approved digest and `--exported-source-repository` set to the credential-free
-identity used for the push. Save the candidate only after that check proves the
-exported `refs/heads/main` is the receipt commit and remains stable.
+recording the printed `receipt_sha256`, canonical remote Sites repository
+identity, `refs/heads/main`, and receipt commit in an explicit owner approval
+to push the receipt's exact patched source. Only after that approval, push the
+source, then verify the unchanged archive and receipt with
+`--expected-receipt-sha256` set to the approved digest,
+`--exported-source-repository` set to the URL or configured alias used for the
+push, and `--expected-exported-source-repository` set to the approved canonical
+identity. Save the candidate only after that check proves the resolved
+repository is remote, separate from `origin`, approval-matched, stable, and its
+exported `refs/heads/main` is the receipt commit.
 Source-export approval does not authorize production; record the saved
 version, source identity, and archive
 digest, then obtain separate owner approval before deployment. After deployment

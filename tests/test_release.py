@@ -410,7 +410,11 @@ class ReleaseManifestTests(unittest.TestCase):
             "receipt bytes the owner reviewed",
             "--expected-receipt-sha256 APPROVED_RECEIPT_SHA256",
             '--exported-source-repository "$SITES_SOURCE_REPOSITORY"',
-            "credential-free repository URL or configured remote name",
+            "--expected-exported-source-repository "
+            '"$APPROVED_SITES_SOURCE_REPOSITORY"',
+            "canonical repository identity",
+            "local checkout, `origin`, equivalent aliases, or an unrelated "
+            "fork",
             "read-only `git ls-remote` calls",
             "exported ref differs from the approved candidate commit",
             "semantically reserialized",

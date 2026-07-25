@@ -188,18 +188,24 @@ site release:
    at that final acceptance checkpoint before reporting success. Record the
    printed `receipt_sha256` with the source-export approval so later
    verification can require the exact receipt bytes the owner reviewed.
+   Resolve the existing Sites source repository's credential-free remote URL
+   before approval, confirm that it is not the local checkout or the repository
+   configured as `origin`, and record that canonical identity as
+   `APPROVED_SITES_SOURCE_REPOSITORY` in the same approval evidence. A
+   configured remote alias may be used for Git operations, but the approved
+   identity itself must be a remote URL rather than a mutable alias.
 3. Obtain explicit owner approval before pushing the exact committed source to
-   the separate Sites source repository. This source-export approval is
-   separate from deployment approval, and the source export does not authorize
-   production deployment.
+   the approved separate Sites source repository. The approval must identify
+   the receipt digest, canonical repository identity, `refs/heads/main`, and
+   receipt commit. This source-export approval is separate from deployment
+   approval, and the source export does not authorize production deployment.
 4. Push the receipt's exact source commit to the separate Sites source
    repository (the existing Sites source repository for this project), and
-   reuse the existing Sites project in `.openai/hosting.json`. Retain the
-   credential-free repository URL or configured remote name used for that
-   approved push as `SITES_SOURCE_REPOSITORY`; pass authentication through the
-   same per-command Git credential context rather than embedding a token in the
-   repository identity. Do not create a replacement project for a version
-   update.
+   reuse the existing Sites project in `.openai/hosting.json`.
+   `SITES_SOURCE_REPOSITORY` may be the approved URL or a configured remote
+   alias that resolves to it. Pass authentication through the same per-command
+   Git credential context rather than embedding a token in either repository
+   identity. Do not create a replacement project for a version update.
 5. Verify the unchanged archive and receipt again before saving:
 
    ```bash
@@ -207,17 +213,21 @@ site release:
      --archive /tmp/repo-scout-site.tar.gz \
      --receipt /tmp/repo-scout-site-receipt.json \
      --expected-receipt-sha256 APPROVED_RECEIPT_SHA256 \
-     --exported-source-repository "$SITES_SOURCE_REPOSITORY"
+     --exported-source-repository "$SITES_SOURCE_REPOSITORY" \
+     --expected-exported-source-repository "$APPROVED_SITES_SOURCE_REPOSITORY"
    ```
 
    This check fails if the receipt was even semantically reserialized after
-   approval. It also resolves the existing Sites repository's
-   `refs/heads/main` twice with read-only `git ls-remote` calls and fails if
-   that exported ref differs from the approved candidate commit or moves
-   during verification. This pre-save form therefore uses the network but
-   performs no source export, version save, or deployment. Save the verified
-   preflight archive against the receipt's exact source commit. Saving a
-   version does not make that version live.
+   approval. It resolves the operational repository argument, requires its
+   canonical remote identity to equal the repository recorded in approval, and
+   rejects the local checkout, `origin`, equivalent aliases, or an unrelated
+   fork even when they contain the same commit. The resolved identity must
+   remain stable while read-only `git ls-remote` calls resolve
+   `refs/heads/main` twice; the check fails if that exported ref differs from
+   the approved candidate commit or moves during verification. This pre-save
+   form therefore uses the network but performs no source export, version save,
+   or deployment. Save the verified preflight archive against the receipt's
+   exact source commit. Saving a version does not make that version live.
 6. Obtain separate explicit owner approval before deploying the saved version
    to the existing public production site.
 7. Only after the approved deployment succeeds, immediately run the production
