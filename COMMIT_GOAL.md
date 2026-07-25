@@ -8,8 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after bracketing Sites archive identity: 239 / 1,000 (23.9%).
-- Remaining after bracketing Sites archive identity: 761 commits.
+- Progress after preserving pre-existing Sites candidate evidence: 240 / 1,000
+  (24.0%).
+- Remaining after preserving pre-existing Sites candidate evidence: 760
+  commits.
 
 ## Commit Standard
 

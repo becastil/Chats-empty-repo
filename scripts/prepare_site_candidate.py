@@ -133,6 +133,11 @@ def prepare_site_candidate(
             raise SiteCandidateError(
                 f"{label} must be written outside the repository: {output_path}"
             )
+        if os.path.lexists(output_path):
+            raise SiteCandidateError(
+                f"{label} output already exists; refusing to overwrite: "
+                f"{output_path}"
+            )
 
     commit_sha = _synchronized_commit(project_root, runner)
 

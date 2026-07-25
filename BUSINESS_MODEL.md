@@ -412,6 +412,13 @@ receipt. Read-only verification repeats the receipt-bound digest after archive
 validation and its final source proof before reporting success. This closes a
 mutation window in approval evidence without changing schema 4, granting an
 approval, or creating customer or revenue evidence.
+Candidate preparation also refuses any pre-existing requested archive or
+receipt before source checks or build commands begin. A normal rerun therefore
+cannot replace an artifact pair that may already be under review; the operator
+must choose fresh outside-repository paths while independent verification keeps
+consuming the original evidence. This preflight does not reserve paths against
+another process after the check, alter schema-4 receipts, authorize source
+export or deployment, or create customer or revenue evidence.
 A separate read-only hosted dependency contract runs for relevant lock and
 workflow changes, on manual dispatch, and weekly so a newly published advisory
 does not wait for another package edit. It uses the minimum supported Node

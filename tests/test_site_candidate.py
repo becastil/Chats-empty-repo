@@ -1380,6 +1380,52 @@ class SiteCandidateTests(unittest.TestCase):
 
             self.assertEqual(runner.commands, [])
 
+    def test_rejects_a_preexisting_archive_without_replacing_it(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            existing_evidence = b"previously reviewed archive\n"
+            archive.write_bytes(existing_evidence)
+            runner = FakeCommandRunner(root, archive)
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "archive output already exists; refusing to overwrite",
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=runner,
+                )
+
+            self.assertEqual(archive.read_bytes(), existing_evidence)
+            self.assertFalse(receipt.exists())
+            self.assertEqual(runner.commands, [])
+
+    def test_rejects_a_preexisting_receipt_without_replacing_it(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            existing_evidence = b'{"reviewed": true}\n'
+            receipt.write_bytes(existing_evidence)
+            runner = FakeCommandRunner(root, archive)
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "receipt output already exists; refusing to overwrite",
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=runner,
+                )
+
+            self.assertFalse(archive.exists())
+            self.assertEqual(receipt.read_bytes(), existing_evidence)
+            self.assertEqual(runner.commands, [])
+
     def test_rejects_duplicate_hosting_metadata_keys(self) -> None:
         with TemporaryDirectory() as tmp:
             root, archive, receipt, package_script = self._fixture(Path(tmp))

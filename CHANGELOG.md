@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Made Sites candidate preparation refuse pre-existing archive or receipt
+  outputs before running source, build, test, or packaging commands, preserving
+  previously reviewed evidence and requiring a fresh output pair for each run.
 - Bracketed Sites archive validation with the same regular-file digest through
   the final source checkpoint, withholding receipts and read-only success when
   the archive path or bytes change during either candidate operation.

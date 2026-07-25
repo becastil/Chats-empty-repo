@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 239 of
-1,000, with 761 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 240 of
+1,000, with 760 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -137,6 +137,10 @@ alignment take priority over commit volume.
   structural validation and requires the same regular archive and digest after
   the final synchronized-source checkpoint. A persistent path or byte change
   withholds both the candidate receipt and read-only verification success.
+- Overwrite-safe Sites candidate preflight that refuses any pre-existing
+  archive or receipt output before Git, Node, npm, or packaging commands run.
+  Normal reruns must use a fresh outside-repository output pair, leaving
+  previously reviewed evidence unchanged for independent verification.
 - A zero-vulnerability site dependency lock with Next `16.2.11`, React and
   React Server Components `19.2.8`, `brace-expansion` `5.0.8`, current
   Cloudflare and Vite tooling, and advisory-fixed PostCSS and Sharp overrides.
@@ -561,8 +565,10 @@ The public site still advertises `v0.3.50`. Sites versions 46 and 47 are
 superseded and must not be deployed; version 47 predates the July 24 React
 Server Components and `brace-expansion` advisories. Run `nvm install` and
 `nvm use` to select the repository's exact Node `22.13.0` pin, then run the
-deployment handoff with `scripts/prepare_site_candidate.py`. Obtain independent
-`--verify-only` evidence for its schema-4 complete-tree, duplicate-free,
+deployment handoff with `scripts/prepare_site_candidate.py`, using fresh
+outside-repository archive and receipt paths so any previously reviewed pair
+remains unchanged. Obtain independent `--verify-only` evidence for its
+schema-4 complete-tree, duplicate-free,
 branch-bound, archive-stable, test-bracketed receipt before asking for explicit
 owner approval to push the receipt's exact patched `main` source
 to the separate Sites source repository. Only after that approval, push the

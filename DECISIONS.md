@@ -3255,3 +3255,24 @@ Archive bytes and schema-4 receipts remain unchanged, so no schema migration is
 needed. This strengthens the source-export and version-save evidence boundary;
 it does not export source, save or deploy a Sites version, approve either
 controlled action, or create a visit, pilot request, payment, or revenue event.
+
+## 2026-07-25: Preserve Pre-Existing Sites Candidate Evidence
+
+Candidate preparation passed the requested archive path to the external
+packaging helper and atomically replaced the requested receipt. Repeating an
+otherwise valid command with the same paths could therefore replace an
+artifact pair already referenced in an approval review, even though the
+receipt and archive were internally bound.
+
+Preparation now rejects any pre-existing archive or receipt path during local
+output-policy validation, before Git, Node, npm, site-test, or packaging
+commands run. Regression coverage preserves sentinel bytes for either existing
+artifact and proves the command runner is never called. Operators must choose a
+fresh outside-repository output pair for a new preparation run; read-only
+verification continues to consume the original pair.
+
+This protects normal reruns rather than claiming a cross-process reservation
+after preflight. Valid schema-4 evidence is unchanged, so no migration is
+needed. The guard does not export source, save or deploy a Sites version,
+approve either controlled action, or create a visit, pilot request, payment, or
+revenue event.
