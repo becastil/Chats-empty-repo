@@ -3479,3 +3479,30 @@ Descriptor-bound evidence reads and publication therefore remain required
 before a replacement candidate is approval-ready. The change performs no
 source export, version save, deployment, approval, customer contact, or revenue
 event.
+
+## 2026-07-25: Compare Sites Outputs With Every Checkout Directory
+
+Comparing output ancestors only with the checkout root closed stable
+alternate-spelling and whole-repository aliases, but a bind or equivalent
+alias can expose one checkout subdirectory with that subdirectory's identity.
+An ignored evidence directory could therefore remain lexically external and
+avoid the root-only comparison while still writing into the protected source
+tree.
+
+Candidate preparation now inventories every repository directory with
+`follow_symlinks=False`, records each unique device and inode pair, and skips a
+repeated identity rather than traversing a mount cycle. Every existing archive
+and receipt parent ancestor is compared with that inventory. Stable aliases to
+the root or any subdirectory fail before source, build, test, or packaging
+commands, while reported traversal or ambiguous stat failures stop preparation.
+Regression coverage proves root and subdirectory aliases for both evidence
+labels, missing intermediate output directories, symlink exclusion, duplicate-
+identity cycle suppression, and traversal failure.
+
+This closes stable subdirectory aliases only when the filesystem preserves
+directory identity. It does not anchor later staging, reads, publication, or
+cleanup against concurrent parent or leaf replacement, and an identity-
+remapping filesystem remains outside the guarantee. Descriptor-bound evidence
+operations therefore remain required before a replacement candidate is
+approval-ready. The change performs no source export, version save, deployment,
+approval, customer contact, or revenue event.

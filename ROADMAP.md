@@ -16,11 +16,11 @@
   and receipt digests survive every acceptance checkpoint. The requested
   evidence leaves must remain direct regular files rather than initial or
   dangling symlinks. Stable alternate case or Unicode spellings and
-  whole-repository aliases must fail by filesystem identity. Reject aliases
-  that expose only a repository subdirectory, then bind evidence reads and
-  publication to stable parent and file identities across the remaining
-  check-to-open windows before asking for explicit source-export approval that
-  records the printed `receipt_sha256`.
+  whole-repository or subdirectory-only aliases must fail by filesystem
+  identity. Bind evidence staging, reads, publication, and cleanup to stable
+  parent and file identities across the remaining check-to-open windows before
+  asking for explicit source-export approval that records the printed
+  `receipt_sha256`.
   After approval, push its receipt-bound source to the separate Sites source
   repository, verify the unchanged archive and receipt again while requiring
   the approved digest and canonical Sites repository identity, and resolve

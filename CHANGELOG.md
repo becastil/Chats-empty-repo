@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Extended Sites output containment across every non-symlink repository
+  directory, rejecting stable subdirectory-only filesystem aliases with a
+  cycle-safe identity scan that fails closed on traversal errors.
 - Rejected Sites archive and receipt parents whose existing ancestor has the
   repository's filesystem identity, closing stable case-folded, Unicode, and
   whole-repository aliases while failing closed on ambiguous identity checks.

@@ -135,6 +135,10 @@ def prepare_site_candidate(
         raise SiteCandidateError(
             f"Sites packaging helper is not executable: {package_path}"
         )
+    repository_identities = _repository_directory_identities(
+        project_root,
+        "archive",
+    )
     for output_path, label in (
         (archive_path, "archive"),
         (receipt_path, "receipt"),
@@ -143,6 +147,7 @@ def prepare_site_candidate(
             output_path,
             project_root,
             label,
+            repository_identities,
         ):
             raise SiteCandidateError(
                 f"{label} must be written outside the repository: {output_path}"
@@ -748,22 +753,22 @@ def _path_is_within_repository(
     path: Path,
     project_root: Path,
     label: str,
+    repository_identities: tuple[os.stat_result, ...],
 ) -> bool:
     if path == project_root or path.is_relative_to(project_root):
         return True
-
-    try:
-        project_identity = project_root.stat()
-    except OSError as exc:
-        raise SiteCandidateError(
-            f"could not verify {label} repository containment: {exc}"
-        ) from exc
 
     ancestor = path.parent
     while True:
         try:
             ancestor_identity = ancestor.stat()
-            if os.path.samestat(ancestor_identity, project_identity):
+            if any(
+                os.path.samestat(
+                    ancestor_identity,
+                    repository_identity,
+                )
+                for repository_identity in repository_identities
+            ):
                 return True
         except FileNotFoundError:
             pass
@@ -775,6 +780,47 @@ def _path_is_within_repository(
         if ancestor == ancestor.parent:
             return False
         ancestor = ancestor.parent
+
+
+def _repository_directory_identities(
+    project_root: Path,
+    label: str,
+) -> tuple[os.stat_result, ...]:
+    identities: list[os.stat_result] = []
+    seen: set[tuple[int, int]] = set()
+    pending = [project_root]
+
+    try:
+        while pending:
+            directory = pending.pop()
+            details = directory.stat(follow_symlinks=False)
+            if not stat.S_ISDIR(details.st_mode):
+                raise SiteCandidateError(
+                    f"could not verify {label} repository containment: "
+                    f"repository directory changed: {directory}"
+                )
+
+            identity = (details.st_dev, details.st_ino)
+            if identity in seen:
+                continue
+            seen.add(identity)
+            identities.append(details)
+
+            with os.scandir(directory) as entries:
+                children = []
+                for entry in entries:
+                    entry_details = entry.stat(follow_symlinks=False)
+                    if stat.S_ISDIR(entry_details.st_mode):
+                        children.append(Path(entry.path))
+            pending.extend(sorted(children, reverse=True))
+    except SiteCandidateError:
+        raise
+    except OSError as exc:
+        raise SiteCandidateError(
+            f"could not verify {label} repository containment: {exc}"
+        ) from exc
+
+    return tuple(identities)
 
 
 def _require_regular_file(path: Path, label: str) -> None:

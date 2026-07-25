@@ -2453,57 +2453,186 @@ class SiteCandidateTests(unittest.TestCase):
             self.assertFalse(receipt.exists())
             self.assertEqual(runner.commands, [])
 
-    def test_rejects_evidence_under_a_repository_identity_alias(self) -> None:
-        for label in ("archive", "receipt"):
-            with self.subTest(label=label), TemporaryDirectory() as tmp:
-                root, archive, receipt, package_script = self._fixture(
-                    Path(tmp)
-                )
-                repository_alias = Path(tmp) / "repository-identity-alias"
-                repository_alias.mkdir()
-                repository_alias = repository_alias.resolve()
-                output = (
-                    repository_alias
-                    / "missing"
-                    / ("candidate.tar.gz" if label == "archive" else "receipt")
-                )
-                if label == "archive":
-                    archive = output
-                else:
-                    receipt = output
-                runner = FakeCommandRunner(root, archive)
-                real_samestat = prepare_site_candidate.os.path.samestat
-                alias_identity = repository_alias.stat()
-                root_identity = root.stat()
-
-                def samestat(left: object, right: object) -> bool:
-                    if (
-                        real_samestat(left, alias_identity)
-                        and real_samestat(right, root_identity)
-                    ):
-                        return True
-                    return real_samestat(left, right)
-
-                with patch.object(
-                    prepare_site_candidate.os.path,
-                    "samestat",
-                    side_effect=samestat,
+    def test_rejects_evidence_under_a_repository_directory_identity_alias(
+        self,
+    ) -> None:
+        for repository_location in ("root", "subdirectory"):
+            for label in ("archive", "receipt"):
+                with (
+                    self.subTest(
+                        repository_location=repository_location,
+                        label=label,
+                    ),
+                    TemporaryDirectory() as tmp,
                 ):
-                    with self.assertRaisesRegex(
-                        prepare_site_candidate.SiteCandidateError,
-                        rf"{label} must be written outside the repository",
-                    ):
-                        prepare_site_candidate.prepare_site_candidate(
-                            root,
-                            archive,
-                            receipt,
-                            package_script,
-                            run_command=runner,
+                    root, archive, receipt, package_script = self._fixture(
+                        Path(tmp)
+                    )
+                    repository_target = root
+                    if repository_location == "subdirectory":
+                        repository_target = root / "ignored-output"
+                        repository_target.mkdir()
+                    repository_alias = (
+                        Path(tmp) / "repository-identity-alias"
+                    )
+                    repository_alias.mkdir()
+                    repository_alias = repository_alias.resolve()
+                    output = (
+                        repository_alias
+                        / "missing"
+                        / (
+                            "candidate.tar.gz"
+                            if label == "archive"
+                            else "receipt"
                         )
+                    )
+                    if label == "archive":
+                        archive = output
+                    else:
+                        receipt = output
+                    runner = FakeCommandRunner(root, archive)
+                    real_samestat = prepare_site_candidate.os.path.samestat
+                    alias_identity = repository_alias.stat()
+                    target_identity = repository_target.stat()
 
-                self.assertFalse(archive.exists())
-                self.assertFalse(receipt.exists())
-                self.assertEqual(runner.commands, [])
+                    def samestat(left: object, right: object) -> bool:
+                        if (
+                            real_samestat(left, alias_identity)
+                            and real_samestat(right, target_identity)
+                        ):
+                            return True
+                        return real_samestat(left, right)
+
+                    with patch.object(
+                        prepare_site_candidate.os.path,
+                        "samestat",
+                        side_effect=samestat,
+                    ):
+                        with self.assertRaisesRegex(
+                            prepare_site_candidate.SiteCandidateError,
+                            rf"{label} must be written outside the repository",
+                        ):
+                            prepare_site_candidate.prepare_site_candidate(
+                                root,
+                                archive,
+                                receipt,
+                                package_script,
+                                run_command=runner,
+                            )
+
+                    self.assertFalse(archive.exists())
+                    self.assertFalse(receipt.exists())
+                    self.assertEqual(runner.commands, [])
+
+    def test_repository_identity_scan_does_not_follow_symlinks(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, _, _, _ = self._fixture(Path(tmp))
+            external = Path(tmp) / "external"
+            external.mkdir()
+            (root / "external-link").symlink_to(
+                external,
+                target_is_directory=True,
+            )
+            (external / "repository-link").symlink_to(
+                root,
+                target_is_directory=True,
+            )
+
+            identities = (
+                prepare_site_candidate._repository_directory_identities(
+                    root,
+                    "archive",
+                )
+            )
+            external_identity = external.stat()
+
+            self.assertFalse(
+                any(
+                    prepare_site_candidate.os.path.samestat(
+                        identity,
+                        external_identity,
+                    )
+                    for identity in identities
+                )
+            )
+
+    def test_repository_identity_scan_skips_a_duplicate_identity(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, _, _, _ = self._fixture(Path(tmp))
+            duplicate = root / "duplicate"
+            duplicate.mkdir()
+            duplicate = duplicate.resolve()
+            root_identity = root.stat()
+            real_stat = prepare_site_candidate.Path.stat
+            real_scandir = prepare_site_candidate.os.scandir
+            scanned: list[Path] = []
+
+            def stat(
+                path: Path,
+                *args: object,
+                **kwargs: object,
+            ) -> object:
+                if path == duplicate:
+                    return root_identity
+                return real_stat(path, *args, **kwargs)
+
+            def scandir(path: Path) -> object:
+                scanned.append(Path(path))
+                return real_scandir(path)
+
+            with (
+                patch.object(
+                    prepare_site_candidate.Path,
+                    "stat",
+                    stat,
+                ),
+                patch.object(
+                    prepare_site_candidate.os,
+                    "scandir",
+                    side_effect=scandir,
+                ),
+            ):
+                prepare_site_candidate._repository_directory_identities(
+                    root,
+                    "archive",
+                )
+
+            self.assertNotIn(duplicate, scanned)
+
+    def test_fails_closed_when_repository_identity_scan_is_unavailable(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(
+                Path(tmp)
+            )
+            runner = FakeCommandRunner(root, archive)
+
+            with (
+                patch.object(
+                    prepare_site_candidate.os,
+                    "scandir",
+                    side_effect=PermissionError("scan denied"),
+                ),
+                self.assertRaisesRegex(
+                    prepare_site_candidate.SiteCandidateError,
+                    "could not verify archive repository containment: "
+                    "scan denied",
+                ),
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=runner,
+                )
+
+            self.assertFalse(archive.exists())
+            self.assertFalse(receipt.exists())
+            self.assertEqual(runner.commands, [])
 
     def test_fails_closed_when_containment_identity_is_unavailable(
         self,

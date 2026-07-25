@@ -8,9 +8,9 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after rejecting Sites repository identity aliases: 248 / 1,000
-  (24.8%).
-- Remaining after rejecting Sites repository identity aliases: 752 commits.
+- Progress after rejecting Sites subdirectory identity aliases: 249 / 1,000
+  (24.9%).
+- Remaining after rejecting Sites subdirectory identity aliases: 751 commits.
 
 ## Commit Standard
 

@@ -479,16 +479,18 @@ back into the protected checkout. This keeps paid-
 distribution approval attached to the exact evidence leaf an operator supplied
 without exporting source, saving or deploying a version, or creating customer
 or revenue evidence.
-Output containment now also walks existing parent ancestors and compares their
-filesystem identity with the checkout root. Stable alternate case or Unicode
-spellings and whole-repository aliases therefore fail before source checks or
-build commands even when lexical containment differs; missing intermediate
-directories are skipped and ambiguous identity lookups fail closed. This does
-not pin a parent against concurrent replacement or detect a mount that exposes
-only a repository subdirectory, so the replacement candidate remains blocked
-on stronger descriptor-bound reads and publication. The guard protects paid
-distribution evidence without exporting source, saving or deploying a version,
-or creating customer or revenue evidence.
+Output containment now also inventories every non-symlink checkout directory
+and compares those filesystem identities with each existing output-parent
+ancestor. Stable alternate case or Unicode spellings, whole-repository aliases,
+and aliases exposing only a checkout subdirectory therefore fail before source
+checks or build commands even when lexical containment differs. Missing output
+directories are skipped, repeated directory identities stop mount cycles, and
+reported traversal or ambiguous identity lookup failures stop preparation. This
+does not pin a parent or leaf against concurrent replacement or detect an alias
+whose filesystem remaps identity, so the replacement candidate remains blocked
+on descriptor-bound staging, reads, publication, and cleanup. The guard
+protects paid distribution evidence without exporting source, saving or
+deploying a version, or creating customer or revenue evidence.
 A separate read-only hosted dependency contract runs for relevant lock and
 workflow changes, on manual dispatch, and weekly so a newly published advisory
 does not wait for another package edit. It uses the minimum supported Node

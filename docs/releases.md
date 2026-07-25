@@ -169,9 +169,14 @@ site release:
    redirecting evidence; their parent directories are resolved so an existing
    symlink that points into the repository fails the containment check.
    Containment also rejects an output parent whose existing ancestor has the
-   repository's filesystem identity, including stable alternate case or
-   Unicode spellings and whole-repository aliases even when lexical paths
-   differ. An ambiguous identity lookup fails closed.
+   filesystem identity of any non-symlink repository directory, including
+   stable alternate case or Unicode spellings and whole-repository or
+   subdirectory-only aliases even when lexical paths differ. Repeated
+   identities stop directory cycles, and reported traversal or ambiguous
+   identity lookup failures stop preparation. Stable identity checks do not
+   anchor later path-based operations against concurrent replacement; do not
+   treat a candidate as approval-ready until staging, reads, publication, and
+   cleanup are descriptor-bound.
    Persistent drift during receipt publication therefore leaves no
    approval-ready result. The success output includes `receipt_sha256`; retain
    that digest with the candidate evidence.

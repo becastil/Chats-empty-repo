@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 248 of
-1,000, with 752 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 249 of
+1,000, with 751 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -148,9 +148,10 @@ alignment take priority over commit volume.
   leaf symlinks fail before commands or evidence reads, while an existing
   symlinked parent that resolves inside the repository fails containment.
 - Filesystem-identity-aware Sites output containment that walks existing
-  archive and receipt parent ancestors, rejects stable alternate-spelling and
-  whole-repository aliases that identify the checkout, and fails closed when
-  an ancestor identity cannot be determined.
+  archive and receipt parent ancestors against every non-symlink repository
+  directory, rejects stable alternate-spelling, whole-repository, and
+  subdirectory-only aliases, deduplicates directory identities to avoid mount
+  cycles, and fails closed when traversal or identity checks report errors.
 - Receipt-stable Sites verification that parses one exact byte buffer and
   requires the same regular receipt and digest after archive and source
   validation. Mutation or replacement with a link during verification
@@ -602,12 +603,12 @@ Server Components and `brace-expansion` advisories. Run `nvm install` and
 deployment handoff with `scripts/prepare_site_candidate.py`, using fresh
 outside-repository archive and receipt paths so any previously reviewed pair
 remains unchanged. Both requested paths must be direct regular-file leaves,
-not symlinks. Stable alternate case or Unicode spellings and whole-repository
-aliases now fail by filesystem identity. Before treating a new pair as
-approval-ready, reject aliases that expose only a repository subdirectory and
-bind evidence reads and publication to stable parent and file identities so
-concurrent parent or leaf replacement cannot cross the remaining check-to-open
-windows. Then obtain
+not symlinks. Stable alternate case or Unicode spellings, whole-repository
+aliases, and aliases that expose only a repository subdirectory now fail by
+filesystem identity. Before treating a new pair as approval-ready, bind
+evidence staging, reads, publication, and cleanup to stable parent and file
+identities so concurrent parent or leaf replacement cannot cross the remaining
+check-to-open windows. Then obtain
 independent `--verify-only` evidence for its
 schema-4 complete-tree, duplicate-free,
 branch-bound, archive-stable, receipt-stable, test-bracketed evidence before
