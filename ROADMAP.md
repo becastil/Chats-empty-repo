@@ -17,9 +17,12 @@
   evidence leaves must remain direct regular files rather than initial or
   dangling symlinks. Stable alternate case or Unicode spellings and
   whole-repository or subdirectory-only aliases must fail by filesystem
-  identity. Bind evidence staging, reads, publication, and cleanup to stable
-  parent and file identities across the remaining check-to-open windows before
-  asking for explicit source-export approval that records the printed
+  identity. Final archive and receipt publication must retain its existing
+  no-clobber semantics while requiring existing output parents and creating
+  each leaf relative to a verified open parent descriptor. Bind evidence
+  staging, staged-file and post-publication reads, and cleanup to descriptors
+  held from preflight across the remaining check-to-open windows before asking
+  for explicit source-export approval that records the printed
   `receipt_sha256`.
   After approval, push its receipt-bound source to the separate Sites source
   repository, verify the unchanged archive and receipt again while requiring

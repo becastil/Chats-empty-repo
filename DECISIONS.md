@@ -3506,3 +3506,30 @@ remapping filesystem remains outside the guarantee. Descriptor-bound evidence
 operations therefore remain required before a replacement candidate is
 approval-ready. The change performs no source export, version save, deployment,
 approval, customer contact, or revenue event.
+
+## 2026-07-25: Anchor Sites Publication To The Validated Parent
+
+Candidate preparation recorded output containment before long-running build
+and validation commands, but final archive and receipt hard links still
+resolved the destination parent from its path. Replacing that directory after
+preflight could therefore move a create-only publication into a different
+location without overwriting an existing leaf.
+
+Preparation now requires both direct output parents to exist and the host to
+support POSIX descriptor-relative hard links before any Git, Node, npm, test,
+or packaging command runs. It records each parent's filesystem identity,
+opens the parent without following a symlink at publication, verifies the open
+descriptor still has that identity, and creates the output leaf relative to
+the descriptor. Replacement before the open fails, while a rename after the
+identity check cannot redirect the link into a newly created directory at the
+requested parent path. Existing late-leaf claims retain their bytes and the
+same controlled no-clobber failure.
+
+This decision anchors only the final destination operation. The parent
+descriptor is reopened rather than held from preflight, and staging,
+staged-file reads, post-publication reads, and cleanup remain path-based.
+Identity-remapping filesystems and inode reuse across the reopen interval also
+remain outside this guarantee. Those operations must become descriptor-bound
+before a replacement candidate is approval-ready. The change performs no
+source export, version save, deployment, approval, customer contact, or
+revenue event.

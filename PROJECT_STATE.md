@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 249 of
-1,000, with 751 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 250 of
+1,000, with 750 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -152,6 +152,11 @@ alignment take priority over commit volume.
   directory, rejects stable alternate-spelling, whole-repository, and
   subdirectory-only aliases, deduplicates directory identities to avoid mount
   cycles, and fails closed when traversal or identity checks report errors.
+- Destination-anchored Sites evidence publication that requires existing
+  output parents and supported POSIX descriptor-relative hard links, records
+  each direct parent's identity before commands, rejects replacement before
+  publication, and creates each no-clobber leaf relative to the verified open
+  parent descriptor so a later rename cannot redirect it into a replacement.
 - Receipt-stable Sites verification that parses one exact byte buffer and
   requires the same regular receipt and digest after archive and source
   validation. Mutation or replacement with a link during verification
@@ -606,9 +611,12 @@ remains unchanged. Both requested paths must be direct regular-file leaves,
 not symlinks. Stable alternate case or Unicode spellings, whole-repository
 aliases, and aliases that expose only a repository subdirectory now fail by
 filesystem identity. Before treating a new pair as approval-ready, bind
-evidence staging, reads, publication, and cleanup to stable parent and file
-identities so concurrent parent or leaf replacement cannot cross the remaining
-check-to-open windows. Then obtain
+evidence staging, staged-file and post-publication reads, and cleanup to parent
+and file descriptors held from preflight so concurrent parent or leaf
+replacement cannot cross the remaining check-to-open windows. Final archive
+and receipt publication now requires existing output parents and anchors each
+no-clobber leaf to a verified open parent descriptor, but it does not retain
+that descriptor across the full operation. Then obtain
 independent `--verify-only` evidence for its
 schema-4 complete-tree, duplicate-free,
 branch-bound, archive-stable, receipt-stable, test-bracketed evidence before

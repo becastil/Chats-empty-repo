@@ -373,6 +373,29 @@ class SiteCandidateTests(unittest.TestCase):
             )
             self.assertFalse(staged_archive.exists())
 
+    def test_prepares_outputs_in_distinct_prevalidated_parents(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            archive_parent = Path(tmp) / "archive-output"
+            receipt_parent = Path(tmp) / "receipt-output"
+            archive_parent.mkdir()
+            receipt_parent.mkdir()
+            archive = (archive_parent / archive.name).resolve()
+            receipt = (receipt_parent / receipt.name).resolve()
+
+            result = prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+
+            self.assertEqual(result.archive, archive)
+            self.assertEqual(result.receipt, receipt)
+            self.assertTrue(archive.is_file())
+            self.assertTrue(receipt.is_file())
+
     def test_independently_verifies_without_build_or_package_commands(
         self,
     ) -> None:
@@ -1267,8 +1290,14 @@ class SiteCandidateTests(unittest.TestCase):
                 path: Path,
                 payload: dict[str, object],
                 label: str,
+                expected_parent_identity: object,
             ) -> str:
-                receipt_sha256 = create_receipt(path, payload, label)
+                receipt_sha256 = create_receipt(
+                    path,
+                    payload,
+                    label,
+                    expected_parent_identity,
+                )
                 with archive.open("ab") as target:
                     target.write(b"changed during receipt publication\n")
                 return receipt_sha256
@@ -1307,8 +1336,14 @@ class SiteCandidateTests(unittest.TestCase):
                 path: Path,
                 payload: dict[str, object],
                 label: str,
+                expected_parent_identity: object,
             ) -> str:
-                receipt_sha256 = create_receipt(path, payload, label)
+                receipt_sha256 = create_receipt(
+                    path,
+                    payload,
+                    label,
+                    expected_parent_identity,
+                )
                 with receipt.open("ab") as target:
                     target.write(b"changed during publication\n")
                 return receipt_sha256
@@ -1649,8 +1684,8 @@ class SiteCandidateTests(unittest.TestCase):
 
         self.assertEqual(
             help_text.count(
-                "Preparation requires a new path; --verify-only requires an "
-                "existing path."
+                "Preparation requires a new path in an existing parent "
+                "directory; --verify-only requires an existing path."
             ),
             2,
         )
@@ -2678,6 +2713,152 @@ class SiteCandidateTests(unittest.TestCase):
                 self.assertFalse(archive.exists())
                 self.assertFalse(receipt.exists())
                 self.assertEqual(runner.commands, [])
+
+    def test_requires_existing_evidence_parent_directories(self) -> None:
+        for label in ("archive", "receipt"):
+            with self.subTest(label=label), TemporaryDirectory() as tmp:
+                root, archive, receipt, package_script = self._fixture(
+                    Path(tmp)
+                )
+                missing_parent = Path(tmp) / f"missing-{label}"
+                if label == "archive":
+                    archive = missing_parent / archive.name
+                else:
+                    receipt = missing_parent / receipt.name
+                runner = FakeCommandRunner(root, archive)
+
+                with self.assertRaisesRegex(
+                    prepare_site_candidate.SiteCandidateError,
+                    rf"{label} parent directory must already exist",
+                ):
+                    prepare_site_candidate.prepare_site_candidate(
+                        root,
+                        archive,
+                        receipt,
+                        package_script,
+                        run_command=runner,
+                    )
+
+                self.assertFalse(missing_parent.exists())
+                self.assertEqual(runner.commands, [])
+
+    def test_requires_descriptor_relative_publication_support(self) -> None:
+        for capability in (
+            "supports_dir_fd",
+            "supports_follow_symlinks",
+        ):
+            with (
+                self.subTest(capability=capability),
+                TemporaryDirectory() as tmp,
+            ):
+                root, archive, receipt, package_script = self._fixture(
+                    Path(tmp)
+                )
+                runner = FakeCommandRunner(root, archive)
+
+                with (
+                    patch.object(
+                        prepare_site_candidate.os,
+                        capability,
+                        frozenset(),
+                    ),
+                    self.assertRaisesRegex(
+                        prepare_site_candidate.SiteCandidateError,
+                        "requires descriptor-relative hard-link publication "
+                        "support",
+                    ),
+                ):
+                    prepare_site_candidate.prepare_site_candidate(
+                        root,
+                        archive,
+                        receipt,
+                        package_script,
+                        run_command=runner,
+                    )
+
+                self.assertFalse(archive.exists())
+                self.assertFalse(receipt.exists())
+                self.assertEqual(runner.commands, [])
+
+    def test_rejects_a_replaced_output_parent_before_publication(self) -> None:
+        with TemporaryDirectory() as tmp:
+            temporary_root = Path(tmp)
+            output_parent = temporary_root / "outputs"
+            output_parent.mkdir()
+            displaced_parent = temporary_root / "displaced"
+            staged = temporary_root / "staged-archive"
+            staged.write_bytes(b"validated archive\n")
+            output = output_parent / "candidate.tar.gz"
+            expected_parent_identity = output_parent.stat(
+                follow_symlinks=False
+            )
+            output_parent.rename(displaced_parent)
+            output_parent.mkdir()
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "archive output parent changed during candidate operation",
+            ):
+                prepare_site_candidate._publish_new_output(
+                    staged,
+                    output,
+                    "archive",
+                    expected_parent_identity,
+                )
+
+            self.assertFalse(output.exists())
+            self.assertFalse(
+                displaced_parent.joinpath(output.name).exists()
+            )
+
+    def test_publication_stays_bound_after_the_parent_is_opened(self) -> None:
+        with TemporaryDirectory() as tmp:
+            temporary_root = Path(tmp)
+            output_parent = temporary_root / "outputs"
+            output_parent.mkdir()
+            displaced_parent = temporary_root / "displaced"
+            staged = temporary_root / "staged-archive"
+            content = b"validated archive\n"
+            staged.write_bytes(content)
+            output = output_parent / "candidate.tar.gz"
+            expected_parent_identity = output_parent.stat(
+                follow_symlinks=False
+            )
+            real_link = prepare_site_candidate.os.link
+
+            def replace_parent_then_link(
+                source: Path,
+                destination: str,
+                *,
+                dst_dir_fd: int,
+                follow_symlinks: bool,
+            ) -> None:
+                output_parent.rename(displaced_parent)
+                output_parent.mkdir()
+                real_link(
+                    source,
+                    destination,
+                    dst_dir_fd=dst_dir_fd,
+                    follow_symlinks=follow_symlinks,
+                )
+
+            with patch.object(
+                prepare_site_candidate.os,
+                "link",
+                side_effect=replace_parent_then_link,
+            ):
+                prepare_site_candidate._publish_new_output(
+                    staged,
+                    output,
+                    "archive",
+                    expected_parent_identity,
+                )
+
+            self.assertFalse(output.exists())
+            self.assertEqual(
+                displaced_parent.joinpath(output.name).read_bytes(),
+                content,
+            )
 
     def test_preserves_an_archive_claimed_after_preflight(self) -> None:
         with TemporaryDirectory() as tmp:

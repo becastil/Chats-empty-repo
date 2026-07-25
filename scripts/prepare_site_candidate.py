@@ -139,6 +139,7 @@ def prepare_site_candidate(
         project_root,
         "archive",
     )
+    output_parent_identities: dict[str, os.stat_result] = {}
     for output_path, label in (
         (archive_path, "archive"),
         (receipt_path, "receipt"),
@@ -157,6 +158,12 @@ def prepare_site_candidate(
                 f"{label} output already exists; refusing to overwrite: "
                 f"{output_path}"
             )
+        output_parent_identities[label] = _output_parent_identity(
+            output_path,
+            label,
+            repository_identities,
+        )
+    _require_descriptor_relative_publication()
 
     commit_sha = _synchronized_commit(project_root, runner)
 
@@ -195,7 +202,6 @@ def prepare_site_candidate(
             "candidate payload changed during site tests"
         )
 
-    archive_path.parent.mkdir(parents=True, exist_ok=True)
     with TemporaryDirectory(
         dir=archive_path.parent,
         prefix=f".{archive_path.name}.",
@@ -231,6 +237,7 @@ def prepare_site_candidate(
             staged_archive,
             archive_path,
             "archive",
+            output_parent_identities["archive"],
         )
         _require_same_archive(
             archive_path,
@@ -249,6 +256,7 @@ def prepare_site_candidate(
         receipt_path,
         receipt_payload,
         "receipt",
+        output_parent_identities["receipt"],
     )
     _require_same_synchronized_commit(
         project_root,
@@ -823,6 +831,51 @@ def _repository_directory_identities(
     return tuple(identities)
 
 
+def _output_parent_identity(
+    output_path: Path,
+    label: str,
+    repository_identities: tuple[os.stat_result, ...],
+) -> os.stat_result:
+    parent = output_path.parent
+    try:
+        details = parent.stat(follow_symlinks=False)
+    except FileNotFoundError as exc:
+        raise SiteCandidateError(
+            f"{label} parent directory must already exist: {parent}"
+        ) from exc
+    except OSError as exc:
+        raise SiteCandidateError(
+            f"could not verify {label} output parent: {exc}"
+        ) from exc
+
+    if not stat.S_ISDIR(details.st_mode):
+        raise SiteCandidateError(
+            f"{label} parent must be a directory: {parent}"
+        )
+    if any(
+        os.path.samestat(details, repository_identity)
+        for repository_identity in repository_identities
+    ):
+        raise SiteCandidateError(
+            f"{label} must be written outside the repository: {output_path}"
+        )
+    return details
+
+
+def _require_descriptor_relative_publication() -> None:
+    if (
+        os.name != "posix"
+        or not hasattr(os, "O_DIRECTORY")
+        or not hasattr(os, "O_NOFOLLOW")
+        or os.link not in getattr(os, "supports_dir_fd", ())
+        or os.link not in getattr(os, "supports_follow_symlinks", ())
+    ):
+        raise SiteCandidateError(
+            "Sites candidate preparation requires descriptor-relative "
+            "hard-link publication support"
+        )
+
+
 def _require_regular_file(path: Path, label: str) -> None:
     if path.is_symlink() or not path.is_file():
         raise SiteCandidateError(f"{label} must be a regular file: {path}")
@@ -1107,8 +1160,8 @@ def _atomic_create_json(
     path: Path,
     payload: dict[str, object],
     label: str,
+    expected_parent_identity: os.stat_result,
 ) -> str:
-    path.parent.mkdir(parents=True, exist_ok=True)
     serialized = _serialize_json(payload)
     temporary_path: Path | None = None
     try:
@@ -1132,7 +1185,12 @@ def _atomic_create_json(
         raise SiteCandidateError(f"could not stage {path}")
     try:
         receipt_sha256 = _sha256(temporary_path)
-        _publish_new_output(temporary_path, path, label)
+        _publish_new_output(
+            temporary_path,
+            path,
+            label,
+            expected_parent_identity,
+        )
     except SiteCandidateError:
         _remove_staged_file(temporary_path)
         raise
@@ -1151,9 +1209,46 @@ def _publish_new_output(
     staged_path: Path,
     output_path: Path,
     label: str,
+    expected_parent_identity: os.stat_result,
 ) -> None:
+    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+    if hasattr(os, "O_CLOEXEC"):
+        flags |= os.O_CLOEXEC
+
     try:
-        os.link(staged_path, output_path)
+        parent_fd = os.open(output_path.parent, flags)
+    except OSError as exc:
+        raise SiteCandidateError(
+            f"could not open {label} output parent for publication "
+            f"{output_path.parent}: {exc}"
+        ) from exc
+
+    try:
+        try:
+            actual_parent_identity = os.fstat(parent_fd)
+        except OSError as exc:
+            raise SiteCandidateError(
+                f"could not verify {label} output parent before "
+                f"publication: {exc}"
+            ) from exc
+        if (
+            not stat.S_ISDIR(actual_parent_identity.st_mode)
+            or not os.path.samestat(
+                actual_parent_identity,
+                expected_parent_identity,
+            )
+        ):
+            raise SiteCandidateError(
+                f"{label} output parent changed during candidate operation; "
+                f"refusing publication: {output_path.parent}"
+            )
+
+        os.link(
+            staged_path,
+            output_path.name,
+            dst_dir_fd=parent_fd,
+            follow_symlinks=False,
+        )
     except FileExistsError as exc:
         raise SiteCandidateError(
             f"{label} output appeared during candidate operation; "
@@ -1163,6 +1258,11 @@ def _publish_new_output(
         raise SiteCandidateError(
             f"could not publish {label} output {output_path}: {exc}"
         ) from exc
+    finally:
+        try:
+            os.close(parent_fd)
+        except OSError:
+            pass
 
 
 def _remove_staged_file(path: Path | None) -> None:
@@ -1350,7 +1450,8 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help=(
             "Candidate .tar.gz path outside the repository. Preparation "
-            "requires a new path; --verify-only requires an existing path."
+            "requires a new path in an existing parent directory; "
+            "--verify-only requires an existing path."
         ),
     )
     parser.add_argument(
@@ -1359,7 +1460,8 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help=(
             "Candidate JSON receipt path outside the repository. Preparation "
-            "requires a new path; --verify-only requires an existing path."
+            "requires a new path in an existing parent directory; "
+            "--verify-only requires an existing path."
         ),
     )
     parser.add_argument(

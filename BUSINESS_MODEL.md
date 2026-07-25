@@ -486,11 +486,23 @@ and aliases exposing only a checkout subdirectory therefore fail before source
 checks or build commands even when lexical containment differs. Missing output
 directories are skipped, repeated directory identities stop mount cycles, and
 reported traversal or ambiguous identity lookup failures stop preparation. This
-does not pin a parent or leaf against concurrent replacement or detect an alias
-whose filesystem remaps identity, so the replacement candidate remains blocked
-on descriptor-bound staging, reads, publication, and cleanup. The guard
-protects paid distribution evidence without exporting source, saving or
-deploying a version, or creating customer or revenue evidence.
+does not detect an alias whose filesystem remaps identity. The guard protects
+paid distribution evidence without exporting source, saving or deploying a
+version, or creating customer or revenue evidence.
+Final candidate publication now narrows the concurrent replacement boundary
+too. Both direct output parents must already exist on a POSIX host with
+descriptor-relative hard-link support. Preparation records their identities
+before running commands, then opens each parent without following a symlink,
+verifies that descriptor against the recorded identity, and creates the
+archive or receipt leaf relative to it. A pre-open replacement fails, and a
+rename after verification cannot redirect publication into a replacement
+directory. The descriptor is not held from preflight, while staging,
+staged-file reads, post-publication reads, and cleanup remain path-based;
+identity remapping and inode reuse across the reopen interval remain outside
+the guarantee. The replacement candidate therefore remains blocked on those
+descriptor-bound operations. This strengthens paid-distribution integrity
+without exporting source, saving or deploying a version, or creating customer
+or revenue evidence.
 A separate read-only hosted dependency contract runs for relevant lock and
 workflow changes, on manual dispatch, and weekly so a newly published advisory
 does not wait for another package edit. It uses the minimum supported Node

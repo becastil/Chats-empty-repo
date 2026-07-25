@@ -411,7 +411,12 @@ class ReleaseManifestTests(unittest.TestCase):
             "reported traversal or ambiguous identity lookup failures stop "
             "preparation",
             "whole-repository or subdirectory-only aliases",
-            "staging, reads, publication, and cleanup are descriptor-bound",
+            "Both output parent directories must already exist",
+            "descriptor-relative hard-link support",
+            "links the output leaf relative to that descriptor",
+            "staging, staged-file reads, post-publication reads, and cleanup "
+            "remain path-based",
+            "those operations are descriptor-bound",
             "supplied archive and receipt paths must themselves name regular "
             "files rather than symlinks",
             "`receipt_sha256`",
