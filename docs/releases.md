@@ -136,9 +136,12 @@ site release:
    vulnerabilities. The command refuses dirty or unsynchronized source,
    runtime-pin or active-runtime drift, and an archive whose embedded commit,
    lock digest, Sites project, or Node version differs from the tested source.
-   Its receipt records the resulting archive digest. Do not use
-   `npm audit fix --force` when it proposes a framework downgrade; review and
-   test a supported patch or explicit transitive override instead.
+   Archive members outside `dist/`, path aliases, links, devices, pipes, and
+   other special files are rejected; only canonical regular files and
+   directories can cross the candidate boundary. Its receipt records the
+   resulting archive digest. Do not use `npm audit fix --force` when it
+   proposes a framework downgrade; review and test a supported patch or
+   explicit transitive override instead.
 2. Verify the archive and receipt immediately before asking for source-export
    approval:
 

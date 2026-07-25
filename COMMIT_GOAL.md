@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after pinning the candidate runtime: 231 / 1,000 (23.1%).
-- Remaining after pinning the candidate runtime: 769 commits.
+- Progress after constraining candidate archives: 232 / 1,000 (23.2%).
+- Remaining after constraining candidate archives: 768 commits.
 
 ## Commit Standard
 

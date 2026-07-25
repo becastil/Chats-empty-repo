@@ -29,6 +29,7 @@ REQUIRED_ARCHIVE_MEMBERS = (
     "dist/.openai/hosting.json",
     "dist/.openai/site-candidate.json",
 )
+ARCHIVE_ROOT = "dist"
 SHA_PATTERN = re.compile(r"[0-9a-f]{40}\Z")
 DIGEST_PATTERN = re.compile(r"[0-9a-f]{64}\Z")
 NODE_VERSION_PATTERN = re.compile(
@@ -429,16 +430,28 @@ def _verify_archive(
             members: dict[str, tarfile.TarInfo] = {}
             for member in bundle.getmembers():
                 name = member.name.rstrip("/")
-                parts = PurePosixPath(name).parts
+                normalized = PurePosixPath(name)
+                parts = normalized.parts
                 if (
                     not name
                     or name.startswith("/")
                     or ".." in parts
+                    or normalized.as_posix() != name
                     or member.issym()
                     or member.islnk()
                 ):
                     raise SiteCandidateError(
                         f"unsafe archive member: {member.name}"
+                    )
+                if not parts or parts[0] != ARCHIVE_ROOT:
+                    raise SiteCandidateError(
+                        "archive member must stay within "
+                        f"{ARCHIVE_ROOT}/: {member.name}"
+                    )
+                if not (member.isfile() or member.isdir()):
+                    raise SiteCandidateError(
+                        "archive member must be a regular file or directory: "
+                        f"{member.name}"
                     )
                 if name in members:
                     raise SiteCandidateError(

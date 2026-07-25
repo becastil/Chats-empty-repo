@@ -349,6 +349,13 @@ site code keeps its tested compatibility floor without weakening the exact
 paid-distribution handoff. This makes candidate evidence reproducible; it does
 not authorize source export, save a Sites version, deploy production, or create
 demand, payment, or revenue evidence.
+Candidate validation now also limits every archive member to a canonical path
+under `dist/` and permits only regular files or directories. A packaging helper
+cannot silently carry unrelated repository source, credentials, links, devices,
+or pipes across the source-export boundary and still receive a candidate
+receipt. This strengthens the local-code promise for security-conscious buyers;
+it does not approve an export, save or deploy a version, or establish demand,
+payment, or revenue.
 A separate read-only hosted dependency contract runs for relevant lock and
 workflow changes, on manual dispatch, and weekly so a newly published advisory
 does not wait for another package edit. It uses the minimum supported Node

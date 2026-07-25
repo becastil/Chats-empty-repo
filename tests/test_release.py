@@ -378,6 +378,8 @@ class ReleaseManifestTests(unittest.TestCase):
             "Node `22.13.0`",
             "dependency audit must report zero vulnerabilities",
             "receipt records the resulting archive digest",
+            "outside `dist/`",
+            "regular files and directories",
             "Do not use `npm audit fix --force`",
         ):
             self.assertIn(requirement, normalized, requirement)

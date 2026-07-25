@@ -3,7 +3,7 @@ from __future__ import annotations
 from contextlib import redirect_stdout
 import hashlib
 import importlib.util
-from io import StringIO
+from io import BytesIO, StringIO
 import json
 from pathlib import Path
 import sys
@@ -39,6 +39,8 @@ class FakeCommandRunner:
         origin_sha: str = COMMIT_SHA,
         node_version: str = "v22.13.0",
         include_manifest: bool = True,
+        extra_member_name: str | None = None,
+        extra_member_type: bytes = tarfile.REGTYPE,
     ) -> None:
         self.root = root
         self.archive = archive
@@ -46,6 +48,8 @@ class FakeCommandRunner:
         self.origin_sha = origin_sha
         self.node_version = node_version
         self.include_manifest = include_manifest
+        self.extra_member_name = extra_member_name
+        self.extra_member_type = extra_member_type
         self.commands: list[tuple[str, ...]] = []
 
     def __call__(self, command: list[str] | tuple[str, ...], root: Path) -> str:
@@ -108,6 +112,14 @@ class FakeCommandRunner:
                 ):
                     continue
                 bundle.add(source, arcname=archive_name)
+            if self.extra_member_name is not None:
+                member = tarfile.TarInfo(self.extra_member_name)
+                member.type = self.extra_member_type
+                content: BytesIO | None = None
+                if member.isfile():
+                    content = BytesIO(b"unexpected candidate content\n")
+                    member.size = len(content.getvalue())
+                bundle.addfile(member, content)
 
 
 class SiteCandidateTests(unittest.TestCase):
@@ -522,6 +534,54 @@ class SiteCandidateTests(unittest.TestCase):
                 prepare_site_candidate.SiteCandidateError,
                 "archive is missing regular file "
                 "dist/.openai/site-candidate.json",
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=runner,
+                )
+
+            self.assertFalse(receipt.exists())
+
+    def test_rejects_an_archive_member_outside_dist(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            runner = FakeCommandRunner(
+                root,
+                archive,
+                extra_member_name="README.md",
+            )
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                r"archive member must stay within dist/: README\.md",
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=runner,
+                )
+
+            self.assertFalse(receipt.exists())
+
+    def test_rejects_a_special_file_archive_member(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            runner = FakeCommandRunner(
+                root,
+                archive,
+                extra_member_name="dist/runtime.pipe",
+                extra_member_type=tarfile.FIFOTYPE,
+            )
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "archive member must be a regular file or directory: "
+                r"dist/runtime\.pipe",
             ):
                 prepare_site_candidate.prepare_site_candidate(
                     root,

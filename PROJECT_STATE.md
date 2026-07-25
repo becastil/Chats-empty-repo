@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 231 of
-1,000, with 769 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 232 of
+1,000, with 768 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -105,6 +105,9 @@ alignment take priority over commit volume.
   local preflight, candidate receipts, and the hosted dependency contract.
   Strict parsing rejects malformed pins before commands run, while package
   metadata retains `>=22.13.0` as the general compatibility floor.
+- A scope-constrained Sites archive validator that permits only canonical
+  regular files and directories under `dist/`, rejecting path aliases, links,
+  devices, pipes, and unrelated source before a candidate receipt is written.
 - A zero-vulnerability site dependency lock with Next `16.2.11`, React and
   React Server Components `19.2.8`, `brace-expansion` `5.0.8`, current
   Cloudflare and Vite tooling, and advisory-fixed PostCSS and Sharp overrides.

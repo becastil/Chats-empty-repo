@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Restricted Sites candidates to canonical regular files and directories under
+  `dist/`, rejecting unrelated source paths, aliases, links, and special files
+  before either preparation or independent verification can accept an archive.
 - Added one strict `.nvmrc` source of truth for exact Node `22.13.0` Sites
   candidate builds, receipts, and hosted dependency checks, with fail-fast
   malformed-pin coverage and an explicit local runtime-selection handoff.

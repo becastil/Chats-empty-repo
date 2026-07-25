@@ -3081,3 +3081,22 @@ preflight. This makes the exact patched-site candidate reproducible across
 local and hosted checks without weakening the paid distribution boundary. No
 source was exported, no Sites version was saved or deployed, and no visit,
 pilot request, payment, or revenue evidence was created.
+
+## 2026-07-24: Constrain Sites Candidates To Deployable Output
+
+The candidate validator rejected traversal paths and links but otherwise
+accepted any archive member once the required server, hosting metadata, and
+candidate manifest were present. A misconfigured packaging helper could
+therefore include unrelated repository source, a credential file, or a special
+filesystem entry and still receive a valid receipt before the separate Sites
+source-export boundary.
+
+Candidate archives must now contain only canonical paths rooted under `dist/`.
+Every member must be a regular file or directory; aliases, links, devices,
+pipes, and entries elsewhere are rejected during both preparation and
+independent verification. A failed archive never receives a receipt.
+
+This keeps the artifact handed toward paid-site distribution limited to
+deployable output and makes the local-code promise fail closed. It does not
+approve source export, save a Sites version, authorize production deployment,
+or create a visit, pilot request, payment, or revenue event.
