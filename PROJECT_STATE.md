@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 230 of
-1,000, with 770 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 231 of
+1,000, with 769 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -101,6 +101,10 @@ alignment take priority over commit volume.
   from live production, requires separate deployment approval, and immediately
   audits a successful publish. Sites versions 46 and 47 are superseded and must
   not be published.
+- A canonical `.nvmrc` pin for exact Node `22.13.0` candidate builds, shared by
+  local preflight, candidate receipts, and the hosted dependency contract.
+  Strict parsing rejects malformed pins before commands run, while package
+  metadata retains `>=22.13.0` as the general compatibility floor.
 - A zero-vulnerability site dependency lock with Next `16.2.11`, React and
   React Server Components `19.2.8`, `brace-expansion` `5.0.8`, current
   Cloudflare and Vite tooling, and advisory-fixed PostCSS and Sharp overrides.
@@ -523,16 +527,16 @@ python3 scripts/audit_pilot_labels.py --repo becastil/Chats-empty-repo
 
 The public site still advertises `v0.3.50`. Sites versions 46 and 47 are
 superseded and must not be deployed; version 47 predates the July 24 React
-Server Components and `brace-expansion` advisories. Run the deployment handoff
-from Node `22.13.0` with `scripts/prepare_site_candidate.py`, then obtain
-independent `--verify-only` evidence before asking for explicit owner approval
-to push the receipt's exact patched `main` source to the separate Sites source
-repository. Only after that approval, push the source, verify the unchanged
-archive and receipt again, and save that matched candidate in the existing
-Sites project. Source-export approval does not authorize production; record the
-saved version, source identity, and archive digest, then obtain separate owner
-approval before deployment. After deployment approval, publish that
-replacement and run
+Server Components and `brace-expansion` advisories. Run `nvm install` and
+`nvm use` to select the repository's exact Node `22.13.0` pin, then run the
+deployment handoff with `scripts/prepare_site_candidate.py`. Obtain independent
+`--verify-only` evidence before asking for explicit owner approval to push the
+receipt's exact patched `main` source to the separate Sites source repository.
+Only after that approval, push the source, verify the unchanged archive and
+receipt again, and save that matched candidate in the existing Sites project.
+Source-export approval does not authorize production; record the saved version,
+source identity, and archive digest, then obtain separate owner approval before
+deployment. After deployment approval, publish that replacement and run
 `python3 scripts/audit_production_site.py`; do not describe it as live before
 both steps pass.
 

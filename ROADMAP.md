@@ -7,7 +7,8 @@
 
 ## Near Term
 
-- Run the fail-closed Node `22.13.0` preflight for patched `main`, then obtain
+- Select the exact Node `22.13.0` runtime from `.nvmrc` with `nvm install` and
+  `nvm use`, run the fail-closed preflight for patched `main`, then obtain
   read-only independent verification before asking for explicit source-export
   approval. After approval, push its receipt-bound source to the separate Sites
   source repository, verify the unchanged archive and receipt again, and save

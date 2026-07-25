@@ -3059,3 +3059,25 @@ into deployment approval.
 
 No source was exported, no Sites version was saved or deployed, and no visit,
 pilot request, payment, or revenue evidence was created.
+
+## 2026-07-24: Use One Exact Runtime Pin For Sites Candidates
+
+The candidate preflight required exact Node `22.13.0`, the hosted dependency
+workflow duplicated that literal, and package metadata correctly expressed the
+broader `>=22.13.0` compatibility floor. This checkout had only Node `26.0.0`
+and no repository runtime selector, so an operator could discover the exact
+candidate requirement only after invoking the preflight.
+
+The repository now stores `22.13.0` in `.nvmrc`. Candidate preparation strictly
+parses that file before any Git, Node, npm, or packaging command, compares the
+active runtime with it, and records it in the candidate manifest. Independent
+verification derives the expected receipt from the same pin. The hosted
+dependency workflow also reads `.nvmrc` and watches it in both trigger blocks.
+Package metadata remains `>=22.13.0`; it is a compatibility contract, not a
+candidate identity.
+
+The release handoff now selects the pin with `nvm install` and `nvm use` before
+preflight. This makes the exact patched-site candidate reproducible across
+local and hosted checks without weakening the paid distribution boundary. No
+source was exported, no Sites version was saved or deployed, and no visit,
+pilot request, payment, or revenue evidence was created.

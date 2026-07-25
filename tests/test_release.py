@@ -373,6 +373,8 @@ class ReleaseManifestTests(unittest.TestCase):
             "Only after the approved deployment succeeds",
             "immediately run the production audit",
             "python3 scripts/prepare_site_candidate.py",
+            "`.nvmrc`",
+            "`nvm use`",
             "Node `22.13.0`",
             "dependency audit must report zero vulnerabilities",
             "receipt records the resulting archive digest",

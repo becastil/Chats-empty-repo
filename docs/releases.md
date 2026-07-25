@@ -119,21 +119,26 @@ site release:
    hosted Node `22.13.0` runtime to validate and package the exact source:
 
    ```bash
+   nvm install
+   nvm use
    python3 scripts/prepare_site_candidate.py \
      --package-script "$SITES_PACKAGE_SCRIPT" \
      --archive /tmp/repo-scout-site.tar.gz \
      --receipt /tmp/repo-scout-site-receipt.json
    ```
 
+   Run `nvm use` before every candidate build. The version manager reads the
+   exact runtime from `.nvmrc`; the same file configures the hosted dependency
+   contract and the candidate receipt.
    `SITES_PACKAGE_SCRIPT` must name the trusted Sites `package-site.sh` helper.
    The preflight runs `npm ci`, `npm run audit:dependencies`, `npm test`, and
    `npm run lint` in order. The complete dependency audit must report zero
    vulnerabilities. The command refuses dirty or unsynchronized source,
-   runtime drift, and an archive whose embedded commit, lock digest, Sites
-   project, or Node version differs from the tested source. Its receipt records
-   the resulting archive digest. Do not use `npm audit fix --force` when it
-   proposes a framework downgrade; review and test a supported patch or
-   explicit transitive override instead.
+   runtime-pin or active-runtime drift, and an archive whose embedded commit,
+   lock digest, Sites project, or Node version differs from the tested source.
+   Its receipt records the resulting archive digest. Do not use
+   `npm audit fix --force` when it proposes a framework downgrade; review and
+   test a supported patch or explicit transitive override instead.
 2. Verify the archive and receipt immediately before asking for source-export
    approval:
 

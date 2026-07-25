@@ -16,7 +16,6 @@ from typing import Callable, Sequence
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-EXPECTED_NODE_VERSION = "22.13.0"
 SOURCE_REF = "refs/heads/main"
 SCHEMA_VERSION = 1
 VALIDATION_COMMANDS = (
@@ -32,6 +31,11 @@ REQUIRED_ARCHIVE_MEMBERS = (
 )
 SHA_PATTERN = re.compile(r"[0-9a-f]{40}\Z")
 DIGEST_PATTERN = re.compile(r"[0-9a-f]{64}\Z")
+NODE_VERSION_PATTERN = re.compile(
+    r"(?:0|[1-9][0-9]*)\."
+    r"(?:0|[1-9][0-9]*)\."
+    r"(?:0|[1-9][0-9]*)(?:\n)?\Z"
+)
 RECEIPT_KEYS = frozenset(("schema_version", "candidate", "archive"))
 CANDIDATE_KEYS = frozenset(
     (
@@ -84,6 +88,8 @@ def prepare_site_candidate(
             "Sites packaging helper cannot also be an output path"
         )
     _require_regular_file(project_root / "package-lock.json", "package lock")
+    _require_regular_file(project_root / ".nvmrc", "Node runtime pin")
+    expected_node_version = read_node_runtime_pin(project_root)
     hosting_path = project_root / ".openai" / "hosting.json"
     _require_regular_file(hosting_path, "Sites hosting metadata")
     _require_regular_file(package_path, "Sites packaging helper")
@@ -105,11 +111,11 @@ def prepare_site_candidate(
     commit_sha = _synchronized_commit(project_root, runner)
 
     node_output = runner(("node", "--version"), project_root).strip()
-    expected_node_output = f"v{EXPECTED_NODE_VERSION}"
+    expected_node_output = f"v{expected_node_version}"
     if node_output != expected_node_output:
         raise SiteCandidateError(
             "site candidate requires Node "
-            f"{EXPECTED_NODE_VERSION}; found {node_output or 'no version'}"
+            f"{expected_node_version}; found {node_output or 'no version'}"
         )
 
     for command in VALIDATION_COMMANDS:
@@ -118,7 +124,11 @@ def prepare_site_candidate(
 
     server_entry = project_root / "dist" / "server" / "index.js"
     _require_regular_file(server_entry, "built Sites server entry")
-    manifest = _candidate_manifest(project_root, commit_sha)
+    manifest = _candidate_manifest(
+        project_root,
+        commit_sha,
+        expected_node_version,
+    )
     manifest_path = (
         project_root / "dist" / ".openai" / "site-candidate.json"
     )
@@ -161,6 +171,7 @@ def verify_site_candidate(
     runner = run_command or _run_command
 
     _require_regular_file(project_root / "package-lock.json", "package lock")
+    _require_regular_file(project_root / ".nvmrc", "Node runtime pin")
     _require_regular_file(
         project_root / ".openai" / "hosting.json",
         "Sites hosting metadata",
@@ -169,7 +180,11 @@ def verify_site_candidate(
     _require_regular_file(receipt_path, "Sites candidate receipt")
 
     commit_sha = _synchronized_commit(project_root, runner)
-    expected_candidate = _candidate_manifest(project_root, commit_sha)
+    expected_candidate = _candidate_manifest(
+        project_root,
+        commit_sha,
+        read_node_runtime_pin(project_root),
+    )
     receipt_payload = _read_json_object(
         receipt_path,
         "Sites candidate receipt",
@@ -307,6 +322,7 @@ def _read_json_object(path: Path, label: str) -> dict[str, object]:
 def _candidate_manifest(
     project_root: Path,
     commit_sha: str,
+    node_version: str,
 ) -> dict[str, object]:
     hosting = _read_json_object(
         project_root / ".openai" / "hosting.json",
@@ -321,12 +337,28 @@ def _candidate_manifest(
         "schema_version": SCHEMA_VERSION,
         "commit_sha": commit_sha,
         "source_ref": SOURCE_REF,
-        "node_version": EXPECTED_NODE_VERSION,
+        "node_version": node_version,
         "package_lock_sha256": _sha256(
             project_root / "package-lock.json"
         ),
         "project_id": project_id,
     }
+
+
+def read_node_runtime_pin(project_root: Path) -> str:
+    runtime_path = project_root.expanduser().resolve() / ".nvmrc"
+    _require_regular_file(runtime_path, "Node runtime pin")
+    try:
+        value = runtime_path.read_text(encoding="ascii")
+    except (OSError, UnicodeError) as exc:
+        raise SiteCandidateError(
+            f"could not read Node runtime pin: {exc}"
+        ) from exc
+    if NODE_VERSION_PATTERN.fullmatch(value) is None:
+        raise SiteCandidateError(
+            "Node runtime pin must contain one semantic version"
+        )
+    return value.rstrip("\n")
 
 
 def _require_exact_keys(

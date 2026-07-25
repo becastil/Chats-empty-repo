@@ -552,24 +552,60 @@ class SiteCandidateTests(unittest.TestCase):
 
             self.assertEqual(runner.commands, [])
 
-    def test_expected_node_matches_the_hosted_dependency_contract(self) -> None:
+    def test_runtime_pin_matches_candidate_hosted_and_package_contracts(
+        self,
+    ) -> None:
         workflow = (
             ROOT / ".github" / "workflows" / "site-dependencies.yml"
         ).read_text(encoding="utf-8")
+        package = json.loads(
+            (ROOT / "package.json").read_text(encoding="utf-8")
+        )
+        lock = json.loads(
+            (ROOT / "package-lock.json").read_text(encoding="utf-8")
+        )
+        runtime_pin = (ROOT / ".nvmrc").read_text(encoding="ascii").strip()
 
         self.assertEqual(
-            prepare_site_candidate.EXPECTED_NODE_VERSION,
+            prepare_site_candidate.read_node_runtime_pin(ROOT),
             "22.13.0",
         )
+        self.assertEqual(runtime_pin, "22.13.0")
+        self.assertEqual(package["engines"]["node"], f">={runtime_pin}")
+        self.assertEqual(
+            lock["packages"][""]["engines"]["node"],
+            f">={runtime_pin}",
+        )
         self.assertIn(
-            f'node-version: "{prepare_site_candidate.EXPECTED_NODE_VERSION}"',
+            'node-version-file: ".nvmrc"',
             workflow,
         )
+
+    def test_rejects_a_malformed_runtime_pin_before_commands(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            (root / ".nvmrc").write_text("22.13\nextra\n", encoding="ascii")
+            runner = FakeCommandRunner(root, archive)
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "Node runtime pin must contain one semantic version",
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=runner,
+                )
+
+            self.assertEqual(runner.commands, [])
 
     @staticmethod
     def _fixture(tmp: Path) -> tuple[Path, Path, Path, Path]:
         root = tmp / "project"
         root.mkdir()
+        (root / ".nvmrc").write_text("22.13.0\n", encoding="ascii")
         (root / "package-lock.json").write_text(
             '{"lockfileVersion": 3}\n',
             encoding="utf-8",

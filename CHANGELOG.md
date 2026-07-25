@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added one strict `.nvmrc` source of truth for exact Node `22.13.0` Sites
+  candidate builds, receipts, and hosted dependency checks, with fail-fast
+  malformed-pin coverage and an explicit local runtime-selection handoff.
 - Added independent, read-only Sites candidate verification that strictly
   reconciles a receipt with clean synchronized source, the local lockfile and
   project identity, the archive digest, and its embedded manifest before

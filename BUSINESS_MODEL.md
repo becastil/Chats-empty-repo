@@ -341,6 +341,14 @@ published July 24 dependency advisories supersede that undeployed candidate
 too. Production remains on `v0.3.50` until a newly tested replacement is saved,
 explicitly approved, deployed, and audited. A clean audit or saved version is
 not a visitor, customer activation, demand, payment, or revenue event.
+The repository now carries one exact `.nvmrc` selector for Node `22.13.0`.
+Local candidate preparation strictly parses that pin before running commands,
+uses it for the active-runtime gate and receipt, and the hosted dependency
+contract reads the same file. Package metadata remains `>=22.13.0` so the free
+site code keeps its tested compatibility floor without weakening the exact
+paid-distribution handoff. This makes candidate evidence reproducible; it does
+not authorize source export, save a Sites version, deploy production, or create
+demand, payment, or revenue evidence.
 A separate read-only hosted dependency contract runs for relevant lock and
 workflow changes, on manual dispatch, and weekly so a newly published advisory
 does not wait for another package edit. It uses the minimum supported Node

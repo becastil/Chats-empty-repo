@@ -32,6 +32,7 @@ class SiteDependencyWorkflowContractTests(unittest.TestCase):
         self.assertIn('cron: "23 15 * * 1"', workflow)
 
         for path in (
+            ".nvmrc",
             "package.json",
             "package-lock.json",
             ".github/dependabot.yml",
@@ -75,7 +76,8 @@ class SiteDependencyWorkflowContractTests(unittest.TestCase):
 
         self.assertIn("ref: ${{ github.sha }}", workflow)
         self.assertIn("persist-credentials: false", workflow)
-        self.assertIn('node-version: "22.13.0"', workflow)
+        self.assertIn('node-version-file: ".nvmrc"', workflow)
+        self.assertNotRegex(workflow, r"(?m)^\s+node-version:")
         self.assertIn("package-manager-cache: false", workflow)
         self.assertLess(
             workflow.index("run: python3 scripts/audit_action_pins.py"),
