@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 240 of
-1,000, with 760 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 241 of
+1,000, with 759 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -137,10 +137,11 @@ alignment take priority over commit volume.
   structural validation and requires the same regular archive and digest after
   the final synchronized-source checkpoint. A persistent path or byte change
   withholds both the candidate receipt and read-only verification success.
-- Overwrite-safe Sites candidate preflight that refuses any pre-existing
-  archive or receipt output before Git, Node, npm, or packaging commands run.
-  Normal reruns must use a fresh outside-repository output pair, leaving
-  previously reviewed evidence unchanged for independent verification.
+- No-clobber Sites candidate publication that refuses pre-existing outputs,
+  packages into a private same-filesystem staging directory, validates that
+  staged archive, and atomically links the archive and synced receipt into
+  their requested paths only when absent. A destination claimed after
+  preflight remains unchanged and withholds approval-ready success.
 - A zero-vulnerability site dependency lock with Next `16.2.11`, React and
   React Server Components `19.2.8`, `brace-expansion` `5.0.8`, current
   Cloudflare and Vite tooling, and advisory-fixed PostCSS and Sharp overrides.

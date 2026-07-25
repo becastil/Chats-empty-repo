@@ -413,12 +413,17 @@ validation and its final source proof before reporting success. This closes a
 mutation window in approval evidence without changing schema 4, granting an
 approval, or creating customer or revenue evidence.
 Candidate preparation also refuses any pre-existing requested archive or
-receipt before source checks or build commands begin. A normal rerun therefore
-cannot replace an artifact pair that may already be under review; the operator
-must choose fresh outside-repository paths while independent verification keeps
-consuming the original evidence. This preflight does not reserve paths against
-another process after the check, alter schema-4 receipts, authorize source
-export or deployment, or create customer or revenue evidence.
+receipt before source checks or build commands begin. It gives the packaging
+helper a private staging path on the archive destination's filesystem,
+validates and rechecks source against that staged archive, then atomically
+hard-links the archive into its requested path only if the path is still
+absent. The receipt is written, flushed, and synced to its own same-directory
+staging file and published through the same no-clobber primitive. A destination
+claimed after preflight keeps its bytes and causes preparation to fail instead
+of replacing evidence. A late receipt collision can leave the validated
+archive published without an approval-ready receipt, so that unpaired archive
+must not advance the handoff. This changes no schema-4 evidence, authorizes no
+source export or deployment, and creates no customer or revenue evidence.
 A separate read-only hosted dependency contract runs for relevant lock and
 workflow changes, on manual dispatch, and weekly so a newly published advisory
 does not wait for another package edit. It uses the minimum supported Node

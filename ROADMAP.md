@@ -11,14 +11,14 @@
   `nvm use`, run the fail-closed preflight for patched `main`, then obtain
   read-only independent verification of its schema-4 complete-tree,
   duplicate-free, branch-bound, archive-stable, test-bracketed,
-  scope-constrained archive while `refs/heads/main`, the same synchronized
-  source commit, and the same archive digest survive every acceptance
-  checkpoint, before asking for explicit source-export approval. After
-  approval, push its receipt-bound source to the separate Sites source
-  repository, verify the unchanged archive and receipt again, and save only
-  that matched candidate. Versions 46 and 47 are superseded and must not be
-  deployed. Keep the replacement behind separate deployment approval and the
-  immediate post-deployment production audit.
+  scope-constrained, atomically no-clobber-published archive and receipt while
+  `refs/heads/main`, the same synchronized source commit, and the same archive
+  digest survive every acceptance checkpoint, before asking for explicit
+  source-export approval. After approval, push its receipt-bound source to the
+  separate Sites source repository, verify the unchanged archive and receipt
+  again, and save only that matched candidate. Versions 46 and 47 are
+  superseded and must not be deployed. Keep the replacement behind separate
+  deployment approval and the immediate post-deployment production audit.
 - Human-review the five prepared, publicly qualified drafts. The first
   owner-only `--write-review` bundle is ready in the ignored private workspace;
   use its content-bound `--approve-next` or

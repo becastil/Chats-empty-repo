@@ -3276,3 +3276,29 @@ after preflight. Valid schema-4 evidence is unchanged, so no migration is
 needed. The guard does not export source, save or deploy a Sites version,
 approve either controlled action, or create a visit, pilot request, payment, or
 revenue event.
+
+## 2026-07-25: Publish Sites Candidate Evidence Without Clobbering
+
+Fail-fast output checks protected evidence that existed when preparation
+started, but an output path could still appear during the long build and
+validation window. The packaging helper wrote directly to the requested
+archive, and receipt publication used replacement semantics, so either late
+claim could be overwritten or become the content preparation validated.
+
+The packaging helper now writes to a private temporary directory under the
+archive destination's parent. Preparation hashes, structurally validates, and
+rechecks synchronized source against that staged regular file before using a
+same-filesystem hard link to claim the requested archive path atomically. The
+receipt is serialized to a flushed and synced same-directory staging file and
+published with the same create-only link. If either destination exists at
+publication, the other file's bytes are preserved and preparation fails
+without reporting approval-ready success. Staging paths are removed.
+
+Archive publication necessarily precedes receipt publication. If another
+process claims the receipt path in that interval, the validated archive remains
+as an unpaired output while the competing receipt remains untouched; neither
+is accepted as a candidate pair. The operator must inspect or remove the
+unpaired archive and retry with fresh paths. Valid schema-4 bytes are unchanged,
+so no migration is needed. This boundary exports no source, saves or deploys no
+Sites version, grants no controlled approval, and creates no visit, pilot
+request, payment, or revenue event.

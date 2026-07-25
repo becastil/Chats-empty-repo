@@ -12,7 +12,7 @@ import stat
 import subprocess
 import sys
 import tarfile
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 from typing import Callable, Iterable, Protocol, Sequence
 
 
@@ -177,32 +177,46 @@ def prepare_site_candidate(
         )
 
     archive_path.parent.mkdir(parents=True, exist_ok=True)
-    runner(
-        (
-            *PACKAGING_COMMAND_PREFIX,
-            str(package_path),
-            str(project_root),
-            str(archive_path),
-        ),
-        project_root,
-    )
-    _require_regular_file(archive_path, "Sites candidate archive")
-    archive_sha256 = _sha256(archive_path)
-    _verify_archive(
-        archive_path,
-        manifest,
-        payload_sha256,
-    )
+    with TemporaryDirectory(
+        dir=archive_path.parent,
+        prefix=f".{archive_path.name}.",
+    ) as staging_directory:
+        staged_archive = Path(staging_directory) / archive_path.name
+        runner(
+            (
+                *PACKAGING_COMMAND_PREFIX,
+                str(package_path),
+                str(project_root),
+                str(staged_archive),
+            ),
+            project_root,
+        )
+        _require_regular_file(staged_archive, "Sites candidate archive")
+        archive_sha256 = _sha256(staged_archive)
+        _verify_archive(
+            staged_archive,
+            manifest,
+            payload_sha256,
+        )
 
-    _require_same_synchronized_commit(
-        project_root,
-        commit_sha,
-        runner,
-    )
-    _require_same_archive(
-        archive_path,
-        archive_sha256,
-    )
+        _require_same_synchronized_commit(
+            project_root,
+            commit_sha,
+            runner,
+        )
+        _require_same_archive(
+            staged_archive,
+            archive_sha256,
+        )
+        _publish_new_output(
+            staged_archive,
+            archive_path,
+            "archive",
+        )
+        _require_same_archive(
+            archive_path,
+            archive_sha256,
+        )
     receipt_payload = {
         "schema_version": SCHEMA_VERSION,
         "candidate": manifest,
@@ -212,7 +226,7 @@ def prepare_site_candidate(
             "sha256": archive_sha256,
         },
     }
-    _atomic_write_json(receipt_path, receipt_payload)
+    _atomic_create_json(receipt_path, receipt_payload, "receipt")
     return SiteCandidateResult(
         commit_sha=commit_sha,
         archive_sha256=archive_sha256,
@@ -644,12 +658,7 @@ def _update_payload_digest(
 
 def _atomic_write_json(path: Path, payload: dict[str, object]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    serialized = json.dumps(
-        payload,
-        indent=2,
-        sort_keys=True,
-        ensure_ascii=True,
-    ) + "\n"
+    serialized = _serialize_json(payload)
     temporary_path: Path | None = None
     try:
         with NamedTemporaryFile(
@@ -669,6 +678,84 @@ def _atomic_write_json(path: Path, payload: dict[str, object]) -> None:
         if temporary_path is not None:
             temporary_path.unlink(missing_ok=True)
         raise SiteCandidateError(f"could not write {path}: {exc}") from exc
+
+
+def _atomic_create_json(
+    path: Path,
+    payload: dict[str, object],
+    label: str,
+) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    serialized = _serialize_json(payload)
+    temporary_path: Path | None = None
+    try:
+        with NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=path.parent,
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as temporary:
+            temporary_path = Path(temporary.name)
+            temporary.write(serialized)
+            temporary.flush()
+            os.fsync(temporary.fileno())
+    except OSError as exc:
+        _remove_staged_file(temporary_path)
+        raise SiteCandidateError(f"could not stage {path}: {exc}") from exc
+
+    if temporary_path is None:
+        raise SiteCandidateError(f"could not stage {path}")
+    try:
+        _publish_new_output(temporary_path, path, label)
+    except SiteCandidateError:
+        _remove_staged_file(temporary_path)
+        raise
+
+    try:
+        temporary_path.unlink()
+    except OSError as exc:
+        raise SiteCandidateError(
+            f"{label} output was published to {path}, but staging cleanup "
+            f"failed for {temporary_path}: {exc}"
+        ) from exc
+
+
+def _publish_new_output(
+    staged_path: Path,
+    output_path: Path,
+    label: str,
+) -> None:
+    try:
+        os.link(staged_path, output_path)
+    except FileExistsError as exc:
+        raise SiteCandidateError(
+            f"{label} output appeared during candidate operation; "
+            f"refusing to overwrite: {output_path}"
+        ) from exc
+    except OSError as exc:
+        raise SiteCandidateError(
+            f"could not publish {label} output {output_path}: {exc}"
+        ) from exc
+
+
+def _remove_staged_file(path: Path | None) -> None:
+    if path is None:
+        return
+    try:
+        path.unlink(missing_ok=True)
+    except OSError:
+        pass
+
+
+def _serialize_json(payload: dict[str, object]) -> str:
+    return json.dumps(
+        payload,
+        indent=2,
+        sort_keys=True,
+        ensure_ascii=True,
+    ) + "\n"
 
 
 def _verify_archive(
@@ -836,13 +923,19 @@ def build_parser() -> argparse.ArgumentParser:
         "--archive",
         type=Path,
         required=True,
-        help="Candidate .tar.gz path outside the repository.",
+        help=(
+            "Candidate .tar.gz path outside the repository. Preparation "
+            "requires a new path; --verify-only requires an existing path."
+        ),
     )
     parser.add_argument(
         "--receipt",
         type=Path,
         required=True,
-        help="Candidate JSON receipt path outside the repository.",
+        help=(
+            "Candidate JSON receipt path outside the repository. Preparation "
+            "requires a new path; --verify-only requires an existing path."
+        ),
     )
     return parser
 

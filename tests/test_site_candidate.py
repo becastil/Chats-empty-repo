@@ -10,7 +10,7 @@ import sys
 import tarfile
 from tempfile import TemporaryDirectory
 import unittest
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -48,6 +48,7 @@ class FakeCommandRunner:
         mutate_server_after_site_tests: bool = False,
         mutate_server_before_package: bool = False,
         duplicate_manifest_before_package: bool = False,
+        late_outputs: dict[Path, bytes] | None = None,
     ) -> None:
         self.root = root
         self.archive = archive
@@ -67,7 +68,9 @@ class FakeCommandRunner:
         self.duplicate_manifest_before_package = (
             duplicate_manifest_before_package
         )
+        self.late_outputs = late_outputs or {}
         self.commands: list[tuple[str, ...]] = []
+        self.packaged_archives: list[Path] = []
 
     def __call__(self, command: list[str] | tuple[str, ...], root: Path) -> str:
         normalized = tuple(command)
@@ -119,6 +122,7 @@ class FakeCommandRunner:
             == prepare_site_candidate.PACKAGING_COMMAND_PREFIX
             and normalized[prefix_length + 1] == str(self.root)
         ):
+            output = Path(normalized[prefix_length + 2])
             if self.mutate_server_before_package:
                 server = self.root / "dist" / "server" / "index.js"
                 server.write_text(
@@ -139,8 +143,12 @@ class FakeCommandRunner:
                     1,
                 )
                 manifest.write_text(content, encoding="utf-8")
-            self._package()
-            return str(self.archive)
+            self.packaged_archives.append(output)
+            self._package(output)
+            for path, content in self.late_outputs.items():
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(content)
+            return str(output)
         raise AssertionError(f"unexpected command: {normalized}")
 
     def assert_root(self, root: Path) -> None:
@@ -153,9 +161,9 @@ class FakeCommandRunner:
             return values.pop(0)
         return values[0]
 
-    def _package(self) -> None:
-        self.archive.parent.mkdir(parents=True, exist_ok=True)
-        with tarfile.open(self.archive, "w:gz") as bundle:
+    def _package(self, archive: Path) -> None:
+        archive.parent.mkdir(parents=True, exist_ok=True)
+        with tarfile.open(archive, "w:gz") as bundle:
             entries: dict[str, Path] = {}
             self._overlay_entries(entries, self.root / "dist", "dist")
             entries["dist/.openai/hosting.json"] = (
@@ -296,7 +304,7 @@ class SiteCandidateTests(unittest.TestCase):
                         *prepare_site_candidate.PACKAGING_COMMAND_PREFIX,
                         str(package_script),
                         str(root),
-                        str(archive),
+                        ANY,
                     ),
                     (
                         "git",
@@ -309,6 +317,14 @@ class SiteCandidateTests(unittest.TestCase):
                     ("git", "rev-parse", "origin/main"),
                 ],
             )
+            staged_archive = runner.packaged_archives[0]
+            self.assertNotEqual(staged_archive, archive)
+            self.assertEqual(staged_archive.name, archive.name)
+            self.assertEqual(staged_archive.parent.parent, archive.parent)
+            self.assertTrue(
+                staged_archive.parent.name.startswith(f".{archive.name}.")
+            )
+            self.assertFalse(staged_archive.exists())
 
     def test_independently_verifies_without_build_or_package_commands(
         self,
@@ -466,7 +482,7 @@ class SiteCandidateTests(unittest.TestCase):
                     run_command=FakeCommandRunner(root, archive),
                 )
 
-            self.assertTrue(archive.exists())
+            self.assertFalse(archive.exists())
             self.assertFalse(receipt.exists())
 
     def test_verification_rejects_archive_changed_after_validation(self) -> None:
@@ -815,6 +831,19 @@ class SiteCandidateTests(unittest.TestCase):
                     run_command=FakeCommandRunner(root, archive),
                 )
 
+    def test_output_help_distinguishes_prepare_and_verify_paths(self) -> None:
+        help_text = " ".join(
+            prepare_site_candidate.build_parser().format_help().split()
+        )
+
+        self.assertEqual(
+            help_text.count(
+                "Preparation requires a new path; --verify-only requires an "
+                "existing path."
+            ),
+            2,
+        )
+
     def test_verify_only_cli_does_not_require_a_packaging_helper(self) -> None:
         result = prepare_site_candidate.SiteCandidateResult(
             commit_sha=COMMIT_SHA,
@@ -1079,7 +1108,7 @@ class SiteCandidateTests(unittest.TestCase):
                     run_command=runner,
                 )
 
-            self.assertTrue(archive.exists())
+            self.assertFalse(archive.exists())
             self.assertFalse(receipt.exists())
 
     def test_rejects_synchronized_source_moving_during_archive_hashing(
@@ -1093,7 +1122,10 @@ class SiteCandidateTests(unittest.TestCase):
 
             def hash_and_move_source(path: Path) -> str:
                 digest = real_sha256(path)
-                if path == archive.resolve():
+                if (
+                    runner.packaged_archives
+                    and path == runner.packaged_archives[-1]
+                ):
                     runner.head_shas[:] = [moved_sha]
                     runner.origin_shas[:] = [moved_sha]
                 return digest
@@ -1117,7 +1149,7 @@ class SiteCandidateTests(unittest.TestCase):
                     run_command=runner,
                 )
 
-            self.assertTrue(archive.exists())
+            self.assertFalse(archive.exists())
             self.assertFalse(receipt.exists())
 
     def test_verification_rejects_synchronized_source_moving_mid_check(
@@ -1425,6 +1457,66 @@ class SiteCandidateTests(unittest.TestCase):
             self.assertFalse(archive.exists())
             self.assertEqual(receipt.read_bytes(), existing_evidence)
             self.assertEqual(runner.commands, [])
+
+    def test_preserves_an_archive_claimed_after_preflight(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            competing_evidence = b"archive claimed by another process\n"
+            runner = FakeCommandRunner(
+                root,
+                archive,
+                late_outputs={archive: competing_evidence},
+            )
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "archive output appeared during candidate operation; "
+                "refusing to overwrite",
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=runner,
+                )
+
+            self.assertEqual(archive.read_bytes(), competing_evidence)
+            self.assertFalse(receipt.exists())
+            self.assertEqual(
+                list(archive.parent.glob(f".{archive.name}.*")),
+                [],
+            )
+
+    def test_preserves_a_receipt_claimed_after_preflight(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            competing_evidence = b'{"claimed_by": "another process"}\n'
+            runner = FakeCommandRunner(
+                root,
+                archive,
+                late_outputs={receipt: competing_evidence},
+            )
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "receipt output appeared during candidate operation; "
+                "refusing to overwrite",
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=runner,
+                )
+
+            self.assertTrue(archive.is_file())
+            self.assertEqual(receipt.read_bytes(), competing_evidence)
+            self.assertEqual(
+                list(receipt.parent.glob(f".{receipt.name}.*.tmp")),
+                [],
+            )
 
     def test_rejects_duplicate_hosting_metadata_keys(self) -> None:
         with TemporaryDirectory() as tmp:

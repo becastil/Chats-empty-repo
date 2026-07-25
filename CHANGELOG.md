@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Published newly prepared Sites archives and synced receipts through atomic
+  no-clobber links from private same-filesystem staging paths, preserving any
+  destination claimed after preflight and withholding approval-ready success
+  instead of replacing concurrent evidence.
 - Made Sites candidate preparation refuse pre-existing archive or receipt
   outputs before running source, build, test, or packaging commands, preserving
   previously reviewed evidence and requiring a fresh output pair for each run.

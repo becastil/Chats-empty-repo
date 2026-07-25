@@ -8,10 +8,9 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after preserving pre-existing Sites candidate evidence: 240 / 1,000
-  (24.0%).
-- Remaining after preserving pre-existing Sites candidate evidence: 760
-  commits.
+- Progress after atomically publishing Sites candidate evidence: 241 / 1,000
+  (24.1%).
+- Remaining after atomically publishing Sites candidate evidence: 759 commits.
 
 ## Commit Standard
 
