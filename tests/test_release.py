@@ -404,6 +404,8 @@ class ReleaseManifestTests(unittest.TestCase):
             "`COPYFILE_DISABLE=1`",
             "same synchronized commit at every acceptance checkpoint",
             "same branch and synchronized commit still hold",
+            "same regular archive and digest",
+            "changed path or byte withholds the receipt",
             "Do not use `npm audit fix --force`",
         ):
             self.assertIn(requirement, normalized, requirement)

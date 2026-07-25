@@ -161,7 +161,9 @@ site release:
    active `refs/heads/main` and clean `HEAD == origin/main` checks after
    validation and after packaging, requiring the same synchronized commit at
    every acceptance checkpoint while remaining on the same branch before it
-   writes a receipt.
+   writes a receipt. It also hashes the packaged archive before structural
+   validation and requires the same regular archive and digest after the final
+   source checkpoint; a changed path or byte withholds the receipt.
    Do not use `npm audit fix --force` when it proposes a framework downgrade;
    review and test a supported patch or explicit transitive override instead.
 2. Verify the archive and receipt immediately before asking for source-export
@@ -178,8 +180,9 @@ site release:
    remain on `refs/heads/main`, clean, and synchronized with `origin/main`,
    reconciles its commit, lockfile, and Sites project with the strict receipt,
    recomputes the archive digest, validates the embedded manifest, and then
-   proves the same branch and synchronized commit still hold before reporting
-   success.
+   proves the same branch and synchronized commit still hold. It requires the
+   same regular archive and digest once more at that final acceptance
+   checkpoint before reporting success.
 3. Obtain explicit owner approval before pushing the exact committed source to
    the separate Sites source repository. This source-export approval is
    separate from deployment approval, and the source export does not authorize

@@ -182,17 +182,21 @@ def prepare_site_candidate(
         project_root,
     )
     _require_regular_file(archive_path, "Sites candidate archive")
+    archive_sha256 = _sha256(archive_path)
     _verify_archive(
         archive_path,
         manifest,
         payload_sha256,
     )
 
-    archive_sha256 = _sha256(archive_path)
     _require_same_synchronized_commit(
         project_root,
         commit_sha,
         runner,
+    )
+    _require_same_archive(
+        archive_path,
+        archive_sha256,
     )
     receipt_payload = {
         "schema_version": SCHEMA_VERSION,
@@ -304,6 +308,10 @@ def verify_site_candidate(
         project_root,
         commit_sha,
         runner,
+    )
+    _require_same_archive(
+        archive_path,
+        archive_sha256,
     )
     return SiteCandidateResult(
         commit_sha=commit_sha,
@@ -505,6 +513,17 @@ def _sha256(path: Path) -> str:
     except OSError as exc:
         raise SiteCandidateError(f"could not hash {path}: {exc}") from exc
     return digest.hexdigest()
+
+
+def _require_same_archive(path: Path, expected_sha256: str) -> None:
+    if path.is_symlink() or not path.is_file():
+        raise SiteCandidateError(
+            "Sites candidate archive changed during candidate operation"
+        )
+    if _sha256(path) != expected_sha256:
+        raise SiteCandidateError(
+            "Sites candidate archive changed during candidate operation"
+        )
 
 
 def _candidate_payload_sha256(project_root: Path) -> str:

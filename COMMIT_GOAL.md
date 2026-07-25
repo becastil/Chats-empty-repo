@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after enforcing the Sites source branch: 238 / 1,000 (23.8%).
-- Remaining after enforcing the Sites source branch: 762 commits.
+- Progress after bracketing Sites archive identity: 239 / 1,000 (23.9%).
+- Remaining after bracketing Sites archive identity: 761 commits.
 
 ## Commit Standard
 

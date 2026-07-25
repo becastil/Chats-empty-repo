@@ -432,6 +432,83 @@ class SiteCandidateTests(unittest.TestCase):
                     run_command=FakeCommandRunner(root, archive),
                 )
 
+    def test_preparation_rejects_archive_changed_after_validation(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            validate_archive = prepare_site_candidate._verify_archive
+
+            def validate_then_mutate(
+                path: Path,
+                manifest: dict[str, object],
+                payload_sha256: str,
+            ) -> None:
+                validate_archive(path, manifest, payload_sha256)
+                with path.open("ab") as target:
+                    target.write(b"changed after validation\n")
+
+            with (
+                patch.object(
+                    prepare_site_candidate,
+                    "_verify_archive",
+                    side_effect=validate_then_mutate,
+                ),
+                self.assertRaisesRegex(
+                    prepare_site_candidate.SiteCandidateError,
+                    "Sites candidate archive changed during candidate "
+                    "operation",
+                ),
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+
+            self.assertTrue(archive.exists())
+            self.assertFalse(receipt.exists())
+
+    def test_verification_rejects_archive_changed_after_validation(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+            validate_archive = prepare_site_candidate._verify_archive
+
+            def validate_then_mutate(
+                path: Path,
+                manifest: dict[str, object],
+                payload_sha256: str,
+            ) -> None:
+                validate_archive(path, manifest, payload_sha256)
+                with path.open("ab") as target:
+                    target.write(b"changed after validation\n")
+
+            with (
+                patch.object(
+                    prepare_site_candidate,
+                    "_verify_archive",
+                    side_effect=validate_then_mutate,
+                ),
+                self.assertRaisesRegex(
+                    prepare_site_candidate.SiteCandidateError,
+                    "Sites candidate archive changed during candidate "
+                    "operation",
+                ),
+            ):
+                prepare_site_candidate.verify_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+
     def test_verification_rejects_payload_digest_drift(self) -> None:
         with TemporaryDirectory() as tmp:
             root, archive, receipt, package_script = self._fixture(Path(tmp))

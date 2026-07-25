@@ -405,6 +405,13 @@ same `origin/main` commit can no longer receive a manifest that claims the main
 source ref. This makes the approval identity truthful without changing valid
 schema-4 receipts, granting source-export or deployment approval, or creating
 customer or revenue evidence.
+Candidate operations now bracket archive identity as well. Preparation hashes
+the packaged archive before structural validation and requires the same regular
+file and digest after its final synchronized-source proof before writing a
+receipt. Read-only verification repeats the receipt-bound digest after archive
+validation and its final source proof before reporting success. This closes a
+mutation window in approval evidence without changing schema 4, granting an
+approval, or creating customer or revenue evidence.
 A separate read-only hosted dependency contract runs for relevant lock and
 workflow changes, on manual dispatch, and weekly so a newly published advisory
 does not wait for another package edit. It uses the minimum supported Node

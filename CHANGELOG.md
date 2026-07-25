@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Bracketed Sites archive validation with the same regular-file digest through
+  the final source checkpoint, withholding receipts and read-only success when
+  the archive path or bytes change during either candidate operation.
 - Required every Sites candidate source checkpoint to remain on
   `refs/heads/main`, rejecting detached or alternate-branch checkouts even when
   their commit still matches `origin/main`.

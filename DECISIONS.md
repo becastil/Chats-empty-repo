@@ -3234,3 +3234,24 @@ The schema remains at version 4 because valid receipts already record the
 required source ref; this change enforces that existing claim. It does not
 export source, save or deploy a Sites version, approve either controlled action,
 or create a visit, pilot request, payment, or revenue event.
+
+## 2026-07-25: Bracket Sites Archive Identity Through Acceptance
+
+Candidate preparation structurally validated the packaged archive and then
+hashed it for the receipt. Read-only verification hashed the receipt-bound
+archive before structural validation. In both paths, later synchronized-source
+checks created a window where the archive path could change after the trusted
+digest or structure was observed but before a receipt or verification success
+was emitted.
+
+Preparation now hashes the regular archive before structural validation, then
+requires the same regular path and digest after the final branch and source
+checkpoint. Read-only verification retains its initial receipt comparison and
+performs the same final archive check after validating structure and source.
+A persistent byte change or replacement with a symlink or non-file fails before
+acceptance.
+
+Archive bytes and schema-4 receipts remain unchanged, so no schema migration is
+needed. This strengthens the source-export and version-save evidence boundary;
+it does not export source, save or deploy a Sites version, approve either
+controlled action, or create a visit, pilot request, payment, or revenue event.
