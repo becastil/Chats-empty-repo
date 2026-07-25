@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after hardening the Sites candidate handoff: 229 / 1,000 (22.9%).
-- Remaining after hardening the Sites candidate handoff: 771 commits.
+- Progress after adding independent candidate verification: 230 / 1,000 (23.0%).
+- Remaining after adding independent candidate verification: 770 commits.
 
 ## Commit Standard
 

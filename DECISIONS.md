@@ -3035,3 +3035,27 @@ approval afterward. Export consent explicitly cannot authorize production.
 No source was pushed to Sites, no replacement version was saved, production was
 not changed, and no visit, pilot request, payment, or revenue evidence was
 created.
+
+## 2026-07-24: Independently Verify Sites Candidates Before Each Handoff
+
+The Sites preflight verified its archive while producing it, but the release
+guide later asked an operator to confirm the archive digest and project identity
+manually before saving. There was no executable way to prove that the archive
+and receipt still matched the exact synchronized checkout at either the
+source-export approval boundary or the later version-save boundary.
+
+The existing candidate tool now has a read-only `--verify-only` mode. It
+requires clean `HEAD == origin/main`, strictly accepts only the current receipt
+schema, reconciles the receipt's commit, lock digest, hosted Node identity, and
+Sites project with the checkout, recomputes the archive digest, and validates
+the embedded manifest and project identity. It invokes no Node, npm, packaging
+helper, network request, source export, version save, or deployment action.
+
+The handoff runs verification immediately before asking for source-export
+approval and repeats it after the approved source push but before saving the
+archive. Verification makes both human decisions refer to the same tested
+candidate; it does not grant either approval or collapse source-export approval
+into deployment approval.
+
+No source was exported, no Sites version was saved or deployed, and no visit,
+pilot request, payment, or revenue evidence was created.

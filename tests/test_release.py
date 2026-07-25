@@ -379,13 +379,29 @@ class ReleaseManifestTests(unittest.TestCase):
             "Do not use `npm audit fix --force`",
         ):
             self.assertIn(requirement, normalized, requirement)
+        self.assertEqual(
+            deployment.count(
+                "python3 scripts/prepare_site_candidate.py --verify-only"
+            ),
+            2,
+        )
+        first_verification = normalized.index(
+            "Verify the archive and receipt immediately before asking"
+        )
         source_approval = "Obtain explicit owner approval before pushing"
         source_push = (
             "Push the receipt's exact source commit to the separate Sites "
             "source repository"
         )
+        second_verification = normalized.index(
+            "Verify the unchanged archive and receipt again before saving"
+        )
         deployment_approval = (
             "Obtain separate explicit owner approval before deploying"
+        )
+        self.assertLess(
+            first_verification,
+            normalized.index(source_approval),
         )
         self.assertLess(
             normalized.index(source_approval),
@@ -393,6 +409,10 @@ class ReleaseManifestTests(unittest.TestCase):
         )
         self.assertLess(
             normalized.index(source_push),
+            second_verification,
+        )
+        self.assertLess(
+            second_verification,
             normalized.index(deployment_approval),
         )
         self.assertIn("python3 scripts/audit_production_site.py", audit)

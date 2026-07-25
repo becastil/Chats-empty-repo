@@ -1,13 +1,16 @@
 from __future__ import annotations
 
+from contextlib import redirect_stdout
 import hashlib
 import importlib.util
+from io import StringIO
 import json
 from pathlib import Path
 import sys
 import tarfile
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -173,6 +176,263 @@ class SiteCandidateTests(unittest.TestCase):
                     ),
                 ],
             )
+
+    def test_independently_verifies_without_build_or_package_commands(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            prepare_runner = FakeCommandRunner(root, archive)
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=prepare_runner,
+            )
+            verify_runner = FakeCommandRunner(root, archive)
+
+            result = prepare_site_candidate.verify_site_candidate(
+                root,
+                archive,
+                receipt,
+                run_command=verify_runner,
+            )
+
+            self.assertEqual(result.commit_sha, COMMIT_SHA)
+            self.assertEqual(
+                verify_runner.commands,
+                [
+                    (
+                        "git",
+                        "status",
+                        "--porcelain",
+                        "--untracked-files=all",
+                    ),
+                    ("git", "rev-parse", "HEAD"),
+                    ("git", "rev-parse", "origin/main"),
+                ],
+            )
+
+    def test_verification_rejects_archive_bytes_changed_after_preparation(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            runner = FakeCommandRunner(root, archive)
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=runner,
+            )
+            with archive.open("ab") as target:
+                target.write(b"changed after receipt\n")
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "archive digest does not match receipt",
+            ):
+                prepare_site_candidate.verify_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+
+    def test_verification_rejects_receipt_commit_drift(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            runner = FakeCommandRunner(root, archive)
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=runner,
+            )
+            payload = json.loads(receipt.read_text(encoding="utf-8"))
+            payload["candidate"]["commit_sha"] = "b" * 40
+            receipt.write_text(json.dumps(payload), encoding="utf-8")
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "receipt candidate commit_sha does not match checkout",
+            ):
+                prepare_site_candidate.verify_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+
+    def test_verification_rejects_checkout_lock_drift(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            runner = FakeCommandRunner(root, archive)
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=runner,
+            )
+            (root / "package-lock.json").write_text(
+                '{"lockfileVersion": 4}\n',
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "receipt candidate package_lock_sha256 does not match checkout",
+            ):
+                prepare_site_candidate.verify_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+
+    def test_verification_rejects_checkout_project_drift(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            runner = FakeCommandRunner(root, archive)
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=runner,
+            )
+            hosting = root / ".openai" / "hosting.json"
+            hosting.write_text(
+                json.dumps({"project_id": "appgprj_other"}) + "\n",
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "receipt candidate project_id does not match checkout",
+            ):
+                prepare_site_candidate.verify_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+
+    def test_verification_rejects_receipt_schema_extensions(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            runner = FakeCommandRunner(root, archive)
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=runner,
+            )
+            payload = json.loads(receipt.read_text(encoding="utf-8"))
+            payload["approval"] = True
+            receipt.write_text(json.dumps(payload), encoding="utf-8")
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "receipt must contain exactly",
+            ):
+                prepare_site_candidate.verify_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+
+    def test_verify_only_cli_does_not_require_a_packaging_helper(self) -> None:
+        result = prepare_site_candidate.SiteCandidateResult(
+            commit_sha=COMMIT_SHA,
+            archive_sha256="c" * 64,
+            archive=Path("/tmp/candidate.tar.gz"),
+            receipt=Path("/tmp/candidate.json"),
+        )
+
+        with patch.object(
+            prepare_site_candidate,
+            "verify_site_candidate",
+            return_value=result,
+        ) as verify:
+            stdout = StringIO()
+            with redirect_stdout(stdout):
+                status = prepare_site_candidate.main(
+                    [
+                        "--verify-only",
+                        "--root",
+                        "/tmp/project",
+                        "--archive",
+                        "/tmp/candidate.tar.gz",
+                        "--receipt",
+                        "/tmp/candidate.json",
+                    ]
+                )
+
+        self.assertEqual(status, 0)
+        self.assertEqual(
+            stdout.getvalue().strip(),
+            "site candidate verified: "
+            f"commit={COMMIT_SHA} "
+            "archive=candidate.tar.gz "
+            f"sha256={'c' * 64} "
+            "receipt=candidate.json",
+        )
+        verify.assert_called_once_with(
+            Path("/tmp/project"),
+            Path("/tmp/candidate.tar.gz"),
+            Path("/tmp/candidate.json"),
+        )
+
+    def test_prepare_cli_still_routes_through_the_packaging_helper(self) -> None:
+        result = prepare_site_candidate.SiteCandidateResult(
+            commit_sha=COMMIT_SHA,
+            archive_sha256="d" * 64,
+            archive=Path("/tmp/candidate.tar.gz"),
+            receipt=Path("/tmp/candidate.json"),
+        )
+
+        with patch.object(
+            prepare_site_candidate,
+            "prepare_site_candidate",
+            return_value=result,
+        ) as prepare:
+            stdout = StringIO()
+            with redirect_stdout(stdout):
+                status = prepare_site_candidate.main(
+                    [
+                        "--root",
+                        "/tmp/project",
+                        "--package-script",
+                        "/tmp/package-site.sh",
+                        "--archive",
+                        "/tmp/candidate.tar.gz",
+                        "--receipt",
+                        "/tmp/candidate.json",
+                    ]
+                )
+
+        self.assertEqual(status, 0)
+        self.assertEqual(
+            stdout.getvalue().strip(),
+            "site candidate ready: "
+            f"commit={COMMIT_SHA} "
+            "archive=candidate.tar.gz "
+            f"sha256={'d' * 64} "
+            "receipt=candidate.json",
+        )
+        prepare.assert_called_once_with(
+            Path("/tmp/project"),
+            Path("/tmp/candidate.tar.gz"),
+            Path("/tmp/candidate.json"),
+            Path("/tmp/package-site.sh"),
+        )
 
     def test_rejects_a_dirty_checkout_before_validation(self) -> None:
         with TemporaryDirectory() as tmp:

@@ -134,21 +134,42 @@ site release:
    the resulting archive digest. Do not use `npm audit fix --force` when it
    proposes a framework downgrade; review and test a supported patch or
    explicit transitive override instead.
-2. Obtain explicit owner approval before pushing the exact committed source to
+2. Verify the archive and receipt immediately before asking for source-export
+   approval:
+
+   ```bash
+   python3 scripts/prepare_site_candidate.py --verify-only \
+     --archive /tmp/repo-scout-site.tar.gz \
+     --receipt /tmp/repo-scout-site-receipt.json
+   ```
+
+   Verification is read-only and runs no Node, npm, packaging, network, source
+   export, version save, or deployment operation. It requires the checkout to
+   remain clean and synchronized with `origin/main`, reconciles its commit,
+   lockfile, and Sites project with the strict receipt, recomputes the archive
+   digest, and validates the embedded manifest.
+3. Obtain explicit owner approval before pushing the exact committed source to
    the separate Sites source repository. This source-export approval is
    separate from deployment approval, and the source export does not authorize
    production deployment.
-3. Push the receipt's exact source commit to the separate Sites source
+4. Push the receipt's exact source commit to the separate Sites source
    repository (the existing Sites source repository for this project), and
    reuse the existing Sites project in
    `.openai/hosting.json`. Do not create a replacement project for a version
    update.
-4. Save the preflight archive against that same source commit. Confirm its
-   archive digest and embedded project identity match the receipt. Saving a
-   version does not make that version live.
-5. Obtain separate explicit owner approval before deploying the saved version
+5. Verify the unchanged archive and receipt again before saving:
+
+   ```bash
+   python3 scripts/prepare_site_candidate.py --verify-only \
+     --archive /tmp/repo-scout-site.tar.gz \
+     --receipt /tmp/repo-scout-site-receipt.json
+   ```
+
+   Save the verified preflight archive against the receipt's exact source
+   commit. Saving a version does not make that version live.
+6. Obtain separate explicit owner approval before deploying the saved version
    to the existing public production site.
-6. Only after the approved deployment succeeds, immediately run the production
+7. Only after the approved deployment succeeds, immediately run the production
    audit in the next section. A prepared or saved version must not be described
    as deployed before both steps finish.
 

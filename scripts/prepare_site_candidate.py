@@ -31,6 +31,19 @@ REQUIRED_ARCHIVE_MEMBERS = (
     "dist/.openai/site-candidate.json",
 )
 SHA_PATTERN = re.compile(r"[0-9a-f]{40}\Z")
+DIGEST_PATTERN = re.compile(r"[0-9a-f]{64}\Z")
+RECEIPT_KEYS = frozenset(("schema_version", "candidate", "archive"))
+CANDIDATE_KEYS = frozenset(
+    (
+        "schema_version",
+        "commit_sha",
+        "source_ref",
+        "node_version",
+        "package_lock_sha256",
+        "project_id",
+    )
+)
+ARCHIVE_KEYS = frozenset(("name", "sha256"))
 
 
 class SiteCandidateError(RuntimeError):
@@ -89,19 +102,7 @@ def prepare_site_candidate(
                 f"{label} must be written outside the repository: {output_path}"
             )
 
-    _require_clean_worktree(project_root, runner)
-    commit_sha = _validated_sha(
-        runner(("git", "rev-parse", "HEAD"), project_root),
-        "HEAD",
-    )
-    origin_sha = _validated_sha(
-        runner(("git", "rev-parse", "origin/main"), project_root),
-        "origin/main",
-    )
-    if commit_sha != origin_sha:
-        raise SiteCandidateError(
-            f"HEAD {commit_sha} does not match origin/main {origin_sha}"
-        )
+    commit_sha = _synchronized_commit(project_root, runner)
 
     node_output = runner(("node", "--version"), project_root).strip()
     expected_node_output = f"v{EXPECTED_NODE_VERSION}"
@@ -111,28 +112,13 @@ def prepare_site_candidate(
             f"{EXPECTED_NODE_VERSION}; found {node_output or 'no version'}"
         )
 
-    hosting = _read_json_object(hosting_path, "Sites hosting metadata")
-    project_id = hosting.get("project_id")
-    if not isinstance(project_id, str) or not project_id.strip():
-        raise SiteCandidateError(
-            "Sites hosting metadata must contain a non-empty project_id"
-        )
-    lock_sha256 = _sha256(project_root / "package-lock.json")
-
     for command in VALIDATION_COMMANDS:
         runner(command, project_root)
     _require_clean_worktree(project_root, runner)
 
     server_entry = project_root / "dist" / "server" / "index.js"
     _require_regular_file(server_entry, "built Sites server entry")
-    manifest = {
-        "schema_version": SCHEMA_VERSION,
-        "commit_sha": commit_sha,
-        "source_ref": SOURCE_REF,
-        "node_version": EXPECTED_NODE_VERSION,
-        "package_lock_sha256": lock_sha256,
-        "project_id": project_id,
-    }
+    manifest = _candidate_manifest(project_root, commit_sha)
     manifest_path = (
         project_root / "dist" / ".openai" / "site-candidate.json"
     )
@@ -154,6 +140,85 @@ def prepare_site_candidate(
         },
     }
     _atomic_write_json(receipt_path, receipt_payload)
+    return SiteCandidateResult(
+        commit_sha=commit_sha,
+        archive_sha256=archive_sha256,
+        archive=archive_path,
+        receipt=receipt_path,
+    )
+
+
+def verify_site_candidate(
+    root: Path,
+    archive: Path,
+    receipt: Path,
+    *,
+    run_command: CommandRunner | None = None,
+) -> SiteCandidateResult:
+    project_root = root.expanduser().resolve()
+    archive_path = archive.expanduser().resolve()
+    receipt_path = receipt.expanduser().resolve()
+    runner = run_command or _run_command
+
+    _require_regular_file(project_root / "package-lock.json", "package lock")
+    _require_regular_file(
+        project_root / ".openai" / "hosting.json",
+        "Sites hosting metadata",
+    )
+    _require_regular_file(archive_path, "Sites candidate archive")
+    _require_regular_file(receipt_path, "Sites candidate receipt")
+
+    commit_sha = _synchronized_commit(project_root, runner)
+    expected_candidate = _candidate_manifest(project_root, commit_sha)
+    receipt_payload = _read_json_object(
+        receipt_path,
+        "Sites candidate receipt",
+    )
+    _require_exact_keys(receipt_payload, RECEIPT_KEYS, "receipt")
+    _require_schema_version(
+        receipt_payload["schema_version"],
+        "receipt",
+    )
+
+    candidate = receipt_payload["candidate"]
+    if not isinstance(candidate, dict):
+        raise SiteCandidateError("receipt candidate must be a JSON object")
+    _require_exact_keys(candidate, CANDIDATE_KEYS, "receipt candidate")
+    _require_schema_version(
+        candidate["schema_version"],
+        "receipt candidate",
+    )
+    for field, expected_value in expected_candidate.items():
+        if type(candidate[field]) is not type(expected_value):
+            raise SiteCandidateError(
+                f"receipt candidate {field} does not match checkout"
+            )
+        if candidate[field] != expected_value:
+            raise SiteCandidateError(
+                f"receipt candidate {field} does not match checkout"
+            )
+
+    archive_evidence = receipt_payload["archive"]
+    if not isinstance(archive_evidence, dict):
+        raise SiteCandidateError("receipt archive must be a JSON object")
+    _require_exact_keys(archive_evidence, ARCHIVE_KEYS, "receipt archive")
+    if archive_evidence["name"] != archive_path.name:
+        raise SiteCandidateError(
+            "archive filename does not match receipt"
+        )
+    recorded_digest = archive_evidence["sha256"]
+    if (
+        not isinstance(recorded_digest, str)
+        or DIGEST_PATTERN.fullmatch(recorded_digest) is None
+    ):
+        raise SiteCandidateError(
+            "receipt archive sha256 must be a lowercase SHA-256 digest"
+        )
+    archive_sha256 = _sha256(archive_path)
+    if archive_sha256 != recorded_digest:
+        raise SiteCandidateError("archive digest does not match receipt")
+
+    _verify_archive(archive_path, candidate)
     return SiteCandidateResult(
         commit_sha=commit_sha,
         archive_sha256=archive_sha256,
@@ -191,8 +256,28 @@ def _require_clean_worktree(
     if status:
         first_change = status.splitlines()[0]
         raise SiteCandidateError(
-            f"worktree must be clean before packaging: {first_change}"
+            f"worktree must be clean for candidate operations: {first_change}"
         )
+
+
+def _synchronized_commit(
+    root: Path,
+    run_command: CommandRunner,
+) -> str:
+    _require_clean_worktree(root, run_command)
+    commit_sha = _validated_sha(
+        run_command(("git", "rev-parse", "HEAD"), root),
+        "HEAD",
+    )
+    origin_sha = _validated_sha(
+        run_command(("git", "rev-parse", "origin/main"), root),
+        "origin/main",
+    )
+    if commit_sha != origin_sha:
+        raise SiteCandidateError(
+            f"HEAD {commit_sha} does not match origin/main {origin_sha}"
+        )
+    return commit_sha
 
 
 def _validated_sha(value: str, label: str) -> str:
@@ -217,6 +302,50 @@ def _read_json_object(path: Path, label: str) -> dict[str, object]:
     if not isinstance(payload, dict):
         raise SiteCandidateError(f"{label} must contain a JSON object")
     return payload
+
+
+def _candidate_manifest(
+    project_root: Path,
+    commit_sha: str,
+) -> dict[str, object]:
+    hosting = _read_json_object(
+        project_root / ".openai" / "hosting.json",
+        "Sites hosting metadata",
+    )
+    project_id = hosting.get("project_id")
+    if not isinstance(project_id, str) or not project_id.strip():
+        raise SiteCandidateError(
+            "Sites hosting metadata must contain a non-empty project_id"
+        )
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "commit_sha": commit_sha,
+        "source_ref": SOURCE_REF,
+        "node_version": EXPECTED_NODE_VERSION,
+        "package_lock_sha256": _sha256(
+            project_root / "package-lock.json"
+        ),
+        "project_id": project_id,
+    }
+
+
+def _require_exact_keys(
+    payload: dict[str, object],
+    expected_keys: frozenset[str],
+    label: str,
+) -> None:
+    if set(payload) != expected_keys:
+        expected = ", ".join(sorted(expected_keys))
+        raise SiteCandidateError(
+            f"{label} must contain exactly: {expected}"
+        )
+
+
+def _require_schema_version(value: object, label: str) -> None:
+    if type(value) is not int or value != SCHEMA_VERSION:
+        raise SiteCandidateError(
+            f"{label} schema_version must be {SCHEMA_VERSION}"
+        )
 
 
 def _sha256(path: Path) -> str:
@@ -354,38 +483,66 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--package-script",
         type=Path,
-        required=True,
-        help="Absolute path to the trusted Sites package-site.sh helper.",
+        help=(
+            "Absolute path to the trusted Sites package-site.sh helper. "
+            "Required unless --verify-only is used."
+        ),
+    )
+    parser.add_argument(
+        "--verify-only",
+        action="store_true",
+        help=(
+            "Verify an existing archive and receipt against the checkout "
+            "without building, packaging, exporting, or deploying."
+        ),
     )
     parser.add_argument(
         "--archive",
         type=Path,
         required=True,
-        help="Output .tar.gz path outside the repository.",
+        help="Candidate .tar.gz path outside the repository.",
     )
     parser.add_argument(
         "--receipt",
         type=Path,
         required=True,
-        help="Output JSON receipt path outside the repository.",
+        help="Candidate JSON receipt path outside the repository.",
     )
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
+    parser = build_parser()
+    args = parser.parse_args(argv)
     try:
-        result = prepare_site_candidate(
-            args.root,
-            args.archive,
-            args.receipt,
-            args.package_script,
-        )
+        if args.verify_only:
+            if args.package_script is not None:
+                parser.error(
+                    "--package-script cannot be used with --verify-only"
+                )
+            result = verify_site_candidate(
+                args.root,
+                args.archive,
+                args.receipt,
+            )
+            action = "verified"
+        else:
+            if args.package_script is None:
+                parser.error(
+                    "--package-script is required unless --verify-only is used"
+                )
+            result = prepare_site_candidate(
+                args.root,
+                args.archive,
+                args.receipt,
+                args.package_script,
+            )
+            action = "ready"
     except SiteCandidateError as exc:
         print(f"site-candidate: {exc}", file=sys.stderr)
         return 2
     print(
-        "site candidate ready: "
+        f"site candidate {action}: "
         f"commit={result.commit_sha} "
         f"archive={result.archive.name} "
         f"sha256={result.archive_sha256} "

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added independent, read-only Sites candidate verification that strictly
+  reconciles a receipt with clean synchronized source, the local lockfile and
+  project identity, the archive digest, and its embedded manifest before
+  source-export approval and again before version saving.
 - Added a fail-closed Sites candidate preflight that rejects dirty,
   unsynchronized, or runtime-drifted source and binds the tested commit,
   lockfile, Sites project, Node runtime, and archive digest in a receipt.
