@@ -3323,3 +3323,26 @@ Schema-4 receipt bytes remain unchanged, so no migration is needed. This
 strengthens the source-export and version-save evidence boundary; it does not
 export source, save or deploy a Sites version, approve either controlled
 action, or create a visit, pilot request, payment, or revenue event.
+
+## 2026-07-25: Pin The Exact Sites Receipt Across Approval
+
+Candidate preparation last checked synchronized source and archive identity
+before publishing the receipt, so persistent drift during receipt publication
+could still receive a success result. Read-only verification retained the
+receipt digest only within one invocation. Reformatting a semantically
+equivalent receipt between source-export approval and the later pre-save check
+therefore passed both checks even though the owner had reviewed different
+bytes.
+
+Receipt publication now returns the SHA-256 of its flushed staging file.
+Preparation publishes the receipt, then repeats the synchronized-source,
+archive, and receipt checks before reporting success. Preparation and
+verification results and CLI output expose `receipt_sha256`. A later
+`--verify-only` invocation can require the owner-approved digest with
+`--expected-receipt-sha256`, rejecting malformed digests, changed bytes, and
+semantically equivalent reserialization.
+
+Schema-4 receipt contents remain unchanged, so no migration is needed. The
+digest is approval evidence rather than approval itself. This change exports no
+source, saves or deploys no Sites version, grants no controlled approval, and
+creates no visit, pilot request, payment, or revenue event.

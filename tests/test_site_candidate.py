@@ -273,6 +273,10 @@ class SiteCandidateTests(unittest.TestCase):
                 receipt_payload["archive"]["sha256"],
                 hashlib.sha256(archive.read_bytes()).hexdigest(),
             )
+            self.assertEqual(
+                result.receipt_sha256,
+                hashlib.sha256(receipt.read_bytes()).hexdigest(),
+            )
             self.assertRegex(
                 receipt_payload["archive"]["payload_sha256"],
                 r"^[0-9a-f]{64}$",
@@ -306,6 +310,15 @@ class SiteCandidateTests(unittest.TestCase):
                         str(root),
                         ANY,
                     ),
+                    (
+                        "git",
+                        "status",
+                        "--porcelain",
+                        "--untracked-files=all",
+                    ),
+                    ("git", "branch", "--show-current"),
+                    ("git", "rev-parse", "HEAD"),
+                    ("git", "rev-parse", "origin/main"),
                     (
                         "git",
                         "status",
@@ -604,6 +617,129 @@ class SiteCandidateTests(unittest.TestCase):
                     receipt,
                     run_command=FakeCommandRunner(root, archive),
                 )
+
+    def test_verification_requires_the_approved_receipt_digest(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+            approved_digest = hashlib.sha256(receipt.read_bytes()).hexdigest()
+
+            result = prepare_site_candidate.verify_site_candidate(
+                root,
+                archive,
+                receipt,
+                expected_receipt_sha256=approved_digest,
+                run_command=FakeCommandRunner(root, archive),
+            )
+
+            self.assertEqual(result.receipt_sha256, approved_digest)
+            payload = json.loads(receipt.read_text(encoding="utf-8"))
+            receipt.write_text(
+                json.dumps(payload, separators=(",", ":")) + "\n",
+                encoding="utf-8",
+            )
+            self.assertNotEqual(
+                hashlib.sha256(receipt.read_bytes()).hexdigest(),
+                approved_digest,
+            )
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "receipt digest does not match approved receipt",
+            ):
+                prepare_site_candidate.verify_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    expected_receipt_sha256=approved_digest,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+
+    def test_preparation_rejects_archive_changed_during_receipt_publication(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            create_receipt = prepare_site_candidate._atomic_create_json
+
+            def create_then_mutate_archive(
+                path: Path,
+                payload: dict[str, object],
+                label: str,
+            ) -> str:
+                receipt_sha256 = create_receipt(path, payload, label)
+                with archive.open("ab") as target:
+                    target.write(b"changed during receipt publication\n")
+                return receipt_sha256
+
+            with (
+                patch.object(
+                    prepare_site_candidate,
+                    "_atomic_create_json",
+                    side_effect=create_then_mutate_archive,
+                ),
+                self.assertRaisesRegex(
+                    prepare_site_candidate.SiteCandidateError,
+                    "Sites candidate archive changed during candidate "
+                    "operation",
+                ),
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+
+            self.assertTrue(archive.is_file())
+            self.assertTrue(receipt.is_file())
+
+    def test_preparation_rejects_receipt_changed_during_publication(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            create_receipt = prepare_site_candidate._atomic_create_json
+
+            def create_then_mutate_receipt(
+                path: Path,
+                payload: dict[str, object],
+                label: str,
+            ) -> str:
+                receipt_sha256 = create_receipt(path, payload, label)
+                with receipt.open("ab") as target:
+                    target.write(b"changed during publication\n")
+                return receipt_sha256
+
+            with (
+                patch.object(
+                    prepare_site_candidate,
+                    "_atomic_create_json",
+                    side_effect=create_then_mutate_receipt,
+                ),
+                self.assertRaisesRegex(
+                    prepare_site_candidate.SiteCandidateError,
+                    "Sites candidate receipt changed during candidate "
+                    "operation",
+                ),
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+
+            self.assertTrue(archive.is_file())
+            self.assertTrue(receipt.is_file())
 
     def test_verification_rejects_payload_digest_drift(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -928,6 +1064,7 @@ class SiteCandidateTests(unittest.TestCase):
         result = prepare_site_candidate.SiteCandidateResult(
             commit_sha=COMMIT_SHA,
             archive_sha256="c" * 64,
+            receipt_sha256="e" * 64,
             archive=Path("/tmp/candidate.tar.gz"),
             receipt=Path("/tmp/candidate.json"),
         )
@@ -948,6 +1085,8 @@ class SiteCandidateTests(unittest.TestCase):
                         "/tmp/candidate.tar.gz",
                         "--receipt",
                         "/tmp/candidate.json",
+                        "--expected-receipt-sha256",
+                        "e" * 64,
                     ]
                 )
 
@@ -958,18 +1097,21 @@ class SiteCandidateTests(unittest.TestCase):
             f"commit={COMMIT_SHA} "
             "archive=candidate.tar.gz "
             f"sha256={'c' * 64} "
-            "receipt=candidate.json",
+            "receipt=candidate.json "
+            f"receipt_sha256={'e' * 64}",
         )
         verify.assert_called_once_with(
             Path("/tmp/project"),
             Path("/tmp/candidate.tar.gz"),
             Path("/tmp/candidate.json"),
+            expected_receipt_sha256="e" * 64,
         )
 
     def test_prepare_cli_still_routes_through_the_packaging_helper(self) -> None:
         result = prepare_site_candidate.SiteCandidateResult(
             commit_sha=COMMIT_SHA,
             archive_sha256="d" * 64,
+            receipt_sha256="f" * 64,
             archive=Path("/tmp/candidate.tar.gz"),
             receipt=Path("/tmp/candidate.json"),
         )
@@ -1001,7 +1143,8 @@ class SiteCandidateTests(unittest.TestCase):
             f"commit={COMMIT_SHA} "
             "archive=candidate.tar.gz "
             f"sha256={'d' * 64} "
-            "receipt=candidate.json",
+            "receipt=candidate.json "
+            f"receipt_sha256={'f' * 64}",
         )
         prepare.assert_called_once_with(
             Path("/tmp/project"),
@@ -1231,6 +1374,44 @@ class SiteCandidateTests(unittest.TestCase):
 
             self.assertFalse(archive.exists())
             self.assertFalse(receipt.exists())
+
+    def test_rejects_synchronized_source_moving_during_receipt_publication(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            moved_sha = "b" * 40
+            runner = FakeCommandRunner(
+                root,
+                archive,
+                head_shas=(
+                    COMMIT_SHA,
+                    COMMIT_SHA,
+                    COMMIT_SHA,
+                    moved_sha,
+                ),
+                origin_shas=(
+                    COMMIT_SHA,
+                    COMMIT_SHA,
+                    COMMIT_SHA,
+                    moved_sha,
+                ),
+            )
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "synchronized source moved during candidate operation",
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=runner,
+                )
+
+            self.assertTrue(archive.is_file())
+            self.assertTrue(receipt.is_file())
 
     def test_verification_rejects_synchronized_source_moving_mid_check(
         self,

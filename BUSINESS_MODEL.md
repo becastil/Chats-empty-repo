@@ -419,6 +419,16 @@ same regular file with the same bytes before reporting success. A later edit
 or replacement with a link fails closed. This strengthens paid-distribution
 evidence without changing schema 4, granting approval, exporting source,
 deploying a version, or creating customer or revenue evidence.
+That exact receipt digest now crosses the approval interval explicitly.
+Preparation derives it from the flushed staging file, publishes the receipt,
+then repeats synchronized-source, archive, and receipt checks before reporting
+success. Preparation and read-only verification both print `receipt_sha256`;
+the owner records it with source-export approval, and the later pre-save check
+can require it through `--expected-receipt-sha256`. Reformatting otherwise
+equivalent JSON therefore cannot silently replace the reviewed evidence. This
+makes paid distribution approval reproducible without granting approval,
+exporting source, saving or deploying a version, or creating customer or
+revenue evidence.
 Candidate preparation also refuses any pre-existing requested archive or
 receipt before source checks or build commands begin. It gives the packaging
 helper a private staging path on the archive destination's filesystem,

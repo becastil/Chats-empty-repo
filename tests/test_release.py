@@ -405,7 +405,11 @@ class ReleaseManifestTests(unittest.TestCase):
             "same synchronized commit at every acceptance checkpoint",
             "same branch and synchronized commit still hold",
             "same regular archive and digest",
-            "changed path or byte withholds the receipt",
+            "exact staged receipt digest",
+            "`receipt_sha256`",
+            "receipt bytes the owner reviewed",
+            "--expected-receipt-sha256 APPROVED_RECEIPT_SHA256",
+            "semantically reserialized",
             "Do not use `npm audit fix --force`",
         ):
             self.assertIn(requirement, normalized, requirement)

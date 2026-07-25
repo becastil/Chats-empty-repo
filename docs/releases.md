@@ -160,10 +160,13 @@ site release:
    metadata outside the allowed archive root. The preflight also repeats the
    active `refs/heads/main` and clean `HEAD == origin/main` checks after
    validation and after packaging, requiring the same synchronized commit at
-   every acceptance checkpoint while remaining on the same branch before it
-   writes a receipt. It also hashes the packaged archive before structural
-   validation and requires the same regular archive and digest after the final
-   source checkpoint; a changed path or byte withholds the receipt.
+   every acceptance checkpoint while remaining on the same branch. It hashes
+   the packaged archive before structural validation, publishes the archive
+   and receipt without replacing existing paths, then repeats synchronized
+   source, archive digest, and exact staged receipt digest checks before
+   reporting success. Persistent drift during receipt publication therefore
+   leaves no approval-ready result. The success output includes
+   `receipt_sha256`; retain that digest with the candidate evidence.
    Do not use `npm audit fix --force` when it proposes a framework downgrade;
    review and test a supported patch or explicit transitive override instead.
 2. Verify the archive and receipt immediately before asking for source-export
@@ -182,7 +185,9 @@ site release:
    recomputes the archive digest, validates the embedded manifest, and then
    proves the same branch and synchronized commit still hold. It requires the
    same regular archive and digest once more at that final acceptance
-   checkpoint before reporting success.
+   checkpoint before reporting success. Record the printed `receipt_sha256`
+   with the source-export approval so later verification can require the exact
+   receipt bytes the owner reviewed.
 3. Obtain explicit owner approval before pushing the exact committed source to
    the separate Sites source repository. This source-export approval is
    separate from deployment approval, and the source export does not authorize
@@ -197,11 +202,13 @@ site release:
    ```bash
    python3 scripts/prepare_site_candidate.py --verify-only \
      --archive /tmp/repo-scout-site.tar.gz \
-     --receipt /tmp/repo-scout-site-receipt.json
+     --receipt /tmp/repo-scout-site-receipt.json \
+     --expected-receipt-sha256 APPROVED_RECEIPT_SHA256
    ```
 
-   Save the verified preflight archive against the receipt's exact source
-   commit. Saving a version does not make that version live.
+   This check fails if the receipt was even semantically reserialized after
+   approval. Save the verified preflight archive against the receipt's exact
+   source commit. Saving a version does not make that version live.
 6. Obtain separate explicit owner approval before deploying the saved version
    to the existing public production site.
 7. Only after the approved deployment succeeds, immediately run the production

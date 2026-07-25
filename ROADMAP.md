@@ -13,12 +13,14 @@
   duplicate-free, branch-bound, archive-stable, receipt-stable, test-bracketed,
   scope-constrained, atomically no-clobber-published archive and receipt while
   `refs/heads/main`, the same synchronized source commit, and the same archive
-  digest survive every acceptance checkpoint, before asking for explicit
-  source-export approval. After approval, push its receipt-bound source to the
-  separate Sites source repository, verify the unchanged archive and receipt
-  again, and save only that matched candidate. Versions 46 and 47 are
-  superseded and must not be deployed. Keep the replacement behind separate
-  deployment approval and the immediate post-deployment production audit.
+  and receipt digests survive every acceptance checkpoint, before asking for
+  explicit source-export approval that records the printed `receipt_sha256`.
+  After approval, push its receipt-bound source to the separate Sites source
+  repository, verify the unchanged archive and receipt again while requiring
+  the approved digest, and save only that matched candidate. Versions 46 and
+  47 are superseded and must not be deployed. Keep the replacement behind
+  separate deployment approval and the immediate post-deployment production
+  audit.
 - Human-review the five prepared, publicly qualified drafts. The first
   owner-only `--write-review` bundle is ready in the ignored private workspace;
   use its content-bound `--approve-next` or

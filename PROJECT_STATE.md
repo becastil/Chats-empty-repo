@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 242 of
-1,000, with 758 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 243 of
+1,000, with 757 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -146,6 +146,11 @@ alignment take priority over commit volume.
   requires the same regular receipt and digest after archive and source
   validation. Mutation or replacement with a link during verification
   withholds approval-ready success.
+- Approval-pinned Sites receipt identity that records the exact staged receipt
+  SHA-256, repeats source, archive, and receipt checks after publication,
+  exposes that digest in preparation and verification output, and lets the
+  pre-save check require the digest the owner approved. Semantically equivalent
+  reserialization therefore fails closed across the approval interval.
 - A zero-vulnerability site dependency lock with Next `16.2.11`, React and
   React Server Components `19.2.8`, `brace-expansion` `5.0.8`, current
   Cloudflare and Vite tooling, and advisory-fixed PostCSS and Sharp overrides.
@@ -575,11 +580,13 @@ outside-repository archive and receipt paths so any previously reviewed pair
 remains unchanged. Obtain independent `--verify-only` evidence for its
 schema-4 complete-tree, duplicate-free,
 branch-bound, archive-stable, receipt-stable, test-bracketed evidence before
-asking for explicit owner approval to push the receipt's exact patched `main`
-source to the separate Sites source repository. Only after that approval, push
-the source, verify the unchanged archive and receipt again, and save that matched
-candidate in the existing Sites project. Source-export approval does not
-authorize production; record the saved version, source identity, and archive
+recording the printed `receipt_sha256` in an explicit owner approval to push
+the receipt's exact patched `main` source to the separate Sites source
+repository. Only after that approval, push the source, verify the unchanged
+archive and receipt again with `--expected-receipt-sha256` set to the approved
+digest, and save that matched candidate in the existing Sites project.
+Source-export approval does not authorize production; record the saved
+version, source identity, and archive
 digest, then obtain separate owner approval before deployment. After deployment
 approval, publish that replacement and run
 `python3 scripts/audit_production_site.py`; do not describe it as live before

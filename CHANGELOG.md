@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Made the exact Sites receipt SHA-256 part of preparation and verification
+  output, rechecked source, archive, and receipt after publication, and let the
+  pre-save verifier require the digest recorded in owner approval.
 - Bracketed the exact Sites candidate receipt bytes parsed during read-only
   verification through the final acceptance checkpoint, rejecting later
   mutation or replacement before reporting approval-ready success.

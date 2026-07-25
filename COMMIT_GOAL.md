@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after bracketing Sites receipt identity: 242 / 1,000 (24.2%).
-- Remaining after bracketing Sites receipt identity: 758 commits.
+- Progress after pinning Sites receipt approval identity: 243 / 1,000 (24.3%).
+- Remaining after pinning Sites receipt approval identity: 757 commits.
 
 ## Commit Standard
 

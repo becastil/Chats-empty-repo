@@ -87,6 +87,7 @@ CommandRunner = Callable[[Sequence[str], Path], str]
 class SiteCandidateResult:
     commit_sha: str
     archive_sha256: str
+    receipt_sha256: str
     archive: Path
     receipt: Path
 
@@ -226,10 +227,29 @@ def prepare_site_candidate(
             "sha256": archive_sha256,
         },
     }
-    _atomic_create_json(receipt_path, receipt_payload, "receipt")
+    receipt_sha256 = _atomic_create_json(
+        receipt_path,
+        receipt_payload,
+        "receipt",
+    )
+    _require_same_synchronized_commit(
+        project_root,
+        commit_sha,
+        runner,
+    )
+    _require_same_archive(
+        archive_path,
+        archive_sha256,
+    )
+    _require_same_regular_file(
+        receipt_path,
+        receipt_sha256,
+        "Sites candidate receipt",
+    )
     return SiteCandidateResult(
         commit_sha=commit_sha,
         archive_sha256=archive_sha256,
+        receipt_sha256=receipt_sha256,
         archive=archive_path,
         receipt=receipt_path,
     )
@@ -240,6 +260,7 @@ def verify_site_candidate(
     archive: Path,
     receipt: Path,
     *,
+    expected_receipt_sha256: str | None = None,
     run_command: CommandRunner | None = None,
 ) -> SiteCandidateResult:
     project_root = root.expanduser().resolve()
@@ -266,6 +287,15 @@ def verify_site_candidate(
         receipt_path,
         "Sites candidate receipt",
     )
+    if expected_receipt_sha256 is not None:
+        approved_receipt_sha256 = _validated_sha256(
+            expected_receipt_sha256,
+            "expected receipt SHA-256",
+        )
+        if receipt_sha256 != approved_receipt_sha256:
+            raise SiteCandidateError(
+                "receipt digest does not match approved receipt"
+            )
     _require_exact_keys(receipt_payload, RECEIPT_KEYS, "receipt")
     _require_schema_version(
         receipt_payload["schema_version"],
@@ -298,22 +328,14 @@ def verify_site_candidate(
         raise SiteCandidateError(
             "archive filename does not match receipt"
         )
-    recorded_payload_digest = archive_evidence["payload_sha256"]
-    if (
-        not isinstance(recorded_payload_digest, str)
-        or DIGEST_PATTERN.fullmatch(recorded_payload_digest) is None
-    ):
-        raise SiteCandidateError(
-            "receipt archive payload_sha256 must be a lowercase SHA-256 digest"
-        )
-    recorded_digest = archive_evidence["sha256"]
-    if (
-        not isinstance(recorded_digest, str)
-        or DIGEST_PATTERN.fullmatch(recorded_digest) is None
-    ):
-        raise SiteCandidateError(
-            "receipt archive sha256 must be a lowercase SHA-256 digest"
-        )
+    recorded_payload_digest = _validated_sha256(
+        archive_evidence["payload_sha256"],
+        "receipt archive payload_sha256",
+    )
+    recorded_digest = _validated_sha256(
+        archive_evidence["sha256"],
+        "receipt archive sha256",
+    )
     archive_sha256 = _sha256(archive_path)
     if archive_sha256 != recorded_digest:
         raise SiteCandidateError("archive digest does not match receipt")
@@ -340,6 +362,7 @@ def verify_site_candidate(
     return SiteCandidateResult(
         commit_sha=commit_sha,
         archive_sha256=archive_sha256,
+        receipt_sha256=receipt_sha256,
         archive=archive_path,
         receipt=receipt_path,
     )
@@ -424,6 +447,14 @@ def _validated_sha(value: str, label: str) -> str:
             f"{label} did not resolve to a full lowercase commit SHA"
         )
     return normalized
+
+
+def _validated_sha256(value: object, label: str) -> str:
+    if not isinstance(value, str) or DIGEST_PATTERN.fullmatch(value) is None:
+        raise SiteCandidateError(
+            f"{label} must be a lowercase SHA-256 digest"
+        )
+    return value
 
 
 def _require_regular_file(path: Path, label: str) -> None:
@@ -710,7 +741,7 @@ def _atomic_create_json(
     path: Path,
     payload: dict[str, object],
     label: str,
-) -> None:
+) -> str:
     path.parent.mkdir(parents=True, exist_ok=True)
     serialized = _serialize_json(payload)
     temporary_path: Path | None = None
@@ -734,6 +765,7 @@ def _atomic_create_json(
     if temporary_path is None:
         raise SiteCandidateError(f"could not stage {path}")
     try:
+        receipt_sha256 = _sha256(temporary_path)
         _publish_new_output(temporary_path, path, label)
     except SiteCandidateError:
         _remove_staged_file(temporary_path)
@@ -746,6 +778,7 @@ def _atomic_create_json(
             f"{label} output was published to {path}, but staging cleanup "
             f"failed for {temporary_path}: {exc}"
         ) from exc
+    return receipt_sha256
 
 
 def _publish_new_output(
@@ -963,6 +996,13 @@ def build_parser() -> argparse.ArgumentParser:
             "requires a new path; --verify-only requires an existing path."
         ),
     )
+    parser.add_argument(
+        "--expected-receipt-sha256",
+        help=(
+            "Approved lowercase receipt SHA-256 to require during "
+            "--verify-only."
+        ),
+    )
     return parser
 
 
@@ -979,12 +1019,17 @@ def main(argv: Sequence[str] | None = None) -> int:
                 args.root,
                 args.archive,
                 args.receipt,
+                expected_receipt_sha256=args.expected_receipt_sha256,
             )
             action = "verified"
         else:
             if args.package_script is None:
                 parser.error(
                     "--package-script is required unless --verify-only is used"
+                )
+            if args.expected_receipt_sha256 is not None:
+                parser.error(
+                    "--expected-receipt-sha256 requires --verify-only"
                 )
             result = prepare_site_candidate(
                 args.root,
@@ -1001,7 +1046,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         f"commit={result.commit_sha} "
         f"archive={result.archive.name} "
         f"sha256={result.archive_sha256} "
-        f"receipt={result.receipt.name}"
+        f"receipt={result.receipt.name} "
+        f"receipt_sha256={result.receipt_sha256}"
     )
     return 0
 
