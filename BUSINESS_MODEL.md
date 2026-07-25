@@ -364,6 +364,16 @@ suppresses AppleDouble metadata so portability does not weaken archive scope.
 This closes the gap between a passing build and the artifact awaiting approval;
 it does not authorize export, save or deploy a version, or create customer or
 revenue evidence.
+Candidate preparation now separates the production build from the site tests.
+After install, audit, lint, and build, it writes the deterministic manifest and
+captures the complete payload digest. `npm run test:site` then exercises that
+exact existing `dist/` without rebuilding, and a second digest must match before
+packaging can begin. The built executable output is therefore test-bracketed;
+hosting metadata, Drizzle configuration, and the candidate manifest remain
+integrity-bound and structurally checked. Receipts advance to schema 3 so older
+post-hoc schema-2 evidence fails closed. This strengthens paid distribution
+evidence without authorizing source export, version saving, deployment, or
+recording customer or revenue evidence.
 Candidate preparation now also repeats the complete clean
 `HEAD == origin/main` check after validation and packaging, requiring both
 observations to retain the original synchronized commit. Read-only verification

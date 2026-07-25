@@ -2,12 +2,15 @@
 
 ## Unreleased
 
+- Added schema-3 Sites receipts that build once, bind the complete candidate
+  payload, test that exact existing output without rebuilding, and refuse
+  packaging when any ignored build byte changes during the tests.
 - Required the same clean `HEAD == origin/main` commit at every Sites
   validation, packaged-archive, and read-only verification checkpoint,
   rejecting persistent ref moves before a receipt or approval-ready success.
 - Bound every Sites candidate payload file's canonical path, permission mode,
   and bytes before the external packaging helper runs, requiring schema-2
-  receipts and later read-only verification to reproduce the tested digest.
+  receipts and later read-only verification to reproduce the recorded digest.
 - Disabled macOS AppleDouble archive metadata during packaging so strict
   deployable-output scope remains portable instead of admitting sidecar files.
 - Restricted Sites candidates to canonical regular files and directories under

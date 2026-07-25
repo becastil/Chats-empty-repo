@@ -9,7 +9,7 @@
 
 - Select the exact Node `22.13.0` runtime from `.nvmrc` with `nvm install` and
   `nvm use`, run the fail-closed preflight for patched `main`, then obtain
-  read-only independent verification of its schema-2 payload-bound,
+  read-only independent verification of its schema-3 test-bracketed,
   scope-constrained archive while the same synchronized source commit survives
   every acceptance checkpoint, before asking for explicit source-export
   approval. After approval, push its receipt-bound source to the separate Sites

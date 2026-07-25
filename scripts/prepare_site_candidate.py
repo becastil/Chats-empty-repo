@@ -18,12 +18,17 @@ from typing import Callable, Iterable, Protocol, Sequence
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SOURCE_REF = "refs/heads/main"
-SCHEMA_VERSION = 2
-VALIDATION_COMMANDS = (
+SCHEMA_VERSION = 3
+PRE_SITE_TEST_COMMANDS = (
     ("npm", "ci"),
     ("npm", "run", "audit:dependencies"),
-    ("npm", "test"),
     ("npm", "run", "lint"),
+    ("npm", "run", "build"),
+)
+SITE_TEST_COMMAND = ("npm", "run", "test:site")
+VALIDATION_COMMANDS = (
+    *PRE_SITE_TEST_COMMANDS,
+    SITE_TEST_COMMAND,
 )
 REQUIRED_ARCHIVE_MEMBERS = (
     "dist/server/index.js",
@@ -125,13 +130,8 @@ def prepare_site_candidate(
             f"{expected_node_version}; found {node_output or 'no version'}"
         )
 
-    for command in VALIDATION_COMMANDS:
+    for command in PRE_SITE_TEST_COMMANDS:
         runner(command, project_root)
-    _require_same_synchronized_commit(
-        project_root,
-        commit_sha,
-        runner,
-    )
 
     server_entry = project_root / "dist" / "server" / "index.js"
     _require_regular_file(server_entry, "built Sites server entry")
@@ -145,6 +145,17 @@ def prepare_site_candidate(
     )
     _atomic_write_json(manifest_path, manifest)
     payload_sha256 = _candidate_payload_sha256(project_root)
+
+    runner(SITE_TEST_COMMAND, project_root)
+    _require_same_synchronized_commit(
+        project_root,
+        commit_sha,
+        runner,
+    )
+    if _candidate_payload_sha256(project_root) != payload_sha256:
+        raise SiteCandidateError(
+            "candidate payload changed during site tests"
+        )
 
     archive_path.parent.mkdir(parents=True, exist_ok=True)
     runner(

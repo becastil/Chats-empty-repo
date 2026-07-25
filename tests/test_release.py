@@ -175,6 +175,15 @@ class ReleaseManifestTests(unittest.TestCase):
             "npm audit",
         )
         self.assertEqual(
+            package["scripts"]["test:site"],
+            "node --test tests/rendered-html.test.mjs "
+            "tests/dependency-compatibility.test.mjs",
+        )
+        self.assertEqual(
+            package["scripts"]["test"],
+            "npm run build && npm run test:site",
+        )
+        self.assertEqual(
             package["overrides"],
             {
                 "brace-expansion": "5.0.8",
@@ -356,8 +365,9 @@ class ReleaseManifestTests(unittest.TestCase):
         for command in (
             "npm ci",
             "npm run audit:dependencies",
-            "npm test",
             "npm run lint",
+            "npm run build",
+            "npm run test:site",
         ):
             self.assertIn(command, deployment)
         for requirement in (
@@ -381,7 +391,10 @@ class ReleaseManifestTests(unittest.TestCase):
             "outside `dist/`",
             "regular files and directories",
             "path, mode, and bytes",
-            "tested build payload",
+            "tested payload digest",
+            "exact existing `dist/`",
+            "test-brackets built server and client output",
+            "schema-3 receipt",
             "`COPYFILE_DISABLE=1`",
             "same synchronized commit at every acceptance checkpoint",
             "same synchronized commit still holds",

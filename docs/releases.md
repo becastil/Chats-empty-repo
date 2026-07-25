@@ -131,17 +131,24 @@ site release:
    exact runtime from `.nvmrc`; the same file configures the hosted dependency
    contract and the candidate receipt.
    `SITES_PACKAGE_SCRIPT` must name the trusted Sites `package-site.sh` helper.
-   The preflight runs `npm ci`, `npm run audit:dependencies`, `npm test`, and
-   `npm run lint` in order. The complete dependency audit must report zero
-   vulnerabilities. The command refuses dirty or unsynchronized source,
+   The preflight runs `npm ci`, `npm run audit:dependencies`,
+   `npm run lint`, and `npm run build`, binds the candidate payload, then runs
+   `npm run test:site` against the exact existing `dist/` without rebuilding.
+   The complete dependency audit must report zero vulnerabilities. The command
+   refuses dirty or unsynchronized source,
    runtime-pin or active-runtime drift, and an archive whose embedded commit,
    lock digest, Sites project, or Node version differs from the tested source.
    Archive members outside `dist/`, path aliases, links, devices, pipes, and
    other special files are rejected; only canonical regular files and
-   directories can cross the candidate boundary. Before packaging, the
-   preflight digests every tested build payload path, mode, and bytes. The
-   packaged payload must match. The receipt records the resulting archive
-   digest and the pre-package payload digest for later read-only verification.
+   directories can cross the candidate boundary. After the build and before
+   the test-only command, the preflight adds the candidate manifest and digests
+   every payload's path, mode, and bytes. It recomputes that digest after the
+   tests and rejects any candidate payload changed during site tests. The
+   packaged payload must also match. This test-brackets built server and client
+   output; hosting metadata, Drizzle configuration, and the embedded manifest
+   are integrity-bound and structurally checked. The schema-3 receipt records
+   the resulting archive digest and tested payload digest for later read-only
+   verification.
    Packaging sets `COPYFILE_DISABLE=1` so macOS cannot inject AppleDouble
    metadata outside the allowed archive root. The preflight also repeats the
    clean `HEAD == origin/main` check after validation and after packaging,

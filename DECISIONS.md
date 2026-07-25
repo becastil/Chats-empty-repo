@@ -3144,3 +3144,26 @@ This brackets each approval-evidence operation with the same source identity
 instead of describing only its starting instant. It does not lock the
 repository, approve source export, save or deploy a Sites version, or create a
 visit, pilot request, payment, or revenue event.
+
+## 2026-07-24: Test-Bracket The Exact Sites Payload
+
+Candidate preparation previously ran the combined production build and site
+tests before computing the expected payload digest. Because `dist/` is
+intentionally ignored, a persistent file change or injection after `npm test`
+returned but before the first digest could become the accepted baseline without
+affecting Git cleanliness.
+
+Preparation now installs, audits, lints, and builds once, writes the
+deterministic candidate manifest, and captures the complete payload path,
+permission mode, size, and byte digest. A separate `npm run test:site` command
+then exercises that exact existing `dist/` without rebuilding. Preparation
+repeats the digest after the tests and refuses to invoke the packaging helper
+if any payload byte changed; the archive comparison still rejects later
+packaging-time drift.
+
+Receipts advance to schema 3 so schema-2 evidence created without this test
+bracket fails closed. Built server and client output is test-bracketed, while
+hosting metadata, Drizzle configuration, and the embedded manifest are
+integrity-bound and structurally checked. No source was exported, no Sites
+version was saved or deployed, and no visit, pilot request, payment, or revenue
+evidence was created.

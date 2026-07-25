@@ -43,6 +43,7 @@ class FakeCommandRunner:
         include_manifest: bool = True,
         extra_member_name: str | None = None,
         extra_member_type: bytes = tarfile.REGTYPE,
+        mutate_server_after_site_tests: bool = False,
         mutate_server_before_package: bool = False,
     ) -> None:
         self.root = root
@@ -54,6 +55,9 @@ class FakeCommandRunner:
         self.include_manifest = include_manifest
         self.extra_member_name = extra_member_name
         self.extra_member_type = extra_member_type
+        self.mutate_server_after_site_tests = (
+            mutate_server_after_site_tests
+        )
         self.mutate_server_before_package = mutate_server_before_package
         self.commands: list[tuple[str, ...]] = []
 
@@ -74,10 +78,25 @@ class FakeCommandRunner:
             return self._next_sha(self.origin_shas)
         if normalized == ("node", "--version"):
             return self.node_version
-        if normalized == ("npm", "test"):
+        if normalized == ("npm", "run", "build"):
             server = self.root / "dist" / "server" / "index.js"
             server.parent.mkdir(parents=True, exist_ok=True)
             server.write_text("export default {};\n", encoding="utf-8")
+            return ""
+        if normalized == ("npm", "run", "test:site"):
+            manifest = (
+                self.root / "dist" / ".openai" / "site-candidate.json"
+            )
+            if not manifest.is_file():
+                raise AssertionError(
+                    "site tests ran before the candidate manifest was bound"
+                )
+            if self.mutate_server_after_site_tests:
+                server = self.root / "dist" / "server" / "index.js"
+                server.write_text(
+                    "export default { changedDuringTest: true };\n",
+                    encoding="utf-8",
+                )
             return ""
         if normalized in prepare_site_candidate.VALIDATION_COMMANDS:
             return ""
@@ -171,11 +190,11 @@ class SiteCandidateTests(unittest.TestCase):
             ).hexdigest()
             receipt_payload = json.loads(receipt.read_text(encoding="utf-8"))
             self.assertEqual(result.commit_sha, COMMIT_SHA)
-            self.assertEqual(receipt_payload["schema_version"], 2)
+            self.assertEqual(receipt_payload["schema_version"], 3)
             self.assertEqual(
                 receipt_payload["candidate"],
                 {
-                    "schema_version": 2,
+                    "schema_version": 3,
                     "commit_sha": COMMIT_SHA,
                     "source_ref": "refs/heads/main",
                     "node_version": "22.13.0",
@@ -529,7 +548,7 @@ class SiteCandidateTests(unittest.TestCase):
                     run_command=FakeCommandRunner(root, archive),
                 )
 
-    def test_verification_rejects_receipts_before_payload_binding(self) -> None:
+    def test_verification_rejects_receipts_before_test_bracketing(self) -> None:
         with TemporaryDirectory() as tmp:
             root, archive, receipt, package_script = self._fixture(Path(tmp))
             runner = FakeCommandRunner(root, archive)
@@ -541,12 +560,12 @@ class SiteCandidateTests(unittest.TestCase):
                 run_command=runner,
             )
             payload = json.loads(receipt.read_text(encoding="utf-8"))
-            payload["schema_version"] = 1
+            payload["schema_version"] = 2
             receipt.write_text(json.dumps(payload), encoding="utf-8")
 
             with self.assertRaisesRegex(
                 prepare_site_candidate.SiteCandidateError,
-                "receipt schema_version must be 2",
+                "receipt schema_version must be 3",
             ):
                 prepare_site_candidate.verify_site_candidate(
                     root,
@@ -930,6 +949,30 @@ class SiteCandidateTests(unittest.TestCase):
                     run_command=runner,
                 )
 
+            self.assertFalse(receipt.exists())
+
+    def test_rejects_payload_changed_during_site_tests(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            runner = FakeCommandRunner(
+                root,
+                archive,
+                mutate_server_after_site_tests=True,
+            )
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "candidate payload changed during site tests",
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=runner,
+                )
+
+            self.assertFalse(archive.exists())
             self.assertFalse(receipt.exists())
 
     def test_rejects_extra_deployable_bytes_added_during_packaging(self) -> None:

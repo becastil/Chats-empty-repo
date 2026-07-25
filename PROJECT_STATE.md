@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 234 of
-1,000, with 766 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 235 of
+1,000, with 765 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -113,6 +113,10 @@ alignment take priority over commit volume.
   archive and later read-only verification to reproduce that digest exactly.
   macOS AppleDouble metadata is disabled rather than admitted around the scope
   boundary.
+- A schema-3 test-bracketed payload checkpoint that builds once, adds the
+  candidate manifest, captures all deployable paths, modes, and bytes, runs
+  site tests against that exact existing output, and rejects any ignored
+  build-output drift before the packaging helper can run.
 - Candidate source-stability checks that repeat clean `HEAD == origin/main`
   validation after the long test phase, after packaging, and at the end of
   read-only verification, requiring the same synchronized commit at every
@@ -542,7 +546,7 @@ superseded and must not be deployed; version 47 predates the July 24 React
 Server Components and `brace-expansion` advisories. Run `nvm install` and
 `nvm use` to select the repository's exact Node `22.13.0` pin, then run the
 deployment handoff with `scripts/prepare_site_candidate.py`. Obtain independent
-`--verify-only` evidence for its schema-2 payload-bound receipt before asking
+`--verify-only` evidence for its schema-3 test-bracketed receipt before asking
 for explicit owner approval to push the receipt's exact patched `main` source
 to the separate Sites source repository. Only after that approval, push the
 source, verify the unchanged archive and receipt again, and save that matched
