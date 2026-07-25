@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 243 of
-1,000, with 757 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 244 of
+1,000, with 756 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -151,6 +151,11 @@ alignment take priority over commit volume.
   exposes that digest in preparation and verification output, and lets the
   pre-save check require the digest the owner approved. Semantically equivalent
   reserialization therefore fails closed across the approval interval.
+- Export-bound Sites pre-save verification that requires the owner-approved
+  receipt digest plus the credential-free identity of the existing Sites
+  repository, resolves its `refs/heads/main` twice with read-only
+  `git ls-remote`, and rejects a wrong or moving exported commit before a
+  version can be saved. The earlier pre-approval verification remains offline.
 - A zero-vulnerability site dependency lock with Next `16.2.11`, React and
   React Server Components `19.2.8`, `brace-expansion` `5.0.8`, current
   Cloudflare and Vite tooling, and advisory-fixed PostCSS and Sharp overrides.
@@ -582,9 +587,11 @@ schema-4 complete-tree, duplicate-free,
 branch-bound, archive-stable, receipt-stable, test-bracketed evidence before
 recording the printed `receipt_sha256` in an explicit owner approval to push
 the receipt's exact patched `main` source to the separate Sites source
-repository. Only after that approval, push the source, verify the unchanged
-archive and receipt again with `--expected-receipt-sha256` set to the approved
-digest, and save that matched candidate in the existing Sites project.
+repository. Only after that approval, push the source, then verify the
+unchanged archive and receipt with `--expected-receipt-sha256` set to the
+approved digest and `--exported-source-repository` set to the credential-free
+identity used for the push. Save the candidate only after that check proves the
+exported `refs/heads/main` is the receipt commit and remains stable.
 Source-export approval does not authorize production; record the saved
 version, source identity, and archive
 digest, then obtain separate owner approval before deployment. After deployment

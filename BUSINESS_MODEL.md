@@ -429,6 +429,16 @@ equivalent JSON therefore cannot silently replace the reviewed evidence. This
 makes paid distribution approval reproducible without granting approval,
 exporting source, saving or deploying a version, or creating customer or
 revenue evidence.
+The pre-save verifier now binds that approved artifact identity to the source
+that actually crossed the export boundary. When given the credential-free
+identity used for the approved push, it performs two read-only
+`git ls-remote` resolutions of the separate Sites repository's
+`refs/heads/main` and requires both to equal the receipt commit. A wrong or
+moving export therefore cannot advance to version saving even when the local
+checkout, archive, and receipt remain valid. The pre-approval verifier remains
+offline, and this additional check neither exports source nor saves or deploys
+a version. It protects the paid distribution path without creating customer,
+demand, payment, or revenue evidence.
 Candidate preparation also refuses any pre-existing requested archive or
 receipt before source checks or build commands begin. It gives the packaging
 helper a private staging path on the archive destination's filesystem,

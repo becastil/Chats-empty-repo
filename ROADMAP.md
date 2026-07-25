@@ -17,10 +17,11 @@
   explicit source-export approval that records the printed `receipt_sha256`.
   After approval, push its receipt-bound source to the separate Sites source
   repository, verify the unchanged archive and receipt again while requiring
-  the approved digest, and save only that matched candidate. Versions 46 and
-  47 are superseded and must not be deployed. Keep the replacement behind
-  separate deployment approval and the immediate post-deployment production
-  audit.
+  the approved digest, and resolve that repository's exported
+  `refs/heads/main` twice to prove it still equals the receipt commit before
+  saving only that matched candidate. Versions 46 and 47 are superseded and
+  must not be deployed. Keep the replacement behind separate deployment
+  approval and the immediate post-deployment production audit.
 - Human-review the five prepared, publicly qualified drafts. The first
   owner-only `--write-review` bundle is ready in the ignored private workspace;
   use its content-bound `--approve-next` or

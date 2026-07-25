@@ -178,24 +178,27 @@ site release:
      --receipt /tmp/repo-scout-site-receipt.json
    ```
 
-   Verification is read-only and runs no Node, npm, packaging, network, source
-   export, version save, or deployment operation. It requires the checkout to
-   remain on `refs/heads/main`, clean, and synchronized with `origin/main`,
-   reconciles its commit, lockfile, and Sites project with the strict receipt,
-   recomputes the archive digest, validates the embedded manifest, and then
-   proves the same branch and synchronized commit still hold. It requires the
-   same regular archive and digest once more at that final acceptance
-   checkpoint before reporting success. Record the printed `receipt_sha256`
-   with the source-export approval so later verification can require the exact
-   receipt bytes the owner reviewed.
+   This pre-approval verification is read-only and runs no Node, npm,
+   packaging, network, source export, version save, or deployment operation.
+   It requires the checkout to remain on `refs/heads/main`, clean, and
+   synchronized with `origin/main`, reconciles its commit, lockfile, and Sites
+   project with the strict receipt, recomputes the archive digest, validates
+   the embedded manifest, and then proves the same branch and synchronized
+   commit still hold. It requires the same regular archive and digest once more
+   at that final acceptance checkpoint before reporting success. Record the
+   printed `receipt_sha256` with the source-export approval so later
+   verification can require the exact receipt bytes the owner reviewed.
 3. Obtain explicit owner approval before pushing the exact committed source to
    the separate Sites source repository. This source-export approval is
    separate from deployment approval, and the source export does not authorize
    production deployment.
 4. Push the receipt's exact source commit to the separate Sites source
    repository (the existing Sites source repository for this project), and
-   reuse the existing Sites project in
-   `.openai/hosting.json`. Do not create a replacement project for a version
+   reuse the existing Sites project in `.openai/hosting.json`. Retain the
+   credential-free repository URL or configured remote name used for that
+   approved push as `SITES_SOURCE_REPOSITORY`; pass authentication through the
+   same per-command Git credential context rather than embedding a token in the
+   repository identity. Do not create a replacement project for a version
    update.
 5. Verify the unchanged archive and receipt again before saving:
 
@@ -203,12 +206,18 @@ site release:
    python3 scripts/prepare_site_candidate.py --verify-only \
      --archive /tmp/repo-scout-site.tar.gz \
      --receipt /tmp/repo-scout-site-receipt.json \
-     --expected-receipt-sha256 APPROVED_RECEIPT_SHA256
+     --expected-receipt-sha256 APPROVED_RECEIPT_SHA256 \
+     --exported-source-repository "$SITES_SOURCE_REPOSITORY"
    ```
 
    This check fails if the receipt was even semantically reserialized after
-   approval. Save the verified preflight archive against the receipt's exact
-   source commit. Saving a version does not make that version live.
+   approval. It also resolves the existing Sites repository's
+   `refs/heads/main` twice with read-only `git ls-remote` calls and fails if
+   that exported ref differs from the approved candidate commit or moves
+   during verification. This pre-save form therefore uses the network but
+   performs no source export, version save, or deployment. Save the verified
+   preflight archive against the receipt's exact source commit. Saving a
+   version does not make that version live.
 6. Obtain separate explicit owner approval before deploying the saved version
    to the existing public production site.
 7. Only after the approved deployment succeeds, immediately run the production

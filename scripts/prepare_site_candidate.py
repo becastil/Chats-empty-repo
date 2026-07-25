@@ -14,6 +14,7 @@ import sys
 import tarfile
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from typing import Callable, Iterable, Protocol, Sequence
+from urllib.parse import urlsplit
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -261,12 +262,26 @@ def verify_site_candidate(
     receipt: Path,
     *,
     expected_receipt_sha256: str | None = None,
+    exported_source_repository: str | None = None,
     run_command: CommandRunner | None = None,
 ) -> SiteCandidateResult:
     project_root = root.expanduser().resolve()
     archive_path = archive.expanduser().resolve()
     receipt_path = receipt.expanduser().resolve()
     runner = run_command or _run_command
+
+    if (
+        exported_source_repository is not None
+        and expected_receipt_sha256 is None
+    ):
+        raise SiteCandidateError(
+            "exported source verification requires an approved receipt digest"
+        )
+    source_repository = (
+        _validated_source_repository(exported_source_repository)
+        if exported_source_repository is not None
+        else None
+    )
 
     _require_regular_file(project_root / "package-lock.json", "package lock")
     _require_regular_file(project_root / ".nvmrc", "Node runtime pin")
@@ -320,6 +335,19 @@ def verify_site_candidate(
                 f"receipt candidate {field} does not match checkout"
             )
 
+    exported_commit_sha: str | None = None
+    if source_repository is not None:
+        exported_commit_sha = _exported_source_commit(
+            source_repository,
+            SOURCE_REF,
+            project_root,
+            runner,
+        )
+        if exported_commit_sha != commit_sha:
+            raise SiteCandidateError(
+                "exported source does not match approved candidate"
+            )
+
     archive_evidence = receipt_payload["archive"]
     if not isinstance(archive_evidence, dict):
         raise SiteCandidateError("receipt archive must be a JSON object")
@@ -359,6 +387,17 @@ def verify_site_candidate(
         receipt_sha256,
         "Sites candidate receipt",
     )
+    if source_repository is not None:
+        final_exported_commit_sha = _exported_source_commit(
+            source_repository,
+            SOURCE_REF,
+            project_root,
+            runner,
+        )
+        if final_exported_commit_sha != exported_commit_sha:
+            raise SiteCandidateError(
+                "exported source moved during candidate operation"
+            )
     return SiteCandidateResult(
         commit_sha=commit_sha,
         archive_sha256=archive_sha256,
@@ -455,6 +494,56 @@ def _validated_sha256(value: object, label: str) -> str:
             f"{label} must be a lowercase SHA-256 digest"
         )
     return value
+
+
+def _validated_source_repository(value: str) -> str:
+    if (
+        not value
+        or value.startswith("-")
+        or any(ord(character) < 32 for character in value)
+    ):
+        raise SiteCandidateError(
+            "exported source repository must be a non-empty Git repository "
+            "identity without control characters"
+        )
+    if (
+        value.lower().startswith(("http://", "https://"))
+        and urlsplit(value).username is not None
+    ):
+        raise SiteCandidateError(
+            "exported source repository must not embed credentials"
+        )
+    return value
+
+
+def _exported_source_commit(
+    repository: str,
+    source_ref: str,
+    root: Path,
+    run_command: CommandRunner,
+) -> str:
+    output = run_command(
+        (
+            "git",
+            "ls-remote",
+            "--exit-code",
+            "--refs",
+            repository,
+            source_ref,
+        ),
+        root,
+    )
+    lines = output.splitlines()
+    if len(lines) != 1:
+        raise SiteCandidateError(
+            f"exported source repository must resolve exactly one {source_ref}"
+        )
+    fields = lines[0].split()
+    if len(fields) != 2 or fields[1] != source_ref:
+        raise SiteCandidateError(
+            f"exported source repository returned an invalid {source_ref}"
+        )
+    return _validated_sha(fields[0], f"exported source {source_ref}")
 
 
 def _require_regular_file(path: Path, label: str) -> None:
@@ -1003,6 +1092,14 @@ def build_parser() -> argparse.ArgumentParser:
             "--verify-only."
         ),
     )
+    parser.add_argument(
+        "--exported-source-repository",
+        help=(
+            "Existing Sites Git repository URL or remote name to verify "
+            "read-only before saving. Requires --verify-only and "
+            "--expected-receipt-sha256."
+        ),
+    )
     return parser
 
 
@@ -1015,11 +1112,22 @@ def main(argv: Sequence[str] | None = None) -> int:
                 parser.error(
                     "--package-script cannot be used with --verify-only"
                 )
+            if (
+                args.exported_source_repository is not None
+                and args.expected_receipt_sha256 is None
+            ):
+                parser.error(
+                    "--exported-source-repository requires "
+                    "--expected-receipt-sha256"
+                )
             result = verify_site_candidate(
                 args.root,
                 args.archive,
                 args.receipt,
                 expected_receipt_sha256=args.expected_receipt_sha256,
+                exported_source_repository=(
+                    args.exported_source_repository
+                ),
             )
             action = "verified"
         else:
@@ -1030,6 +1138,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             if args.expected_receipt_sha256 is not None:
                 parser.error(
                     "--expected-receipt-sha256 requires --verify-only"
+                )
+            if args.exported_source_repository is not None:
+                parser.error(
+                    "--exported-source-repository requires --verify-only"
                 )
             result = prepare_site_candidate(
                 args.root,

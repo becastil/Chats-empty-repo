@@ -3346,3 +3346,24 @@ Schema-4 receipt contents remain unchanged, so no migration is needed. The
 digest is approval evidence rather than approval itself. This change exports no
 source, saves or deploys no Sites version, grants no controlled approval, and
 creates no visit, pilot request, payment, or revenue event.
+
+## 2026-07-25: Bind Pre-Save Verification To Exported Sites Source
+
+The pre-save command required the receipt digest recorded in owner approval,
+but still verified only the local checkout, archive, and receipt. If the wrong
+commit reached the separate Sites source repository, that local evidence could
+pass even though saving the candidate would join an approved archive to
+different exported source.
+
+Pre-save verification now requires the credential-free Git repository identity
+used for the approved export. It resolves that repository's
+`refs/heads/main` with read-only `git ls-remote`, requires the exported commit
+to equal the receipt commit, and repeats the resolution before reporting
+success so persistent movement fails closed. The exported-source option itself
+requires `--expected-receipt-sha256`; ordinary pre-approval verification stays
+offline.
+
+The repository identity must not embed an access token; authentication remains
+in the same per-command Git credential context used for the approved push. The
+check follows the project's CI/CD integrity guidance while performing no source
+export, version save, deployment, approval, customer contact, or revenue event.

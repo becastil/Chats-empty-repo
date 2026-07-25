@@ -409,6 +409,10 @@ class ReleaseManifestTests(unittest.TestCase):
             "`receipt_sha256`",
             "receipt bytes the owner reviewed",
             "--expected-receipt-sha256 APPROVED_RECEIPT_SHA256",
+            '--exported-source-repository "$SITES_SOURCE_REPOSITORY"',
+            "credential-free repository URL or configured remote name",
+            "read-only `git ls-remote` calls",
+            "exported ref differs from the approved candidate commit",
             "semantically reserialized",
             "Do not use `npm audit fix --force`",
         ):

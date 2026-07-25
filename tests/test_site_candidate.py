@@ -27,6 +27,7 @@ SPEC.loader.exec_module(prepare_site_candidate)
 
 COMMIT_SHA = "a" * 40
 PROJECT_ID = "appgprj_test"
+SITES_SOURCE_REPOSITORY = "https://sites.example/repo-scout.git"
 
 
 class FakeCommandRunner:
@@ -39,6 +40,7 @@ class FakeCommandRunner:
         origin_sha: str = COMMIT_SHA,
         head_shas: tuple[str, ...] | None = None,
         origin_shas: tuple[str, ...] | None = None,
+        exported_source_shas: tuple[str, ...] | None = None,
         branches: tuple[str, ...] | None = None,
         node_version: str = "v22.13.0",
         include_manifest: bool = True,
@@ -55,6 +57,9 @@ class FakeCommandRunner:
         self.status = status
         self.head_shas = list(head_shas or (COMMIT_SHA,))
         self.origin_shas = list(origin_shas or (origin_sha,))
+        self.exported_source_shas = list(
+            exported_source_shas or (COMMIT_SHA,)
+        )
         self.branches = list(branches or ("main",))
         self.node_version = node_version
         self.include_manifest = include_manifest
@@ -89,6 +94,16 @@ class FakeCommandRunner:
             return self._next_value(self.head_shas)
         if normalized == ("git", "rev-parse", "origin/main"):
             return self._next_value(self.origin_shas)
+        if normalized == (
+            "git",
+            "ls-remote",
+            "--exit-code",
+            "--refs",
+            SITES_SOURCE_REPOSITORY,
+            prepare_site_candidate.SOURCE_REF,
+        ):
+            sha = self._next_value(self.exported_source_shas)
+            return f"{sha}\t{prepare_site_candidate.SOURCE_REF}\n"
         if normalized == ("node", "--version"):
             return self.node_version
         if normalized == ("npm", "run", "build"):
@@ -661,6 +676,147 @@ class SiteCandidateTests(unittest.TestCase):
                     run_command=FakeCommandRunner(root, archive),
                 )
 
+    def test_pre_save_verification_requires_approved_receipt_digest(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "exported source verification requires an approved receipt "
+                "digest",
+            ):
+                prepare_site_candidate.verify_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    exported_source_repository=SITES_SOURCE_REPOSITORY,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+
+    def test_pre_save_verification_rejects_embedded_credentials(self) -> None:
+        with self.assertRaisesRegex(
+            prepare_site_candidate.SiteCandidateError,
+            "exported source repository must not embed credentials",
+        ):
+            prepare_site_candidate.verify_site_candidate(
+                Path("/tmp/project"),
+                Path("/tmp/candidate.tar.gz"),
+                Path("/tmp/candidate.json"),
+                expected_receipt_sha256="e" * 64,
+                exported_source_repository=(
+                    "https://secret-token@sites.example/repo-scout.git"
+                ),
+                run_command=lambda command, root: "",
+            )
+
+    def test_pre_save_verification_checks_exported_source_twice(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+            approved_digest = hashlib.sha256(receipt.read_bytes()).hexdigest()
+            runner = FakeCommandRunner(
+                root,
+                archive,
+                exported_source_shas=(COMMIT_SHA, COMMIT_SHA),
+            )
+
+            result = prepare_site_candidate.verify_site_candidate(
+                root,
+                archive,
+                receipt,
+                expected_receipt_sha256=approved_digest,
+                exported_source_repository=SITES_SOURCE_REPOSITORY,
+                run_command=runner,
+            )
+
+            self.assertEqual(result.commit_sha, COMMIT_SHA)
+            self.assertEqual(
+                runner.commands.count(
+                    (
+                        "git",
+                        "ls-remote",
+                        "--exit-code",
+                        "--refs",
+                        SITES_SOURCE_REPOSITORY,
+                        prepare_site_candidate.SOURCE_REF,
+                    )
+                ),
+                2,
+            )
+
+    def test_pre_save_verification_rejects_wrong_exported_source(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+            approved_digest = hashlib.sha256(receipt.read_bytes()).hexdigest()
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "exported source does not match approved candidate",
+            ):
+                prepare_site_candidate.verify_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    expected_receipt_sha256=approved_digest,
+                    exported_source_repository=SITES_SOURCE_REPOSITORY,
+                    run_command=FakeCommandRunner(
+                        root,
+                        archive,
+                        exported_source_shas=("b" * 40,),
+                    ),
+                )
+
+    def test_pre_save_verification_rejects_exported_source_drift(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+            approved_digest = hashlib.sha256(receipt.read_bytes()).hexdigest()
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "exported source moved during candidate operation",
+            ):
+                prepare_site_candidate.verify_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    expected_receipt_sha256=approved_digest,
+                    exported_source_repository=SITES_SOURCE_REPOSITORY,
+                    run_command=FakeCommandRunner(
+                        root,
+                        archive,
+                        exported_source_shas=(COMMIT_SHA, "b" * 40),
+                    ),
+                )
+
     def test_preparation_rejects_archive_changed_during_receipt_publication(
         self,
     ) -> None:
@@ -1105,6 +1261,48 @@ class SiteCandidateTests(unittest.TestCase):
             Path("/tmp/candidate.tar.gz"),
             Path("/tmp/candidate.json"),
             expected_receipt_sha256="e" * 64,
+            exported_source_repository=None,
+        )
+
+    def test_pre_save_cli_routes_exported_source_verification(self) -> None:
+        result = prepare_site_candidate.SiteCandidateResult(
+            commit_sha=COMMIT_SHA,
+            archive_sha256="c" * 64,
+            receipt_sha256="e" * 64,
+            archive=Path("/tmp/candidate.tar.gz"),
+            receipt=Path("/tmp/candidate.json"),
+        )
+
+        with patch.object(
+            prepare_site_candidate,
+            "verify_site_candidate",
+            return_value=result,
+        ) as verify:
+            stdout = StringIO()
+            with redirect_stdout(stdout):
+                status = prepare_site_candidate.main(
+                    [
+                        "--verify-only",
+                        "--root",
+                        "/tmp/project",
+                        "--archive",
+                        "/tmp/candidate.tar.gz",
+                        "--receipt",
+                        "/tmp/candidate.json",
+                        "--expected-receipt-sha256",
+                        "e" * 64,
+                        "--exported-source-repository",
+                        SITES_SOURCE_REPOSITORY,
+                    ]
+                )
+
+        self.assertEqual(status, 0)
+        verify.assert_called_once_with(
+            Path("/tmp/project"),
+            Path("/tmp/candidate.tar.gz"),
+            Path("/tmp/candidate.json"),
+            expected_receipt_sha256="e" * 64,
+            exported_source_repository=SITES_SOURCE_REPOSITORY,
         )
 
     def test_prepare_cli_still_routes_through_the_packaging_helper(self) -> None:

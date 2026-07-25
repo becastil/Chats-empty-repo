@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added approval-bound pre-save verification for the separate Sites source
+  repository, requiring the approved receipt digest and checking its exported
+  `refs/heads/main` twice for candidate mismatch or movement before success.
 - Made the exact Sites receipt SHA-256 part of preparation and verification
   output, rechecked source, archive, and receipt after publication, and let the
   pre-save verifier require the digest recorded in owner approval.
