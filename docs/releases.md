@@ -153,6 +153,9 @@ site release:
    configuration, and the embedded manifest are integrity-bound and
    structurally checked. The schema-4 receipt records the resulting archive
    digest and tested payload digest for later read-only verification.
+   Duplicate JSON keys fail even when repeated values match in checkout hosting
+   metadata, candidate receipts, or archived manifests, so approval evidence
+   never depends on a decoder selecting the first or last value.
    Packaging sets `COPYFILE_DISABLE=1` so macOS cannot inject AppleDouble
    metadata outside the allowed archive root. The preflight also repeats the
    clean `HEAD == origin/main` check after validation and after packaging,

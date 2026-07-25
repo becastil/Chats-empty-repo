@@ -384,6 +384,12 @@ independent verification reject noncanonical source modes, unexpected empty
 directories, and changed archive permissions. This prevents extraction behavior
 from drifting at the paid-distribution boundary without authorizing source
 export, version saving, deployment, or recording customer or revenue evidence.
+Schema-4 evidence also rejects duplicate JSON keys in checkout hosting
+metadata, candidate receipts, and archived manifests, even when repeated values
+match. Different JSON implementations can select the first or last repeated
+value, so accepting either interpretation would make approval identity
+parser-dependent. This closes that ambiguity without changing valid schema-4
+receipts, granting approval, or creating customer or revenue evidence.
 Candidate preparation now also repeats the complete clean
 `HEAD == origin/main` check after validation and packaging, requiring both
 observations to retain the original synchronized commit. Read-only verification

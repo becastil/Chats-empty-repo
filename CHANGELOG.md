@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Rejected duplicate JSON keys throughout Sites source metadata, candidate
+  receipts, and archived manifests, even when repeated values match, so
+  approval evidence cannot depend on parser-specific key selection.
 - Advanced Sites receipts to schema 4 and bound every regular directory's path,
   type, and deterministic `0755` mode alongside file bytes, rejecting injected
   empty directories, noncanonical source modes, and archive permission drift

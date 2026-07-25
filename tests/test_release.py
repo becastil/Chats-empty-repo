@@ -398,6 +398,7 @@ class ReleaseManifestTests(unittest.TestCase):
             "exact existing `dist/`",
             "test-brackets built server and client output",
             "schema-4 receipt",
+            "Duplicate JSON keys fail even when repeated values match",
             "`COPYFILE_DISABLE=1`",
             "same synchronized commit at every acceptance checkpoint",
             "same synchronized commit still holds",

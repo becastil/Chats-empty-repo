@@ -70,6 +70,12 @@ class SiteCandidateError(RuntimeError):
     """Raised when a Sites candidate cannot be tied to validated source."""
 
 
+class _DuplicateJsonKeyError(ValueError):
+    def __init__(self, key: str) -> None:
+        self.key = key
+        super().__init__(key)
+
+
 class HashDigest(Protocol):
     def update(self, data: bytes, /) -> None: ...
 
@@ -389,12 +395,38 @@ def _require_regular_file(path: Path, label: str) -> None:
 
 def _read_json_object(path: Path, label: str) -> dict[str, object]:
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload = _load_json_with_unique_keys(
+            path.read_text(encoding="utf-8"),
+            label,
+        )
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         raise SiteCandidateError(f"could not read {label}: {exc}") from exc
     if not isinstance(payload, dict):
         raise SiteCandidateError(f"{label} must contain a JSON object")
     return payload
+
+
+def _load_json_with_unique_keys(content: str, label: str) -> object:
+    try:
+        return json.loads(
+            content,
+            object_pairs_hook=_reject_duplicate_json_keys,
+        )
+    except _DuplicateJsonKeyError as exc:
+        raise SiteCandidateError(
+            f"{label} contains duplicate JSON key: {exc.key}"
+        ) from exc
+
+
+def _reject_duplicate_json_keys(
+    pairs: list[tuple[str, object]],
+) -> dict[str, object]:
+    values: dict[str, object] = {}
+    for key, value in pairs:
+        if key in values:
+            raise _DuplicateJsonKeyError(key)
+        values[key] = value
+    return values
 
 
 def _candidate_manifest(
@@ -728,7 +760,10 @@ def _read_archived_json(
     if source is None:
         raise SiteCandidateError(f"could not read archived {label}")
     try:
-        payload = json.loads(source.read().decode("utf-8"))
+        payload = _load_json_with_unique_keys(
+            source.read().decode("utf-8"),
+            f"archived {label}",
+        )
     except (UnicodeError, json.JSONDecodeError) as exc:
         raise SiteCandidateError(
             f"archived {label} is not valid UTF-8 JSON: {exc}"

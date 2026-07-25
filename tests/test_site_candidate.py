@@ -46,6 +46,7 @@ class FakeCommandRunner:
         server_directory_mode: int | None = None,
         mutate_server_after_site_tests: bool = False,
         mutate_server_before_package: bool = False,
+        duplicate_manifest_before_package: bool = False,
     ) -> None:
         self.root = root
         self.archive = archive
@@ -61,6 +62,9 @@ class FakeCommandRunner:
             mutate_server_after_site_tests
         )
         self.mutate_server_before_package = mutate_server_before_package
+        self.duplicate_manifest_before_package = (
+            duplicate_manifest_before_package
+        )
         self.commands: list[tuple[str, ...]] = []
 
     def __call__(self, command: list[str] | tuple[str, ...], root: Path) -> str:
@@ -117,6 +121,20 @@ class FakeCommandRunner:
                     "export default { tampered: true };\n",
                     encoding="utf-8",
                 )
+            if self.duplicate_manifest_before_package:
+                manifest = (
+                    self.root
+                    / "dist"
+                    / ".openai"
+                    / "site-candidate.json"
+                )
+                content = manifest.read_text(encoding="utf-8")
+                content = content.replace(
+                    '  "schema_version": 4',
+                    '  "schema_version": 4,\n  "schema_version": 4',
+                    1,
+                )
+                manifest.write_text(content, encoding="utf-8")
             self._package()
             return str(self.archive)
         raise AssertionError(f"unexpected command: {normalized}")
@@ -423,6 +441,84 @@ class SiteCandidateTests(unittest.TestCase):
             with self.assertRaisesRegex(
                 prepare_site_candidate.SiteCandidateError,
                 "archive payload does not match tested build",
+            ):
+                prepare_site_candidate.verify_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+
+    def test_verification_rejects_duplicate_receipt_keys(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+            payload = json.loads(receipt.read_text(encoding="utf-8"))
+            archive_digest = payload["archive"]["sha256"]
+            digest_line = f'    "sha256": "{archive_digest}"'
+            content = receipt.read_text(encoding="utf-8")
+            receipt.write_text(
+                content.replace(
+                    digest_line,
+                    f"{digest_line},\n{digest_line}",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "Sites candidate receipt contains duplicate JSON key: sha256",
+            ):
+                prepare_site_candidate.verify_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+
+    def test_verification_rejects_duplicate_archived_manifest_keys(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+            repack = FakeCommandRunner(
+                root,
+                archive,
+                duplicate_manifest_before_package=True,
+            )
+            repack(
+                (
+                    *prepare_site_candidate.PACKAGING_COMMAND_PREFIX,
+                    str(package_script),
+                    str(root),
+                    str(archive),
+                ),
+                root,
+            )
+            payload = json.loads(receipt.read_text(encoding="utf-8"))
+            payload["archive"]["sha256"] = hashlib.sha256(
+                archive.read_bytes()
+            ).hexdigest()
+            receipt.write_text(json.dumps(payload), encoding="utf-8")
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "archived site candidate manifest contains duplicate JSON "
+                "key: schema_version",
             ):
                 prepare_site_candidate.verify_site_candidate(
                     root,
@@ -1122,6 +1218,31 @@ class SiteCandidateTests(unittest.TestCase):
                 )
 
             self.assertEqual(runner.commands, [])
+
+    def test_rejects_duplicate_hosting_metadata_keys(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            (root / ".openai" / "hosting.json").write_text(
+                '{"project_id": "appgprj_test", '
+                '"project_id": "appgprj_test"}\n',
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "Sites hosting metadata contains duplicate JSON key: "
+                "project_id",
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+
+            self.assertFalse(archive.exists())
+            self.assertFalse(receipt.exists())
 
     def test_runtime_pin_matches_candidate_hosted_and_package_contracts(
         self,

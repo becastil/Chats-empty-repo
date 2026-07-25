@@ -3192,3 +3192,25 @@ This keeps the artifact awaiting paid-distribution approval identical at the
 filesystem boundary, including an intentionally empty Drizzle metadata
 directory. No source was exported, no Sites version was saved or deployed, and
 no visit, pilot request, payment, or revenue evidence was created.
+
+## 2026-07-25: Reject Ambiguous Sites JSON Evidence
+
+Sites candidate verification strictly checked schema versions, exact key sets,
+source identity, payload bytes, and archive structure, but its JSON decoder
+silently accepted repeated object keys. JSON consumers differ on whether the
+first or last repeated value wins, so a receipt or archived manifest could have
+one byte representation and multiple effective identities. Repeating the same
+value still leaves evidence ambiguous because later tooling can normalize it
+differently.
+
+One duplicate-rejecting object parser now covers checkout hosting metadata,
+candidate receipts, and archived hosting and manifest documents at every
+nesting depth. Preparation and read-only verification fail on the duplicate key
+before accepting later digest or identity evidence. Valid schema-4 documents
+and their serialization do not change, so a schema bump would add migration
+cost without strengthening the invariant.
+
+This removes parser-dependent interpretation from the paid-distribution
+approval boundary. It does not export source, save or deploy a Sites version,
+approve either controlled action, or create a visit, pilot request, payment, or
+revenue event.
