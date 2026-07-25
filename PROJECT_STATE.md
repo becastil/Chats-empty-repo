@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 245 of
-1,000, with 755 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 246 of
+1,000, with 754 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -159,6 +159,14 @@ alignment take priority over commit volume.
   repository identity drift, then checks the approval-bound
   `refs/heads/main` twice with read-only `git ls-remote` before version saving.
   The earlier pre-approval verification remains offline.
+- Atomic Sites pre-save mode requiring the approved receipt digest,
+  operational repository, and approved canonical repository identity together.
+  Digest-only verification cannot report a pre-save success without the
+  exported-source network and commit checks.
+- Authority-bound Sites repository identity that normalizes standard Git,
+  HTTP, HTTPS, and SSH ports across legitimate protocol aliases while retaining
+  every non-default port. A matching host, path, and commit on an unapproved
+  port therefore cannot satisfy source-export approval.
 - A zero-vulnerability site dependency lock with Next `16.2.11`, React and
   React Server Components `19.2.8`, `brace-expansion` `5.0.8`, current
   Cloudflare and Vite tooling, and advisory-fixed PostCSS and Sharp overrides.
@@ -595,9 +603,10 @@ source, then verify the unchanged archive and receipt with
 `--expected-receipt-sha256` set to the approved digest,
 `--exported-source-repository` set to the URL or configured alias used for the
 push, and `--expected-exported-source-repository` set to the approved canonical
-identity. Save the candidate only after that check proves the resolved
-repository is remote, separate from `origin`, approval-matched, stable, and its
-exported `refs/heads/main` is the receipt commit.
+identity. The digest and both repository options are required together. Save
+the candidate only after that check proves the resolved repository is remote,
+separate from `origin`, approval-matched including any non-default port,
+stable, and its exported `refs/heads/main` is the receipt commit.
 Source-export approval does not authorize production; record the saved
 version, source identity, and archive
 digest, then obtain separate owner approval before deployment. After deployment

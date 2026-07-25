@@ -412,9 +412,12 @@ class ReleaseManifestTests(unittest.TestCase):
             '--exported-source-repository "$SITES_SOURCE_REPOSITORY"',
             "--expected-exported-source-repository "
             '"$APPROVED_SITES_SOURCE_REPOSITORY"',
+            "three approval arguments form one atomic pre-save mode",
+            "digest-only success",
             "canonical repository identity",
             "local checkout, `origin`, equivalent aliases, or an unrelated "
             "fork",
+            "unapproved non-default port",
             "read-only `git ls-remote` calls",
             "exported ref differs from the approved candidate commit",
             "semantically reserialized",

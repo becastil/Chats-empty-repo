@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Made the approved receipt digest and both exported-source repository
+  arguments an atomic pre-save verification mode, preventing digest-only
+  success from omitting the network source and commit checks.
+- Preserved non-default ports in canonical Sites repository identities while
+  normalizing protocol-default ports, rejecting an operational endpoint on an
+  unapproved authority even when its host, path, and commit match.
 - Bound pre-save source verification to the canonical remote Sites repository
   identity recorded in owner approval, rejecting `origin`, local repositories,
   unrelated forks, equivalent aliases, and identity drift before version save.

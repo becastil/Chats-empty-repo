@@ -3390,3 +3390,41 @@ Authentication remains outside both identity arguments, and malformed remote
 URLs fail with a controlled error. The change follows the project's CI/CD
 integrity guidance while performing no source export, version save, deployment,
 approval, customer contact, or revenue event.
+
+## 2026-07-25: Retain Non-Default Sites Repository Ports
+
+Canonical repository identity validated URL ports but omitted them from the
+identity string. An approved `https://host/repository` and an operational
+`https://host:8443/repository` therefore compared equal even though the
+non-default port can serve an unrelated Git repository. Matching the receipt
+commit on that endpoint could satisfy the repository and ref checks without
+using the authority recorded in approval.
+
+Canonicalization now removes only each protocol's standard port: Git `9418`,
+HTTP `80`, HTTPS `443`, and SSH `22`. Every non-default port remains in the
+canonical authority. This preserves legitimate default-port and cross-protocol
+aliases while making an unapproved port mismatch fail before exported-ref
+verification. Regression coverage proves both boundaries.
+
+The change follows the project's CI/CD integrity guidance while performing no
+source export, version save, deployment, approval, customer contact, or revenue
+event.
+
+## 2026-07-25: Keep The Sites Pre-Save Approval Tuple Atomic
+
+`--expected-receipt-sha256` remained usable without either exported-source
+repository argument. That legacy digest-only mode checked the reviewed receipt
+bytes but returned the same generic verification success while skipping every
+network, canonical repository identity, and exported-commit check. The current
+operator contract defines no digest-only post-approval stage, so omitting both
+repository lines from the pre-save command could silently weaken the gate.
+
+An approved receipt digest now requires the operational exported repository,
+which already requires the approved canonical repository identity. The same
+all-or-none rule applies to direct Python callers and the CLI before any
+candidate evidence is read. Plain `--verify-only` remains the offline
+pre-approval operation and continues to print the receipt digest for review.
+
+This removes an ambiguous weaker success mode while following the project's
+CI/CD integrity guidance. It performs no source export, version save,
+deployment, approval, customer contact, or revenue event.

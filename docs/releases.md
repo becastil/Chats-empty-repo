@@ -193,7 +193,10 @@ site release:
    configured as `origin`, and record that canonical identity as
    `APPROVED_SITES_SOURCE_REPOSITORY` in the same approval evidence. A
    configured remote alias may be used for Git operations, but the approved
-   identity itself must be a remote URL rather than a mutable alias.
+   identity itself must be a remote URL rather than a mutable alias. Canonical
+   identity normalizes the standard Git, HTTP, HTTPS, and SSH ports across
+   protocol aliases but retains any non-default port as part of the approved
+   repository authority.
 3. Obtain explicit owner approval before pushing the exact committed source to
    the approved separate Sites source repository. The approval must identify
    the receipt digest, canonical repository identity, `refs/heads/main`, and
@@ -217,17 +220,22 @@ site release:
      --expected-exported-source-repository "$APPROVED_SITES_SOURCE_REPOSITORY"
    ```
 
+   The three approval arguments form one atomic pre-save mode: the command
+   rejects the approved digest without both repository arguments, rather than
+   reporting a digest-only success that omitted exported-source verification.
    This check fails if the receipt was even semantically reserialized after
    approval. It resolves the operational repository argument, requires its
    canonical remote identity to equal the repository recorded in approval, and
    rejects the local checkout, `origin`, equivalent aliases, or an unrelated
-   fork even when they contain the same commit. The resolved identity must
-   remain stable while read-only `git ls-remote` calls resolve
-   `refs/heads/main` twice; the check fails if that exported ref differs from
-   the approved candidate commit or moves during verification. This pre-save
-   form therefore uses the network but performs no source export, version save,
-   or deployment. Save the verified preflight archive against the receipt's
-   exact source commit. Saving a version does not make that version live.
+   fork even when they contain the same commit. A matching host and path on an
+   unapproved non-default port is a different repository and also fails. The
+   resolved identity must remain stable while read-only `git ls-remote` calls
+   resolve `refs/heads/main` twice; the check fails if that exported ref differs
+   from the approved candidate commit or moves during verification. This
+   pre-save form therefore uses the network but performs no source export,
+   version save, or deployment. Save the verified preflight archive against
+   the receipt's exact source commit. Saving a version does not make that
+   version live.
 6. Obtain separate explicit owner approval before deploying the saved version
    to the existing public production site.
 7. Only after the approved deployment succeeds, immediately run the production

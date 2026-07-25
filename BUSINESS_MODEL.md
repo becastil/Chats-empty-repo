@@ -444,6 +444,20 @@ pre-approval verifier remains offline, and this additional check neither
 exports source nor saves or deploys a version. It protects the paid
 distribution path without creating customer, demand, payment, or revenue
 evidence.
+The approved receipt digest and both repository arguments now form one atomic
+pre-save mode. Supplying the digest alone fails before local evidence checks
+instead of returning a generic verification success without querying the
+approved source repository. Plain pre-approval verification remains offline
+and prints the digest an owner can review. This prevents an operator omission
+from weakening the paid-distribution gate without exporting source, saving or
+deploying a version, or creating customer or revenue evidence.
+Canonical repository identity now retains any non-default network port while
+normalizing the standard Git, HTTP, HTTPS, and SSH ports across legitimate
+protocol aliases. A server on an unapproved port can no longer inherit approval
+from the same host and path merely by exposing the receipt commit. This closes
+an authority ambiguity in the paid-distribution handoff without exporting
+source, saving or deploying a version, or creating customer or revenue
+evidence.
 Candidate preparation also refuses any pre-existing requested archive or
 receipt before source checks or build commands begin. It gives the packaging
 helper a private staging path on the archive destination's filesystem,

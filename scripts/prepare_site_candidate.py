@@ -57,6 +57,12 @@ SCP_REPOSITORY_PATTERN = re.compile(
     r"(?:[^/@:\s]+@)?(?P<host>[^/:\s]+):(?P<path>[^\\].+)\Z"
 )
 REMOTE_REPOSITORY_SCHEMES = frozenset(("git", "http", "https", "ssh"))
+DEFAULT_REPOSITORY_PORTS = {
+    "git": 9418,
+    "http": 80,
+    "https": 443,
+    "ssh": 22,
+}
 RECEIPT_KEYS = frozenset(("schema_version", "candidate", "archive"))
 CANDIDATE_KEYS = frozenset(
     (
@@ -281,6 +287,13 @@ def verify_site_candidate(
     ):
         raise SiteCandidateError(
             "exported source verification requires an approved receipt digest"
+        )
+    if (
+        expected_receipt_sha256 is not None
+        and exported_source_repository is None
+    ):
+        raise SiteCandidateError(
+            "approved receipt digest requires exported source verification"
         )
     if (
         exported_source_repository is None
@@ -655,17 +668,24 @@ def _canonical_repository_identity(value: str, label: str) -> str:
         parsed.scheme.lower() in REMOTE_REPOSITORY_SCHEMES
         and parsed.hostname
     ):
+        scheme = parsed.scheme.lower()
         host = (parsed.hostname or "").lower()
         try:
-            parsed.port
+            port = parsed.port
         except ValueError as exc:
             raise SiteCandidateError(
                 f"{label} must be a valid remote Git repository identity"
             ) from exc
+        authority = f"[{host}]" if ":" in host else host
+        if (
+            port is not None
+            and port != DEFAULT_REPOSITORY_PORTS[scheme]
+        ):
+            authority = f"{authority}:{port}"
         path = parsed.path.rstrip("/")
         if path.endswith(".git"):
             path = path[:-4]
-        return f"{host}/{path.lstrip('/')}"
+        return f"{authority}/{path.lstrip('/')}"
     scp_match = SCP_REPOSITORY_PATTERN.fullmatch(value)
     if scp_match is None:
         raise SiteCandidateError(
@@ -1260,7 +1280,8 @@ def build_parser() -> argparse.ArgumentParser:
         "--expected-receipt-sha256",
         help=(
             "Approved lowercase receipt SHA-256 to require during "
-            "--verify-only."
+            "pre-save --verify-only. Requires both exported source "
+            "repository options."
         ),
     )
     parser.add_argument(
@@ -1300,6 +1321,14 @@ def main(argv: Sequence[str] | None = None) -> int:
                 parser.error(
                     "--exported-source-repository requires "
                     "--expected-receipt-sha256"
+                )
+            if (
+                args.expected_receipt_sha256 is not None
+                and args.exported_source_repository is None
+            ):
+                parser.error(
+                    "--expected-receipt-sha256 requires "
+                    "--exported-source-repository"
                 )
             if (
                 args.exported_source_repository is None

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 import hashlib
 import importlib.util
 from io import BytesIO, StringIO
@@ -669,6 +669,10 @@ class SiteCandidateTests(unittest.TestCase):
                 archive,
                 receipt,
                 expected_receipt_sha256=approved_digest,
+                exported_source_repository=SITES_SOURCE_REMOTE,
+                expected_exported_source_repository=(
+                    SITES_SOURCE_REPOSITORY
+                ),
                 run_command=FakeCommandRunner(root, archive),
             )
 
@@ -692,6 +696,10 @@ class SiteCandidateTests(unittest.TestCase):
                     archive,
                     receipt,
                     expected_receipt_sha256=approved_digest,
+                    exported_source_repository=SITES_SOURCE_REMOTE,
+                    expected_exported_source_repository=(
+                        SITES_SOURCE_REPOSITORY
+                    ),
                     run_command=FakeCommandRunner(root, archive),
                 )
 
@@ -720,6 +728,21 @@ class SiteCandidateTests(unittest.TestCase):
                     exported_source_repository=SITES_SOURCE_REPOSITORY,
                     run_command=FakeCommandRunner(root, archive),
                 )
+
+    def test_pre_save_verification_rejects_digest_only_downgrade(
+        self,
+    ) -> None:
+        with self.assertRaisesRegex(
+            prepare_site_candidate.SiteCandidateError,
+            "approved receipt digest requires exported source verification",
+        ):
+            prepare_site_candidate.verify_site_candidate(
+                Path("/tmp/project"),
+                Path("/tmp/candidate.tar.gz"),
+                Path("/tmp/candidate.json"),
+                expected_receipt_sha256="e" * 64,
+                run_command=lambda command, root: "",
+            )
 
     def test_pre_save_verification_rejects_embedded_credentials(self) -> None:
         with self.assertRaisesRegex(
@@ -889,6 +912,77 @@ class SiteCandidateTests(unittest.TestCase):
                         ),
                     ),
                 )
+
+    def test_pre_save_verification_rejects_unapproved_nondefault_port(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+            approved_digest = hashlib.sha256(receipt.read_bytes()).hexdigest()
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "repository does not match approved Sites repository",
+            ):
+                prepare_site_candidate.verify_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    expected_receipt_sha256=approved_digest,
+                    exported_source_repository=SITES_SOURCE_REMOTE,
+                    expected_exported_source_repository=(
+                        SITES_SOURCE_REPOSITORY
+                    ),
+                    run_command=FakeCommandRunner(
+                        root,
+                        archive,
+                        exported_source_repositories=(
+                            "https://sites.example:8443/repo-scout.git",
+                        ),
+                    ),
+                )
+
+    def test_pre_save_verification_accepts_default_port_protocol_alias(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+            approved_digest = hashlib.sha256(receipt.read_bytes()).hexdigest()
+
+            result = prepare_site_candidate.verify_site_candidate(
+                root,
+                archive,
+                receipt,
+                expected_receipt_sha256=approved_digest,
+                exported_source_repository=SITES_SOURCE_REMOTE,
+                expected_exported_source_repository=(
+                    SITES_SOURCE_REPOSITORY
+                ),
+                run_command=FakeCommandRunner(
+                    root,
+                    archive,
+                    exported_source_repositories=(
+                        "ssh://git@sites.example:22/repo-scout.git",
+                    ),
+                    exported_source_shas=(COMMIT_SHA, COMMIT_SHA),
+                ),
+            )
+
+            self.assertEqual(result.commit_sha, COMMIT_SHA)
 
     def test_pre_save_verification_rejects_local_repository(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -1511,6 +1605,10 @@ class SiteCandidateTests(unittest.TestCase):
             "origin.",
             help_text,
         )
+        self.assertIn(
+            "Requires both exported source repository options.",
+            help_text,
+        )
 
     def test_verify_only_cli_does_not_require_a_packaging_helper(self) -> None:
         result = prepare_site_candidate.SiteCandidateResult(
@@ -1537,8 +1635,6 @@ class SiteCandidateTests(unittest.TestCase):
                         "/tmp/candidate.tar.gz",
                         "--receipt",
                         "/tmp/candidate.json",
-                        "--expected-receipt-sha256",
-                        "e" * 64,
                     ]
                 )
 
@@ -1556,10 +1652,39 @@ class SiteCandidateTests(unittest.TestCase):
             Path("/tmp/project"),
             Path("/tmp/candidate.tar.gz"),
             Path("/tmp/candidate.json"),
-            expected_receipt_sha256="e" * 64,
+            expected_receipt_sha256=None,
             exported_source_repository=None,
             expected_exported_source_repository=None,
         )
+
+    def test_verify_only_cli_rejects_digest_only_downgrade(self) -> None:
+        with patch.object(
+            prepare_site_candidate,
+            "verify_site_candidate",
+        ) as verify:
+            stderr = StringIO()
+            with redirect_stderr(stderr), self.assertRaises(SystemExit) as ctx:
+                prepare_site_candidate.main(
+                    [
+                        "--verify-only",
+                        "--root",
+                        "/tmp/project",
+                        "--archive",
+                        "/tmp/candidate.tar.gz",
+                        "--receipt",
+                        "/tmp/candidate.json",
+                        "--expected-receipt-sha256",
+                        "e" * 64,
+                    ]
+                )
+
+        self.assertEqual(ctx.exception.code, 2)
+        self.assertIn(
+            "--expected-receipt-sha256 requires "
+            "--exported-source-repository",
+            stderr.getvalue(),
+        )
+        verify.assert_not_called()
 
     def test_pre_save_cli_routes_exported_source_verification(self) -> None:
         result = prepare_site_candidate.SiteCandidateResult(
