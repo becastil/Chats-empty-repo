@@ -18,7 +18,7 @@ from typing import Callable, Iterable, Protocol, Sequence
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SOURCE_REF = "refs/heads/main"
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 PRE_SITE_TEST_COMMANDS = (
     ("npm", "ci"),
     ("npm", "run", "audit:dependencies"),
@@ -36,7 +36,15 @@ REQUIRED_ARCHIVE_MEMBERS = (
     "dist/.openai/site-candidate.json",
 )
 ARCHIVE_ROOT = "dist"
-PACKAGING_ENV = ("env", "COPYFILE_DISABLE=1")
+PACKAGING_COMMAND_PREFIX = (
+    "env",
+    "COPYFILE_DISABLE=1",
+    "sh",
+    "-c",
+    'umask 022; exec "$@"',
+    "repo-scout-site-package",
+)
+REQUIRED_DIRECTORY_MODE = 0o755
 SHA_PATTERN = re.compile(r"[0-9a-f]{40}\Z")
 DIGEST_PATTERN = re.compile(r"[0-9a-f]{64}\Z")
 NODE_VERSION_PATTERN = re.compile(
@@ -160,7 +168,7 @@ def prepare_site_candidate(
     archive_path.parent.mkdir(parents=True, exist_ok=True)
     runner(
         (
-            *PACKAGING_ENV,
+            *PACKAGING_COMMAND_PREFIX,
             str(package_path),
             str(project_root),
             str(archive_path),
@@ -462,14 +470,14 @@ def _sha256(path: Path) -> str:
 
 
 def _candidate_payload_sha256(project_root: Path) -> str:
-    files: dict[str, Path] = {}
-    _overlay_payload_files(
-        files,
+    entries: dict[str, Path] = {}
+    _overlay_payload_entries(
+        entries,
         project_root / ARCHIVE_ROOT,
         PurePosixPath(ARCHIVE_ROOT),
         "built Sites output",
     )
-    files["dist/.openai/hosting.json"] = (
+    entries["dist/.openai/hosting.json"] = (
         project_root / ".openai" / "hosting.json"
     )
 
@@ -483,36 +491,58 @@ def _candidate_payload_sha256(project_root: Path) -> str:
             raise SiteCandidateError(
                 f"Sites drizzle payload must be a regular directory: {drizzle}"
             )
-        _overlay_payload_files(
-            files,
+        _overlay_payload_entries(
+            entries,
             drizzle,
             PurePosixPath("dist/.openai/drizzle"),
             "Sites drizzle payload",
         )
 
     digest = hashlib.sha256()
-    for name, path in sorted(files.items()):
+    for name, path in sorted(entries.items()):
         try:
-            details = path.stat()
-            size = details.st_size
+            details = path.lstat()
             mode = stat.S_IMODE(details.st_mode)
-            with path.open("rb") as source:
+            if stat.S_ISDIR(details.st_mode):
+                if mode != REQUIRED_DIRECTORY_MODE:
+                    raise SiteCandidateError(
+                        "tested Sites payload directory mode must be 0755: "
+                        f"{path}"
+                    )
                 _update_payload_digest(
                     digest,
                     name,
+                    b"d",
                     mode,
-                    size,
-                    iter(lambda: source.read(1024 * 1024), b""),
+                    0,
+                    (),
                 )
+            elif stat.S_ISREG(details.st_mode):
+                with path.open("rb") as source:
+                    _update_payload_digest(
+                        digest,
+                        name,
+                        b"f",
+                        mode,
+                        details.st_size,
+                        iter(lambda: source.read(1024 * 1024), b""),
+                    )
+            else:
+                raise SiteCandidateError(
+                    "tested Sites payload must contain only regular files "
+                    f"and directories: {path}"
+                )
+        except SiteCandidateError:
+            raise
         except OSError as exc:
             raise SiteCandidateError(
-                f"could not hash tested build payload {path}: {exc}"
+                f"could not hash tested Sites payload {path}: {exc}"
             ) from exc
     return digest.hexdigest()
 
 
-def _overlay_payload_files(
-    files: dict[str, Path],
+def _overlay_payload_entries(
+    entries: dict[str, Path],
     source_root: Path,
     archive_root: PurePosixPath,
     label: str,
@@ -521,6 +551,7 @@ def _overlay_payload_files(
         raise SiteCandidateError(
             f"{label} must be a regular directory: {source_root}"
         )
+    entries[archive_root.as_posix()] = source_root
     for path in sorted(source_root.rglob("*")):
         relative = path.relative_to(source_root)
         if path.is_symlink() or not (path.is_file() or path.is_dir()):
@@ -528,13 +559,13 @@ def _overlay_payload_files(
                 f"{label} must contain only regular files and directories: "
                 f"{path}"
             )
-        if path.is_file():
-            files[(archive_root / relative.as_posix()).as_posix()] = path
+        entries[(archive_root / relative.as_posix()).as_posix()] = path
 
 
 def _update_payload_digest(
     digest: HashDigest,
     name: str,
+    entry_type: bytes,
     mode: int,
     size: int,
     chunks: Iterable[bytes],
@@ -542,6 +573,7 @@ def _update_payload_digest(
     encoded_name = name.encode("utf-8")
     digest.update(len(encoded_name).to_bytes(8, "big"))
     digest.update(encoded_name)
+    digest.update(entry_type)
     digest.update(mode.to_bytes(4, "big"))
     digest.update(size.to_bytes(8, "big"))
     for chunk in chunks:
@@ -661,20 +693,29 @@ def _archived_payload_sha256(
 ) -> str:
     digest = hashlib.sha256()
     for name, member in sorted(members.items()):
-        if not member.isfile():
-            continue
-        source = bundle.extractfile(member)
-        if source is None:
-            raise SiteCandidateError(
-                f"could not read archived payload file {name}"
+        if member.isdir():
+            _update_payload_digest(
+                digest,
+                name,
+                b"d",
+                member.mode,
+                0,
+                (),
             )
-        _update_payload_digest(
-            digest,
-            name,
-            member.mode,
-            member.size,
-            iter(lambda: source.read(1024 * 1024), b""),
-        )
+        else:
+            source = bundle.extractfile(member)
+            if source is None:
+                raise SiteCandidateError(
+                    f"could not read archived payload file {name}"
+                )
+            _update_payload_digest(
+                digest,
+                name,
+                b"f",
+                member.mode,
+                member.size,
+                iter(lambda: source.read(1024 * 1024), b""),
+            )
     return digest.hexdigest()
 
 

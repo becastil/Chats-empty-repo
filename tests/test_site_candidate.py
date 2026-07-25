@@ -43,6 +43,7 @@ class FakeCommandRunner:
         include_manifest: bool = True,
         extra_member_name: str | None = None,
         extra_member_type: bytes = tarfile.REGTYPE,
+        server_directory_mode: int | None = None,
         mutate_server_after_site_tests: bool = False,
         mutate_server_before_package: bool = False,
     ) -> None:
@@ -55,6 +56,7 @@ class FakeCommandRunner:
         self.include_manifest = include_manifest
         self.extra_member_name = extra_member_name
         self.extra_member_type = extra_member_type
+        self.server_directory_mode = server_directory_mode
         self.mutate_server_after_site_tests = (
             mutate_server_after_site_tests
         )
@@ -100,10 +102,14 @@ class FakeCommandRunner:
             return ""
         if normalized in prepare_site_candidate.VALIDATION_COMMANDS:
             return ""
+        prefix_length = len(
+            prepare_site_candidate.PACKAGING_COMMAND_PREFIX
+        )
         if (
-            len(normalized) == 5
-            and normalized[:2] == prepare_site_candidate.PACKAGING_ENV
-            and normalized[3] == str(self.root)
+            len(normalized) == prefix_length + 3
+            and normalized[:prefix_length]
+            == prepare_site_candidate.PACKAGING_COMMAND_PREFIX
+            and normalized[prefix_length + 1] == str(self.root)
         ):
             if self.mutate_server_before_package:
                 server = self.root / "dist" / "server" / "index.js"
@@ -128,39 +134,33 @@ class FakeCommandRunner:
     def _package(self) -> None:
         self.archive.parent.mkdir(parents=True, exist_ok=True)
         with tarfile.open(self.archive, "w:gz") as bundle:
-            paths = (
-                (
-                    self.root / "dist" / "server" / "index.js",
-                    "dist/server/index.js",
-                ),
-                (
-                    self.root / ".openai" / "hosting.json",
-                    "dist/.openai/hosting.json",
-                ),
-                (
-                    self.root
-                    / "dist"
-                    / ".openai"
-                    / "site-candidate.json",
-                    "dist/.openai/site-candidate.json",
-                ),
+            entries: dict[str, Path] = {}
+            self._overlay_entries(entries, self.root / "dist", "dist")
+            entries["dist/.openai/hosting.json"] = (
+                self.root / ".openai" / "hosting.json"
             )
-            for source, archive_name in paths:
+            drizzle = self.root / "drizzle"
+            if drizzle.is_dir():
+                self._overlay_entries(
+                    entries,
+                    drizzle,
+                    "dist/.openai/drizzle",
+                )
+            for archive_name, source in sorted(
+                entries.items(),
+                key=lambda item: (item[0].count("/"), item[0]),
+            ):
                 if (
                     archive_name == "dist/.openai/site-candidate.json"
                     and not self.include_manifest
                 ):
                     continue
-                bundle.add(source, arcname=archive_name)
-            drizzle = self.root / "drizzle"
-            if drizzle.is_dir():
-                for source in sorted(drizzle.rglob("*")):
-                    if source.is_file():
-                        relative = source.relative_to(drizzle).as_posix()
-                        bundle.add(
-                            source,
-                            arcname=f"dist/.openai/drizzle/{relative}",
-                        )
+                bundle.add(
+                    source,
+                    arcname=archive_name,
+                    recursive=False,
+                    filter=self._filter_archive_member,
+                )
             if self.extra_member_name is not None:
                 member = tarfile.TarInfo(self.extra_member_name)
                 member.type = self.extra_member_type
@@ -170,8 +170,45 @@ class FakeCommandRunner:
                     member.size = len(content.getvalue())
                 bundle.addfile(member, content)
 
+    def _filter_archive_member(
+        self,
+        member: tarfile.TarInfo,
+    ) -> tarfile.TarInfo:
+        if member.isdir():
+            member.mode = prepare_site_candidate.REQUIRED_DIRECTORY_MODE
+        if (
+            self.server_directory_mode is not None
+            and member.name == "dist/server"
+        ):
+            member.mode = self.server_directory_mode
+        return member
+
+    @staticmethod
+    def _overlay_entries(
+        entries: dict[str, Path],
+        source_root: Path,
+        archive_root: str,
+    ) -> None:
+        entries[archive_root] = source_root
+        for source in sorted(source_root.rglob("*")):
+            relative = source.relative_to(source_root).as_posix()
+            entries[f"{archive_root}/{relative}"] = source
+
 
 class SiteCandidateTests(unittest.TestCase):
+    def test_packaging_uses_a_deterministic_directory_umask(self) -> None:
+        self.assertEqual(
+            prepare_site_candidate.PACKAGING_COMMAND_PREFIX,
+            (
+                "env",
+                "COPYFILE_DISABLE=1",
+                "sh",
+                "-c",
+                'umask 022; exec "$@"',
+                "repo-scout-site-package",
+            ),
+        )
+
     def test_prepares_a_provenance_bound_archive_and_receipt(self) -> None:
         with TemporaryDirectory() as tmp:
             root, archive, receipt, package_script = self._fixture(Path(tmp))
@@ -190,11 +227,11 @@ class SiteCandidateTests(unittest.TestCase):
             ).hexdigest()
             receipt_payload = json.loads(receipt.read_text(encoding="utf-8"))
             self.assertEqual(result.commit_sha, COMMIT_SHA)
-            self.assertEqual(receipt_payload["schema_version"], 3)
+            self.assertEqual(receipt_payload["schema_version"], 4)
             self.assertEqual(
                 receipt_payload["candidate"],
                 {
-                    "schema_version": 3,
+                    "schema_version": 4,
                     "commit_sha": COMMIT_SHA,
                     "source_ref": "refs/heads/main",
                     "node_version": "22.13.0",
@@ -232,7 +269,7 @@ class SiteCandidateTests(unittest.TestCase):
                     ("git", "rev-parse", "HEAD"),
                     ("git", "rev-parse", "origin/main"),
                     (
-                        *prepare_site_candidate.PACKAGING_ENV,
+                        *prepare_site_candidate.PACKAGING_COMMAND_PREFIX,
                         str(package_script),
                         str(root),
                         str(archive),
@@ -319,6 +356,28 @@ class SiteCandidateTests(unittest.TestCase):
 
             self.assertEqual(result.commit_sha, COMMIT_SHA)
 
+    def test_rejects_noncanonical_overlay_root_mode(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            meta = root / "drizzle" / "meta"
+            meta.mkdir(parents=True)
+            meta.parent.chmod(0o700)
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "tested Sites payload directory mode must be 0755",
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+
+            self.assertFalse(archive.exists())
+            self.assertFalse(receipt.exists())
+
     def test_verification_rejects_archive_bytes_changed_after_preparation(
         self,
     ) -> None:
@@ -391,7 +450,7 @@ class SiteCandidateTests(unittest.TestCase):
             )
             repack(
                 (
-                    *prepare_site_candidate.PACKAGING_ENV,
+                    *prepare_site_candidate.PACKAGING_COMMAND_PREFIX,
                     str(package_script),
                     str(root),
                     str(archive),
@@ -548,7 +607,7 @@ class SiteCandidateTests(unittest.TestCase):
                     run_command=FakeCommandRunner(root, archive),
                 )
 
-    def test_verification_rejects_receipts_before_test_bracketing(self) -> None:
+    def test_verification_rejects_receipts_before_tree_binding(self) -> None:
         with TemporaryDirectory() as tmp:
             root, archive, receipt, package_script = self._fixture(Path(tmp))
             runner = FakeCommandRunner(root, archive)
@@ -560,12 +619,12 @@ class SiteCandidateTests(unittest.TestCase):
                 run_command=runner,
             )
             payload = json.loads(receipt.read_text(encoding="utf-8"))
-            payload["schema_version"] = 2
+            payload["schema_version"] = 3
             receipt.write_text(json.dumps(payload), encoding="utf-8")
 
             with self.assertRaisesRegex(
                 prepare_site_candidate.SiteCandidateError,
-                "receipt schema_version must be 3",
+                "receipt schema_version must be 4",
             ):
                 prepare_site_candidate.verify_site_candidate(
                     root,
@@ -982,6 +1041,53 @@ class SiteCandidateTests(unittest.TestCase):
                 root,
                 archive,
                 extra_member_name="dist/injected.js",
+            )
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "archive payload does not match tested build",
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=runner,
+                )
+
+            self.assertFalse(receipt.exists())
+
+    def test_rejects_extra_empty_directory_added_during_packaging(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            runner = FakeCommandRunner(
+                root,
+                archive,
+                extra_member_name="dist/unexpected-empty",
+                extra_member_type=tarfile.DIRTYPE,
+            )
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "archive payload does not match tested build",
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=runner,
+                )
+
+            self.assertFalse(receipt.exists())
+
+    def test_rejects_changed_directory_mode_during_packaging(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            runner = FakeCommandRunner(
+                root,
+                archive,
+                server_directory_mode=0,
             )
 
             with self.assertRaisesRegex(

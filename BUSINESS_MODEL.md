@@ -370,10 +370,20 @@ captures the complete payload digest. `npm run test:site` then exercises that
 exact existing `dist/` without rebuilding, and a second digest must match before
 packaging can begin. The built executable output is therefore test-bracketed;
 hosting metadata, Drizzle configuration, and the candidate manifest remain
-integrity-bound and structurally checked. Receipts advance to schema 3 so older
-post-hoc schema-2 evidence fails closed. This strengthens paid distribution
-evidence without authorizing source export, version saving, deployment, or
-recording customer or revenue evidence.
+integrity-bound and structurally checked. Schema-3 receipts established this
+bracket so older post-hoc schema-2 evidence fails closed. This strengthens paid
+distribution evidence without authorizing source export, version saving,
+deployment, or recording customer or revenue evidence.
+Schema-4 receipts extend that test-bracketed identity from regular files to the
+complete payload tree. Every regular directory and file contributes its
+canonical archive path, entry type, and permission mode; files also contribute
+their size and bytes. Tested directories must use deterministic mode `0755`,
+and packaging runs under an explicit `022` umask so helper-created staging
+directories reproduce that contract across environments. Preparation and
+independent verification reject noncanonical source modes, unexpected empty
+directories, and changed archive permissions. This prevents extraction behavior
+from drifting at the paid-distribution boundary without authorizing source
+export, version saving, deployment, or recording customer or revenue evidence.
 Candidate preparation now also repeats the complete clean
 `HEAD == origin/main` check after validation and packaging, requiring both
 observations to retain the original synchronized commit. Read-only verification

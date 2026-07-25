@@ -3167,3 +3167,28 @@ hosting metadata, Drizzle configuration, and the embedded manifest are
 integrity-bound and structurally checked. No source was exported, no Sites
 version was saved or deployed, and no visit, pilot request, payment, or revenue
 evidence was created.
+
+## 2026-07-25: Bind Sites Receipts To The Complete Payload Tree
+
+The schema-3 payload digest covered every regular file's canonical path,
+permission mode, size, and bytes but skipped tar directory entries. A packaging
+helper could therefore add an unexpected empty directory or change an expected
+directory's permissions and still receive a valid receipt. Directory
+permissions affect whether extracted server and asset paths can be traversed,
+so equal file bytes alone did not prove equal deployable behavior.
+
+Schema-4 receipts digest every regular directory and file. Each entry
+contributes its canonical archive path, file-or-directory type, and permission
+mode; regular files additionally contribute size and bytes, while directory
+size is normalized to zero across the filesystem and tar representations. The
+bundled helper creates staging directories under the process umask instead of
+preserving every source directory mode. Preparation therefore requires every
+tested payload directory to use deterministic mode `0755`, and invokes
+packaging under an explicit `022` umask. Noncanonical source modes fail before
+packaging, archive mode drift fails before a receipt, and independent
+verification reproduces the same complete-tree digest.
+
+This keeps the artifact awaiting paid-distribution approval identical at the
+filesystem boundary, including an intentionally empty Drizzle metadata
+directory. No source was exported, no Sites version was saved or deployed, and
+no visit, pilot request, payment, or revenue evidence was created.

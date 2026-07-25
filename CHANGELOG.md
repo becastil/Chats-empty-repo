@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Advanced Sites receipts to schema 4 and bound every regular directory's path,
+  type, and deterministic `0755` mode alongside file bytes, rejecting injected
+  empty directories, noncanonical source modes, and archive permission drift
+  under an explicit packaging umask.
 - Added schema-3 Sites receipts that build once, bind the complete candidate
   payload, test that exact existing output without rebuilding, and refuse
   packaging when any ignored build byte changes during the tests.

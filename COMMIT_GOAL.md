@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after test-bracketing the Sites payload: 235 / 1,000 (23.5%).
-- Remaining after test-bracketing the Sites payload: 765 commits.
+- Progress after binding the complete Sites payload tree: 236 / 1,000 (23.6%).
+- Remaining after binding the complete Sites payload tree: 764 commits.
 
 ## Commit Standard
 

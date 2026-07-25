@@ -142,13 +142,17 @@ site release:
    other special files are rejected; only canonical regular files and
    directories can cross the candidate boundary. After the build and before
    the test-only command, the preflight adds the candidate manifest and digests
-   every payload's path, mode, and bytes. It recomputes that digest after the
-   tests and rejects any candidate payload changed during site tests. The
-   packaged payload must also match. This test-brackets built server and client
-   output; hosting metadata, Drizzle configuration, and the embedded manifest
-   are integrity-bound and structurally checked. The schema-3 receipt records
-   the resulting archive digest and tested payload digest for later read-only
-   verification.
+   every regular directory and file's canonical path, entry type, and
+   permission mode plus each file's size and bytes. It recomputes that digest
+   after the tests and rejects any candidate payload changed during site tests.
+   Every tested payload directory must use mode `0755`; packaging runs under an
+   explicit `umask 022` so helper-created staging directories reproduce that
+   mode. The packaged payload must also match, so a noncanonical source mode,
+   unexpected empty directory, or changed archive permission fails closed. This
+   test-brackets built server and client output; hosting metadata, Drizzle
+   configuration, and the embedded manifest are integrity-bound and
+   structurally checked. The schema-4 receipt records the resulting archive
+   digest and tested payload digest for later read-only verification.
    Packaging sets `COPYFILE_DISABLE=1` so macOS cannot inject AppleDouble
    metadata outside the allowed archive root. The preflight also repeats the
    clean `HEAD == origin/main` check after validation and after packaging,
