@@ -380,6 +380,9 @@ class ReleaseManifestTests(unittest.TestCase):
             "receipt records the resulting archive digest",
             "outside `dist/`",
             "regular files and directories",
+            "path, mode, and bytes",
+            "tested build payload",
+            "`COPYFILE_DISABLE=1`",
             "Do not use `npm audit fix --force`",
         ):
             self.assertIn(requirement, normalized, requirement)

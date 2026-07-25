@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after constraining candidate archives: 232 / 1,000 (23.2%).
-- Remaining after constraining candidate archives: 768 commits.
+- Progress after binding tested candidate payloads: 233 / 1,000 (23.3%).
+- Remaining after binding tested candidate payloads: 767 commits.
 
 ## Commit Standard
 

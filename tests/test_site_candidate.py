@@ -41,6 +41,7 @@ class FakeCommandRunner:
         include_manifest: bool = True,
         extra_member_name: str | None = None,
         extra_member_type: bytes = tarfile.REGTYPE,
+        mutate_server_before_package: bool = False,
     ) -> None:
         self.root = root
         self.archive = archive
@@ -50,6 +51,7 @@ class FakeCommandRunner:
         self.include_manifest = include_manifest
         self.extra_member_name = extra_member_name
         self.extra_member_type = extra_member_type
+        self.mutate_server_before_package = mutate_server_before_package
         self.commands: list[tuple[str, ...]] = []
 
     def __call__(self, command: list[str] | tuple[str, ...], root: Path) -> str:
@@ -76,7 +78,17 @@ class FakeCommandRunner:
             return ""
         if normalized in prepare_site_candidate.VALIDATION_COMMANDS:
             return ""
-        if len(normalized) == 3 and normalized[1] == str(self.root):
+        if (
+            len(normalized) == 5
+            and normalized[:2] == prepare_site_candidate.PACKAGING_ENV
+            and normalized[3] == str(self.root)
+        ):
+            if self.mutate_server_before_package:
+                server = self.root / "dist" / "server" / "index.js"
+                server.write_text(
+                    "export default { tampered: true };\n",
+                    encoding="utf-8",
+                )
             self._package()
             return str(self.archive)
         raise AssertionError(f"unexpected command: {normalized}")
@@ -112,6 +124,15 @@ class FakeCommandRunner:
                 ):
                     continue
                 bundle.add(source, arcname=archive_name)
+            drizzle = self.root / "drizzle"
+            if drizzle.is_dir():
+                for source in sorted(drizzle.rglob("*")):
+                    if source.is_file():
+                        relative = source.relative_to(drizzle).as_posix()
+                        bundle.add(
+                            source,
+                            arcname=f"dist/.openai/drizzle/{relative}",
+                        )
             if self.extra_member_name is not None:
                 member = tarfile.TarInfo(self.extra_member_name)
                 member.type = self.extra_member_type
@@ -141,10 +162,11 @@ class SiteCandidateTests(unittest.TestCase):
             ).hexdigest()
             receipt_payload = json.loads(receipt.read_text(encoding="utf-8"))
             self.assertEqual(result.commit_sha, COMMIT_SHA)
+            self.assertEqual(receipt_payload["schema_version"], 2)
             self.assertEqual(
                 receipt_payload["candidate"],
                 {
-                    "schema_version": 1,
+                    "schema_version": 2,
                     "commit_sha": COMMIT_SHA,
                     "source_ref": "refs/heads/main",
                     "node_version": "22.13.0",
@@ -155,6 +177,10 @@ class SiteCandidateTests(unittest.TestCase):
             self.assertEqual(
                 receipt_payload["archive"]["sha256"],
                 hashlib.sha256(archive.read_bytes()).hexdigest(),
+            )
+            self.assertRegex(
+                receipt_payload["archive"]["payload_sha256"],
+                r"^[0-9a-f]{64}$",
             )
             self.assertEqual(
                 runner.commands,
@@ -176,6 +202,7 @@ class SiteCandidateTests(unittest.TestCase):
                         "--untracked-files=all",
                     ),
                     (
+                        *prepare_site_candidate.PACKAGING_ENV,
                         str(package_script),
                         str(root),
                         str(archive),
@@ -226,6 +253,32 @@ class SiteCandidateTests(unittest.TestCase):
                 ],
             )
 
+    def test_payload_binding_includes_the_drizzle_overlay(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            migration = root / "drizzle" / "0001_policy.sql"
+            migration.parent.mkdir()
+            migration.write_text(
+                "CREATE TABLE policies (id INTEGER PRIMARY KEY);\n",
+                encoding="utf-8",
+            )
+
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+            result = prepare_site_candidate.verify_site_candidate(
+                root,
+                archive,
+                receipt,
+                run_command=FakeCommandRunner(root, archive),
+            )
+
+            self.assertEqual(result.commit_sha, COMMIT_SHA)
+
     def test_verification_rejects_archive_bytes_changed_after_preparation(
         self,
     ) -> None:
@@ -245,6 +298,101 @@ class SiteCandidateTests(unittest.TestCase):
             with self.assertRaisesRegex(
                 prepare_site_candidate.SiteCandidateError,
                 "archive digest does not match receipt",
+            ):
+                prepare_site_candidate.verify_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+
+    def test_verification_rejects_payload_digest_drift(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            runner = FakeCommandRunner(root, archive)
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=runner,
+            )
+            payload = json.loads(receipt.read_text(encoding="utf-8"))
+            payload["archive"]["payload_sha256"] = "b" * 64
+            receipt.write_text(json.dumps(payload), encoding="utf-8")
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "archive payload does not match tested build",
+            ):
+                prepare_site_candidate.verify_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+
+    def test_verification_rejects_changed_payload_with_updated_archive_digest(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+            repack = FakeCommandRunner(
+                root,
+                archive,
+                mutate_server_before_package=True,
+            )
+            repack(
+                (
+                    *prepare_site_candidate.PACKAGING_ENV,
+                    str(package_script),
+                    str(root),
+                    str(archive),
+                ),
+                root,
+            )
+            payload = json.loads(receipt.read_text(encoding="utf-8"))
+            payload["archive"]["sha256"] = hashlib.sha256(
+                archive.read_bytes()
+            ).hexdigest()
+            receipt.write_text(json.dumps(payload), encoding="utf-8")
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "archive payload does not match tested build",
+            ):
+                prepare_site_candidate.verify_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+
+    def test_verification_rejects_malformed_payload_digest(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+            payload = json.loads(receipt.read_text(encoding="utf-8"))
+            payload["archive"]["payload_sha256"] = "not-a-digest"
+            receipt.write_text(json.dumps(payload), encoding="utf-8")
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "receipt archive payload_sha256 must be a lowercase "
+                "SHA-256 digest",
             ):
                 prepare_site_candidate.verify_site_candidate(
                     root,
@@ -352,6 +500,32 @@ class SiteCandidateTests(unittest.TestCase):
             with self.assertRaisesRegex(
                 prepare_site_candidate.SiteCandidateError,
                 "receipt must contain exactly",
+            ):
+                prepare_site_candidate.verify_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+
+    def test_verification_rejects_receipts_before_payload_binding(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            runner = FakeCommandRunner(root, archive)
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=runner,
+            )
+            payload = json.loads(receipt.read_text(encoding="utf-8"))
+            payload["schema_version"] = 1
+            receipt.write_text(json.dumps(payload), encoding="utf-8")
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "receipt schema_version must be 2",
             ):
                 prepare_site_candidate.verify_site_candidate(
                     root,
@@ -582,6 +756,52 @@ class SiteCandidateTests(unittest.TestCase):
                 prepare_site_candidate.SiteCandidateError,
                 "archive member must be a regular file or directory: "
                 r"dist/runtime\.pipe",
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=runner,
+                )
+
+            self.assertFalse(receipt.exists())
+
+    def test_rejects_a_packaging_helper_that_changes_tested_bytes(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            runner = FakeCommandRunner(
+                root,
+                archive,
+                mutate_server_before_package=True,
+            )
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "archive payload does not match tested build",
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=runner,
+                )
+
+            self.assertFalse(receipt.exists())
+
+    def test_rejects_extra_deployable_bytes_added_during_packaging(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            runner = FakeCommandRunner(
+                root,
+                archive,
+                extra_member_name="dist/injected.js",
+            )
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "archive payload does not match tested build",
             ):
                 prepare_site_candidate.prepare_site_candidate(
                     root,

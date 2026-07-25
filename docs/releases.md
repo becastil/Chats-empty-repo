@@ -138,10 +138,14 @@ site release:
    lock digest, Sites project, or Node version differs from the tested source.
    Archive members outside `dist/`, path aliases, links, devices, pipes, and
    other special files are rejected; only canonical regular files and
-   directories can cross the candidate boundary. Its receipt records the
-   resulting archive digest. Do not use `npm audit fix --force` when it
-   proposes a framework downgrade; review and test a supported patch or
-   explicit transitive override instead.
+   directories can cross the candidate boundary. Before packaging, the
+   preflight digests every tested build payload path, mode, and bytes. The
+   packaged payload must match. The receipt records the resulting archive
+   digest and the pre-package payload digest for later read-only verification.
+   Packaging sets `COPYFILE_DISABLE=1` so macOS cannot inject AppleDouble
+   metadata outside the allowed archive root.
+   Do not use `npm audit fix --force` when it proposes a framework downgrade;
+   review and test a supported patch or explicit transitive override instead.
 2. Verify the archive and receipt immediately before asking for source-export
    approval:
 

@@ -356,6 +356,14 @@ or pipes across the source-export boundary and still receive a candidate
 receipt. This strengthens the local-code promise for security-conscious buyers;
 it does not approve an export, save or deploy a version, or establish demand,
 payment, or revenue.
+Schema-2 candidate receipts now bind every tested deployable file's canonical
+path, permission mode, and bytes before the external packaging helper runs.
+Preparation rejects changed or injected output, while later `--verify-only`
+checks reproduce the same payload digest without rebuilding. macOS packaging
+suppresses AppleDouble metadata so portability does not weaken archive scope.
+This closes the gap between a passing build and the artifact awaiting approval;
+it does not authorize export, save or deploy a version, or create customer or
+revenue evidence.
 A separate read-only hosted dependency contract runs for relevant lock and
 workflow changes, on manual dispatch, and weekly so a newly published advisory
 does not wait for another package edit. It uses the minimum supported Node

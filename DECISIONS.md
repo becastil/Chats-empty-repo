@@ -3100,3 +3100,28 @@ This keeps the artifact handed toward paid-site distribution limited to
 deployable output and makes the local-code promise fail closed. It does not
 approve source export, save a Sites version, authorize production deployment,
 or create a visit, pilot request, payment, or revenue event.
+
+## 2026-07-24: Bind Sites Receipts To The Tested Build Payload
+
+Candidate preparation tested `dist/` and then invoked a trusted external
+packaging helper. Git cleanliness could not detect changes to that ignored
+directory, while the archive manifest proved source identity but did not bind
+the server and client bytes. A changed file or an extra deployable file added
+between testing and packaging could therefore receive a valid receipt.
+
+Before the helper runs, preparation now computes one digest over every regular
+payload file's canonical archive path, permission mode, size, and bytes,
+including the candidate manifest and final Sites metadata overlays. The helper
+output must reproduce that digest exactly. Schema-2 receipts store the payload
+digest beside the complete archive digest, and `--verify-only` independently
+recomputes both without Node, npm, a build, or packaging. Schema-1 candidate
+receipts fail closed because they predate payload binding.
+
+An actual macOS run of the bundled Sites helper exposed an AppleDouble
+`._dist` entry created by `tar`. Packaging now sets `COPYFILE_DISABLE=1`; the
+real helper then passes without relaxing the archive root. This preserves the
+same strict artifact on macOS and hosted Linux.
+
+The receipt now proves that the artifact awaiting approval is the tested build,
+not only a source label. No source was exported, no Sites version was saved or
+deployed, and no visit, pilot request, payment, or revenue evidence was created.

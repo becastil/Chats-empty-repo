@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Bound every Sites candidate payload file's canonical path, permission mode,
+  and bytes before the external packaging helper runs, requiring schema-2
+  receipts and later read-only verification to reproduce the tested digest.
+- Disabled macOS AppleDouble archive metadata during packaging so strict
+  deployable-output scope remains portable instead of admitting sidecar files.
 - Restricted Sites candidates to canonical regular files and directories under
   `dist/`, rejecting unrelated source paths, aliases, links, and special files
   before either preparation or independent verification can accept an archive.

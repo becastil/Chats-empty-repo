@@ -8,16 +8,17 @@ import json
 import os
 from pathlib import Path, PurePosixPath
 import re
+import stat
 import subprocess
 import sys
 import tarfile
 from tempfile import NamedTemporaryFile
-from typing import Callable, Sequence
+from typing import Callable, Iterable, Protocol, Sequence
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SOURCE_REF = "refs/heads/main"
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 VALIDATION_COMMANDS = (
     ("npm", "ci"),
     ("npm", "run", "audit:dependencies"),
@@ -30,6 +31,7 @@ REQUIRED_ARCHIVE_MEMBERS = (
     "dist/.openai/site-candidate.json",
 )
 ARCHIVE_ROOT = "dist"
+PACKAGING_ENV = ("env", "COPYFILE_DISABLE=1")
 SHA_PATTERN = re.compile(r"[0-9a-f]{40}\Z")
 DIGEST_PATTERN = re.compile(r"[0-9a-f]{64}\Z")
 NODE_VERSION_PATTERN = re.compile(
@@ -48,11 +50,15 @@ CANDIDATE_KEYS = frozenset(
         "project_id",
     )
 )
-ARCHIVE_KEYS = frozenset(("name", "sha256"))
+ARCHIVE_KEYS = frozenset(("name", "payload_sha256", "sha256"))
 
 
 class SiteCandidateError(RuntimeError):
     """Raised when a Sites candidate cannot be tied to validated source."""
+
+
+class HashDigest(Protocol):
+    def update(self, data: bytes, /) -> None: ...
 
 
 CommandRunner = Callable[[Sequence[str], Path], str]
@@ -134,12 +140,25 @@ def prepare_site_candidate(
         project_root / "dist" / ".openai" / "site-candidate.json"
     )
     _atomic_write_json(manifest_path, manifest)
+    payload_sha256 = _candidate_payload_sha256(project_root)
 
     archive_path.parent.mkdir(parents=True, exist_ok=True)
-    runner((str(package_path), str(project_root), str(archive_path)), project_root)
+    runner(
+        (
+            *PACKAGING_ENV,
+            str(package_path),
+            str(project_root),
+            str(archive_path),
+        ),
+        project_root,
+    )
     _require_clean_worktree(project_root, runner)
     _require_regular_file(archive_path, "Sites candidate archive")
-    _verify_archive(archive_path, manifest)
+    _verify_archive(
+        archive_path,
+        manifest,
+        payload_sha256,
+    )
 
     archive_sha256 = _sha256(archive_path)
     receipt_payload = {
@@ -147,6 +166,7 @@ def prepare_site_candidate(
         "candidate": manifest,
         "archive": {
             "name": archive_path.name,
+            "payload_sha256": payload_sha256,
             "sha256": archive_sha256,
         },
     }
@@ -222,6 +242,14 @@ def verify_site_candidate(
         raise SiteCandidateError(
             "archive filename does not match receipt"
         )
+    recorded_payload_digest = archive_evidence["payload_sha256"]
+    if (
+        not isinstance(recorded_payload_digest, str)
+        or DIGEST_PATTERN.fullmatch(recorded_payload_digest) is None
+    ):
+        raise SiteCandidateError(
+            "receipt archive payload_sha256 must be a lowercase SHA-256 digest"
+        )
     recorded_digest = archive_evidence["sha256"]
     if (
         not isinstance(recorded_digest, str)
@@ -234,7 +262,11 @@ def verify_site_candidate(
     if archive_sha256 != recorded_digest:
         raise SiteCandidateError("archive digest does not match receipt")
 
-    _verify_archive(archive_path, candidate)
+    _verify_archive(
+        archive_path,
+        candidate,
+        recorded_payload_digest,
+    )
     return SiteCandidateResult(
         commit_sha=commit_sha,
         archive_sha256=archive_sha256,
@@ -392,6 +424,93 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _candidate_payload_sha256(project_root: Path) -> str:
+    files: dict[str, Path] = {}
+    _overlay_payload_files(
+        files,
+        project_root / ARCHIVE_ROOT,
+        PurePosixPath(ARCHIVE_ROOT),
+        "built Sites output",
+    )
+    files["dist/.openai/hosting.json"] = (
+        project_root / ".openai" / "hosting.json"
+    )
+
+    drizzle = project_root / "drizzle"
+    if drizzle.is_symlink():
+        raise SiteCandidateError(
+            f"Sites drizzle payload must be a regular directory: {drizzle}"
+        )
+    if drizzle.exists():
+        if not drizzle.is_dir():
+            raise SiteCandidateError(
+                f"Sites drizzle payload must be a regular directory: {drizzle}"
+            )
+        _overlay_payload_files(
+            files,
+            drizzle,
+            PurePosixPath("dist/.openai/drizzle"),
+            "Sites drizzle payload",
+        )
+
+    digest = hashlib.sha256()
+    for name, path in sorted(files.items()):
+        try:
+            details = path.stat()
+            size = details.st_size
+            mode = stat.S_IMODE(details.st_mode)
+            with path.open("rb") as source:
+                _update_payload_digest(
+                    digest,
+                    name,
+                    mode,
+                    size,
+                    iter(lambda: source.read(1024 * 1024), b""),
+                )
+        except OSError as exc:
+            raise SiteCandidateError(
+                f"could not hash tested build payload {path}: {exc}"
+            ) from exc
+    return digest.hexdigest()
+
+
+def _overlay_payload_files(
+    files: dict[str, Path],
+    source_root: Path,
+    archive_root: PurePosixPath,
+    label: str,
+) -> None:
+    if source_root.is_symlink() or not source_root.is_dir():
+        raise SiteCandidateError(
+            f"{label} must be a regular directory: {source_root}"
+        )
+    for path in sorted(source_root.rglob("*")):
+        relative = path.relative_to(source_root)
+        if path.is_symlink() or not (path.is_file() or path.is_dir()):
+            raise SiteCandidateError(
+                f"{label} must contain only regular files and directories: "
+                f"{path}"
+            )
+        if path.is_file():
+            files[(archive_root / relative.as_posix()).as_posix()] = path
+
+
+def _update_payload_digest(
+    digest: HashDigest,
+    name: str,
+    mode: int,
+    size: int,
+    chunks: Iterable[bytes],
+) -> None:
+    encoded_name = name.encode("utf-8")
+    digest.update(len(encoded_name).to_bytes(8, "big"))
+    digest.update(encoded_name)
+    digest.update(mode.to_bytes(4, "big"))
+    digest.update(size.to_bytes(8, "big"))
+    for chunk in chunks:
+        digest.update(chunk)
+
+
 def _atomic_write_json(path: Path, payload: dict[str, object]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     serialized = json.dumps(
@@ -424,6 +543,7 @@ def _atomic_write_json(path: Path, payload: dict[str, object]) -> None:
 def _verify_archive(
     archive: Path,
     expected_manifest: dict[str, object],
+    expected_payload_sha256: str,
 ) -> None:
     try:
         with tarfile.open(archive, "r:gz") as bundle:
@@ -485,12 +605,40 @@ def _verify_archive(
                 raise SiteCandidateError(
                     "archive Sites project does not match validated source"
                 )
+            payload_sha256 = _archived_payload_sha256(bundle, members)
+            if payload_sha256 != expected_payload_sha256:
+                raise SiteCandidateError(
+                    "archive payload does not match tested build"
+                )
     except SiteCandidateError:
         raise
     except (OSError, tarfile.TarError) as exc:
         raise SiteCandidateError(
             f"could not validate Sites candidate archive: {exc}"
         ) from exc
+
+
+def _archived_payload_sha256(
+    bundle: tarfile.TarFile,
+    members: dict[str, tarfile.TarInfo],
+) -> str:
+    digest = hashlib.sha256()
+    for name, member in sorted(members.items()):
+        if not member.isfile():
+            continue
+        source = bundle.extractfile(member)
+        if source is None:
+            raise SiteCandidateError(
+                f"could not read archived payload file {name}"
+            )
+        _update_payload_digest(
+            digest,
+            name,
+            member.mode,
+            member.size,
+            iter(lambda: source.read(1024 * 1024), b""),
+        )
+    return digest.hexdigest()
 
 
 def _read_archived_json(
