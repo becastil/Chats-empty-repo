@@ -21,10 +21,11 @@
   no-clobber semantics while requiring existing output parents and creating
   each leaf relative to a parent descriptor held from preflight through the
   complete candidate operation, reusing that descriptor when both outputs
-  share a parent. Bind evidence staging, staged-file and post-publication reads,
-  and cleanup to descriptors across the remaining check-to-open windows before
-  asking for explicit source-export approval that records the printed
-  `receipt_sha256`.
+  share a parent. Hold each exact newly published regular file through final
+  source, digest, requested-parent, and requested-leaf identity checks. Bind
+  evidence staging, staged-file reads, and cleanup to descriptors across the
+  remaining check-to-open windows before asking for explicit source-export
+  approval that records the printed `receipt_sha256`.
   After approval, push its receipt-bound source to the separate Sites source
   repository, verify the unchanged archive and receipt again while requiring
   the approved digest and canonical Sites repository identity, and resolve

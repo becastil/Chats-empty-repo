@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 251 of
-1,000, with 749 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 252 of
+1,000, with 748 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -158,6 +158,11 @@ alignment take priority over commit volume.
   live through validation, reuses one descriptor for shared parents, and
   creates each no-clobber leaf relative to that held identity so a later path
   replacement cannot redirect publication.
+- Published-file-anchored Sites evidence checks that open each new archive and
+  receipt relative to its held parent, require it to share the staged source's
+  filesystem identity, retain non-inheritable file descriptors through the
+  final source and digest checks, and reconcile the requested parent and leaf
+  identities before reporting success.
 - Receipt-stable Sites verification that parses one exact byte buffer and
   requires the same regular receipt and digest after archive and source
   validation. Mutation or replacement with a link during verification
@@ -612,14 +617,13 @@ remains unchanged. Both requested paths must be direct regular-file leaves,
 not symlinks. Stable alternate case or Unicode spellings, whole-repository
 aliases, and aliases that expose only a repository subdirectory now fail by
 filesystem identity. Before treating a new pair as approval-ready, bind
-evidence staging, staged-file and post-publication reads, and cleanup to parent
-and file descriptors so concurrent parent or leaf replacement cannot cross the
-remaining check-to-open windows. Final archive and receipt publication now
-holds each unique validated output-parent descriptor from preflight through
-the no-clobber link, including across Git, Node, npm, and test commands. Then
-obtain
-independent `--verify-only` evidence for its
-schema-4 complete-tree, duplicate-free,
+evidence staging, staged-file reads, and cleanup to parent and file descriptors
+so concurrent parent or leaf replacement cannot cross the remaining
+check-to-open windows. Final archive and receipt publication now holds each
+unique validated output-parent descriptor from preflight through the
+no-clobber link, then holds each exact published regular file through the final
+source and digest checks. Then obtain independent `--verify-only` evidence for
+its schema-4 complete-tree, duplicate-free,
 branch-bound, archive-stable, receipt-stable, test-bracketed evidence before
 recording the printed `receipt_sha256`, canonical remote Sites repository
 identity, `refs/heads/main`, and receipt commit in an explicit owner approval

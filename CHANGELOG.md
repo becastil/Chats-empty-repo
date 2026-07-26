@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Held the exact newly published Sites archive and receipt descriptors through
+  final source and digest checks, rejecting link-to-open substitution,
+  byte-identical leaf replacement, and replaced requested parents before
+  success.
 - Held each unique validated Sites output-parent descriptor from preflight
   through archive and receipt publication, reusing shared parents and closing
   every descriptor on success, command failure, or partial acquisition.

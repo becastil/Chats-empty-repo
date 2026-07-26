@@ -498,11 +498,18 @@ non-inheritable and live through validation and publication. Archive and
 receipt paths sharing one parent reuse one descriptor, preventing two opens
 from binding one candidate pair to different directory instances. Each leaf is
 created relative to its held parent, so later path replacement cannot redirect
-publication. Staging, staged-file reads, post-publication reads, and cleanup
-remain path-based, and the replacement candidate remains blocked on those
-descriptor-bound operations. This strengthens paid-distribution integrity
-without exporting source, saving or deploying a version, or creating customer
-or revenue evidence.
+publication. Publication now opens the staged source without following links,
+opens the new leaf relative to the held parent, and requires both descriptors
+to identify the same regular file. It keeps the exact archive and receipt
+descriptors non-inheritable and live through the final source and digest
+checks. Before success, it reopens each requested parent, requires that parent
+to match the held descriptor, and compares the leaf relative to it with the
+published file descriptor. Link-to-open substitution, byte-identical leaf
+replacement, and a replaced parent re-linking the same file therefore fail
+closed. Staging, staged-file validation, and cleanup remain path-based, and the
+replacement candidate remains blocked on those descriptor-bound operations.
+This strengthens paid-distribution integrity without exporting source, saving
+or deploying a version, or creating customer or revenue evidence.
 A separate read-only hosted dependency contract runs for relevant lock and
 workflow changes, on manual dispatch, and weekly so a newly published advisory
 does not wait for another package edit. It uses the minimum supported Node

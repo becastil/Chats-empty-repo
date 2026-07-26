@@ -418,8 +418,12 @@ class ReleaseManifestTests(unittest.TestCase):
             "outputs in one parent reuse the same descriptor",
             "Each final no-clobber link names its leaf relative to that held "
             "descriptor",
-            "Staging, staged-file reads, post-publication reads, and cleanup "
-            "remain path-based",
+            "requires both descriptors to identify the same regular file",
+            "exact archive and receipt descriptors remain open and "
+            "non-inheritable",
+            "requires it to match the held parent",
+            "Link-to-open substitution, byte-identical leaf replacement",
+            "Staging, staged-file reads, and cleanup remain path-based",
             "those operations are descriptor-bound",
             "supplied archive and receipt paths must themselves name regular "
             "files rather than symlinks",

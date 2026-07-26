@@ -182,11 +182,17 @@ site release:
    publication. Archive and receipt outputs in one parent reuse the same
    descriptor. Each final no-clobber link names its leaf relative to that held
    descriptor, so replacing or renaming the parent path after preflight cannot
-   redirect publication into a different directory. Existing path-based final
-   checks still reject the overall candidate if its requested path no longer
-   names the published evidence. Staging, staged-file reads, post-publication
-   reads, and cleanup remain path-based. Do not treat a candidate as
-   approval-ready until those operations are descriptor-bound.
+   redirect publication into a different directory. Publication opens the
+   staged source without following links, opens the new leaf relative to the
+   held parent, and requires both descriptors to identify the same regular
+   file. The exact archive and receipt descriptors remain open and
+   non-inheritable through the final synchronized-source and digest checks.
+   Before success, preparation reopens each requested parent, requires it to
+   match the held parent, and compares the leaf relative to it with the
+   published file descriptor. Link-to-open substitution, byte-identical leaf
+   replacement, and a replacement parent that re-links the same file therefore
+   fail. Staging, staged-file reads, and cleanup remain path-based. Do not treat
+   a candidate as approval-ready until those operations are descriptor-bound.
    Persistent drift during receipt publication therefore leaves no
    approval-ready result. The success output includes `receipt_sha256`; retain
    that digest with the candidate evidence.

@@ -76,6 +76,7 @@ CANDIDATE_KEYS = frozenset(
     )
 )
 ARCHIVE_KEYS = frozenset(("name", "payload_sha256", "sha256"))
+_OPEN_SUPPORTS_DIR_FD = os.open in getattr(os, "supports_dir_fd", ())
 
 
 class SiteCandidateError(RuntimeError):
@@ -106,6 +107,11 @@ class SiteCandidateResult:
 
 @dataclass(frozen=True)
 class _OutputParent:
+    fd: int
+
+
+@dataclass(frozen=True)
+class _PublishedOutput:
     fd: int
 
 
@@ -227,83 +233,106 @@ def _prepare_site_candidate_with_open_parents(
             "candidate payload changed during site tests"
         )
 
-    with TemporaryDirectory(
-        dir=archive_path.parent,
-        prefix=f".{archive_path.name}.",
-    ) as staging_directory:
-        staged_archive = Path(staging_directory) / archive_path.name
-        runner(
-            (
-                *PACKAGING_COMMAND_PREFIX,
-                str(package_path),
-                str(project_root),
-                str(staged_archive),
-            ),
-            project_root,
-        )
-        _require_regular_file(staged_archive, "Sites candidate archive")
-        archive_sha256 = _sha256(staged_archive)
-        _verify_archive(
-            staged_archive,
-            manifest,
-            payload_sha256,
-        )
+    with ExitStack() as published_outputs:
+        with TemporaryDirectory(
+            dir=archive_path.parent,
+            prefix=f".{archive_path.name}.",
+        ) as staging_directory:
+            staged_archive = Path(staging_directory) / archive_path.name
+            runner(
+                (
+                    *PACKAGING_COMMAND_PREFIX,
+                    str(package_path),
+                    str(project_root),
+                    str(staged_archive),
+                ),
+                project_root,
+            )
+            _require_regular_file(staged_archive, "Sites candidate archive")
+            archive_sha256 = _sha256(staged_archive)
+            _verify_archive(
+                staged_archive,
+                manifest,
+                payload_sha256,
+            )
 
+            _require_same_synchronized_commit(
+                project_root,
+                commit_sha,
+                runner,
+            )
+            _require_same_archive(
+                staged_archive,
+                archive_sha256,
+            )
+            published_archive = _publish_new_output(
+                staged_archive,
+                archive_path,
+                "archive",
+                output_parents["archive"].fd,
+            )
+            published_outputs.callback(
+                _close_descriptor,
+                published_archive.fd,
+            )
+            _require_same_open_regular_file(
+                published_archive.fd,
+                archive_sha256,
+                "Sites candidate archive",
+            )
+        receipt_payload = {
+            "schema_version": SCHEMA_VERSION,
+            "candidate": manifest,
+            "archive": {
+                "name": archive_path.name,
+                "payload_sha256": payload_sha256,
+                "sha256": archive_sha256,
+            },
+        }
+        receipt_sha256, published_receipt = _atomic_create_json(
+            receipt_path,
+            receipt_payload,
+            "receipt",
+            output_parents["receipt"].fd,
+        )
+        published_outputs.callback(
+            _close_descriptor,
+            published_receipt.fd,
+        )
         _require_same_synchronized_commit(
             project_root,
             commit_sha,
             runner,
         )
-        _require_same_archive(
-            staged_archive,
+        _require_same_open_regular_file(
+            published_archive.fd,
             archive_sha256,
+            "Sites candidate archive",
         )
-        _publish_new_output(
-            staged_archive,
+        _require_same_open_regular_file(
+            published_receipt.fd,
+            receipt_sha256,
+            "Sites candidate receipt",
+        )
+        _require_path_matches_open_file(
             archive_path,
-            "archive",
+            published_archive.fd,
             output_parents["archive"].fd,
+            "Sites candidate archive",
         )
-        _require_same_archive(
-            archive_path,
-            archive_sha256,
+        _require_path_matches_open_file(
+            receipt_path,
+            published_receipt.fd,
+            output_parents["receipt"].fd,
+            "Sites candidate receipt",
         )
-    receipt_payload = {
-        "schema_version": SCHEMA_VERSION,
-        "candidate": manifest,
-        "archive": {
-            "name": archive_path.name,
-            "payload_sha256": payload_sha256,
-            "sha256": archive_sha256,
-        },
-    }
-    receipt_sha256 = _atomic_create_json(
-        receipt_path,
-        receipt_payload,
-        "receipt",
-        output_parents["receipt"].fd,
-    )
-    _require_same_synchronized_commit(
-        project_root,
-        commit_sha,
-        runner,
-    )
-    _require_same_archive(
-        archive_path,
-        archive_sha256,
-    )
-    _require_same_regular_file(
-        receipt_path,
-        receipt_sha256,
-        "Sites candidate receipt",
-    )
-    return SiteCandidateResult(
-        commit_sha=commit_sha,
-        archive_sha256=archive_sha256,
-        receipt_sha256=receipt_sha256,
-        archive=archive_path,
-        receipt=receipt_path,
-    )
+        return SiteCandidateResult(
+            commit_sha=commit_sha,
+            archive_sha256=archive_sha256,
+            receipt_sha256=receipt_sha256,
+            archive=archive_path,
+            receipt=receipt_path,
+        )
 
 
 def verify_site_candidate(
@@ -961,6 +990,7 @@ def _require_descriptor_relative_publication() -> None:
         os.name != "posix"
         or not hasattr(os, "O_DIRECTORY")
         or not hasattr(os, "O_NOFOLLOW")
+        or not _OPEN_SUPPORTS_DIR_FD
         or os.stat not in getattr(os, "supports_dir_fd", ())
         or os.stat not in getattr(os, "supports_follow_symlinks", ())
         or os.link not in getattr(os, "supports_dir_fd", ())
@@ -1117,6 +1147,77 @@ def _require_same_regular_file(
         )
 
 
+def _require_same_open_regular_file(
+    descriptor: int,
+    expected_sha256: str,
+    label: str,
+) -> None:
+    try:
+        details = os.fstat(descriptor)
+        if not stat.S_ISREG(details.st_mode):
+            raise OSError(f"{label} is no longer a regular file")
+
+        digest = hashlib.sha256()
+        os.lseek(descriptor, 0, os.SEEK_SET)
+        for chunk in iter(
+            lambda: os.read(descriptor, 1024 * 1024),
+            b"",
+        ):
+            digest.update(chunk)
+    except OSError as exc:
+        raise SiteCandidateError(
+            f"{label} changed during candidate operation"
+        ) from exc
+    if digest.hexdigest() != expected_sha256:
+        raise SiteCandidateError(
+            f"{label} changed during candidate operation"
+        )
+
+
+def _require_path_matches_open_file(
+    path: Path,
+    descriptor: int,
+    parent_descriptor: int,
+    label: str,
+) -> None:
+    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+    if hasattr(os, "O_CLOEXEC"):
+        flags |= os.O_CLOEXEC
+
+    path_parent_descriptor: int | None = None
+    try:
+        path_parent_descriptor = os.open(path.parent, flags)
+        path_parent_details = os.fstat(path_parent_descriptor)
+        open_parent_details = os.fstat(parent_descriptor)
+        path_details = os.stat(
+            path.name,
+            dir_fd=path_parent_descriptor,
+            follow_symlinks=False,
+        )
+        open_details = os.fstat(descriptor)
+    except OSError as exc:
+        raise SiteCandidateError(
+            f"{label} changed during candidate operation"
+        ) from exc
+    finally:
+        if path_parent_descriptor is not None:
+            _close_descriptor(path_parent_descriptor)
+    if (
+        not stat.S_ISDIR(path_parent_details.st_mode)
+        or not stat.S_ISDIR(open_parent_details.st_mode)
+        or not os.path.samestat(
+            path_parent_details,
+            open_parent_details,
+        )
+        or not stat.S_ISREG(path_details.st_mode)
+        or not stat.S_ISREG(open_details.st_mode)
+        or not os.path.samestat(path_details, open_details)
+    ):
+        raise SiteCandidateError(
+            f"{label} changed during candidate operation"
+        )
+
+
 def _candidate_payload_sha256(project_root: Path) -> str:
     entries: dict[str, Path] = {}
     _overlay_payload_entries(
@@ -1257,9 +1358,10 @@ def _atomic_create_json(
     payload: dict[str, object],
     label: str,
     parent_fd: int,
-) -> str:
+) -> tuple[str, _PublishedOutput]:
     serialized = _serialize_json(payload)
     temporary_path: Path | None = None
+    published_output: _PublishedOutput | None = None
     try:
         with NamedTemporaryFile(
             mode="w",
@@ -1281,7 +1383,7 @@ def _atomic_create_json(
         raise SiteCandidateError(f"could not stage {path}")
     try:
         receipt_sha256 = _sha256(temporary_path)
-        _publish_new_output(
+        published_output = _publish_new_output(
             temporary_path,
             path,
             label,
@@ -1291,14 +1393,17 @@ def _atomic_create_json(
         _remove_staged_file(temporary_path)
         raise
 
+    if published_output is None:
+        raise SiteCandidateError(f"could not publish {label} output {path}")
     try:
         temporary_path.unlink()
     except OSError as exc:
+        _close_descriptor(published_output.fd)
         raise SiteCandidateError(
             f"{label} output was published to {path}, but staging cleanup "
             f"failed for {temporary_path}: {exc}"
         ) from exc
-    return receipt_sha256
+    return receipt_sha256, published_output
 
 
 def _publish_new_output(
@@ -1306,14 +1411,44 @@ def _publish_new_output(
     output_path: Path,
     label: str,
     parent_fd: int,
-) -> None:
+) -> _PublishedOutput:
+    flags = os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK
+    if hasattr(os, "O_CLOEXEC"):
+        flags |= os.O_CLOEXEC
+
+    source_fd: int | None = None
+    output_fd: int | None = None
+    output_transferred = False
     try:
+        source_fd = os.open(staged_path, flags)
+        source_details = os.fstat(source_fd)
+        if not stat.S_ISREG(source_details.st_mode):
+            raise SiteCandidateError(
+                f"staged {label} output must be a regular file: "
+                f"{staged_path}"
+            )
         os.link(
             staged_path,
             output_path.name,
             dst_dir_fd=parent_fd,
             follow_symlinks=False,
         )
+        output_fd = os.open(
+            output_path.name,
+            flags,
+            dir_fd=parent_fd,
+        )
+        output_details = os.fstat(output_fd)
+        if (
+            not stat.S_ISREG(output_details.st_mode)
+            or not os.path.samestat(source_details, output_details)
+        ):
+            raise SiteCandidateError(
+                f"{label} output changed during publication: {output_path}"
+            )
+        published_output = _PublishedOutput(fd=output_fd)
+        output_transferred = True
+        return published_output
     except FileExistsError as exc:
         raise SiteCandidateError(
             f"{label} output appeared during candidate operation; "
@@ -1323,6 +1458,13 @@ def _publish_new_output(
         raise SiteCandidateError(
             f"could not publish {label} output {output_path}: {exc}"
         ) from exc
+    except SiteCandidateError:
+        raise
+    finally:
+        if source_fd is not None:
+            _close_descriptor(source_fd)
+        if output_fd is not None and not output_transferred:
+            _close_descriptor(output_fd)
 
 
 def _remove_staged_file(path: Path | None) -> None:

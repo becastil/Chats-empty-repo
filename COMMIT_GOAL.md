@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after holding Sites output-parent descriptors: 251 / 1,000 (25.1%).
-- Remaining after holding Sites output-parent descriptors: 749 commits.
+- Progress after holding published Sites evidence: 252 / 1,000 (25.2%).
+- Remaining after holding published Sites evidence: 748 commits.
 
 ## Commit Standard
 

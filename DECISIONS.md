@@ -3560,3 +3560,31 @@ displaced original directory while a later path-based check rejects the
 candidate. Those operations remain required before replacement evidence is
 approval-ready. This change performs no source export, version save,
 deployment, approval, customer contact, or revenue event.
+
+## 2026-07-25: Hold Published Sites Evidence Through Final Checks
+
+Holding each validated output parent through final no-clobber publication
+prevented destination redirection, but preparation still reopened the archive
+and receipt by path for its post-publication digest checks. The interval between
+the hard link and that reopen could bind validation to a replacement leaf, and
+a byte-identical replacement could satisfy a digest while changing the file
+identity. Checking only a leaf relative to the original parent would also miss
+a requested parent replaced with another directory that re-linked the same
+published inode.
+
+Publication now opens the staged source without following links or blocking on
+a special file, links it relative to the held destination parent, opens the new
+leaf relative to that parent, and requires both descriptors to identify the
+same regular file. Preparation registers the returned archive and receipt
+descriptors with context-managed ownership immediately, keeps them
+non-inheritable and live through the final synchronized-source and digest
+checks, and hashes those borrowed descriptors directly. Before success it
+reopens each requested parent without following a symlink, compares that
+directory with the held parent, and compares the leaf relative to it with the
+published file descriptor. Every descriptor closes after success, partial
+publication, or later validation failure.
+
+Staging-directory creation, staged archive validation, and staging cleanup
+still resolve paths and remain required before replacement evidence is
+approval-ready. This change performs no source export, version save,
+deployment, approval, customer contact, or revenue event.
