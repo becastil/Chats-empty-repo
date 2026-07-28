@@ -1782,8 +1782,14 @@ def format_outreach_contact(
 
 
 def _format_outreach_command(ledger: Path, *arguments: str) -> str:
-    return shlex.join(
-        ["repo-scout-outreach", *arguments, "--", str(ledger)]
+    command = ["repo-scout-outreach", *arguments, "--", str(ledger)]
+    return " ".join(
+        (
+            f"'{argument}'"
+            if argument == REVIEW_OUTPUT_PLACEHOLDER
+            else shlex.quote(argument)
+        )
+        for argument in command
     )
 
 

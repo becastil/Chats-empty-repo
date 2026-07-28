@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Kept generated content-bound decline continuations copy-ready by always
+  shell-quoting the `PRIVATE-REVIEW-PATH` marker, so literal replacement with
+  an owner-only destination containing spaces remains one argument.
+- Extended the source and installed-command outreach lifecycle checks to run a
+  literally replaced continuation with a spaced private review path.
 - Emitted Sites candidate status and pending source-export approval evidence as
   compact single-line JSON records, preventing opaque project IDs or output
   filenames from injecting misleading fields or extra terminal lines.

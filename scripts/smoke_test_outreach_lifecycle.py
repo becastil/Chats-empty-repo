@@ -474,6 +474,21 @@ def verify_outreach_lifecycle(
             == REVIEW_OUTPUT_PLACEHOLDER,
             "content-bound decline did not require an owner-only review output",
         )
+        continuation_lines = [
+            line
+            for line in continuation_decline.stdout.splitlines()
+            if line.startswith("repo-scout-outreach ")
+            and " --review-next " in line
+        ]
+        _require(
+            len(continuation_lines) == 1,
+            "content-bound decline did not emit one copy-ready continuation",
+        )
+        continuation_line = continuation_lines[0]
+        _require(
+            f"'{REVIEW_OUTPUT_PLACEHOLDER}'" in continuation_line,
+            "continued review output placeholder was not shell-quoted",
+        )
         date_only_arguments = _replace_event_date(
             continuation_arguments,
             event_date="2026-07-04",
@@ -493,15 +508,24 @@ def verify_outreach_lifecycle(
             "unchanged review output placeholder did not fail closed",
         )
         next_review_path = Path(tmp) / "next complete review.md"
-        next_review_arguments = tuple(
-            str(next_review_path)
-            if value == REVIEW_OUTPUT_PLACEHOLDER
-            else value
-            for value in date_only_arguments
+        replaced_continuation = continuation_line.replace(
+            DATE_PLACEHOLDER,
+            "2026-07-04",
+        ).replace(
+            REVIEW_OUTPUT_PLACEHOLDER,
+            str(next_review_path),
+        )
+        next_review_command = shlex.split(replaced_continuation)
+        _require(
+            next_review_command[
+                next_review_command.index("--write-review") + 1
+            ]
+            == str(next_review_path),
+            "literal review path replacement did not preserve one argument",
         )
         next_review_result = _run_arguments(
             outreach_command,
-            next_review_arguments,
+            tuple(next_review_command[1:]),
             environment=environment,
         )
         _require(

@@ -1877,6 +1877,10 @@ class OutreachReportTests(unittest.TestCase):
                 command[command.index("--write-review") + 1],
                 REVIEW_OUTPUT_PLACEHOLDER,
             )
+            self.assertIn(
+                f"'{REVIEW_OUTPUT_PLACEHOLDER}'",
+                command_line,
+            )
             self.assertEqual(command[-2:], ["--", str(ledger)])
             before_review = ledger.read_bytes()
             with redirect_stderr(io.StringIO()), self.assertRaises(
@@ -1919,21 +1923,23 @@ class OutreachReportTests(unittest.TestCase):
             self.assertEqual(ledger.read_bytes(), before_review)
 
             next_review_path = Path(tmp) / "next review.md"
+            replaced_command = command_line.replace(
+                DATE_PLACEHOLDER,
+                "2026-07-14",
+            ).replace(
+                REVIEW_OUTPUT_PLACEHOLDER,
+                str(next_review_path),
+            )
+            next_review_command = shlex.split(replaced_command)[1:]
+            self.assertEqual(
+                next_review_command[
+                    next_review_command.index("--write-review") + 1
+                ],
+                str(next_review_path),
+            )
             next_review_stdout = io.StringIO()
             with redirect_stdout(next_review_stdout):
-                self.assertEqual(
-                    main(
-                        [
-                            "2026-07-14"
-                            if value == DATE_PLACEHOLDER
-                            else str(next_review_path)
-                            if value == REVIEW_OUTPUT_PLACEHOLDER
-                            else value
-                            for value in command
-                        ]
-                    ),
-                    0,
-                )
+                self.assertEqual(main(next_review_command), 0)
             self.assertEqual(
                 next_review_stdout.getvalue(),
                 "Private review written with owner-only permissions.\n",

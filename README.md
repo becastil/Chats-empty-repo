@@ -338,9 +338,10 @@ across dates only while the reviewed row, draft, and checklist are unchanged.
 Remove or privately archive the bundle after the human decision before writing
 the next review.
 After a content-bound decline, the generated continuation retains the evidence
-and draft flags and uses `--write-review PRIVATE-REVIEW-PATH`. Replace that
-literal with a new ignored owner-only destination; leaving it unchanged fails
-before private material is read, while a valid path keeps the next complete
+and draft flags and uses `--write-review 'PRIVATE-REVIEW-PATH'`. Replace the
+literal inside those existing quotes with a new ignored owner-only destination;
+a path containing spaces remains one shell argument, and leaving it unchanged
+fails before private material is read. A valid path keeps the next complete
 review out of terminal capture.
 Omit `--as-of` to use the current UTC calendar date; the explicit UTC date in
 these examples keeps the initial ledger audit reproducible across operator

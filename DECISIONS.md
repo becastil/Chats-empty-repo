@@ -3804,3 +3804,22 @@ percent-encoded and remain unchanged through canonicalization.
 This hardens the existing approval handoff only. It does not run Node or npm,
 query a remote ref, export source, save or deploy a Sites version, approve
 publication, contact a customer, or create revenue evidence.
+
+## 2026-07-28: Keep Private Review Path Replacement Shell-Safe
+
+The content-bound decline continuation included a literal
+`PRIVATE-REVIEW-PATH` marker, but the command formatter treated it as an
+ordinary shell-safe token. Operator guidance said to replace that literal.
+Replacing it with an owner-only destination containing spaces therefore split
+the intended path into multiple arguments and made the copy-ready continuation
+fail.
+
+Generated outreach commands now force that marker into single quotes while
+retaining normal shell quoting for every other argument. Literal replacement
+inside the existing quotes keeps an ordinary spaced path intact. The source
+test exercises the emitted command as shell text, and the installed-wheel
+lifecycle smoke test proves the same behavior through the packaged command.
+
+This change preserves the private review handoff after a human no-send
+decision. It does not make that decision, approve or send outreach, save or
+deploy a Sites version, validate willingness to pay, or record revenue.

@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 260 of
-1,000, with 740 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 261 of
+1,000, with 739 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -505,8 +505,8 @@ alignment take priority over commit volume.
   cannot silently inherit the prior draft's decision date.
 - Complete-review continuity after a content-bound decline, preserving private
   evidence, draft notes, and the exact notes path while requiring a replaced
-  `PRIVATE-REVIEW-PATH` to write the next `600` bundle without terminal
-  disclosure.
+  shell-quoted `PRIVATE-REVIEW-PATH` to write the next `600` bundle without
+  terminal disclosure, including when the literal replacement contains spaces.
 - Full-ledger preflight and postflight validation plus permission-preserving,
   atomic approval writes that never create contact or follow-up dates.
 - Revision-checked, per-ledger lifecycle locking that preserves newer outreach
@@ -697,7 +697,10 @@ Then human-review the fresh owner-only schema-5 bundle at
 superseded. Replace every `YYYY-MM-DD` value in the chosen decision command with
 the actual UTC decision date, and record the human decision with its
 content-bound `--approve-next` or `--decline-next` command. Send only approved
-drafts one at a time through their published business channels.
+drafts one at a time through their published business channels. After a
+nonterminal decline, replace `PRIVATE-REVIEW-PATH` inside its existing single
+quotes with a new ignored owner-only destination before running the emitted
+review command.
 Immediately record each human send with guarded `--record-contact`, which
 retains approval and calculates the exact seven-day follow-up before the next
 message. When due, send that one follow-up manually and close its cadence

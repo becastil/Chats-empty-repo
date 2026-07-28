@@ -46,8 +46,12 @@ class DirectOutreachContractTests(unittest.TestCase):
         self.assertIn("--require-counts-only", readme)
         self.assertIn("exits with code 7", normalized_readme)
         self.assertIn(
-            f"`--write-review {REVIEW_OUTPUT_PLACEHOLDER}`",
+            f"`--write-review '{REVIEW_OUTPUT_PLACEHOLDER}'`",
             readme,
+        )
+        self.assertIn(
+            "a path containing spaces remains one shell argument",
+            normalized_readme,
         )
         self.assertIn(
             "leaving it unchanged fails before private material is read",
@@ -127,8 +131,12 @@ class DirectOutreachContractTests(unittest.TestCase):
             normalized_playbook,
         )
         self.assertIn(
-            f"`--write-review {REVIEW_OUTPUT_PLACEHOLDER}`",
+            f"`--write-review '{REVIEW_OUTPUT_PLACEHOLDER}'`",
             playbook,
+        )
+        self.assertIn(
+            "A path containing spaces remains one shell argument",
+            normalized_playbook,
         )
         self.assertIn(
             "fails before the private ledger or draft notes are read",
