@@ -4026,3 +4026,33 @@ This is a corrective availability boundary for free first-repository and paid
 CI activation. It does not add a policy feature, approve or send outreach,
 establish customer use, validate demand, deploy the site, collect payment, or
 record revenue.
+
+## 2026-07-28: Bind Rollout Aggregation Inputs To Stable Evidence
+
+`repo-scout-rollout` aggregated the paid delivery bundle for each repository,
+but opened each Markdown argument with a path-based, unbounded text read. A
+symlink could redirect one repository's evidence, a FIFO could stall the
+operator command, and replacement or same-inode mutation could race metadata
+validation. An oversized regular or sparse file could also consume
+uncontrolled memory before the command returned a parsing error.
+
+Each rollout argument must now be a direct regular-file leaf no larger than
+1 MiB. The 1,048,576-byte ceiling is roughly 380 times the current
+repository's generated 2.7 KiB bundle while bounding customer-controlled input.
+The initially inspected leaf and opened descriptor must identify the same
+regular file. One exact UTF-8 buffer is parsed and validated, then the
+descriptor bytes and requested leaf are rechecked before the metadata can enter
+a cross-repository summary.
+
+Symlinks and special files fail before opening. Oversized sparse files fail
+before reading or parsing. Different-inode replacement, same-inode mutation,
+or growth detected at acceptance also fails with exit 2 and no summary.
+Source regressions cover directory, symlink, FIFO, sparse oversize, the exact
+size boundary, and mutation during parsing. The installed rollout smoke proves
+the packaged command rejects symlink and oversized evidence without changing
+the files.
+
+This protects the counts-only acceptance record required by the $299 pilot.
+It adds no policy capability or acquisition asset, does not approve outreach or
+site deployment, and does not establish activation, demand, payment, or
+revenue.

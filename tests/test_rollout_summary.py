@@ -3,18 +3,22 @@ from __future__ import annotations
 from contextlib import redirect_stderr, redirect_stdout
 import io
 import json
+import os
 from pathlib import Path
 import sys
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from repo_scout.rollout import (
+    MAX_ROLLOUT_EVIDENCE_BYTES,
     ROLLOUT_METADATA_END,
     ROLLOUT_METADATA_START,
     RolloutEvidenceError,
     format_rollout_metadata,
+    load_rollout_metadata,
     parse_rollout_metadata,
 )
 from repo_scout.rollout_summary import (
@@ -281,6 +285,139 @@ class RolloutSummaryTests(unittest.TestCase):
         self.assertEqual(exit_code, 2)
         self.assertEqual(stdout.getvalue(), "")
         self.assertIn("could not read missing.md", stderr.getvalue())
+
+    def test_main_rejects_non_regular_evidence_before_read(self) -> None:
+        kinds = ["directory"]
+        if hasattr(os, "symlink"):
+            kinds.append("symlink")
+        if hasattr(os, "mkfifo"):
+            kinds.append("fifo")
+
+        for kind in kinds:
+            with self.subTest(kind=kind), TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                evidence_path = root / "rollout.md"
+                target_path = root / "stored-rollout.md"
+                target_path.write_text(
+                    self._bundle(self._metadata("api")),
+                    encoding="utf-8",
+                )
+                if kind == "directory":
+                    evidence_path.mkdir()
+                elif kind == "symlink":
+                    evidence_path.symlink_to(target_path)
+                else:
+                    os.mkfifo(evidence_path)
+
+                stdout = io.StringIO()
+                stderr = io.StringIO()
+                with patch.object(
+                    Path,
+                    "read_text",
+                    side_effect=AssertionError(
+                        "non-regular rollout evidence must not be read"
+                    ),
+                ), redirect_stdout(stdout), redirect_stderr(stderr):
+                    exit_code = main([str(evidence_path)])
+
+                self.assertEqual(exit_code, 2)
+                self.assertEqual(stdout.getvalue(), "")
+                if kind == "symlink":
+                    self.assertIn("must not be a symlink", stderr.getvalue())
+                    self.assertEqual(
+                        target_path.read_text(encoding="utf-8"),
+                        self._bundle(self._metadata("api")),
+                    )
+                else:
+                    self.assertIn("must be a regular file", stderr.getvalue())
+
+    def test_main_rejects_oversized_evidence_before_parsing(self) -> None:
+        with TemporaryDirectory() as tmp:
+            evidence_path = Path(tmp) / "rollout.md"
+            with evidence_path.open("wb") as evidence_file:
+                evidence_file.truncate(MAX_ROLLOUT_EVIDENCE_BYTES + 1)
+
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with patch(
+                "repo_scout.rollout.parse_rollout_metadata",
+                side_effect=AssertionError(
+                    "oversized rollout evidence must not be parsed"
+                ),
+            ) as parser, patch(
+                "repo_scout._file_evidence.os.read",
+                side_effect=AssertionError(
+                    "oversized sparse rollout evidence must not be read"
+                ),
+            ) as descriptor_reader:
+                with redirect_stdout(stdout), redirect_stderr(stderr):
+                    exit_code = main([str(evidence_path)])
+
+            self.assertEqual(exit_code, 2)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertIn(
+                (
+                    "rollout evidence exceeds "
+                    f"{MAX_ROLLOUT_EVIDENCE_BYTES} bytes"
+                ),
+                stderr.getvalue(),
+            )
+            parser.assert_not_called()
+            descriptor_reader.assert_not_called()
+            self.assertEqual(
+                evidence_path.stat().st_size,
+                MAX_ROLLOUT_EVIDENCE_BYTES + 1,
+            )
+
+    def test_load_accepts_evidence_at_size_limit(self) -> None:
+        with TemporaryDirectory() as tmp:
+            evidence_path = Path(tmp) / "rollout.md"
+            bundle = self._bundle(self._metadata("api")).encode("utf-8")
+            prefix_size = MAX_ROLLOUT_EVIDENCE_BYTES - len(bundle)
+            evidence_path.write_bytes(
+                b"#" + (b"x" * (prefix_size - 2)) + b"\n" + bundle
+            )
+
+            metadata = load_rollout_metadata(evidence_path)
+
+            self.assertEqual(metadata["repository_id"], "api")
+            self.assertEqual(
+                evidence_path.stat().st_size,
+                MAX_ROLLOUT_EVIDENCE_BYTES,
+            )
+
+    def test_load_rejects_evidence_mutation_during_parsing(self) -> None:
+        with TemporaryDirectory() as tmp:
+            evidence_path = Path(tmp) / "rollout.md"
+            evidence_path.write_text(
+                self._bundle(self._metadata("api")),
+                encoding="utf-8",
+            )
+            original_parser = parse_rollout_metadata
+            evidence_changed = False
+
+            def mutate_after_parsing(
+                content: str,
+                *,
+                source: str = "<rollout evidence>",
+            ) -> dict[str, object]:
+                nonlocal evidence_changed
+                metadata = original_parser(content, source=source)
+                with evidence_path.open("ab") as evidence_file:
+                    evidence_file.write(b"\n")
+                evidence_changed = True
+                return metadata
+
+            with patch(
+                "repo_scout.rollout.parse_rollout_metadata",
+                side_effect=mutate_after_parsing,
+            ), self.assertRaisesRegex(
+                RolloutEvidenceError,
+                "rollout evidence changed during loading",
+            ):
+                load_rollout_metadata(evidence_path)
+
+            self.assertTrue(evidence_changed)
 
     @staticmethod
     def _bundle(metadata: dict[str, object]) -> str:

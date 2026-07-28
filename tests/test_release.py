@@ -654,6 +654,8 @@ class ReleaseManifestTests(unittest.TestCase):
                 "shared-policy-remediation",
                 "explicit-details",
                 "duplicate-rejected",
+                "symlink-evidence-rejected",
+                "oversized-evidence-rejected",
             ),
         )
 

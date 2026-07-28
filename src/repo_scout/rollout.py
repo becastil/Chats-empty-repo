@@ -3,13 +3,22 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import re
+import stat
 from typing import Any
+
+from ._file_evidence import (
+    FileSizeLimitError,
+    StableContentError,
+    StablePathError,
+    read_stable_regular_file,
+)
 
 
 ROLLOUT_SCHEMA_VERSION = 2
 SUPPORTED_ROLLOUT_SCHEMA_VERSIONS = {1, ROLLOUT_SCHEMA_VERSION}
 ROLLOUT_METADATA_START = "## Rollout Metadata\n\n```json\n"
 ROLLOUT_METADATA_END = "\n```"
+MAX_ROLLOUT_EVIDENCE_BYTES = 1024 * 1024
 _POLICY_FINGERPRINT_PATTERN = re.compile(r"sha256:[0-9a-f]{64}")
 _GIT_COMMIT_PATTERN = re.compile(r"(?:[0-9a-f]{40}|[0-9a-f]{64})")
 
@@ -62,12 +71,49 @@ def format_rollout_metadata(metadata: dict[str, Any]) -> str:
 
 
 def load_rollout_metadata(path: str | Path) -> dict[str, Any]:
-    source = Path(path)
+    requested = Path(path)
     try:
-        content = source.read_text(encoding="utf-8")
-    except OSError as exc:
-        raise RolloutEvidenceError(f"could not read {source}: {exc}") from exc
-    return parse_rollout_metadata(content, source=str(source))
+        if "\0" in str(requested):
+            raise ValueError("NUL is not allowed")
+        source = requested.parent.resolve() / requested.name
+        source_details = source.lstat()
+    except FileNotFoundError as exc:
+        raise RolloutEvidenceError(f"could not read {requested}: {exc}") from exc
+    except (OSError, RuntimeError, ValueError) as exc:
+        raise RolloutEvidenceError(
+            f"could not inspect rollout evidence path {requested}: {exc}"
+        ) from exc
+    if stat.S_ISLNK(source_details.st_mode):
+        raise RolloutEvidenceError(
+            f"rollout evidence path must not be a symlink: {requested}"
+        )
+    if not stat.S_ISREG(source_details.st_mode):
+        raise RolloutEvidenceError(
+            f"rollout evidence path must be a regular file: {requested}"
+        )
+
+    try:
+        with read_stable_regular_file(
+            source,
+            source_details,
+            max_bytes=MAX_ROLLOUT_EVIDENCE_BYTES,
+        ) as content:
+            return parse_rollout_metadata(content, source=str(requested))
+    except StablePathError as exc:
+        raise RolloutEvidenceError(
+            f"rollout evidence path changed during loading: {requested}"
+        ) from exc
+    except StableContentError as exc:
+        raise RolloutEvidenceError(
+            f"rollout evidence changed during loading: {requested}"
+        ) from exc
+    except FileSizeLimitError as exc:
+        raise RolloutEvidenceError(
+            "rollout evidence exceeds "
+            f"{MAX_ROLLOUT_EVIDENCE_BYTES} bytes: {requested}"
+        ) from exc
+    except (OSError, UnicodeDecodeError) as exc:
+        raise RolloutEvidenceError(f"could not read {requested}: {exc}") from exc
 
 
 def parse_rollout_metadata(

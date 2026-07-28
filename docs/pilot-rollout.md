@@ -90,6 +90,13 @@ result. Duplicate IDs, duplicate JSON keys, missing metadata, unknown fields,
 unsupported schemas, invalid types, and internally contradictory evidence
 fail with exit code 2 instead of being counted.
 
+Each evidence argument must name a direct regular-file leaf no larger than
+1 MiB (1,048,576 bytes). Symlinks, directories, FIFOs, and other special files
+fail with exit code 2 before a summary is emitted. The command reads and parses
+one descriptor-bound UTF-8 buffer, then rereads the same descriptor and
+rechecks the requested leaf before accepting the metadata. Replacement,
+same-file mutation, or growth detected at that checkpoint also fails closed.
+
 Fingerprint equality proves only that the normalized rules recorded in the
 bundles match. It is not a digital signature or freshness check. A person who
 can modify an evidence file can replace its prose, metadata, fingerprint, and

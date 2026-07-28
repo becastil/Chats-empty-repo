@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Required `repo-scout-rollout` inputs to remain direct regular-file leaves,
+  rejecting symlinks and special files before cross-repository evidence reads.
+- Capped each rollout bundle at 1 MiB and bound parsing plus the acceptance
+  reread to one descriptor, failing on detected replacement, mutation, or
+  growth before a summary is emitted.
+- Added source proof for non-regular leaves, sparse oversize, exact-limit
+  acceptance, and in-place mutation, plus installed-command proof for symlink
+  and oversized rollout evidence.
 - Capped primary policies, bootstrap receipts, and receipt-selected policies at
   128 KiB through the shared descriptor reader, rejecting oversized sparse
   inputs before parsing.

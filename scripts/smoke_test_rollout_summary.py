@@ -13,6 +13,7 @@ from typing import Any, Mapping, Sequence
 POLICY_FINGERPRINT = f"sha256:{'a' * 64}"
 API_COMMIT = "b" * 40
 WEB_COMMIT = "c" * 40
+MAX_ROLLOUT_EVIDENCE_BYTES = 1024 * 1024
 
 
 class SmokeTestError(RuntimeError):
@@ -144,6 +145,51 @@ def verify_rollout_summary(
             "duplicate repository ID did not produce its controlled error",
         )
         checked.append("duplicate-rejected")
+
+        symlink = root / "symlink.md"
+        symlink.symlink_to(api)
+        rejected = _run(
+            rollout_command,
+            (symlink,),
+            output_format="json",
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(not rejected.stdout, "symlink evidence emitted a report")
+        _require(
+            "rollout evidence path must not be a symlink" in rejected.stderr,
+            "symlink evidence did not produce its controlled error",
+        )
+        _require(
+            symlink.is_symlink() and api.is_file(),
+            "symlink evidence changed during rejection",
+        )
+        checked.append("symlink-evidence-rejected")
+
+        oversized = root / "oversized.md"
+        with oversized.open("wb") as evidence_file:
+            evidence_file.truncate(MAX_ROLLOUT_EVIDENCE_BYTES + 1)
+        rejected = _run(
+            rollout_command,
+            (oversized,),
+            output_format="json",
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(not rejected.stdout, "oversized evidence emitted a report")
+        _require(
+            (
+                "rollout evidence exceeds "
+                f"{MAX_ROLLOUT_EVIDENCE_BYTES} bytes"
+            )
+            in rejected.stderr,
+            "oversized evidence did not produce its controlled error",
+        )
+        _require(
+            oversized.stat().st_size == MAX_ROLLOUT_EVIDENCE_BYTES + 1,
+            "oversized evidence changed during rejection",
+        )
+        checked.append("oversized-evidence-rejected")
 
     return tuple(checked)
 

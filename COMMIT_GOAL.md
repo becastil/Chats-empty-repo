@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after bounding activation evidence before parsing:
-  269 / 1,000 (26.9%).
-- Remaining after bounding activation evidence before parsing:
-  731 commits.
+- Progress after binding rollout aggregation inputs to stable evidence:
+  270 / 1,000 (27.0%).
+- Remaining after binding rollout aggregation inputs to stable evidence:
+  730 commits.
 
 ## Commit Standard
 

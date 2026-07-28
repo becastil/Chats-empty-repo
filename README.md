@@ -220,7 +220,10 @@ commit, so the aggregate can verify complete matching policy fingerprints
 across two or more repositories. Results remain bundle-reported and do not
 prove freshness. The aggregator accepts legacy schema-1 bundles, rejects
 duplicate IDs, duplicate JSON keys, and malformed or contradictory metadata,
-performs no uploads, and requires no API key.
+performs no uploads, and requires no API key. Every input must be a direct
+regular-file leaf no larger than 1 MiB (1,048,576 bytes). The command parses
+one descriptor-bound UTF-8 buffer, then accepts it only if the exact bytes and
+requested leaf remain unchanged.
 
 Initialize an offline starter policy for a common repository type:
 
