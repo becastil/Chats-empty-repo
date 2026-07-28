@@ -3966,3 +3966,32 @@ This prevents untrusted receipt input from redirecting or stalling free
 first-repository and paid-CI activation. It does not approve outreach, export
 or deploy the site, establish customer use, validate demand, collect payment,
 or record revenue.
+
+## 2026-07-28: Bind Primary Policy Loading To Stable Evidence
+
+The bootstrap-receipt verifier had a direct-leaf, descriptor-bound policy read,
+but the primary `repo-scout --policy` command still resolved through its input
+leaf and reopened the result by path. A symlink therefore selected and reported
+its referent as the policy source. A FIFO or other special file could also block
+the copy-ready customer gate, and path replacement or same-inode mutation had
+no acceptance check around parsing and validation.
+
+Primary policy loading now resolves only the parent and preserves the requested
+leaf. It rejects symlinks and non-regular files before opening, then uses the
+shared read-only, non-inheritable descriptor helper already proven by receipt
+verification, including no-follow and nonblocking flags where the platform
+provides them. The descriptor must match the initially inspected regular file.
+One exact UTF-8 byte buffer is parsed and validated, then the bytes are reread
+and the requested leaf must still identify that file at the acceptance
+checkpoint. Symlink or distinct regular-file replacement and in-place mutation
+detected there return exit 2 without a scan report.
+
+Source regressions cover static symlink, directory, and FIFO leaves, replacement
+between inspection and open, replacement after validation, and same-inode byte
+mutation. The installed activation journey proves the packaged primary command
+rejects symlink and directory inputs without naming or changing the referent.
+
+This closes the remaining input-integrity gap in the command used by the
+copy-ready paid-CI workflow. It does not approve outreach, establish an install
+or customer use, validate demand, collect payment, deploy the site, or record
+revenue.

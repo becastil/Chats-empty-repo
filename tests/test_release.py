@@ -537,6 +537,8 @@ class ReleaseManifestTests(unittest.TestCase):
                 "service-baseline",
                 "polyglot-review",
                 "symlink-bootstrap-output-rejected",
+                "symlink-cli-policy-rejected",
+                "nonregular-cli-policy-rejected",
                 "relative-receipt-output-rejected",
                 "symlink-bootstrap-receipt-rejected",
                 "nonregular-bootstrap-receipt-rejected",
@@ -785,6 +787,7 @@ class ZipappDistributionTests(unittest.TestCase):
                 names = set(archive.namelist())
             self.assertIn("__main__.py", names)
             self.assertIn("repo_scout/cli.py", names)
+            self.assertIn("repo_scout/_file_evidence.py", names)
             self.assertIn(
                 "repo_scout/templates/policies/python-service.toml", names
             )

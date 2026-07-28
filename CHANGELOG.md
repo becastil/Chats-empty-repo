@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Required the primary `repo-scout --policy` argument to remain a direct
+  regular-file leaf, rejecting symlinks and special files with exit 2 before a
+  scan report can be emitted.
+- Bound primary policy parsing and validation to one non-inheritable descriptor,
+  then rechecked the exact bytes and requested leaf so different-inode
+  replacement and same-inode mutation detected at the acceptance checkpoint
+  fail closed.
+- Added deterministic source proof across symlink, directory, FIFO, pre-read
+  replacement, post-validation replacement, and in-place mutation, plus
+  installed-command proof for symlink and directory policy inputs.
 - Required bootstrap receipt arguments to name direct regular-file leaves,
   rejecting symlinks and special files before reads with exit 2 and no
   verification report.

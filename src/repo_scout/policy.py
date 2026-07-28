@@ -3,9 +3,16 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path, PurePosixPath
+import stat
 import subprocess
 import tomllib
 from typing import Any
+
+from ._file_evidence import (
+    StableContentError,
+    StablePathError,
+    read_stable_regular_file,
+)
 
 
 POLICY_VERSION = 4
@@ -29,18 +36,43 @@ class PolicyError(ValueError):
 
 
 def load_policy(path: str | Path) -> dict[str, Any]:
-    source = Path(path).expanduser().resolve()
+    source = _policy_source(path)
     try:
-        with source.open("rb") as policy_file:
-            policy = tomllib.load(policy_file)
+        source_details = source.lstat()
     except FileNotFoundError as exc:
         raise PolicyError(f"policy file does not exist: {source}") from exc
-    except OSError as exc:
-        raise PolicyError(f"could not read policy file {source}: {exc}") from exc
-    except tomllib.TOMLDecodeError as exc:
-        raise PolicyError(f"invalid TOML in policy file {source}: {exc}") from exc
+    except (OSError, ValueError) as exc:
+        raise PolicyError(f"could not inspect policy path {source}: {exc}") from exc
+    if stat.S_ISLNK(source_details.st_mode):
+        raise PolicyError(f"policy path must not be a symlink: {source}")
+    if not stat.S_ISREG(source_details.st_mode):
+        raise PolicyError(f"policy path must be a regular file: {source}")
 
-    return _validate_policy(policy, source)
+    try:
+        with read_stable_regular_file(source, source_details) as content:
+            try:
+                policy = tomllib.loads(content)
+            except tomllib.TOMLDecodeError as exc:
+                raise PolicyError(
+                    f"invalid TOML in policy file {source}: {exc}"
+                ) from exc
+            return _validate_policy(policy, source)
+    except StablePathError as exc:
+        raise PolicyError(f"policy path changed during loading: {source}") from exc
+    except StableContentError as exc:
+        raise PolicyError(f"policy changed during loading: {source}") from exc
+    except (OSError, UnicodeDecodeError) as exc:
+        raise PolicyError(f"could not read policy file {source}: {exc}") from exc
+
+
+def _policy_source(path: str | Path) -> Path:
+    try:
+        requested = Path(path).expanduser()
+        if "\0" in str(requested):
+            raise ValueError("NUL is not allowed")
+        return requested.parent.resolve() / requested.name
+    except (OSError, RuntimeError, ValueError) as exc:
+        raise PolicyError("policy path is invalid") from exc
 
 
 def parse_policy(content: str, source: str = "<policy>") -> dict[str, Any]:

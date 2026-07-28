@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 267 of
-1,000, with 733 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 268 of
+1,000, with 732 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -648,6 +648,14 @@ alignment take priority over commit volume.
   special files, replacement, and same-inode mutation before evidence is used.
 - Installed-wheel activation proof that receipt symlinks and non-regular leaves
   fail as command-input errors without emitting a verification report.
+- Direct regular-file inputs for the primary `repo-scout --policy` command,
+  with descriptor-bound TOML parsing and validation, exact-byte rereads, and
+  acceptance-point leaf checks that reject static symlinks and special files
+  before reads and fail on detected replacement or same-inode mutation before
+  a scan report is emitted.
+- Installed-command activation proof that the primary policy gate rejects
+  symlink and non-regular policy leaves without disclosing or changing their
+  evidence.
 - Stable text and JSON pass or drift evidence, policy-path overrides, and exit code 6 for missing, invalid, or changed policies.
 - Duplicate-key, unsupported-schema, malformed-shape, and unknown-field rejection for receipt evidence.
 - Installed-wheel release proof that every clear bootstrap receipt verifies its generated policy.

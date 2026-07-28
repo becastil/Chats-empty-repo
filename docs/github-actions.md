@@ -60,6 +60,15 @@ bundles from multiple repositories and run `repo-scout-rollout` locally.
 Configuration errors return exit code 2; scan-limit failures return exit code
 3 and may not produce evidence because no scan completed.
 
+The committed `--policy` input must remain a direct regular-file leaf while it
+is loaded. The command binds parsing and validation to one opened descriptor,
+using no-follow and nonblocking flags where the runner provides them, then
+rechecks both the exact bytes and requested leaf at the policy-acceptance
+checkpoint. A static symlink, directory, FIFO, or other special file returns
+exit code 2 without a rollout bundle. Replacement or in-place mutation detected
+at the checkpoint does the same, preventing an untrusted policy input from
+redirecting or stalling the paid-CI activation path.
+
 The workflow grants only `contents: read` and `attestations: read`, disables
 persisted checkout credentials, and pins every external action by commit. It
 downloads the exact Repo Scout version and wheel digest declared in the

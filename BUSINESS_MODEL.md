@@ -315,6 +315,18 @@ first-repository or paid-CI activation evidence. This strengthens the free
 activation proof without establishing customer use, pilot demand, payment, or
 revenue.
 
+The primary `repo-scout --policy` path now applies the same file-evidence
+boundary before any repository scan. It preserves the requested policy leaf,
+requires a direct regular file, parses and validates one exact UTF-8 buffer
+through a non-inheritable descriptor with no-follow and nonblocking flags where
+available, then rereads the bytes and confirms the leaf still names that file at
+the acceptance checkpoint. Static symlinks and special files return a
+configuration error without a report, as do different-inode replacement and
+same-inode mutation detected at that checkpoint. This protects the copy-ready
+customer gate from redirection or blocking at the command teams actually run;
+it does not establish an install, customer use, pilot demand, payment, or
+revenue.
+
 An AI can recreate a scanner, but that is not the commercial claim being
 tested. The active website experiment presents the paid outcome in plain
 language: help agreeing on one rulebook, installing it across uneven projects,

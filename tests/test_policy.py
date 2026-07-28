@@ -1,13 +1,17 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
+import stat
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+import repo_scout.policy as policy_module
 from repo_scout.policy import (
     PolicyError,
     evaluate_policy,
@@ -453,6 +457,182 @@ required_files = ["../secret.txt"]
 
             with self.assertRaisesRegex(PolicyError, "normalized and relative"):
                 load_policy(policy_path)
+
+    def test_load_policy_rejects_non_regular_paths_before_read(self) -> None:
+        kinds = ["directory"]
+        if hasattr(os, "symlink"):
+            kinds.append("symlink")
+        if hasattr(os, "mkfifo"):
+            kinds.append("fifo")
+        for kind in kinds:
+            with self.subTest(kind=kind), TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                policy_path = root / "team-policy.toml"
+                target = root / "stored-policy.toml"
+                target.write_text(
+                    "version = 1\n[repository]\nmax_files = 10\n",
+                    encoding="utf-8",
+                )
+                if kind == "symlink":
+                    policy_path.symlink_to(target)
+                elif kind == "directory":
+                    policy_path.mkdir()
+                else:
+                    os.mkfifo(policy_path)
+
+                with patch(
+                    "repo_scout.policy.read_stable_regular_file",
+                    side_effect=AssertionError(
+                        "non-regular policy path must not be read"
+                    ),
+                ) as stable_reader, self.assertRaises(PolicyError) as raised:
+                    load_policy(policy_path)
+
+                message = str(raised.exception)
+                self.assertIn(
+                    (
+                        "policy path must not be a symlink"
+                        if kind == "symlink"
+                        else "policy path must be a regular file"
+                    ),
+                    message,
+                )
+                self.assertIn(str(policy_path), message)
+                stable_reader.assert_not_called()
+                if kind == "symlink":
+                    resolved_target = target.parent.resolve() / target.name
+                    self.assertNotIn(str(resolved_target), message)
+                    self.assertTrue(policy_path.is_symlink())
+                    self.assertTrue(target.is_file())
+                elif kind == "directory":
+                    self.assertTrue(policy_path.is_dir())
+                else:
+                    self.assertTrue(stat.S_ISFIFO(policy_path.lstat().st_mode))
+
+    def test_load_policy_rejects_leaf_replacement_before_read(self) -> None:
+        replacement_kinds = ["regular"]
+        if hasattr(os, "symlink"):
+            replacement_kinds.append("symlink")
+        for replacement_kind in replacement_kinds:
+            with self.subTest(
+                replacement_kind=replacement_kind
+            ), TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                policy_path = root / "team-policy.toml"
+                policy_content = (
+                    "version = 1\n[repository]\nmax_files = 10\n"
+                )
+                policy_path.write_text(policy_content, encoding="utf-8")
+                replacement = root / "replacement-policy.toml"
+                replacement.write_text(policy_content, encoding="utf-8")
+                original = root / "original-policy.toml"
+                expected_policy_path = (
+                    policy_path.parent.resolve() / policy_path.name
+                )
+                original_lstat = Path.lstat
+                replacement_made = False
+
+                def replace_after_lstat(path: Path) -> os.stat_result:
+                    nonlocal replacement_made
+                    details = original_lstat(path)
+                    if path == expected_policy_path and not replacement_made:
+                        policy_path.replace(original)
+                        if replacement_kind == "symlink":
+                            policy_path.symlink_to(original)
+                        else:
+                            replacement.replace(policy_path)
+                        replacement_made = True
+                    return details
+
+                with patch.object(
+                    Path,
+                    "lstat",
+                    replace_after_lstat,
+                ), self.assertRaisesRegex(
+                    PolicyError,
+                    "policy path changed during loading",
+                ):
+                    load_policy(policy_path)
+
+                self.assertTrue(replacement_made)
+                self.assertTrue(original.is_file())
+                if replacement_kind == "symlink":
+                    self.assertTrue(policy_path.is_symlink())
+                    self.assertTrue(replacement.is_file())
+                else:
+                    self.assertTrue(policy_path.is_file())
+                    self.assertFalse(policy_path.is_symlink())
+
+    def test_load_policy_rechecks_leaf_after_validation(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            policy_path = root / "team-policy.toml"
+            policy_content = "version = 1\n[repository]\nmax_files = 10\n"
+            policy_path.write_text(policy_content, encoding="utf-8")
+            replacement = root / "replacement-policy.toml"
+            replacement.write_text(policy_content, encoding="utf-8")
+            original = root / "original-policy.toml"
+            original_validator = policy_module._validate_policy
+            replacement_made = False
+
+            def replace_after_validation(
+                policy: object,
+                source: str | Path,
+            ) -> dict[str, object]:
+                nonlocal replacement_made
+                validated = original_validator(policy, source)
+                policy_path.replace(original)
+                replacement.replace(policy_path)
+                replacement_made = True
+                return validated
+
+            with patch(
+                "repo_scout.policy._validate_policy",
+                side_effect=replace_after_validation,
+            ), self.assertRaisesRegex(
+                PolicyError,
+                "policy path changed during loading",
+            ):
+                load_policy(policy_path)
+
+            self.assertTrue(replacement_made)
+            self.assertTrue(original.is_file())
+            self.assertTrue(policy_path.is_file())
+
+    def test_load_policy_rechecks_bytes_after_validation(self) -> None:
+        with TemporaryDirectory() as tmp:
+            policy_path = Path(tmp) / "team-policy.toml"
+            policy_path.write_text(
+                "version = 1\n[repository]\nmax_files = 10\n",
+                encoding="utf-8",
+            )
+            original_details = policy_path.stat()
+            original_validator = policy_module._validate_policy
+            policy_rewritten = False
+
+            def rewrite_after_validation(
+                policy: object,
+                source: str | Path,
+            ) -> dict[str, object]:
+                nonlocal policy_rewritten
+                validated = original_validator(policy, source)
+                policy_path.write_text("version = 999\n", encoding="utf-8")
+                policy_rewritten = True
+                return validated
+
+            with patch(
+                "repo_scout.policy._validate_policy",
+                side_effect=rewrite_after_validation,
+            ), self.assertRaisesRegex(
+                PolicyError,
+                "policy changed during loading",
+            ):
+                load_policy(policy_path)
+
+            self.assertTrue(policy_rewritten)
+            self.assertTrue(
+                os.path.samestat(original_details, policy_path.stat())
+            )
 
     def test_policy_fingerprint_tracks_normalized_rule_semantics(self) -> None:
         first = parse_policy(

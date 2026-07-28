@@ -246,6 +246,72 @@ def verify_policy_activation(
     with TemporaryDirectory() as tmp:
         root = Path(tmp) / "service"
         root.mkdir()
+        (root / "README.md").write_text("# Service\n", encoding="utf-8")
+        stored_policy = root / "stored-policy.toml"
+        stored_policy.write_text(
+            "version = 1\n[repository]\nrequired_files = [\"README.md\"]\n",
+            encoding="utf-8",
+        )
+        policy_path = root / "team-policy.toml"
+        policy_path.symlink_to(stored_policy)
+
+        symlink_policy_scan = _run(
+            [
+                *scan_command,
+                "--format",
+                "json",
+                "--policy",
+                str(policy_path),
+                str(root),
+            ],
+            cwd=root,
+            environment=environment,
+            expected_exit_code=2,
+        )
+        if symlink_policy_scan.stdout:
+            raise SmokeTestError("symlink CLI policy emitted a scan report")
+        if "policy path must not be a symlink" not in symlink_policy_scan.stderr:
+            raise SmokeTestError("symlink CLI policy was not rejected")
+        resolved_stored_policy = (
+            stored_policy.parent.resolve() / stored_policy.name
+        )
+        if str(resolved_stored_policy) in symlink_policy_scan.stderr:
+            raise SmokeTestError("symlink CLI policy disclosed its target")
+        if not policy_path.is_symlink() or not stored_policy.is_file():
+            raise SmokeTestError("symlink CLI policy scan changed policy evidence")
+        checked.append("symlink-cli-policy-rejected")
+
+        policy_path.unlink()
+        policy_path.mkdir()
+        non_regular_policy_scan = _run(
+            [
+                *scan_command,
+                "--format",
+                "json",
+                "--policy",
+                str(policy_path),
+                str(root),
+            ],
+            cwd=root,
+            environment=environment,
+            expected_exit_code=2,
+        )
+        if non_regular_policy_scan.stdout:
+            raise SmokeTestError("non-regular CLI policy emitted a scan report")
+        if (
+            "policy path must be a regular file"
+            not in non_regular_policy_scan.stderr
+        ):
+            raise SmokeTestError("non-regular CLI policy was not rejected")
+        if not policy_path.is_dir() or not stored_policy.is_file():
+            raise SmokeTestError(
+                "non-regular CLI policy scan changed policy evidence"
+            )
+        checked.append("nonregular-cli-policy-rejected")
+
+    with TemporaryDirectory() as tmp:
+        root = Path(tmp) / "service"
+        root.mkdir()
         (root / "pyproject.toml").write_text("[project]\n", encoding="utf-8")
         bootstrap = _run(
             [

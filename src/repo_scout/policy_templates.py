@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-from contextlib import contextmanager
 from dataclasses import dataclass
 from importlib import resources
 import json
@@ -11,8 +10,13 @@ import re
 import stat
 import sys
 from tempfile import NamedTemporaryFile
-from typing import Any, Iterator, Sequence
+from typing import Any, Sequence
 
+from ._file_evidence import (
+    StableContentError as _StableContentError,
+    StablePathError as _StablePathError,
+    read_stable_regular_file as _read_stable_regular_file,
+)
 from .version import add_version_argument
 
 from .policy import PolicyError, parse_policy, policy_fingerprint
@@ -65,14 +69,6 @@ TEMPLATE_BY_NAME = {template.name: template for template in TEMPLATES}
 
 class TemplateError(RuntimeError):
     """Raised when a packaged policy template cannot be read."""
-
-
-class _StablePathError(RuntimeError):
-    """Raised when an inspected file leaf changes during one operation."""
-
-
-class _StableContentError(RuntimeError):
-    """Raised when an opened file's bytes change during one operation."""
 
 
 def get_template(name: str) -> str:
@@ -433,67 +429,6 @@ def _load_stable_policy_identity(
         raise PolicyError(
             f"could not read policy file {target}: {exc}"
         ) from exc
-
-
-@contextmanager
-def _read_stable_regular_file(
-    target: Path,
-    expected_details: os.stat_result,
-) -> Iterator[str]:
-    flags = os.O_RDONLY
-    for flag_name in ("O_BINARY", "O_CLOEXEC", "O_NOFOLLOW", "O_NONBLOCK"):
-        flags |= getattr(os, flag_name, 0)
-
-    descriptor: int | None = None
-    try:
-        try:
-            descriptor = os.open(target, flags)
-        except OSError as exc:
-            if not _regular_path_matches(target, expected_details):
-                raise _StablePathError from exc
-            raise
-
-        os.set_inheritable(descriptor, False)
-        opened_details = os.fstat(descriptor)
-        if (
-            not stat.S_ISREG(opened_details.st_mode)
-            or not os.path.samestat(expected_details, opened_details)
-        ):
-            raise _StablePathError
-        original_content = _read_descriptor_bytes(descriptor)
-        yield original_content.decode("utf-8")
-        os.lseek(descriptor, 0, os.SEEK_SET)
-        if _read_descriptor_bytes(descriptor) != original_content:
-            raise _StableContentError
-        if not _regular_path_matches(target, opened_details):
-            raise _StablePathError
-    finally:
-        if descriptor is not None:
-            os.close(descriptor)
-
-
-def _read_descriptor_bytes(descriptor: int) -> bytes:
-    chunks: list[bytes] = []
-    while True:
-        chunk = os.read(descriptor, 65536)
-        if not chunk:
-            break
-        chunks.append(chunk)
-    return b"".join(chunks)
-
-
-def _regular_path_matches(
-    target: Path,
-    expected_details: os.stat_result,
-) -> bool:
-    try:
-        current_details = target.lstat()
-    except OSError:
-        return False
-    return stat.S_ISREG(current_details.st_mode) and os.path.samestat(
-        expected_details,
-        current_details,
-    )
 
 
 def format_receipt_verification(verification: dict[str, Any]) -> str:

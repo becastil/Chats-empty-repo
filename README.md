@@ -175,6 +175,16 @@ such as `*.pem` match at any depth and belong in reviewed custom policies, not
 the defaults. Each pattern reports at most 20 sorted paths plus the full match
 count, keeping CI evidence bounded.
 
+The `--policy` argument must name a direct regular-file leaf. Repo Scout opens
+that leaf once through a non-inheritable read-only descriptor, adding no-follow
+and nonblocking flags where the platform provides them. The descriptor must
+match the initially inspected file. Repo Scout parses and validates one exact
+UTF-8 byte buffer, then rereads the bytes and rechecks the requested leaf at the
+policy-acceptance checkpoint. Static symlinks, directories, FIFOs, and other
+special files return exit code 2 before a scan report is emitted; a symlink
+target is neither followed nor named. Replacement or same-inode mutation
+detected at that checkpoint also fails closed.
+
 Policy results are included in text, JSON, and Markdown reports. Exit code 6
 means the scan completed and at least one team-policy rule failed. Policy
 failure takes precedence over exit code 5 when `--fail-on-attention` is also
