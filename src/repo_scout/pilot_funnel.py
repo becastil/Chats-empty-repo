@@ -100,7 +100,22 @@ CI_PROVIDER_OPTIONS = (
 CI_PROVIDER_BY_ANSWER = {
     answer: provider for provider, answer in CI_PROVIDER_OPTIONS
 }
+CI_PROVIDER_KEYS = frozenset(CI_PROVIDER_BY_ANSWER.values())
 COPY_READY_CI_PROVIDER = "github_actions"
+QUALIFICATION_STATUSES = frozenset(
+    {"target", "outside_target", "incomplete"}
+)
+PILOT_REPOSITORY_SCOPES = frozenset(
+    {"within_offer", "subset_required"}
+)
+QUALIFICATION_SCOPE_ACTION = (
+    "Review the pilot qualification scope before any further pilot terms or "
+    "payment action."
+)
+SUBSET_SCOPE_ACTION = (
+    "Confirm the first-10-repository pilot scope before any further pilot "
+    "terms or payment action."
+)
 CI_INTEGRATION_DECISION_ACTION = (
     "Record the private CI integration decision before any further pilot "
     "terms or payment action."
@@ -346,11 +361,11 @@ def build_funnel(
         next_action: str | None = None
         if stage in FOLLOW_UP_STAGES and issue.state == "OPEN":
             sales_priority = SALES_PRIORITY_BY_READINESS[readiness]
-            next_action = _sales_action(
+            next_action = expected_sales_action(
                 stage,
                 readiness,
                 pilot_price_usd,
-                qualification["ci_provider"],
+                qualification,
             )
             sales_actions.append(
                 {
@@ -919,17 +934,22 @@ def _record_segment_totals(
     totals["lost_pilots"] += int(is_lost)
 
 
-def _sales_action(
+def expected_sales_action(
     stage: str,
     readiness: str,
     pilot_price_usd: int,
-    ci_provider: str | None,
+    qualification: dict[str, Any],
 ) -> str:
     if readiness == "ready":
+        ci_provider = qualification["ci_provider"]
         if ci_provider is None:
             return UNRESOLVED_CI_PROVIDER_ACTION
         if ci_provider != COPY_READY_CI_PROVIDER:
             return CI_INTEGRATION_DECISION_ACTION
+        if qualification["status"] != "target":
+            return QUALIFICATION_SCOPE_ACTION
+        if qualification["pilot_repository_scope"] == "subset_required":
+            return SUBSET_SCOPE_ACTION
     if readiness not in SALES_ACTIONS:
         return "Clarify purchase readiness before advancing."
     return SALES_ACTIONS[readiness][stage].format(

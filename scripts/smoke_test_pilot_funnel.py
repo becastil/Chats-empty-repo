@@ -207,6 +207,55 @@ def verify_pilot_funnel(
         )
         checked.append("ci-integration-payment-gate")
 
+        issue_export.write_text(
+            json.dumps(
+                [
+                    _issue(
+                        number=107,
+                        title="Out-of-profile team awaiting scope review",
+                        source="Repo Scout website",
+                        readiness="Ready to purchase the $299 pilot",
+                        criterion="Works across our repositories and CI",
+                        labels=(
+                            "pilot-lead",
+                            "pilot-qualified",
+                            "pilot-offered",
+                        ),
+                        team_size=2,
+                        repository_count=1,
+                    )
+                ],
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        qualification_report = _json_report(
+            pilot_command,
+            issue_export,
+            environment=environment,
+        )
+        qualification_queue = qualification_report.get(
+            "sales_queue", {}
+        ).get("deals", [])
+        _require(
+            len(qualification_queue) == 1,
+            "out-of-profile pre-payment request left the sales queue",
+        )
+        _require(
+            qualification_queue[0].get("next_action")
+            == (
+                "Review the pilot qualification scope before any further "
+                "pilot terms or payment action."
+            ),
+            "out-of-profile request was not gated on qualification review",
+        )
+        _require(
+            "Confirm the purchase and payment path."
+            not in json.dumps(qualification_report, sort_keys=True),
+            "out-of-profile request retained a payment-advancing action",
+        )
+        checked.append("qualification-scope-payment-gate")
+
         pilot_report = Path(tmp) / "pilot-report.json"
         baseline_release_export = Path(tmp) / "baseline-releases.json"
         current_release_export = Path(tmp) / "current-releases.json"
@@ -322,10 +371,10 @@ def verify_pilot_funnel(
         _require(
             growth.get("bottleneck", {}).get("next_action")
             == (
-                "Work the provider-aware pilot sales queue before closing the "
-                "next pilot."
+                "Work the qualification-aware pilot sales queue before closing "
+                "the next pilot."
             ),
-            "growth bottleneck bypassed the provider-aware sales queue",
+            "growth bottleneck bypassed the qualification-aware sales queue",
         )
         _require(not growth.get("warnings"), "valid growth evidence emitted warnings")
         measurement_note = growth.get("measurement_note", "")
@@ -386,8 +435,8 @@ def verify_pilot_funnel(
         _require(
             integration_growth.get("bottleneck", {}).get("next_action")
             == (
-                "Work the provider-aware pilot sales queue before confirming "
-                "purchase or payment."
+                "Work the qualification-aware pilot sales queue before "
+                "confirming purchase or payment."
             ),
             "growth report bypassed the non-GitHub integration gate",
         )
@@ -688,11 +737,13 @@ def _issue(
     criterion: str,
     labels: Sequence[str],
     ci_provider: str = "GitHub Actions",
+    team_size: int = 12,
+    repository_count: int = 6,
 ) -> dict[str, Any]:
     body = "\n\n".join(
         (
-            "### Team size\n\n12",
-            "### Repository count\n\n6",
+            f"### Team size\n\n{team_size}",
+            f"### Repository count\n\n{repository_count}",
             f"### CI provider\n\n{ci_provider}",
             f"### How did you hear about Repo Scout?\n\n{source}",
             f"### Repository standard to enforce\n\n{PRIVATE_STANDARD}",

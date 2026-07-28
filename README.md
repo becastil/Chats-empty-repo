@@ -328,15 +328,18 @@ shape stronger policy packs and rollout playbooks. A deterministic sales queue r
 pre-payment deal by declared readiness and funnel stage, then names the next
 conversion action without advancing labels automatically.
 Ready-to-purchase requests receive the normal stage-specific terms or payment
-action only when the CI provider is GitHub Actions, the sole copy-ready gate.
+action only when the CI provider is GitHub Actions, the qualification is
+target-profile, and the requested scope is within the 10-repository offer.
 Recognized non-GitHub providers require the private integration decision first;
 missing, edited, no-response, or ambiguous provider evidence requires provider
-clarification. Queue membership, ranking, target-profile classification, and
-revenue accounting remain unchanged. Schema-7 growth bottlenecks that would
-send terms, confirm payment, or close the next pilot point back to this
-provider-aware queue after validating its action count and ready-buyer gate.
-Saved schema-7 evidence with the former provider-blind action fails growth
-ingestion instead of being described as safe.
+clarification. Ready GitHub requests with incomplete or outside-target evidence
+require qualification review, while larger target requests require an explicit
+first-10 scope. Queue membership, ranking, classification, and revenue
+accounting remain unchanged. Schema-7 growth bottlenecks that would send terms,
+confirm payment, or close the next pilot point back to this
+qualification-aware queue after validating each exact action against its stage,
+readiness, qualification, provider, and configured price. Saved schema-7
+evidence that bypasses any of those boundaries fails growth ingestion.
 Pilot issue JSON with duplicate keys is rejected before issue parsing, so
 conflicting `labels` fields cannot silently change booked-pilot or revenue
 totals.

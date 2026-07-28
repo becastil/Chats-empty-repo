@@ -2,17 +2,30 @@
 
 ## Unreleased
 
+- Withheld normal terms and payment guidance from ready GitHub Actions
+  requests whose qualification is incomplete, outside the target profile, or
+  still requires a first-10-repository pilot scope.
+- Preserved the existing CI-provider gate ahead of qualification review and
+  left approval-dependent, exploratory, and unclear-readiness coaching
+  unchanged.
+- Centralized the schema-7 sales-action contract and made growth ingestion
+  validate every queued stage, readiness, qualification status, repository
+  scope, CI provider, configured price, and exact next action before deferring.
+- Added source and installed-command regressions proving out-of-profile buyers
+  cannot receive payment guidance and saved qualified-stage evidence cannot
+  substitute a later payment action.
 - Required ready-to-purchase requests to identify GitHub Actions before the
   pilot sales queue can recommend normal terms or payment actions.
 - Routed recognized non-GitHub providers to a private integration-decision
   action and missing, edited, no-response, or ambiguous provider evidence to a
   provider-clarification action without changing queue order or qualification.
 - Made schema-7 offer, payment, and open pilot-target growth bottlenecks defer
-  to that provider-aware queue instead of emitting a contradictory commercial
-  action; older aggregate schemas retain their existing recommendations.
+  to that qualification-aware queue instead of emitting a contradictory
+  commercial action; older aggregate schemas retain their existing
+  recommendations.
 - Required growth ingestion to reconcile the schema-7 sales-action count and
   reject missing queues or ready-buyer actions that predate the CI gate before
-  it describes that queue as provider-aware.
+  it describes that queue as qualification-aware.
 - Added source and installed-command regressions across every supported
   provider, all readiness buckets, legacy evidence, and the packaged $299
   commercial workflow.

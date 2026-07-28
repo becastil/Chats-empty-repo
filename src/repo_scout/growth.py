@@ -9,11 +9,14 @@ from typing import Any, Sequence
 from .version import add_version_argument
 
 from .pilot_funnel import (
-    CI_INTEGRATION_DECISION_ACTION,
+    CI_PROVIDER_KEYS,
     COPY_READY_CI_PROVIDER,
     DECISION_CRITERION_KEYS,
+    FOLLOW_UP_STAGES,
+    PILOT_REPOSITORY_SCOPES,
+    QUALIFICATION_STATUSES,
     READINESS_KEYS,
-    UNRESOLVED_CI_PROVIDER_ACTION,
+    expected_sales_action,
 )
 
 
@@ -65,7 +68,9 @@ def build_growth_report(
         pilot_price_usd=pricing["pilot_price_usd"],
         target_pilots=pricing["target_pilots"],
         annual_conversions=pilot_summary["annual_conversions"],
-        provider_aware_sales_queue=pilot["provider_aware_sales_queue"],
+        qualification_aware_sales_queue=pilot[
+            "qualification_aware_sales_queue"
+        ],
     )
 
     warnings: list[dict[str, str]] = []
@@ -461,7 +466,17 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
             summary[field] = _require_non_negative_int(
                 summary_object.get(field), f"pilot report.summary.{field}"
             )
-    provider_aware_sales_queue = False
+    pricing = {
+        field: _require_positive_int(
+            pricing_object.get(field), f"pilot report.pricing.{field}"
+        )
+        for field in (
+            "pilot_price_usd",
+            "target_pilots",
+            "target_revenue_usd",
+        )
+    }
+    qualification_aware_sales_queue = False
     if schema == 7:
         for field in (
             "complete_qualification_issues",
@@ -497,20 +512,13 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
             raise GrowthInputError(
                 "pilot report subset scope exceeds complete qualification"
             )
-        provider_aware_sales_queue = _validate_provider_aware_sales_queue(
-            root,
-            summary,
+        qualification_aware_sales_queue = (
+            _validate_qualification_aware_sales_queue(
+                root,
+                summary,
+                pricing["pilot_price_usd"],
+            )
         )
-    pricing = {
-        field: _require_positive_int(
-            pricing_object.get(field), f"pilot report.pricing.{field}"
-        )
-        for field in (
-            "pilot_price_usd",
-            "target_pilots",
-            "target_revenue_usd",
-        )
-    }
 
     raw_sources = _require_object(root.get("by_source"), "pilot report.by_source")
     sources: list[dict[str, Any]] = []
@@ -594,15 +602,16 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
         "sources": sources,
         "decision_criterion_reporting_available": schema >= 6,
         "qualification_reporting_available": schema == 7,
-        "provider_aware_sales_queue": provider_aware_sales_queue,
+        "qualification_aware_sales_queue": qualification_aware_sales_queue,
         "decision_criteria": decision_criteria,
         "warning_count": len(raw_warnings),
     }
 
 
-def _validate_provider_aware_sales_queue(
+def _validate_qualification_aware_sales_queue(
     root: dict[str, Any],
     summary: dict[str, int],
+    pilot_price_usd: int,
 ) -> bool:
     queue = _require_object(
         root.get("sales_queue"),
@@ -626,6 +635,11 @@ def _validate_provider_aware_sales_queue(
             raise GrowthInputError(
                 f"{location}.purchase_readiness must be a recognized value"
             )
+        stage = deal.get("stage")
+        if not isinstance(stage, str) or stage not in FOLLOW_UP_STAGES:
+            raise GrowthInputError(
+                f"{location}.stage must be an open pre-payment stage"
+            )
         next_action = deal.get("next_action")
         if not isinstance(next_action, str) or not next_action:
             raise GrowthInputError(
@@ -635,28 +649,78 @@ def _validate_provider_aware_sales_queue(
             deal.get("qualification"),
             f"{location}.qualification",
         )
-        ci_provider = qualification.get("ci_provider")
+        qualification_status = qualification.get("status")
+        if (
+            not isinstance(qualification_status, str)
+            or qualification_status not in QUALIFICATION_STATUSES
+        ):
+            raise GrowthInputError(
+                f"{location}.qualification.status must be a recognized value"
+            )
+        if "pilot_repository_scope" not in qualification:
+            raise GrowthInputError(
+                f"{location}.qualification.pilot_repository_scope must be "
+                "present"
+            )
+        repository_scope = qualification["pilot_repository_scope"]
+        if qualification_status == "incomplete":
+            if repository_scope is not None:
+                raise GrowthInputError(
+                    f"{location}.qualification.pilot_repository_scope must be "
+                    "null for incomplete qualification"
+                )
+        elif (
+            not isinstance(repository_scope, str)
+            or repository_scope not in PILOT_REPOSITORY_SCOPES
+        ):
+            raise GrowthInputError(
+                f"{location}.qualification.pilot_repository_scope must be a "
+                "recognized value for complete qualification"
+            )
+        if "ci_provider" not in qualification:
+            raise GrowthInputError(
+                f"{location}.qualification.ci_provider must be present"
+            )
+        ci_provider = qualification["ci_provider"]
         if ci_provider is not None and (
-            not isinstance(ci_provider, str) or not ci_provider
+            not isinstance(ci_provider, str)
+            or ci_provider not in CI_PROVIDER_KEYS
         ):
             raise GrowthInputError(
                 f"{location}.qualification.ci_provider must be null or a "
-                "non-empty string"
+                "recognized value"
+            )
+        if qualification_status != "incomplete" and ci_provider is None:
+            raise GrowthInputError(
+                f"{location}.qualification.ci_provider must be recognized for "
+                "complete qualification"
             )
 
-        expected_action: str | None = None
-        if readiness == "ready" and ci_provider is None:
-            expected_action = UNRESOLVED_CI_PROVIDER_ACTION
-        elif (
-            readiness == "ready"
-            and ci_provider != COPY_READY_CI_PROVIDER
+        expected_action = expected_sales_action(
+            stage,
+            readiness,
+            pilot_price_usd,
+            qualification,
+        )
+        if next_action == expected_action:
+            continue
+        if readiness == "ready" and (
+            qualification_status != "target"
+            or repository_scope == "subset_required"
         ):
-            expected_action = CI_INTEGRATION_DECISION_ACTION
-        if expected_action is not None and next_action != expected_action:
+            raise GrowthInputError(
+                f"{location}.next_action does not preserve the ready "
+                "qualification scope gate"
+            )
+        if readiness == "ready" and ci_provider != COPY_READY_CI_PROVIDER:
             raise GrowthInputError(
                 f"{location}.next_action does not preserve the ready CI "
                 "provider gate"
             )
+        raise GrowthInputError(
+            f"{location}.next_action does not match the stage-specific sales "
+            "action contract"
+        )
 
     return bool(raw_deals)
 
@@ -789,7 +853,7 @@ def _choose_bottleneck(
     pilot_price_usd: int,
     target_pilots: int,
     annual_conversions: int,
-    provider_aware_sales_queue: bool,
+    qualification_aware_sales_queue: bool,
 ) -> dict[str, str]:
     if change is None:
         return {
@@ -824,9 +888,10 @@ def _choose_bottleneck(
             "next_action": "Work the sales queue and qualify the team policy need.",
         }
     if offered_pilots == 0:
-        if provider_aware_sales_queue:
+        if qualification_aware_sales_queue:
             next_action = (
-                "Work the provider-aware pilot sales queue before sending the "
+                "Work the qualification-aware pilot sales queue before sending "
+                "the "
                 f"explicit ${pilot_price_usd} pilot terms."
             )
         else:
@@ -840,10 +905,10 @@ def _choose_bottleneck(
             "next_action": next_action,
         }
     if booked_pilots == 0:
-        if provider_aware_sales_queue:
+        if qualification_aware_sales_queue:
             next_action = (
-                "Work the provider-aware pilot sales queue before confirming "
-                "purchase or payment."
+                "Work the qualification-aware pilot sales queue before "
+                "confirming purchase or payment."
             )
         else:
             next_action = "Resolve the top offered deal's purchase blocker."
@@ -853,10 +918,10 @@ def _choose_bottleneck(
             "next_action": next_action,
         }
     if booked_pilots < target_pilots:
-        if provider_aware_sales_queue:
+        if qualification_aware_sales_queue:
             next_action = (
-                "Work the provider-aware pilot sales queue before closing the "
-                "next pilot."
+                "Work the qualification-aware pilot sales queue before closing "
+                "the next pilot."
             )
         else:
             next_action = (

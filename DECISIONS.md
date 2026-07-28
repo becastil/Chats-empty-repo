@@ -4164,3 +4164,38 @@ non-GitHub or unresolved-provider action before deferring. Saved schema-7
 evidence carrying the former provider-blind action fails closed, while older
 pilot schemas keep their prior aggregate behavior. This does not approve
 outreach, make an integration decision, collect payment, or record revenue.
+
+## 2026-07-28: Gate Ready Buyer Actions On Pilot Scope
+
+Schema-7 qualification classified team size, repository count, CI provider,
+and the presence of a requested standard, but the sales action used only
+readiness, stage, price, and CI provider. A ready GitHub Actions request marked
+incomplete or outside the 5-to-50-developer and multi-repository target could
+therefore receive an instruction to send terms or confirm payment. A target
+request above the 10-repository offer could receive the same instruction before
+its required first-10 scope was agreed.
+
+Ready GitHub Actions requests now receive normal stage-specific terms or payment
+guidance only when qualification is `target` and repository scope is
+`within_offer`. Incomplete and outside-target evidence receives one
+qualification-review action, while `subset_required` receives a
+first-10-repository scope action. The existing non-GitHub integration decision
+and unresolved-provider clarification retain precedence, so unsupported CI
+cannot advance while the broader qualification evidence is reviewed. Actions
+for approval-dependent, exploratory, missing, and unrecognized readiness remain
+unchanged because they do not direct terms or payment.
+
+Pilot reporting and growth ingestion now use one sales-action resolver. Growth
+requires every schema-7 queue entry to carry a recognized open pre-payment
+stage, readiness value, qualification status, repository scope, and provider,
+then reproduces the exact action with the report's validated pilot price.
+Provider-blind, scope-blind, stage-skipping, and price-divergent saved actions
+fail closed before a growth bottleneck can defer to the queue. Schema-5 and
+schema-6 aggregate recommendations remain unchanged.
+
+Source coverage spans target, outside-target, incomplete, and first-10 scope
+requests while preserving non-ready coaching and consistent deal, stale, and
+queue views. The installed commercial smoke proves an out-of-profile request
+cannot retain payment guidance. This corrects the $299 pilot operating contract;
+it does not approve outreach, change qualification labels, make a private scope
+or CI decision, collect payment, or record revenue.

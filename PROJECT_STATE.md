@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 273 of
-1,000, with 727 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 274 of
+1,000, with 726 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -62,11 +62,14 @@ alignment take priority over commit volume.
   surrounding whitespace before operator output.
 - Generic operator warnings for unrecognized public form answers and pilot
   labels, retaining raw values only in structurally escaped JSON fields.
-- Provider-aware ready-buyer actions that preserve normal GitHub Actions terms
-  and payment guidance while routing non-GitHub or unresolved CI evidence to
-  the required integration decision before further commercial advancement,
-  with schema-7 growth ingestion validating that gate before its commercial
-  bottlenecks defer to the same sales queue.
+- Qualification-aware ready-buyer actions that preserve normal terms and
+  payment guidance only for target-profile GitHub Actions requests within the
+  10-repository offer. Non-GitHub or unresolved CI evidence retains its
+  integration gate, incomplete or outside-target GitHub evidence requires
+  scope review, and larger target requests require an explicit first-10 scope.
+  Schema-7 growth ingestion validates every queue action against its stage,
+  readiness, qualification, CI provider, and configured price before its
+  commercial bottlenecks defer to that queue.
 - Strict positive-integer pilot price, target, and inactivity controls that
   reject booleans, floats, and strings before revenue evidence is built.
 - Release-blocking installed-wheel proof that offers remain outside revenue,

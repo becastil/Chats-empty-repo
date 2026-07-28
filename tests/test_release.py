@@ -620,6 +620,7 @@ class ReleaseManifestTests(unittest.TestCase):
                 "qualified-segmentation",
                 "operator-text",
                 "ci-integration-payment-gate",
+                "qualification-scope-payment-gate",
                 "distribution-evidence",
                 "joined-growth-review",
                 "growth-boundaries",

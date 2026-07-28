@@ -786,7 +786,13 @@ class PilotFunnelTests(unittest.TestCase):
 
     def test_main_emits_stable_json_with_custom_commercial_targets(self) -> None:
         payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
-        payload[0]["body"] += "\n\n### CI provider\n\nGitHub Actions"
+        payload[0]["body"] += (
+            "\n\n### Team size\n\n12"
+            "\n\n### Repository count\n\n6"
+            "\n\n### CI provider\n\nGitHub Actions"
+            "\n\n### Repository standard to enforce\n\n"
+            "Use one reviewed repository policy."
+        )
         stdout = io.StringIO()
         with redirect_stdout(stdout):
             exit_code = main(
@@ -863,6 +869,10 @@ class PilotFunnelTests(unittest.TestCase):
                 "state": state,
                 "updatedAt": updated_at,
                 "body": (
+                    "### Team size\n\n12\n\n"
+                    "### Repository count\n\n6\n\n"
+                    "### Repository standard to enforce\n\n"
+                    "Use one reviewed repository policy.\n\n"
                     f"{source}\n\n### Purchase readiness\n\n{readiness}\n\n"
                     f"{criterion}\n\n### CI provider\n\nGitHub Actions"
                 ),
@@ -1165,6 +1175,139 @@ class PilotFunnelTests(unittest.TestCase):
         )
         self.assertEqual(text_report.count(integration_action), 4)
         self.assertEqual(text_report.count(unresolved_action), 4)
+
+    def test_sales_queue_requires_scope_review_before_terms_or_payment(
+        self,
+    ) -> None:
+        def issue(
+            number: int,
+            *,
+            team_size: str,
+            repository_count: str,
+            labels: list[str],
+            readiness: str = "Ready to purchase the $299 pilot",
+        ) -> dict[str, object]:
+            return {
+                "number": number,
+                "title": f"Pilot {number}",
+                "state": "OPEN",
+                "updatedAt": "2026-07-10T00:00:00Z",
+                "body": "\n\n".join(
+                    (
+                        f"### Team size\n\n{team_size}",
+                        f"### Repository count\n\n{repository_count}",
+                        "### CI provider\n\nGitHub Actions",
+                        "### Repository standard to enforce\n\n"
+                        "Use one reviewed repository policy.",
+                        "### How did you hear about Repo Scout?\n\n"
+                        "Repo Scout website",
+                        f"### Purchase readiness\n\n{readiness}",
+                        "### Primary purchase criterion\n\n"
+                        "Works across our repositories and CI",
+                    )
+                ),
+                "labels": labels,
+            }
+
+        payload = [
+            issue(
+                1,
+                team_size="12",
+                repository_count="6",
+                labels=["pilot-lead", "pilot-qualified", "pilot-offered"],
+            ),
+            issue(
+                2,
+                team_size="2",
+                repository_count="1",
+                labels=["pilot-lead", "pilot-qualified", "pilot-offered"],
+            ),
+            issue(
+                3,
+                team_size="about ten",
+                repository_count="6",
+                labels=["pilot-lead", "pilot-qualified"],
+            ),
+            issue(
+                4,
+                team_size="12",
+                repository_count="15",
+                labels=["pilot-lead"],
+            ),
+            issue(
+                5,
+                team_size="2",
+                repository_count="1",
+                labels=["pilot-lead", "pilot-qualified"],
+                readiness="Need internal approval for $299",
+            ),
+            issue(
+                6,
+                team_size="about ten",
+                repository_count="6",
+                labels=["pilot-lead"],
+                readiness="Exploring before requesting budget",
+            ),
+        ]
+
+        report = build_funnel(payload, as_of=date(2026, 7, 20))
+        queue = {
+            deal["number"]: deal for deal in report["sales_queue"]["deals"]
+        }
+        qualification_action = (
+            "Review the pilot qualification scope before any further pilot "
+            "terms or payment action."
+        )
+        subset_action = (
+            "Confirm the first-10-repository pilot scope before any further "
+            "pilot terms or payment action."
+        )
+
+        self.assertEqual(
+            queue[1]["next_action"],
+            "Confirm the purchase and payment path.",
+        )
+        self.assertEqual(queue[2]["qualification"]["status"], "outside_target")
+        self.assertEqual(queue[2]["next_action"], qualification_action)
+        self.assertEqual(queue[3]["qualification"]["status"], "incomplete")
+        self.assertEqual(queue[3]["next_action"], qualification_action)
+        self.assertEqual(
+            queue[4]["qualification"]["pilot_repository_scope"],
+            "subset_required",
+        )
+        self.assertEqual(queue[4]["next_action"], subset_action)
+        self.assertEqual(
+            queue[5]["next_action"],
+            "Send an internal approval brief.",
+        )
+        self.assertEqual(
+            queue[6]["next_action"],
+            "Qualify the repository standard and evidence need.",
+        )
+
+        deals = {deal["number"]: deal for deal in report["deals"]}
+        follow_up = {
+            deal["number"]: deal for deal in report["follow_up"]["deals"]
+        }
+        for number, queue_deal in queue.items():
+            with self.subTest(consistency=number):
+                self.assertEqual(
+                    deals[number]["next_action"],
+                    queue_deal["next_action"],
+                )
+                self.assertEqual(
+                    follow_up[number]["next_action"],
+                    queue_deal["next_action"],
+                )
+
+        text_report = format_funnel(report)
+        self.assertNotIn(
+            "#2 [P1, offered, ready, rollout_fit] "
+            "Confirm the purchase and payment path.",
+            text_report,
+        )
+        self.assertEqual(text_report.count(qualification_action), 2)
+        self.assertEqual(text_report.count(subset_action), 1)
 
     def test_main_rejects_invalid_json(self) -> None:
         stderr = io.StringIO()

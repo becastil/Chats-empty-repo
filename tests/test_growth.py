@@ -408,8 +408,8 @@ class GrowthReportTests(unittest.TestCase):
                 ],
                 "offer",
                 (
-                    "Work the provider-aware pilot sales queue before sending "
-                    "the explicit $400 pilot terms."
+                    "Work the qualification-aware pilot sales queue before "
+                    "sending the explicit $400 pilot terms."
                 ),
             ),
             (
@@ -426,7 +426,7 @@ class GrowthReportTests(unittest.TestCase):
                 ],
                 "payment",
                 (
-                    "Work the provider-aware pilot sales queue before "
+                    "Work the qualification-aware pilot sales queue before "
                     "confirming purchase or payment."
                 ),
             ),
@@ -454,8 +454,8 @@ class GrowthReportTests(unittest.TestCase):
                 ],
                 "pilot_target",
                 (
-                    "Work the provider-aware pilot sales queue before closing "
-                    "the next pilot."
+                    "Work the qualification-aware pilot sales queue before "
+                    "closing the next pilot."
                 ),
             ),
         )
@@ -539,6 +539,159 @@ class GrowthReportTests(unittest.TestCase):
             "sales_actions does not match sales_queue.deals",
         ):
             build_growth_report(self._distribution(), inconsistent_count)
+
+        unsafe_scope = build_funnel(
+            [
+                {
+                    "number": 2,
+                    "title": "Out-of-profile GitHub pilot",
+                    "state": "OPEN",
+                    "updatedAt": "2026-07-10T00:00:00Z",
+                    "body": "\n\n".join(
+                        (
+                            "### Team size\n\n2",
+                            "### Repository count\n\n1",
+                            "### CI provider\n\nGitHub Actions",
+                            "### Repository standard to enforce\n\n"
+                            "Use one reviewed repository policy.",
+                            "### How did you hear about Repo Scout?\n\n"
+                            "Repo Scout website",
+                            "### Purchase readiness\n\n"
+                            "Ready to purchase the $299 pilot",
+                            "### Primary purchase criterion\n\n"
+                            "Works across our repositories and CI",
+                        )
+                    ),
+                    "labels": [
+                        "pilot-lead",
+                        "pilot-qualified",
+                        "pilot-offered",
+                    ],
+                }
+            ],
+            as_of=date(2026, 7, 10),
+        )
+        unsafe_scope["sales_queue"]["deals"][0]["next_action"] = (
+            "Confirm the purchase and payment path."
+        )
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            "next_action does not preserve the ready qualification scope gate",
+        ):
+            build_growth_report(self._distribution(), unsafe_scope)
+
+        wrong_stage_action = build_funnel(
+            [
+                {
+                    "number": 3,
+                    "title": "Qualified GitHub pilot",
+                    "state": "OPEN",
+                    "updatedAt": "2026-07-10T00:00:00Z",
+                    "body": "\n\n".join(
+                        (
+                            "### Team size\n\n12",
+                            "### Repository count\n\n6",
+                            "### CI provider\n\nGitHub Actions",
+                            "### Repository standard to enforce\n\n"
+                            "Use one reviewed repository policy.",
+                            "### How did you hear about Repo Scout?\n\n"
+                            "Repo Scout website",
+                            "### Purchase readiness\n\n"
+                            "Ready to purchase the $299 pilot",
+                            "### Primary purchase criterion\n\n"
+                            "Works across our repositories and CI",
+                        )
+                    ),
+                    "labels": ["pilot-lead", "pilot-qualified"],
+                }
+            ],
+            as_of=date(2026, 7, 10),
+        )
+        wrong_stage_action["sales_queue"]["deals"][0]["next_action"] = (
+            "Confirm the purchase and payment path."
+        )
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            "next_action does not match the stage-specific sales action contract",
+        ):
+            build_growth_report(self._distribution(), wrong_stage_action)
+
+        price_divergent = json.loads(json.dumps(wrong_stage_action))
+        price_divergent["pricing"] = {
+            "pilot_price_usd": 400,
+            "target_pilots": 3,
+            "target_revenue_usd": 1200,
+        }
+        price_divergent["sales_queue"]["deals"][0]["next_action"] = (
+            "Send the $299 pilot terms."
+        )
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            "next_action does not match the stage-specific sales action contract",
+        ):
+            build_growth_report(self._distribution(), price_divergent)
+
+        malformed_cases = (
+            ("stage", [], "stage must be an open pre-payment stage"),
+            (
+                "qualification.status",
+                [],
+                "qualification.status must be a recognized value",
+            ),
+            (
+                "qualification.pilot_repository_scope",
+                [],
+                "pilot_repository_scope must be a recognized value",
+            ),
+            (
+                "qualification.ci_provider",
+                "future_ci",
+                "ci_provider must be null or a recognized value",
+            ),
+            (
+                "qualification.ci_provider",
+                [],
+                "ci_provider must be null or a recognized value",
+            ),
+            (
+                "qualification.ci_provider",
+                None,
+                "ci_provider must be recognized for complete qualification",
+            ),
+        )
+        for field, value, message in malformed_cases:
+            with self.subTest(field=field):
+                malformed = json.loads(json.dumps(wrong_stage_action))
+                queue_deal = malformed["sales_queue"]["deals"][0]
+                if field == "stage":
+                    queue_deal["stage"] = value
+                elif field == "qualification.status":
+                    queue_deal["qualification"]["status"] = value
+                elif field == "qualification.ci_provider":
+                    queue_deal["qualification"]["ci_provider"] = value
+                else:
+                    queue_deal["qualification"][
+                        "pilot_repository_scope"
+                    ] = value
+                with self.assertRaisesRegex(GrowthInputError, message):
+                    build_growth_report(self._distribution(), malformed)
+
+        for field in ("pilot_repository_scope", "ci_provider"):
+            with self.subTest(missing=field):
+                missing_qualification_field = json.loads(
+                    json.dumps(wrong_stage_action)
+                )
+                del missing_qualification_field["sales_queue"]["deals"][0][
+                    "qualification"
+                ][field]
+                with self.assertRaisesRegex(
+                    GrowthInputError,
+                    rf"qualification\.{field} must be present",
+                ):
+                    build_growth_report(
+                        self._distribution(),
+                        missing_qualification_field,
+                    )
 
     def test_requires_a_baseline_before_prioritizing_commercial_movement(self) -> None:
         distribution = self._distribution()

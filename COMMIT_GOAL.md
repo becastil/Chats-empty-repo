@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after gating non-copy-ready CI sales actions:
-  273 / 1,000 (27.3%).
-- Remaining after gating non-copy-ready CI sales actions:
-  727 commits.
+- Progress after gating ready-buyer actions on pilot scope:
+  274 / 1,000 (27.4%).
+- Remaining after gating ready-buyer actions on pilot scope:
+  726 commits.
 
 ## Commit Standard
 

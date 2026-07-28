@@ -1348,22 +1348,26 @@ sales action. Ready buyers surface first, approval-dependent buyers receive an
 approval-oriented action, exploratory buyers receive a proof or decision-criteria
 action, and unclear answers require clarification. Funnel stage and issue age
 order deals within those groups. A ready buyer receives normal terms or payment
-guidance only when the normalized provider is GitHub Actions, the sole
-copy-ready gate. Recognized non-GitHub providers require the existing private
-integration decision first, while missing, no-response, edited, or ambiguous
-provider evidence requires clarification. This changes only the pilot queue's
-next action: target-profile classification, ordering, counts, human-applied
-labels, and booked-revenue semantics remain unchanged. Because the private
-decision is not public evidence, the queue cannot infer that it was completed.
-The aggregate growth review also lacks provider-level actionability. When it
+guidance only when the normalized provider is GitHub Actions, qualification is
+target-profile, and the requested scope fits within 10 repositories. Recognized
+non-GitHub providers require the existing private integration decision first,
+while missing, no-response, edited, or ambiguous provider evidence requires
+clarification. For GitHub Actions, incomplete or outside-target qualification
+requires review and a larger target request requires a first-10-repository
+scope before commercial advancement. This changes only the pilot queue's next
+action: target-profile classification, ordering, counts, human-applied labels,
+and booked-revenue semantics remain unchanged. Because private decisions are
+not public evidence, the queue cannot infer that they were completed.
+The aggregate growth review also lacks deal-level actionability. When it
 reads schema 7 and open sales actions exist, its offer, payment, and open
-pilot-target recommendations therefore defer to the provider-aware queue
+pilot-target recommendations therefore defer to the qualification-aware queue
 instead of issuing a second commercial instruction. The offer-stage handoff
 still carries the report's validated pilot price. Growth first reconciles the
-reported action count with the embedded queue and verifies that every ready
-non-GitHub or unresolved-provider action preserves the gate. A saved schema-7
-report with the former provider-blind action fails closed instead of acquiring
-new meaning from its version number. Older pilot schemas retain their existing
+reported action count with the embedded queue and verifies every queued stage,
+readiness, qualification status, repository scope, provider, price-derived
+action, and exact next action. A saved schema-7 report with a provider-blind,
+scope-blind, or stage-skipping action fails closed instead of acquiring new
+meaning from its version number. Older pilot schemas retain their existing
 aggregate recommendations. The queue is an operating aid, not an automated
 decision, and it neither sends outreach nor records payment.
 
