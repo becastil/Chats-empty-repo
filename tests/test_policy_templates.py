@@ -17,12 +17,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 import repo_scout.policy_templates as policy_templates_module
 from repo_scout.policy import (
+    MAX_POLICY_BYTES,
     evaluate_policy,
     load_policy,
     parse_policy,
     policy_fingerprint,
 )
 from repo_scout.policy_templates import (
+    MAX_BOOTSTRAP_RECEIPT_BYTES,
     TEMPLATE_BY_NAME,
     get_template,
     list_templates,
@@ -1130,6 +1132,98 @@ class PolicyTemplateTests(unittest.TestCase):
             self.assertIn(
                 "bootstrap receipt changed during verification",
                 stderr.getvalue(),
+            )
+
+    def test_verify_receipt_rejects_oversized_receipt_before_json_parsing(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            receipt_path = Path(tmp) / "bootstrap-receipt.json"
+            with receipt_path.open("wb") as receipt_file:
+                receipt_file.truncate(MAX_BOOTSTRAP_RECEIPT_BYTES + 1)
+
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with patch(
+                "repo_scout.policy_templates.json.loads",
+                side_effect=AssertionError(
+                    "oversized receipt must not be parsed"
+                ),
+            ) as decoder, redirect_stdout(stdout), redirect_stderr(stderr):
+                exit_code = main(
+                    [
+                        "verify-receipt",
+                        str(receipt_path),
+                        "--format",
+                        "json",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 2)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertIn(
+                (
+                    "bootstrap receipt exceeds "
+                    f"{MAX_BOOTSTRAP_RECEIPT_BYTES} bytes"
+                ),
+                stderr.getvalue(),
+            )
+            decoder.assert_not_called()
+            self.assertEqual(
+                receipt_path.stat().st_size,
+                MAX_BOOTSTRAP_RECEIPT_BYTES + 1,
+            )
+
+    def test_verify_receipt_rejects_oversized_policy_before_parsing(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "pyproject.toml").write_text(
+                "[project]\n",
+                encoding="utf-8",
+            )
+            bootstrap_stdout = io.StringIO()
+            with redirect_stdout(bootstrap_stdout), redirect_stderr(
+                io.StringIO()
+            ):
+                bootstrap_exit_code = main(
+                    ["bootstrap", str(root), "--format", "json"]
+                )
+            receipt_path = root / "bootstrap-receipt.json"
+            receipt_path.write_text(
+                bootstrap_stdout.getvalue(),
+                encoding="utf-8",
+            )
+            policy_path = root / "repo-scout-policy.toml"
+            with policy_path.open("wb") as policy_file:
+                policy_file.truncate(MAX_POLICY_BYTES + 1)
+
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with redirect_stdout(stdout), redirect_stderr(stderr):
+                exit_code = main(
+                    [
+                        "verify-receipt",
+                        str(receipt_path),
+                        "--format",
+                        "json",
+                    ]
+                )
+            verification = json.loads(stdout.getvalue())
+
+            self.assertEqual(bootstrap_exit_code, 0)
+            self.assertEqual(exit_code, 6)
+            self.assertEqual(stderr.getvalue(), "")
+            self.assertEqual(verification["status"], "fail")
+            self.assertIsNone(verification["actual"])
+            self.assertIn(
+                f"policy file exceeds {MAX_POLICY_BYTES} bytes",
+                verification["message"],
+            )
+            self.assertEqual(
+                policy_path.stat().st_size,
+                MAX_POLICY_BYTES + 1,
             )
 
     def test_verify_receipt_rejects_malformed_evidence_and_reports_missing_policy(

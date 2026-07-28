@@ -183,7 +183,9 @@ UTF-8 byte buffer, then rereads the bytes and rechecks the requested leaf at the
 policy-acceptance checkpoint. Static symlinks, directories, FIFOs, and other
 special files return exit code 2 before a scan report is emitted; a symlink
 target is neither followed nor named. Replacement or same-inode mutation
-detected at that checkpoint also fails closed.
+detected at that checkpoint also fails closed. Policy input is capped at
+128 KiB (131,072 bytes); the descriptor size and both bounded reads enforce the
+ceiling before parsing and during the acceptance reread.
 
 Policy results are included in text, JSON, and Markdown reports. Exit code 6
 means the scan completed and at least one team-policy rule failed. Policy
@@ -246,6 +248,9 @@ must name a direct regular-file leaf. Symlinks, directories, FIFOs, other
 special leaves, replacement, or in-place mutation return exit code 2 without a
 verification report. Receipt JSON is parsed and validated through one opened
 descriptor, then its exact bytes and requested leaf are rechecked before use.
+Receipt input is capped at 128 KiB (131,072 bytes), as is the selected policy;
+oversized sparse files and growth during the bounded reread fail without
+allocating the full input.
 Receipt output evidence must be an absolute, valid file leaf; relative or
 NUL-bearing values return exit code 2 before an override is considered. A moved
 policy can be selected with `--policy`. The selected policy leaf must remain a

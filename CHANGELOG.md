@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Capped primary policies, bootstrap receipts, and receipt-selected policies at
+  128 KiB through the shared descriptor reader, rejecting oversized sparse
+  inputs before parsing.
+- Bounded both the initial read and acceptance reread to the ceiling plus one
+  byte, so concurrent file growth cannot trigger unbounded activation evidence
+  allocation.
+- Added source proof for pre-parse policy and receipt rejection, receipt-policy
+  mismatch evidence, and policy growth during validation, plus installed-command
+  proof for oversized primary policy and receipt inputs.
 - Required the primary `repo-scout --policy` argument to remain a direct
   regular-file leaf, rejecting symlinks and special files with exit 2 before a
   scan report can be emitted.

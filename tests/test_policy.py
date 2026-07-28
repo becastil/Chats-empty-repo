@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 import repo_scout.policy as policy_module
 from repo_scout.policy import (
+    MAX_POLICY_BYTES,
     PolicyError,
     evaluate_policy,
     load_policy,
@@ -458,6 +459,90 @@ required_files = ["../secret.txt"]
             with self.assertRaisesRegex(PolicyError, "normalized and relative"):
                 load_policy(policy_path)
 
+    def test_load_policy_rejects_oversized_file_before_parsing(self) -> None:
+        with TemporaryDirectory() as tmp:
+            policy_path = Path(tmp) / "team-policy.toml"
+            with policy_path.open("wb") as policy_file:
+                policy_file.truncate(MAX_POLICY_BYTES + 1)
+
+            with patch(
+                "repo_scout.policy.tomllib.loads",
+                side_effect=AssertionError(
+                    "oversized policy must not be parsed"
+                ),
+            ) as parser, patch(
+                "repo_scout._file_evidence.os.read",
+                side_effect=AssertionError(
+                    "oversized sparse policy must not be read"
+                ),
+            ) as descriptor_reader, self.assertRaisesRegex(
+                PolicyError,
+                f"policy file exceeds {MAX_POLICY_BYTES} bytes",
+            ):
+                load_policy(policy_path)
+
+            parser.assert_not_called()
+            descriptor_reader.assert_not_called()
+            self.assertEqual(
+                policy_path.stat().st_size,
+                MAX_POLICY_BYTES + 1,
+            )
+
+    def test_load_policy_accepts_file_at_size_limit(self) -> None:
+        with TemporaryDirectory() as tmp:
+            policy_path = Path(tmp) / "team-policy.toml"
+            base = b"version = 1\n[repository]\nmax_files = 10\n"
+            padding = b"#" + (
+                b"x" * (MAX_POLICY_BYTES - len(base) - 2)
+            ) + b"\n"
+            policy_path.write_bytes(base + padding)
+
+            policy = load_policy(policy_path)
+
+            self.assertEqual(policy["version"], 1)
+            self.assertEqual(policy["repository"], {"max_files": 10})
+            self.assertEqual(policy_path.stat().st_size, MAX_POLICY_BYTES)
+
+    def test_load_policy_bounds_growth_during_initial_read(self) -> None:
+        with TemporaryDirectory() as tmp:
+            policy_path = Path(tmp) / "team-policy.toml"
+            policy_path.write_text(
+                "version = 1\n[repository]\nmax_files = 10\n",
+                encoding="utf-8",
+            )
+            original_details = policy_path.stat()
+            original_read = os.read
+            policy_grew = False
+
+            def grow_before_first_read(
+                descriptor: int,
+                size: int,
+            ) -> bytes:
+                nonlocal policy_grew
+                if not policy_grew:
+                    with policy_path.open("r+b") as policy_file:
+                        policy_file.truncate(MAX_POLICY_BYTES + 1)
+                    policy_grew = True
+                return original_read(descriptor, size)
+
+            with patch(
+                "repo_scout._file_evidence.os.read",
+                side_effect=grow_before_first_read,
+            ), self.assertRaisesRegex(
+                PolicyError,
+                f"policy file exceeds {MAX_POLICY_BYTES} bytes",
+            ):
+                load_policy(policy_path)
+
+            self.assertTrue(policy_grew)
+            self.assertTrue(
+                os.path.samestat(original_details, policy_path.stat())
+            )
+            self.assertEqual(
+                policy_path.stat().st_size,
+                MAX_POLICY_BYTES + 1,
+            )
+
     def test_load_policy_rejects_non_regular_paths_before_read(self) -> None:
         kinds = ["directory"]
         if hasattr(os, "symlink"):
@@ -632,6 +717,46 @@ required_files = ["../secret.txt"]
             self.assertTrue(policy_rewritten)
             self.assertTrue(
                 os.path.samestat(original_details, policy_path.stat())
+            )
+
+    def test_load_policy_bounds_growth_during_validation(self) -> None:
+        with TemporaryDirectory() as tmp:
+            policy_path = Path(tmp) / "team-policy.toml"
+            policy_path.write_text(
+                "version = 1\n[repository]\nmax_files = 10\n",
+                encoding="utf-8",
+            )
+            original_details = policy_path.stat()
+            original_validator = policy_module._validate_policy
+            policy_grew = False
+
+            def grow_after_validation(
+                policy: object,
+                source: str | Path,
+            ) -> dict[str, object]:
+                nonlocal policy_grew
+                validated = original_validator(policy, source)
+                with policy_path.open("r+b") as policy_file:
+                    policy_file.truncate(MAX_POLICY_BYTES + 1)
+                policy_grew = True
+                return validated
+
+            with patch(
+                "repo_scout.policy._validate_policy",
+                side_effect=grow_after_validation,
+            ), self.assertRaisesRegex(
+                PolicyError,
+                "policy changed during loading",
+            ):
+                load_policy(policy_path)
+
+            self.assertTrue(policy_grew)
+            self.assertTrue(
+                os.path.samestat(original_details, policy_path.stat())
+            )
+            self.assertEqual(
+                policy_path.stat().st_size,
+                MAX_POLICY_BYTES + 1,
             )
 
     def test_policy_fingerprint_tracks_normalized_rule_semantics(self) -> None:

@@ -3995,3 +3995,34 @@ This closes the remaining input-integrity gap in the command used by the
 copy-ready paid-CI workflow. It does not approve outreach, establish an install
 or customer use, validate demand, collect payment, deploy the site, or record
 revenue.
+
+## 2026-07-28: Bound Activation Evidence Before Parsing
+
+Descriptor binding prevented policy and bootstrap-receipt redirection and
+mutation, but the shared reader still accumulated regular-file bytes until EOF
+and repeated that unbounded allocation at the acceptance checkpoint. A sparse
+or growing policy or receipt could therefore consume excessive memory or CI
+runtime before TOML or JSON validation returned a controlled result.
+
+Primary policies, bootstrap receipts, and policies selected by receipt
+verification now share a 128 KiB ceiling. The opened descriptor's regular-file
+size is checked before content is read, rejecting oversized sparse files before
+allocation or parsing. Each descriptor read requests at most the remaining
+ceiling plus one byte. Crossing the limit during the initial read raises a
+dedicated internal size error. Crossing it during the post-validation reread is
+reported as changed content because the initially accepted bytes grew while
+they were under review. In either case, same-inode growth cannot force an
+unbounded allocation.
+
+An oversized primary policy returns exit 2 before scanning or emitting a
+report. An oversized receipt also returns exit 2 without verification evidence.
+An oversized receipt-selected policy keeps the archived expected identity,
+marks actual identity unavailable, and returns the existing exit-6 mismatch
+report. Source regressions prove pre-parse rejection, receipt-policy evidence,
+and growth during validation. The installed activation journey covers sparse
+primary-policy and receipt inputs without changing their bytes.
+
+This is a corrective availability boundary for free first-repository and paid
+CI activation. It does not add a policy feature, approve or send outreach,
+establish customer use, validate demand, deploy the site, collect payment, or
+record revenue.

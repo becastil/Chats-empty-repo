@@ -67,7 +67,9 @@ rechecks both the exact bytes and requested leaf at the policy-acceptance
 checkpoint. A static symlink, directory, FIFO, or other special file returns
 exit code 2 without a rollout bundle. Replacement or in-place mutation detected
 at the checkpoint does the same, preventing an untrusted policy input from
-redirecting or stalling the paid-CI activation path.
+redirecting or stalling the paid-CI activation path. Policy input is capped at
+128 KiB (131,072 bytes); the opened size and both descriptor reads enforce the
+limit before TOML parsing and at the acceptance checkpoint.
 
 The workflow grants only `contents: read` and `attestations: read`, disables
 persisted checkout credentials, and pins every external action by commit. It

@@ -12,6 +12,7 @@ from typing import Mapping, Sequence
 
 
 LOCKFILES = ("package-lock.json", "pnpm-lock.yaml", "yarn.lock")
+MAX_ACTIVATION_INPUT_BYTES = 128 * 1024
 
 
 class SmokeTestError(RuntimeError):
@@ -309,6 +310,33 @@ def verify_policy_activation(
             )
         checked.append("nonregular-cli-policy-rejected")
 
+        policy_path.rmdir()
+        with policy_path.open("wb") as policy_file:
+            policy_file.truncate(MAX_ACTIVATION_INPUT_BYTES + 1)
+        oversized_policy_scan = _run(
+            [
+                *scan_command,
+                "--format",
+                "json",
+                "--policy",
+                str(policy_path),
+                str(root),
+            ],
+            cwd=root,
+            environment=environment,
+            expected_exit_code=2,
+        )
+        if oversized_policy_scan.stdout:
+            raise SmokeTestError("oversized CLI policy emitted a scan report")
+        if (
+            f"policy file exceeds {MAX_ACTIVATION_INPUT_BYTES} bytes"
+            not in oversized_policy_scan.stderr
+        ):
+            raise SmokeTestError("oversized CLI policy was not rejected")
+        if policy_path.stat().st_size != MAX_ACTIVATION_INPUT_BYTES + 1:
+            raise SmokeTestError("oversized CLI policy evidence changed")
+        checked.append("oversized-cli-policy-rejected")
+
     with TemporaryDirectory() as tmp:
         root = Path(tmp) / "service"
         root.mkdir()
@@ -420,6 +448,34 @@ def verify_policy_activation(
         checked.append("nonregular-bootstrap-receipt-rejected")
 
         receipt_path.rmdir()
+        with receipt_path.open("wb") as receipt_file:
+            receipt_file.truncate(MAX_ACTIVATION_INPUT_BYTES + 1)
+        oversized_receipt_verification = _run(
+            [
+                *policy_command,
+                "verify-receipt",
+                str(receipt_path),
+                "--format",
+                "json",
+            ],
+            cwd=root,
+            environment=environment,
+            expected_exit_code=2,
+        )
+        if oversized_receipt_verification.stdout:
+            raise SmokeTestError(
+                "oversized bootstrap receipt emitted verification"
+            )
+        if (
+            f"bootstrap receipt exceeds {MAX_ACTIVATION_INPUT_BYTES} bytes"
+            not in oversized_receipt_verification.stderr
+        ):
+            raise SmokeTestError("oversized bootstrap receipt was not rejected")
+        if receipt_path.stat().st_size != MAX_ACTIVATION_INPUT_BYTES + 1:
+            raise SmokeTestError("oversized bootstrap receipt evidence changed")
+        checked.append("oversized-bootstrap-receipt-rejected")
+
+        receipt_path.unlink()
         stored_receipt.replace(receipt_path)
         moved_policy = root / "moved-policy.toml"
         policy_path.replace(moved_policy)

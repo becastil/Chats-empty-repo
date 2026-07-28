@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after binding primary policy loading to stable evidence:
-  268 / 1,000 (26.8%).
-- Remaining after binding primary policy loading to stable evidence:
-  732 commits.
+- Progress after bounding activation evidence before parsing:
+  269 / 1,000 (26.9%).
+- Remaining after bounding activation evidence before parsing:
+  731 commits.
 
 ## Commit Standard
 

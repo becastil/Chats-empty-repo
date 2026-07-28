@@ -326,6 +326,15 @@ same-inode mutation detected at that checkpoint. This protects the copy-ready
 customer gate from redirection or blocking at the command teams actually run;
 it does not establish an install, customer use, pilot demand, payment, or
 revenue.
+Primary policy files, bootstrap receipts, and receipt-selected policies are now
+bounded to 128 KiB before parsing. The opened regular-file size rejects sparse
+oversized inputs without reading them, while both descriptor reads stop after
+the ceiling plus one byte so concurrent growth cannot force an unbounded first
+read or acceptance reread. An oversized primary policy or receipt is a
+configuration error without a report; an oversized receipt-selected policy
+retains expected identity and returns the existing mismatch evidence with
+actual identity unavailable. This is an activation-availability correction,
+not another paid-policy feature or evidence of demand.
 
 An AI can recreate a scanner, but that is not the commercial claim being
 tested. The active website experiment presents the paid outcome in plain

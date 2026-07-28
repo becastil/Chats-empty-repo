@@ -9,6 +9,7 @@ import tomllib
 from typing import Any
 
 from ._file_evidence import (
+    FileSizeLimitError,
     StableContentError,
     StablePathError,
     read_stable_regular_file,
@@ -18,6 +19,7 @@ from ._file_evidence import (
 POLICY_VERSION = 4
 SUPPORTED_POLICY_VERSIONS = (1, 2, 3, POLICY_VERSION)
 MAX_FORBIDDEN_PATTERN_PATHS = 20
+MAX_POLICY_BYTES = 128 * 1024
 
 _ROOT_KEYS = {"version", "repository"}
 _REPOSITORY_KEYS_V1 = {
@@ -49,7 +51,11 @@ def load_policy(path: str | Path) -> dict[str, Any]:
         raise PolicyError(f"policy path must be a regular file: {source}")
 
     try:
-        with read_stable_regular_file(source, source_details) as content:
+        with read_stable_regular_file(
+            source,
+            source_details,
+            max_bytes=MAX_POLICY_BYTES,
+        ) as content:
             try:
                 policy = tomllib.loads(content)
             except tomllib.TOMLDecodeError as exc:
@@ -61,6 +67,10 @@ def load_policy(path: str | Path) -> dict[str, Any]:
         raise PolicyError(f"policy path changed during loading: {source}") from exc
     except StableContentError as exc:
         raise PolicyError(f"policy changed during loading: {source}") from exc
+    except FileSizeLimitError as exc:
+        raise PolicyError(
+            f"policy file exceeds {MAX_POLICY_BYTES} bytes: {source}"
+        ) from exc
     except (OSError, UnicodeDecodeError) as exc:
         raise PolicyError(f"could not read policy file {source}: {exc}") from exc
 

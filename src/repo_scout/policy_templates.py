@@ -13,19 +13,26 @@ from tempfile import NamedTemporaryFile
 from typing import Any, Sequence
 
 from ._file_evidence import (
+    FileSizeLimitError as _FileSizeLimitError,
     StableContentError as _StableContentError,
     StablePathError as _StablePathError,
     read_stable_regular_file as _read_stable_regular_file,
 )
 from .version import add_version_argument
 
-from .policy import PolicyError, parse_policy, policy_fingerprint
+from .policy import (
+    MAX_POLICY_BYTES,
+    PolicyError,
+    parse_policy,
+    policy_fingerprint,
+)
 
 
 TEMPLATE_SCHEMA_VERSION = 1
 RECOMMENDATION_SCHEMA_VERSION = 1
 BOOTSTRAP_SCHEMA_VERSION = 1
 RECEIPT_VERIFICATION_SCHEMA_VERSION = 1
+MAX_BOOTSTRAP_RECEIPT_BYTES = 128 * 1024
 OUTPUT_ERROR_EXIT_CODE = 4
 POLICY_MISMATCH_EXIT_CODE = 6
 
@@ -313,7 +320,11 @@ def _load_bootstrap_receipt_source(source: Path) -> dict[str, Any]:
         )
 
     try:
-        with _read_stable_regular_file(source, source_details) as content:
+        with _read_stable_regular_file(
+            source,
+            source_details,
+            max_bytes=MAX_BOOTSTRAP_RECEIPT_BYTES,
+        ) as content:
             try:
                 receipt = json.loads(
                     content,
@@ -335,6 +346,11 @@ def _load_bootstrap_receipt_source(source: Path) -> dict[str, Any]:
     except _StableContentError as exc:
         raise TemplateError(
             f"bootstrap receipt changed during verification: {source}"
+        ) from exc
+    except _FileSizeLimitError as exc:
+        raise TemplateError(
+            "bootstrap receipt exceeds "
+            f"{MAX_BOOTSTRAP_RECEIPT_BYTES} bytes: {source}"
         ) from exc
     except (OSError, UnicodeDecodeError) as exc:
         raise TemplateError(
@@ -411,7 +427,11 @@ def _load_stable_policy_identity(
     expected_details: os.stat_result,
 ) -> dict[str, Any]:
     try:
-        with _read_stable_regular_file(target, expected_details) as content:
+        with _read_stable_regular_file(
+            target,
+            expected_details,
+            max_bytes=MAX_POLICY_BYTES,
+        ) as content:
             policy = parse_policy(content, source=f"policy file {target}")
             return {
                 "version": policy["version"],
@@ -424,6 +444,10 @@ def _load_stable_policy_identity(
     except _StableContentError as exc:
         raise PolicyError(
             f"policy changed during verification: {target}"
+        ) from exc
+    except _FileSizeLimitError as exc:
+        raise PolicyError(
+            f"policy file exceeds {MAX_POLICY_BYTES} bytes: {target}"
         ) from exc
     except (OSError, UnicodeDecodeError) as exc:
         raise PolicyError(
