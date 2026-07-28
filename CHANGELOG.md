@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Bound bootstrap-receipt parsing and fingerprinting to one opened regular-file
+  descriptor, requiring the selected leaf to retain the same filesystem
+  identity before a match can pass.
+- Added deterministic source proof that symlink, identical-byte regular-file,
+  and post-fingerprint leaf replacements return exit-6 evidence with actual
+  identity unavailable.
 - Required receipt-recorded and overridden policy leaves to be regular files
   before loading, returning exit-6 mismatch evidence for directories, FIFOs,
   sockets, devices, and other special files instead of reading or blocking.

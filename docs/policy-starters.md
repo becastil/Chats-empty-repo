@@ -77,7 +77,12 @@ a direct regular-file leaf. An initial or dangling symlink returns 6 with the
 requested leaf and expected identity, reports the actual identity as
 unavailable, and leaves the link and target unchanged without naming the target.
 Directories, FIFOs, and other special leaves receive the same exit-6 evidence
-before they are read, preventing a pipe from blocking CI verification.
+before they are read, preventing a pipe from blocking CI verification. For a
+regular leaf, the verifier parses and fingerprints bytes through one opened
+descriptor, checks that descriptor against the initially inspected file, and
+rechecks the requested leaf after fingerprinting. A symlink or different
+regular-file replacement, including an identical-byte replacement, returns 6
+with actual identity unavailable instead of producing a false match.
 
 Recommendation is deterministic and local. A sole npm lockfile selects the
 npm-only profile; pnpm, Yarn, no lockfile yet, or multiple Node lockfiles select

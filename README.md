@@ -238,8 +238,13 @@ before an override is considered. A moved policy can be selected with
 dangling symlink returns exit code 6, preserves the requested leaf in the report,
 and neither follows nor names its target. It must also be a regular file;
 directories, FIFOs, and other special leaves return exit code 6 before the
-policy loader can read or block on them. Policy drift or a missing policy also
-returns exit code 6 with expected and actual identity evidence.
+policy loader can read or block on them. Verification parses and fingerprints
+the policy through one opened regular-file descriptor, checks that it matches
+the initially inspected leaf, and rechecks that leaf after fingerprinting.
+Replacing the path with a symlink or a different regular file, even one with
+identical bytes, returns exit code 6 with actual identity unavailable. Policy
+drift or a missing policy also returns exit code 6 with expected and actual
+identity evidence.
 `recommend` uses local manifests and lockfiles, can emit stable JSON, and flags
 mixed Python and Node repositories for review instead of presenting one starter
 as a complete team policy.

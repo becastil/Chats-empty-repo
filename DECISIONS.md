@@ -3913,3 +3913,27 @@ non-regular leaf with the same evidence.
 This prevents a crafted policy path from stalling first-repository or paid-CI
 activation while retaining the free verifier's useful failure report. It does
 not establish customer use, pilot demand, payment, or revenue.
+
+## 2026-07-28: Bind Receipt Verification To One Policy Descriptor
+
+Receipt verification inspected the selected policy leaf with `lstat()` but
+then reopened it through the path-based policy loader. The leaf could be
+replaced between those operations. A symlink to the original matching file or
+a different regular file containing identical bytes could therefore produce a
+false `pass` even though the requested first-repository policy leaf had changed.
+
+Verification now opens the inspected leaf with read-only, close-on-exec,
+no-follow, and nonblocking flags where the platform provides them. The opened
+descriptor must be a regular file with the same filesystem identity as the
+initial inspection. Policy bytes, normalization, and fingerprinting all use
+that descriptor, and the requested leaf must still name the same regular file
+after fingerprinting. Any transition returns the existing exit-6 report with
+expected identity retained and actual identity unavailable.
+
+Deterministic source regressions replace the leaf after initial inspection with
+both a symlink and an identical-byte regular file, then replace it again during
+fingerprinting. All three paths fail closed without disclosing a referent.
+
+This keeps free first-repository and paid-CI activation evidence tied to the
+policy leaf under review. It does not deploy the site, approve outreach,
+establish customer use, validate demand, collect payment, or record revenue.

@@ -14,7 +14,7 @@ from typing import Any, Sequence
 
 from .version import add_version_argument
 
-from .policy import PolicyError, load_policy, parse_policy, policy_fingerprint
+from .policy import PolicyError, parse_policy, policy_fingerprint
 
 
 TEMPLATE_SCHEMA_VERSION = 1
@@ -315,10 +315,14 @@ def verify_bootstrap_receipt(
     expected = dict(receipt["policy"])
 
     should_load = True
+    target_details: os.stat_result | None = None
     try:
         target_details = target.lstat()
     except FileNotFoundError:
-        pass
+        should_load = False
+        actual = None
+        status = "fail"
+        message = f"policy file does not exist: {target}"
     except OSError as exc:
         should_load = False
         actual = None
@@ -337,17 +341,14 @@ def verify_bootstrap_receipt(
             message = f"policy path must be a regular file: {target}"
 
     if should_load:
+        assert target_details is not None
         try:
-            policy = load_policy(target)
+            actual = _load_stable_policy_identity(target, target_details)
         except PolicyError as exc:
             actual = None
             status = "fail"
             message = str(exc)
         else:
-            actual = {
-                "version": policy["version"],
-                "fingerprint": policy_fingerprint(policy),
-            }
             status = "pass" if actual == expected else "fail"
             message = (
                 "Policy matches bootstrap receipt."
@@ -364,6 +365,89 @@ def verify_bootstrap_receipt(
         "actual": actual,
         "message": message,
     }
+
+
+def _load_stable_policy_identity(
+    target: Path,
+    expected_details: os.stat_result,
+) -> dict[str, Any]:
+    flags = os.O_RDONLY
+    for flag_name in ("O_BINARY", "O_CLOEXEC", "O_NOFOLLOW", "O_NONBLOCK"):
+        flags |= getattr(os, flag_name, 0)
+
+    descriptor: int | None = None
+    try:
+        try:
+            descriptor = os.open(target, flags)
+        except OSError as exc:
+            if not _regular_path_matches(target, expected_details):
+                raise PolicyError(
+                    f"policy path changed during verification: {target}"
+                ) from exc
+            raise PolicyError(
+                f"could not read policy file {target}: {exc}"
+            ) from exc
+
+        try:
+            os.set_inheritable(descriptor, False)
+            opened_details = os.fstat(descriptor)
+        except OSError as exc:
+            raise PolicyError(
+                f"could not read policy file {target}: {exc}"
+            ) from exc
+        if (
+            not stat.S_ISREG(opened_details.st_mode)
+            or not os.path.samestat(expected_details, opened_details)
+        ):
+            raise PolicyError(
+                f"policy path changed during verification: {target}"
+            )
+
+        chunks: list[bytes] = []
+        try:
+            while True:
+                chunk = os.read(descriptor, 65536)
+                if not chunk:
+                    break
+                chunks.append(chunk)
+        except OSError as exc:
+            raise PolicyError(
+                f"could not read policy file {target}: {exc}"
+            ) from exc
+        try:
+            content = b"".join(chunks).decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise PolicyError(
+                f"could not read policy file {target}: {exc}"
+            ) from exc
+        policy = parse_policy(content, source=f"policy file {target}")
+        actual = {
+            "version": policy["version"],
+            "fingerprint": policy_fingerprint(policy),
+        }
+
+        if not _regular_path_matches(target, opened_details):
+            raise PolicyError(
+                f"policy path changed during verification: {target}"
+            )
+        return actual
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+
+
+def _regular_path_matches(
+    target: Path,
+    expected_details: os.stat_result,
+) -> bool:
+    try:
+        current_details = target.lstat()
+    except OSError:
+        return False
+    return stat.S_ISREG(current_details.st_mode) and os.path.samestat(
+        expected_details,
+        current_details,
+    )
 
 
 def format_receipt_verification(verification: dict[str, Any]) -> str:

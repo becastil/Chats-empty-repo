@@ -299,6 +299,14 @@ The selected policy leaf must also be a regular file before verification reads
 it. Directories, FIFOs, sockets, devices, and other special files fail with
 actual identity unavailable, preventing a crafted pipe from stalling a paid-CI
 activation check while preserving the normal mismatch evidence contract.
+Receipt verification now also binds parsing and fingerprinting to one opened
+regular-file descriptor. The descriptor must match the initially inspected
+leaf, and that requested leaf must still identify the same file after the
+fingerprint is calculated. A symlink redirect or different regular-file
+replacement therefore cannot turn identical policy bytes into false
+first-repository or paid-CI activation evidence. This strengthens the free
+activation proof without establishing customer use, pilot demand, payment, or
+revenue.
 
 An AI can recreate a scanner, but that is not the commercial claim being
 tested. The active website experiment presents the paid outcome in plain
