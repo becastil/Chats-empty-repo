@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Advanced Sites evidence to schema 5 by strictly reconciling
+  `pyproject.toml` `project.version` with the website's single
+  `RELEASE_VERSION` declaration before commands run, then binding that public
+  release version into preparation, archived manifests, receipts, independent
+  verification, and owner-facing CLI output. The read-only hosted site
+  contract now runs when either release-identity source changes.
 - Bound Sites receipt staging to the output-parent descriptor held from
   preflight, retaining one private `0600` regular-file descriptor through
   writing, syncing, intended-byte digest validation, recheck, and no-clobber

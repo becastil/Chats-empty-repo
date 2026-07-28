@@ -33,8 +33,10 @@ class SiteDependencyWorkflowContractTests(unittest.TestCase):
 
         for path in (
             ".nvmrc",
+            "pyproject.toml",
             "package.json",
             "package-lock.json",
+            "app/site-config.ts",
             ".github/dependabot.yml",
             '".github/workflows/**"',
             "scripts/audit_action_pins.py",

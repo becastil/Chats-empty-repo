@@ -136,8 +136,12 @@ site release:
    `npm run test:site` against the exact existing `dist/` without rebuilding.
    The complete dependency audit must report zero vulnerabilities. The command
    refuses a detached or non-`main` branch, dirty or unsynchronized source,
-   runtime-pin or active-runtime drift, and an archive whose embedded commit,
-   lock digest, Sites project, or Node version differs from the tested source.
+   malformed or mismatched package/site release versions, runtime-pin or
+   active-runtime drift, and an archive whose embedded commit, public release
+   version, lock digest, Sites project, or Node version differs from the tested
+   source. `project.version` in `pyproject.toml` and the website's single
+   `RELEASE_VERSION` declaration must be the same semantic version before any
+   Git, Node, or npm command runs.
    Archive members outside `dist/`, path aliases, links, devices, pipes, and
    other special files are rejected; only canonical regular files and
    directories can cross the candidate boundary. After the build and before
@@ -151,8 +155,9 @@ site release:
    unexpected empty directory, or changed archive permission fails closed. This
    test-brackets built server and client output; hosting metadata, Drizzle
    configuration, and the embedded manifest are integrity-bound and
-   structurally checked. The schema-4 receipt records the resulting archive
-   digest and tested payload digest for later read-only verification.
+   structurally checked. The schema-5 receipt records the public release
+   version alongside the resulting archive digest and tested payload digest
+   for later read-only verification.
    Duplicate JSON keys fail even when repeated values match in checkout hosting
    metadata, candidate receipts, or archived manifests, so approval evidence
    never depends on a decoder selecting the first or last value.
@@ -216,8 +221,8 @@ site release:
    fail. Archive and receipt staging, staged reads, publication, and cleanup
    remain bound to the descriptors held from preflight.
    Persistent drift during receipt publication therefore leaves no
-   approval-ready result. The success output includes `receipt_sha256`; retain
-   that digest with the candidate evidence.
+   approval-ready result. The success output includes `release_version` and
+   `receipt_sha256`; retain both with the candidate evidence.
    Do not use `npm audit fix --force` when it proposes a framework downgrade;
    review and test a supported patch or explicit transitive override instead.
 2. Verify the archive and receipt immediately before asking for source-export
@@ -232,15 +237,15 @@ site release:
    This pre-approval verification is read-only and runs no Node, npm,
    packaging, network, source export, version save, or deployment operation.
    It requires the checkout to remain on `refs/heads/main`, clean, and
-   synchronized with `origin/main`, reconciles its commit, lockfile, and Sites
-   project with the strict receipt, recomputes the archive digest, validates
-   the embedded manifest, and then proves the same branch and synchronized
-   commit still hold. The supplied archive and receipt paths must themselves
-   name regular files rather than symlinks. It requires the same regular
-   archive and digest once more at that final acceptance checkpoint before
-   reporting success. Record the printed `receipt_sha256` with the source-export
-   approval so later verification can require the exact receipt bytes the
-   owner reviewed.
+   synchronized with `origin/main`, reconciles its commit, public release
+   version, lockfile, and Sites project with the strict receipt, recomputes the
+   archive digest, validates the embedded manifest, and then proves the same
+   branch and synchronized commit still hold. The supplied archive and receipt
+   paths must themselves name regular files rather than symlinks. It requires
+   the same regular archive and digest once more at that final acceptance
+   checkpoint before reporting success. Record the printed `release_version`
+   and `receipt_sha256` with the source-export approval so later verification
+   can require the exact receipt bytes and release identity the owner reviewed.
    Resolve the existing Sites source repository's credential-free remote URL
    before approval, confirm that it is not the local checkout or the repository
    configured as `origin`, and record that canonical identity as
@@ -252,9 +257,10 @@ site release:
    repository authority.
 3. Obtain explicit owner approval before pushing the exact committed source to
    the approved separate Sites source repository. The approval must identify
-   the receipt digest, canonical repository identity, `refs/heads/main`, and
-   receipt commit. This source-export approval is separate from deployment
-   approval, and the source export does not authorize production deployment.
+   the public release version, receipt digest, canonical repository identity,
+   `refs/heads/main`, and receipt commit. This source-export approval is
+   separate from deployment approval, and the source export does not authorize
+   production deployment.
 4. Push the receipt's exact source commit to the separate Sites source
    repository (the existing Sites source repository for this project), and
    reuse the existing Sites project in `.openai/hosting.json`.

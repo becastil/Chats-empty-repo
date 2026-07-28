@@ -4,8 +4,10 @@ on:
   pull_request:
     paths:
       - .nvmrc
+      - pyproject.toml
       - package.json
       - package-lock.json
+      - app/site-config.ts
       - .github/dependabot.yml
       - ".github/workflows/**"
       - scripts/audit_action_pins.py
@@ -19,8 +21,10 @@ on:
     branches: [main]
     paths:
       - .nvmrc
+      - pyproject.toml
       - package.json
       - package-lock.json
+      - app/site-config.ts
       - .github/dependabot.yml
       - ".github/workflows/**"
       - scripts/audit_action_pins.py

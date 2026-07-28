@@ -29,6 +29,7 @@ SPEC.loader.exec_module(prepare_site_candidate)
 
 COMMIT_SHA = "a" * 40
 PROJECT_ID = "appgprj_test"
+RELEASE_VERSION = "0.3.51"
 ORIGIN_REPOSITORY = "https://github.com/example/repo-scout.git"
 SITES_SOURCE_REPOSITORY = "https://sites.example/repo-scout.git"
 SITES_SOURCE_REMOTE = "sites-source"
@@ -281,8 +282,8 @@ class FakeCommandRunner:
                 )
                 content = manifest.read_text(encoding="utf-8")
                 content = content.replace(
-                    '  "schema_version": 4',
-                    '  "schema_version": 4,\n  "schema_version": 4',
+                    '  "schema_version": 5',
+                    '  "schema_version": 5,\n  "schema_version": 5',
                     1,
                 )
                 manifest.write_text(content, encoding="utf-8")
@@ -400,13 +401,15 @@ class SiteCandidateTests(unittest.TestCase):
             ).hexdigest()
             receipt_payload = json.loads(receipt.read_text(encoding="utf-8"))
             self.assertEqual(result.commit_sha, COMMIT_SHA)
-            self.assertEqual(receipt_payload["schema_version"], 4)
+            self.assertEqual(result.release_version, RELEASE_VERSION)
+            self.assertEqual(receipt_payload["schema_version"], 5)
             self.assertEqual(
                 receipt_payload["candidate"],
                 {
-                    "schema_version": 4,
+                    "schema_version": 5,
                     "commit_sha": COMMIT_SHA,
                     "source_ref": "refs/heads/main",
+                    "release_version": RELEASE_VERSION,
                     "node_version": "22.13.0",
                     "package_lock_sha256": expected_lock_sha,
                     "project_id": PROJECT_ID,
@@ -2200,6 +2203,40 @@ class SiteCandidateTests(unittest.TestCase):
                     run_command=FakeCommandRunner(root, archive),
                 )
 
+    def test_verification_rejects_checkout_release_version_drift(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            runner = FakeCommandRunner(root, archive)
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=runner,
+            )
+            changed_version = "0.3.52"
+            (root / "pyproject.toml").write_text(
+                f'[project]\nversion = "{changed_version}"\n',
+                encoding="utf-8",
+            )
+            (root / "app" / "site-config.ts").write_text(
+                f'export const RELEASE_VERSION = "{changed_version}";\n',
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "receipt candidate release_version does not match checkout",
+            ):
+                prepare_site_candidate.verify_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+
     def test_verification_rejects_receipt_schema_extensions(self) -> None:
         with TemporaryDirectory() as tmp:
             root, archive, receipt, package_script = self._fixture(Path(tmp))
@@ -2226,7 +2263,9 @@ class SiteCandidateTests(unittest.TestCase):
                     run_command=FakeCommandRunner(root, archive),
                 )
 
-    def test_verification_rejects_receipts_before_tree_binding(self) -> None:
+    def test_verification_rejects_receipts_before_release_binding(
+        self,
+    ) -> None:
         with TemporaryDirectory() as tmp:
             root, archive, receipt, package_script = self._fixture(Path(tmp))
             runner = FakeCommandRunner(root, archive)
@@ -2238,12 +2277,12 @@ class SiteCandidateTests(unittest.TestCase):
                 run_command=runner,
             )
             payload = json.loads(receipt.read_text(encoding="utf-8"))
-            payload["schema_version"] = 3
+            payload["schema_version"] = 4
             receipt.write_text(json.dumps(payload), encoding="utf-8")
 
             with self.assertRaisesRegex(
                 prepare_site_candidate.SiteCandidateError,
-                "receipt schema_version must be 4",
+                "receipt schema_version must be 5",
             ):
                 prepare_site_candidate.verify_site_candidate(
                     root,
@@ -2277,6 +2316,7 @@ class SiteCandidateTests(unittest.TestCase):
     def test_verify_only_cli_does_not_require_a_packaging_helper(self) -> None:
         result = prepare_site_candidate.SiteCandidateResult(
             commit_sha=COMMIT_SHA,
+            release_version=RELEASE_VERSION,
             archive_sha256="c" * 64,
             receipt_sha256="e" * 64,
             archive=Path("/tmp/candidate.tar.gz"),
@@ -2307,6 +2347,7 @@ class SiteCandidateTests(unittest.TestCase):
             stdout.getvalue().strip(),
             "site candidate verified: "
             f"commit={COMMIT_SHA} "
+            f"release_version={RELEASE_VERSION} "
             "archive=candidate.tar.gz "
             f"sha256={'c' * 64} "
             "receipt=candidate.json "
@@ -2353,6 +2394,7 @@ class SiteCandidateTests(unittest.TestCase):
     def test_pre_save_cli_routes_exported_source_verification(self) -> None:
         result = prepare_site_candidate.SiteCandidateResult(
             commit_sha=COMMIT_SHA,
+            release_version=RELEASE_VERSION,
             archive_sha256="c" * 64,
             receipt_sha256="e" * 64,
             archive=Path("/tmp/candidate.tar.gz"),
@@ -2397,6 +2439,7 @@ class SiteCandidateTests(unittest.TestCase):
     def test_prepare_cli_still_routes_through_the_packaging_helper(self) -> None:
         result = prepare_site_candidate.SiteCandidateResult(
             commit_sha=COMMIT_SHA,
+            release_version=RELEASE_VERSION,
             archive_sha256="d" * 64,
             receipt_sha256="f" * 64,
             archive=Path("/tmp/candidate.tar.gz"),
@@ -2428,6 +2471,7 @@ class SiteCandidateTests(unittest.TestCase):
             stdout.getvalue().strip(),
             "site candidate ready: "
             f"commit={COMMIT_SHA} "
+            f"release_version={RELEASE_VERSION} "
             "archive=candidate.tar.gz "
             f"sha256={'d' * 64} "
             "receipt=candidate.json "
@@ -4219,6 +4263,83 @@ class SiteCandidateTests(unittest.TestCase):
             workflow,
         )
 
+    def test_release_version_matches_candidate_and_site_contracts(
+        self,
+    ) -> None:
+        self.assertEqual(
+            prepare_site_candidate.read_release_version(ROOT),
+            RELEASE_VERSION,
+        )
+
+    def test_rejects_invalid_release_metadata_before_commands(
+        self,
+    ) -> None:
+        cases = (
+            (
+                "missing project metadata",
+                lambda root: (root / "pyproject.toml").unlink(),
+                "project release metadata must be a regular file",
+            ),
+            (
+                "malformed project metadata",
+                lambda root: (root / "pyproject.toml").write_text(
+                    '[project\nversion = "0.3.51"\n',
+                    encoding="utf-8",
+                ),
+                "could not read project release version",
+            ),
+            (
+                "missing site configuration",
+                lambda root: (
+                    root / "app" / "site-config.ts"
+                ).unlink(),
+                "site release configuration must be a regular file",
+            ),
+            (
+                "malformed site version",
+                lambda root: (
+                    root / "app" / "site-config.ts"
+                ).write_text(
+                    'export const RELEASE_VERSION = "0.3";\n',
+                    encoding="utf-8",
+                ),
+                "site RELEASE_VERSION must contain one semantic version",
+            ),
+            (
+                "mismatched site version",
+                lambda root: (
+                    root / "app" / "site-config.ts"
+                ).write_text(
+                    'export const RELEASE_VERSION = "0.3.50";\n',
+                    encoding="utf-8",
+                ),
+                "site RELEASE_VERSION does not match project.version",
+            ),
+        )
+        for label, mutate, expected_error in cases:
+            with self.subTest(label=label), TemporaryDirectory() as tmp:
+                root, archive, receipt, package_script = self._fixture(
+                    Path(tmp)
+                )
+                mutate(root)
+                runner = FakeCommandRunner(root, archive)
+
+                with self.assertRaisesRegex(
+                    prepare_site_candidate.SiteCandidateError,
+                    expected_error,
+                ):
+                    prepare_site_candidate.prepare_site_candidate(
+                        root,
+                        archive,
+                        receipt,
+                        package_script,
+                        run_command=runner,
+                    )
+
+                self.assertEqual(runner.commands, [])
+                self.assertFalse(archive.exists())
+                self.assertFalse(receipt.exists())
+
     def test_rejects_a_malformed_runtime_pin_before_commands(self) -> None:
         with TemporaryDirectory() as tmp:
             root, archive, receipt, package_script = self._fixture(Path(tmp))
@@ -4243,6 +4364,16 @@ class SiteCandidateTests(unittest.TestCase):
     def _fixture(tmp: Path) -> tuple[Path, Path, Path, Path]:
         root = tmp / "project"
         root.mkdir()
+        (root / "pyproject.toml").write_text(
+            f'[project]\nversion = "{RELEASE_VERSION}"\n',
+            encoding="utf-8",
+        )
+        site_config = root / "app" / "site-config.ts"
+        site_config.parent.mkdir()
+        site_config.write_text(
+            f'export const RELEASE_VERSION = "{RELEASE_VERSION}";\n',
+            encoding="utf-8",
+        )
         (root / ".nvmrc").write_text("22.13.0\n", encoding="ascii")
         (root / "package-lock.json").write_text(
             '{"lockfileVersion": 3}\n',

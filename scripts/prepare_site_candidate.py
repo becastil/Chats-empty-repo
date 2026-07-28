@@ -15,13 +15,14 @@ import subprocess
 import sys
 import tarfile
 from tempfile import NamedTemporaryFile
+import tomllib
 from typing import Callable, Iterable, Iterator, Protocol, Sequence
 from urllib.parse import urlsplit
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SOURCE_REF = "refs/heads/main"
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 PRE_SITE_TEST_COMMANDS = (
     ("npm", "ci"),
     ("npm", "run", "audit:dependencies"),
@@ -55,6 +56,16 @@ NODE_VERSION_PATTERN = re.compile(
     r"(?:0|[1-9][0-9]*)\."
     r"(?:0|[1-9][0-9]*)(?:\n)?\Z"
 )
+RELEASE_VERSION_PATTERN = re.compile(
+    r"(?:0|[1-9][0-9]*)\."
+    r"(?:0|[1-9][0-9]*)\."
+    r"(?:0|[1-9][0-9]*)\Z"
+)
+SITE_RELEASE_VERSION_PATTERN = re.compile(
+    r'^export[ ]+const[ ]+RELEASE_VERSION[ ]*=[ ]*'
+    r'"([^"\r\n]+)";[ \t]*$',
+    re.MULTILINE,
+)
 SCP_REPOSITORY_PATTERN = re.compile(
     r"(?:[^/@:\s]+@)?(?P<host>[^/:\s]+):(?P<path>[^\\].+)\Z"
 )
@@ -71,6 +82,7 @@ CANDIDATE_KEYS = frozenset(
         "schema_version",
         "commit_sha",
         "source_ref",
+        "release_version",
         "node_version",
         "package_lock_sha256",
         "project_id",
@@ -105,6 +117,7 @@ CommandRunner = Callable[[Sequence[str], Path], str]
 @dataclass(frozen=True)
 class SiteCandidateResult:
     commit_sha: str
+    release_version: str
     archive_sha256: str
     receipt_sha256: str
     archive: Path
@@ -162,6 +175,7 @@ def prepare_site_candidate(
         )
     _require_regular_file(project_root / "package-lock.json", "package lock")
     _require_regular_file(project_root / ".nvmrc", "Node runtime pin")
+    release_version = read_release_version(project_root)
     expected_node_version = read_node_runtime_pin(project_root)
     hosting_path = project_root / ".openai" / "hosting.json"
     _require_regular_file(hosting_path, "Sites hosting metadata")
@@ -204,6 +218,7 @@ def prepare_site_candidate(
             archive_path,
             receipt_path,
             package_path,
+            release_version,
             expected_node_version,
             runner,
             output_parents,
@@ -215,6 +230,7 @@ def _prepare_site_candidate_with_open_parents(
     archive_path: Path,
     receipt_path: Path,
     package_path: Path,
+    release_version: str,
     expected_node_version: str,
     runner: CommandRunner,
     output_parents: dict[str, _OutputParent],
@@ -237,6 +253,7 @@ def _prepare_site_candidate_with_open_parents(
     manifest = _candidate_manifest(
         project_root,
         commit_sha,
+        release_version,
         expected_node_version,
     )
     manifest_path = (
@@ -361,6 +378,7 @@ def _prepare_site_candidate_with_open_parents(
         )
         return SiteCandidateResult(
             commit_sha=commit_sha,
+            release_version=release_version,
             archive_sha256=archive_sha256,
             receipt_sha256=receipt_sha256,
             archive=archive_path,
@@ -462,16 +480,22 @@ def verify_site_candidate(
     _require_regular_file(project_root / "package-lock.json", "package lock")
     _require_regular_file(project_root / ".nvmrc", "Node runtime pin")
     _require_regular_file(
+        project_root / "pyproject.toml",
+        "project release metadata",
+    )
+    _require_regular_file(
         project_root / ".openai" / "hosting.json",
         "Sites hosting metadata",
     )
     _require_regular_file(archive_path, "Sites candidate archive")
     _require_regular_file(receipt_path, "Sites candidate receipt")
 
+    release_version = read_release_version(project_root)
     commit_sha = _synchronized_commit(project_root, runner)
     expected_candidate = _candidate_manifest(
         project_root,
         commit_sha,
+        release_version,
         read_node_runtime_pin(project_root),
     )
     receipt_payload, receipt_sha256 = _read_json_object_with_sha256(
@@ -607,6 +631,7 @@ def verify_site_candidate(
             )
     return SiteCandidateResult(
         commit_sha=commit_sha,
+        release_version=release_version,
         archive_sha256=archive_sha256,
         receipt_sha256=receipt_sha256,
         archive=archive_path,
@@ -1506,6 +1531,7 @@ def _reject_duplicate_json_keys(
 def _candidate_manifest(
     project_root: Path,
     commit_sha: str,
+    release_version: str,
     node_version: str,
 ) -> dict[str, object]:
     hosting = _read_json_object(
@@ -1521,12 +1547,66 @@ def _candidate_manifest(
         "schema_version": SCHEMA_VERSION,
         "commit_sha": commit_sha,
         "source_ref": SOURCE_REF,
+        "release_version": release_version,
         "node_version": node_version,
         "package_lock_sha256": _sha256(
             project_root / "package-lock.json"
         ),
         "project_id": project_id,
     }
+
+
+def read_release_version(project_root: Path) -> str:
+    resolved_root = project_root.expanduser().resolve()
+    version_path = resolved_root / "pyproject.toml"
+    site_config_path = resolved_root / "app" / "site-config.ts"
+    _require_regular_file(version_path, "project release metadata")
+    _require_regular_file(
+        site_config_path,
+        "site release configuration",
+    )
+    try:
+        with version_path.open("rb") as version_file:
+            metadata = tomllib.load(version_file)
+    except (OSError, tomllib.TOMLDecodeError) as exc:
+        raise SiteCandidateError(
+            f"could not read project release version: {exc}"
+        ) from exc
+
+    project = metadata.get("project")
+    if not isinstance(project, dict):
+        raise SiteCandidateError(
+            "project release metadata must contain a project table"
+        )
+    version = project.get("version")
+    if (
+        not isinstance(version, str)
+        or RELEASE_VERSION_PATTERN.fullmatch(version) is None
+    ):
+        raise SiteCandidateError(
+            "project.version must contain one semantic version"
+        )
+    try:
+        site_config = site_config_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise SiteCandidateError(
+            f"could not read site release configuration: {exc}"
+        ) from exc
+    site_versions = SITE_RELEASE_VERSION_PATTERN.findall(site_config)
+    if len(site_versions) != 1:
+        raise SiteCandidateError(
+            "site release configuration must define one RELEASE_VERSION"
+        )
+    site_version = site_versions[0]
+    if RELEASE_VERSION_PATTERN.fullmatch(site_version) is None:
+        raise SiteCandidateError(
+            "site RELEASE_VERSION must contain one semantic version"
+        )
+    if site_version != version:
+        raise SiteCandidateError(
+            "site RELEASE_VERSION does not match project.version"
+        )
+    return version
 
 
 def read_node_runtime_pin(project_root: Path) -> str:
@@ -2297,6 +2377,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(
         f"site candidate {action}: "
         f"commit={result.commit_sha} "
+        f"release_version={result.release_version} "
         f"archive={result.archive.name} "
         f"sha256={result.archive_sha256} "
         f"receipt={result.receipt.name} "

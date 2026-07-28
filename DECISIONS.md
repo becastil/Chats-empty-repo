@@ -3665,3 +3665,35 @@ cannot prove it owns.
 This decision completes descriptor binding for both archive and receipt
 staging, reads, publication, and cleanup. It performs no source export, version
 save, deployment, approval, customer contact, or revenue event.
+
+## 2026-07-28: Bind Sites Approval To The Public Release Version
+
+Schema-4 candidate evidence bound the exact source commit, branch, Node
+runtime, lockfile, Sites project, complete deployable tree, archive, and receipt
+bytes. It did not state the public Repo Scout release that the owner was being
+asked to approve. That omission mattered while production still advertised
+`v0.3.50` and the replacement source advertised `v0.3.51`: a receipt digest
+could identify exact bytes without giving the approval record a direct,
+human-readable release identity.
+
+Sites evidence now uses schema 5. Before any Git, Node, npm, test, or packaging
+command runs, preparation strictly parses `project.version` from
+`pyproject.toml`, requires a semantic `MAJOR.MINOR.PATCH` value, finds exactly
+one semantic `RELEASE_VERSION` declaration in `app/site-config.ts`, and requires
+the two values to match. The reconciled version is embedded in the candidate
+manifest and therefore in both the archive and receipt. Independent
+verification recomputes it from the checkout and rejects missing, malformed,
+mismatched, removed, or changed release identity. Prior schema-4 receipts fail
+closed instead of acquiring the new meaning implicitly.
+
+Preparation and verification print `release_version` beside the source commit,
+archive digest, and receipt digest. Source-export approval must record that
+version with the exact receipt SHA-256, canonical Sites repository identity,
+`refs/heads/main`, and receipt commit. This makes the intended production
+upgrade legible without weakening the digest-bound source and artifact proof.
+The read-only site dependency contract watches both `pyproject.toml` and
+`app/site-config.ts`, so either identity source receives the complete hosted
+contract instead of waiting for an unrelated dependency or script change.
+
+The change performs no candidate export, source push, version save, deployment,
+approval, customer contact, or revenue event.

@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 254 of
-1,000, with 746 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 255 of
+1,000, with 745 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -122,8 +122,14 @@ alignment take priority over commit volume.
   and file path, entry type, and deterministic permission mode alongside file
   size and bytes. Tested directories must be `0755`, packaging uses an explicit
   `022` umask, and injected empty directories or archive-mode drift fail closed.
+- A schema-5 owner-review identity that strictly reads `project.version` from
+  `pyproject.toml`, requires the website's single `RELEASE_VERSION` declaration
+  to match before commands run, binds that public release version into the
+  archived manifest and receipt, verifies it against the checkout, and prints
+  it beside the commit and receipt digest for source-export approval. The
+  read-only hosted site contract watches both release-identity sources.
 - Duplicate-free Sites JSON evidence across checkout hosting metadata,
-  schema-4 receipts, and archived manifests. Repeated keys fail even when their
+  schema-5 receipts, and archived manifests. Repeated keys fail even when their
   values match, preventing approval identity from depending on decoder-specific
   first-key or last-key behavior.
 - Candidate source-stability checks that repeat clean `HEAD == origin/main`
@@ -642,12 +648,12 @@ receipt publication holds each unique validated output-parent descriptor from
 preflight through the no-clobber link, then holds each exact published regular
 file through the final source and digest checks. Obtain independent
 `--verify-only` evidence for
-its schema-4 complete-tree, duplicate-free,
+its schema-5 release-bound, complete-tree, duplicate-free,
 branch-bound, archive-stable, receipt-stable, test-bracketed evidence before
-recording the printed `receipt_sha256`, canonical remote Sites repository
-identity, `refs/heads/main`, and receipt commit in an explicit owner approval
-to push the receipt's exact patched source. Only after that approval, push the
-source, then verify the unchanged archive and receipt with
+recording the printed `release_version`, `receipt_sha256`, canonical remote
+Sites repository identity, `refs/heads/main`, and receipt commit in an explicit
+owner approval to push the receipt's exact patched source. Only after that
+approval, push the source, then verify the unchanged archive and receipt with
 `--expected-receipt-sha256` set to the approved digest,
 `--exported-source-repository` set to the URL or configured alias used for the
 push, and `--expected-exported-source-repository` set to the approved canonical

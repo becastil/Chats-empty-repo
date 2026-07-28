@@ -390,6 +390,18 @@ match. Different JSON implementations can select the first or last repeated
 value, so accepting either interpretation would make approval identity
 parser-dependent. This closes that ambiguity without changing valid schema-4
 receipts, granting approval, or creating customer or revenue evidence.
+Schema-5 evidence adds the public release identity the owner is being asked to
+advance. Preparation strictly parses `project.version` and the website's single
+`RELEASE_VERSION` declaration before commands run, requires the same semantic
+version, and binds it into the archived manifest and receipt. Independent
+verification recomputes that value, while prepare and verify output expose it
+beside the exact receipt digest. Source-export approval can therefore state
+that the candidate advances the buyer path from production `v0.3.50` to
+`v0.3.51` without relying on an operator inference from source files. This
+invariant is watched by the read-only hosted site contract whenever either
+release-identity source changes. It strengthens paid-distribution review
+without approving export, saving or deploying a version, or creating customer,
+demand, payment, or revenue evidence.
 Candidate preparation now also repeats the complete clean
 `HEAD == origin/main` check after validation and packaging, requiring both
 observations to retain the original synchronized commit. Read-only verification
