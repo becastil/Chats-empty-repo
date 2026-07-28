@@ -3893,3 +3893,23 @@ the packaged command.
 This keeps free-to-paid policy activation evidence tied to the policy location
 under review. It does not establish customer use, pilot demand, payment, or
 revenue.
+
+## 2026-07-28: Reject Non-Regular Policy Leaves Before Receipt Reads
+
+Receipt verification rejected symlink policy leaves but passed every other
+direct filesystem type to the TOML loader. A directory returned an ordinary
+read error, while a FIFO caused the command to block waiting for a writer.
+Sockets, devices, and similar special files also had no explicit boundary even
+though successful bootstrap and initialization create regular policy files.
+
+Verification now inspects the selected leaf type before loading it. Any present
+leaf that is neither a symlink nor a regular file returns the existing exit-6
+mismatch report with expected identity retained, actual identity unavailable,
+and a controlled regular-file reason. The leaf remains unchanged and the policy
+loader is never called. Source regressions prove both directory and FIFO cases;
+the installed activation journey proves the packaged command rejects a direct
+non-regular leaf with the same evidence.
+
+This prevents a crafted policy path from stalling first-repository or paid-CI
+activation while retaining the free verifier's useful failure report. It does
+not establish customer use, pilot demand, payment, or revenue.

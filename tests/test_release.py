@@ -539,6 +539,7 @@ class ReleaseManifestTests(unittest.TestCase):
                 "symlink-bootstrap-output-rejected",
                 "relative-receipt-output-rejected",
                 "symlink-receipt-policy-rejected",
+                "nonregular-receipt-policy-rejected",
             ),
         )
 

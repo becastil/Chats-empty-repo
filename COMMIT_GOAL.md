@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after keeping receipt verification on direct policy leaves:
-  264 / 1,000 (26.4%).
-- Remaining after keeping receipt verification on direct policy leaves:
-  736 commits.
+- Progress after requiring regular policy evidence before receipt reads:
+  265 / 1,000 (26.5%).
+- Remaining after requiring regular policy evidence before receipt reads:
+  735 commits.
 
 ## Commit Standard
 

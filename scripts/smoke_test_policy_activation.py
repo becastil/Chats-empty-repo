@@ -324,6 +324,49 @@ def verify_policy_activation(
             raise SmokeTestError("symlink policy verification changed policy evidence")
         checked.append("symlink-receipt-policy-rejected")
 
+        policy_path.unlink()
+        policy_path.mkdir()
+        non_regular_verification = _run(
+            [
+                *policy_command,
+                "verify-receipt",
+                str(receipt_path),
+                "--format",
+                "json",
+            ],
+            cwd=root,
+            environment=environment,
+            expected_exit_code=6,
+        )
+        try:
+            non_regular_result = json.loads(non_regular_verification.stdout)
+        except json.JSONDecodeError as exc:
+            raise SmokeTestError(
+                "non-regular policy verification did not emit valid JSON"
+            ) from exc
+        if (
+            non_regular_result.get("status") != "fail"
+            or non_regular_result.get("actual") is not None
+        ):
+            raise SmokeTestError(
+                "non-regular policy verification did not fail closed"
+            )
+        if non_regular_result.get("policy") != str(requested_policy):
+            raise SmokeTestError(
+                "non-regular policy verification changed its leaf"
+            )
+        if "policy path must be a regular file" not in non_regular_result.get(
+            "message", ""
+        ):
+            raise SmokeTestError(
+                "non-regular policy verification omitted its reason"
+            )
+        if not policy_path.is_dir() or not moved_policy.is_file():
+            raise SmokeTestError(
+                "non-regular policy verification changed policy evidence"
+            )
+        checked.append("nonregular-receipt-policy-rejected")
+
     return tuple(checked)
 
 

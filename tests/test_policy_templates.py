@@ -511,6 +511,89 @@ class PolicyTemplateTests(unittest.TestCase):
                 self.assertTrue(policy_path.is_symlink())
                 self.assertTrue(target.is_file())
 
+    @unittest.skipUnless(
+        hasattr(os, "mkfifo"), "FIFO semantics are unavailable"
+    )
+    def test_verify_receipt_rejects_non_regular_policy_paths_before_read(
+        self,
+    ) -> None:
+        for selection in ("recorded", "override"):
+            for kind in ("directory", "fifo"):
+                with self.subTest(
+                    selection=selection,
+                    kind=kind,
+                ), TemporaryDirectory() as tmp:
+                    root = Path(tmp)
+                    (root / "pyproject.toml").write_text(
+                        "[project]\n",
+                        encoding="utf-8",
+                    )
+                    bootstrap_stdout = io.StringIO()
+                    with redirect_stdout(bootstrap_stdout), redirect_stderr(
+                        io.StringIO()
+                    ):
+                        bootstrap_exit_code = main(
+                            ["bootstrap", str(root), "--format", "json"]
+                        )
+                    receipt = json.loads(bootstrap_stdout.getvalue())
+                    receipt_path = root / "bootstrap-receipt.json"
+                    receipt_path.write_text(
+                        bootstrap_stdout.getvalue(),
+                        encoding="utf-8",
+                    )
+                    generated_policy = root / "repo-scout-policy.toml"
+                    if selection == "recorded":
+                        generated_policy.unlink()
+                        policy_path = generated_policy
+                    else:
+                        policy_path = root / "policy-override.toml"
+                    if kind == "directory":
+                        policy_path.mkdir()
+                    else:
+                        os.mkfifo(policy_path)
+
+                    arguments = [
+                        "verify-receipt",
+                        str(receipt_path),
+                        "--format",
+                        "json",
+                    ]
+                    if selection == "override":
+                        arguments.extend(["--policy", str(policy_path)])
+                    stdout = io.StringIO()
+                    stderr = io.StringIO()
+                    with patch(
+                        "repo_scout.policy_templates.load_policy",
+                        side_effect=AssertionError(
+                            "non-regular policy path must not be read"
+                        ),
+                    ) as policy_loader, redirect_stdout(
+                        stdout
+                    ), redirect_stderr(stderr):
+                        exit_code = main(arguments)
+                    verification = json.loads(stdout.getvalue())
+
+                    self.assertEqual(bootstrap_exit_code, 0)
+                    self.assertEqual(exit_code, 6)
+                    self.assertEqual(stderr.getvalue(), "")
+                    self.assertEqual(verification["status"], "fail")
+                    self.assertEqual(
+                        verification["expected"],
+                        receipt["policy"],
+                    )
+                    self.assertIsNone(verification["actual"])
+                    self.assertIn(
+                        "policy path must be a regular file",
+                        verification["message"],
+                    )
+                    policy_loader.assert_not_called()
+                    if kind == "directory":
+                        self.assertTrue(policy_path.is_dir())
+                    else:
+                        self.assertTrue(
+                            stat.S_ISFIFO(policy_path.lstat().st_mode)
+                        )
+
     def test_verify_receipt_rejects_malformed_evidence_and_reports_missing_policy(
         self,
     ) -> None:

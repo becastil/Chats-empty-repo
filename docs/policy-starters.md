@@ -73,9 +73,11 @@ archived `output` must be an absolute, valid file leaf; relative and NUL-bearing
 values fail before a `--policy` override can bypass that receipt contract. The
 override supports a policy moved after bootstrap while preserving the original
 receipt as evidence. Both the receipt-recorded policy and an override must name
-a direct leaf. An initial or dangling symlink returns 6 with the requested leaf
-and expected identity, reports the actual identity as unavailable, and leaves
-the link and target unchanged without naming the target.
+a direct regular-file leaf. An initial or dangling symlink returns 6 with the
+requested leaf and expected identity, reports the actual identity as
+unavailable, and leaves the link and target unchanged without naming the target.
+Directories, FIFOs, and other special leaves receive the same exit-6 evidence
+before they are read, preventing a pipe from blocking CI verification.
 
 Recommendation is deterministic and local. A sole npm lockfile selects the
 npm-only profile; pnpm, Yarn, no lockfile yet, or multiple Node lockfiles select

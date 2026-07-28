@@ -236,7 +236,9 @@ an absolute, valid file leaf; relative or NUL-bearing values return exit code 2
 before an override is considered. A moved policy can be selected with
 `--policy`. The selected policy leaf must remain a direct path: an initial or
 dangling symlink returns exit code 6, preserves the requested leaf in the report,
-and neither follows nor names its target. Policy drift or a missing policy also
+and neither follows nor names its target. It must also be a regular file;
+directories, FIFOs, and other special leaves return exit code 6 before the
+policy loader can read or block on them. Policy drift or a missing policy also
 returns exit code 6 with expected and actual identity evidence.
 `recommend` uses local manifests and lockfiles, can emit stable JSON, and flags
 mixed Python and Node repositories for review instead of presenting one starter

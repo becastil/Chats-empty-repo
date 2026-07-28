@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Required receipt-recorded and overridden policy leaves to be regular files
+  before loading, returning exit-6 mismatch evidence for directories, FIFOs,
+  sockets, devices, and other special files instead of reading or blocking.
+- Added source proof that directory and FIFO leaves never reach the policy
+  loader plus installed-command proof that non-regular evidence remains
+  unchanged and reports actual identity as unavailable.
 - Preserved the receipt-recorded or overridden policy leaf during bootstrap
   receipt verification and rejected initial or dangling symlinks with normal
   exit-6 mismatch evidence instead of following their targets.

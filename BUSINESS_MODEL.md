@@ -295,6 +295,10 @@ absolute, valid file leaf and rejects relative or NUL-bearing values before an
 override is considered. A forged receipt therefore cannot reinterpret its
 original policy location against an operator's working directory, bypass a
 malformed path through `--policy`, or crash CI while parsing evidence.
+The selected policy leaf must also be a regular file before verification reads
+it. Directories, FIFOs, sockets, devices, and other special files fail with
+actual identity unavailable, preventing a crafted pipe from stalling a paid-CI
+activation check while preserving the normal mismatch evidence contract.
 
 An AI can recreate a scanner, but that is not the commercial claim being
 tested. The active website experiment presents the paid outcome in plain

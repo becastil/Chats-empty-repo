@@ -330,6 +330,11 @@ def verify_bootstrap_receipt(
             actual = None
             status = "fail"
             message = f"policy path must not be a symlink: {target}"
+        elif not stat.S_ISREG(target_details.st_mode):
+            should_load = False
+            actual = None
+            status = "fail"
+            message = f"policy path must be a regular file: {target}"
 
     if should_load:
         try:

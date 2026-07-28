@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 264 of
-1,000, with 736 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 265 of
+1,000, with 735 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -637,9 +637,9 @@ alignment take priority over commit volume.
 - Installed-wheel release proof for machine-readable bootstrap receipts across every clear recommendation route.
 - Strict bootstrap-receipt verification against the current policy version and
   normalized fingerprint, requiring an absolute valid output before overrides,
-  preserving the recorded or overridden policy leaf, and rejecting initial or
-  dangling symlinks with exit-6 mismatch evidence that does not expose or
-  modify the target.
+  preserving the recorded or overridden policy leaf, and rejecting symlinks or
+  non-regular files before reads with exit-6 mismatch evidence that does not
+  expose, modify, or block on the target.
 - Stable text and JSON pass or drift evidence, policy-path overrides, and exit code 6 for missing, invalid, or changed policies.
 - Duplicate-key, unsupported-schema, malformed-shape, and unknown-field rejection for receipt evidence.
 - Installed-wheel release proof that every clear bootstrap receipt verifies its generated policy.
