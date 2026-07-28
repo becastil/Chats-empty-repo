@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Made the website, README, and release-guide portable quick starts one shell
+  AND-list, preventing a failed download from executing a stale
+  `/tmp/repo-scout.pyz` or returning a misleading successful scan.
+- Added exact-snippet shell regressions that replace `curl` and `python3`,
+  force download exit 22, and prove every public quick start preserves that
+  failure without invoking Python.
 - Withheld normal terms and payment guidance from ready GitHub Actions
   requests whose qualification is incomplete, outside the target profile, or
   still requires a first-10-repository pilot scope.

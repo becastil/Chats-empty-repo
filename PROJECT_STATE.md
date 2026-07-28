@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 274 of
-1,000, with 726 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 275 of
+1,000, with 725 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -364,6 +364,11 @@ alignment take priority over commit volume.
 - Deterministic sales-action queues ranked by disclosed purchase readiness, funnel stage, issue age, and issue number.
 - Stage-specific next actions for ready, approval-dependent, exploratory, missing, and unrecognized purchase intent.
 - Single-file, no-install zipapp distribution for the free primary CLI.
+- Fail-closed portable quick starts on the website, in the README, and in the
+  release guide. Each published shell block now requires the download to
+  succeed before Python can execute the requested file, with exact-snippet
+  regressions proving a failed transfer cannot fall through to a stale local
+  artifact.
 - Release checksums, provenance attestations, and direct-execution smoke tests covering the portable artifact.
 - Artifact-count-linked release documentation proving the public verification
   guide covers all three checksum entries and all three provenance commands.
@@ -691,7 +696,7 @@ alignment take priority over commit volume.
 ## How To Run
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.51/repo-scout-0.3.51.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.51/repo-scout-0.3.51.pyz -o /tmp/repo-scout.pyz &&
 python3 /tmp/repo-scout.pyz --languages .
 python3 -m unittest discover -s tests
 python3 scripts/audit_action_pins.py

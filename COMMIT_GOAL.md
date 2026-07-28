@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after gating ready-buyer actions on pilot scope:
-  274 / 1,000 (27.4%).
-- Remaining after gating ready-buyer actions on pilot scope:
-  726 commits.
+- Progress after making portable quick starts fail closed:
+  275 / 1,000 (27.5%).
+- Remaining after making portable quick starts fail closed:
+  725 commits.
 
 ## Commit Standard
 

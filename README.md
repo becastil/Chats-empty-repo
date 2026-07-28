@@ -38,8 +38,8 @@ not require a checkout, package installation, administrator access, or an API
 key:
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.51/repo-scout-0.3.51.pyz -o /tmp/repo-scout.pyz
-python3 /tmp/repo-scout.pyz --version
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.51/repo-scout-0.3.51.pyz -o /tmp/repo-scout.pyz &&
+python3 /tmp/repo-scout.pyz --version &&
 python3 /tmp/repo-scout.pyz --languages .
 ```
 

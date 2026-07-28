@@ -27,7 +27,7 @@ The shortest path downloads one executable Python file and does not modify the
 Python environment:
 
 ```bash
-curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.51/repo-scout-0.3.51.pyz -o /tmp/repo-scout.pyz
+curl -fL https://github.com/becastil/Chats-empty-repo/releases/download/v0.3.51/repo-scout-0.3.51.pyz -o /tmp/repo-scout.pyz &&
 python3 /tmp/repo-scout.pyz --languages .
 ```
 

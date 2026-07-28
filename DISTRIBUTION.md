@@ -18,6 +18,10 @@ product, not a release afterthought.
 The portable artifact is the lowest-friction adoption path. The wheel is the
 complete command distribution. The CI example is the team activation path.
 None requires an API key or sends source code to Repo Scout.
+Every published portable quick start is one shell AND-list: Python runs only
+after the versioned download succeeds. Exact-snippet tests force a transfer
+failure and prove the website, README, and release guide cannot fall through to
+an older local artifact or report a false successful scan.
 
 ## Active Website Experiment
 

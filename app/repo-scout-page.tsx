@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { PORTABLE_RELEASE_URL, RELEASE_VERSION } from "./site-config";
 
-const quickStart = `curl -fL ${PORTABLE_RELEASE_URL} -o /tmp/repo-scout.pyz
+const quickStart = `curl -fL ${PORTABLE_RELEASE_URL} -o /tmp/repo-scout.pyz &&
 python3 /tmp/repo-scout.pyz --languages .`;
 
 const snapshotText = `Repo Scout Snapshot

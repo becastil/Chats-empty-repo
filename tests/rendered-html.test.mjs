@@ -53,6 +53,7 @@ test("server-renders the Repo Scout companion page", async () => {
   assert.match(html, /One file\. Python 3\.11\+\. No API key\./i);
   assert.match(html, /curl -fL/i);
   assert.match(html, /repo-scout-0\.3\.51\.pyz/i);
+  assert.match(html, /repo-scout\.pyz &amp;&amp;\s*python3/i);
   assert.match(html, /python3 \/tmp\/repo-scout\.pyz --languages \./i);
   assert.match(html, /Download v/i);
   assert.match(

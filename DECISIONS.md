@@ -4199,3 +4199,28 @@ queue views. The installed commercial smoke proves an out-of-profile request
 cannot retain payment guidance. This corrects the $299 pilot operating contract;
 it does not approve outreach, change qualification labels, make a private scope
 or CI decision, collect payment, or record revenue.
+
+## 2026-07-28: Fail Closed Before Running The Portable Quick Start
+
+The public website, README, and release guide each presented a `curl` download
+followed by an independent `python3` command. If the transfer failed, a pasted
+block continued and could execute an older `/tmp/repo-scout.pyz` from a prior
+evaluation. Because that Python process could succeed, the complete quick start
+could also hide the transport failure behind exit 0.
+
+Each published quick start is now one shell AND-list. The website and release
+guide run the scan only after `curl` succeeds. The README additionally requires
+its version check to pass before scanning. The commands remain POSIX-shell
+compatible and keep the same versioned release URL, output path, and free CLI
+behavior.
+
+An executable contract extracts the exact three public snippets, replaces
+`curl` with a stub that exits 22 and `python3` with an invocation marker, and
+runs each block through `/bin/sh`. Every surface must preserve exit 22 without
+reaching Python. The rendered-site contract separately proves the visible
+command includes the conditional boundary.
+
+This is an activation reliability correction for the free adoption path. It
+does not create another acquisition asset or paid-policy capability, establish
+an install or customer use, approve outreach or deployment, validate
+willingness to pay, collect payment, or record revenue.

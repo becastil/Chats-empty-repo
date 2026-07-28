@@ -34,6 +34,12 @@ The free CLI should be good enough to adopt without a sales conversation.
 Verified GitHub releases remove source-checkout trust and installation friction
 from pilot onboarding. PyPI distribution, billing, and license enforcement stay
 deferred until paid demand justifies their operational cost.
+The website, README, and release guide now keep each portable download and its
+Python invocation in one shell AND-list. A failed transfer therefore preserves
+the download error and cannot execute an older `/tmp/repo-scout.pyz` left by a
+previous evaluation. Exact-snippet shell tests enforce that buyer-facing
+activation boundary. This removes a false-success path; it does not establish
+an install, customer use, pilot demand, payment, or revenue.
 The hash-locked release builder now pins the advisory-fixed `setuptools`
 `83.0.0` wheel and its exact PyPI SHA-256 digest before producing either public
 wheel or source artifacts. The executable lock contract binds every release
