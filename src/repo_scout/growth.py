@@ -8,7 +8,13 @@ from typing import Any, Sequence
 
 from .version import add_version_argument
 
-from .pilot_funnel import DECISION_CRITERION_KEYS
+from .pilot_funnel import (
+    CI_INTEGRATION_DECISION_ACTION,
+    COPY_READY_CI_PROVIDER,
+    DECISION_CRITERION_KEYS,
+    READINESS_KEYS,
+    UNRESOLVED_CI_PROVIDER_ACTION,
+)
 
 
 SCHEMA_VERSION = 2
@@ -59,6 +65,7 @@ def build_growth_report(
         pilot_price_usd=pricing["pilot_price_usd"],
         target_pilots=pricing["target_pilots"],
         annual_conversions=pilot_summary["annual_conversions"],
+        provider_aware_sales_queue=pilot["provider_aware_sales_queue"],
     )
 
     warnings: list[dict[str, str]] = []
@@ -454,6 +461,7 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
             summary[field] = _require_non_negative_int(
                 summary_object.get(field), f"pilot report.summary.{field}"
             )
+    provider_aware_sales_queue = False
     if schema == 7:
         for field in (
             "complete_qualification_issues",
@@ -489,6 +497,10 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
             raise GrowthInputError(
                 "pilot report subset scope exceeds complete qualification"
             )
+        provider_aware_sales_queue = _validate_provider_aware_sales_queue(
+            root,
+            summary,
+        )
     pricing = {
         field: _require_positive_int(
             pricing_object.get(field), f"pilot report.pricing.{field}"
@@ -582,9 +594,71 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
         "sources": sources,
         "decision_criterion_reporting_available": schema >= 6,
         "qualification_reporting_available": schema == 7,
+        "provider_aware_sales_queue": provider_aware_sales_queue,
         "decision_criteria": decision_criteria,
         "warning_count": len(raw_warnings),
     }
+
+
+def _validate_provider_aware_sales_queue(
+    root: dict[str, Any],
+    summary: dict[str, int],
+) -> bool:
+    queue = _require_object(
+        root.get("sales_queue"),
+        "pilot report.sales_queue",
+    )
+    raw_deals = queue.get("deals")
+    if not isinstance(raw_deals, list):
+        raise GrowthInputError(
+            "pilot report.sales_queue.deals must be an array"
+        )
+    if summary["sales_actions"] != len(raw_deals):
+        raise GrowthInputError(
+            "pilot report sales_actions does not match sales_queue.deals"
+        )
+
+    for index, raw_deal in enumerate(raw_deals):
+        location = f"pilot report.sales_queue.deals[{index}]"
+        deal = _require_object(raw_deal, location)
+        readiness = deal.get("purchase_readiness")
+        if readiness not in READINESS_KEYS:
+            raise GrowthInputError(
+                f"{location}.purchase_readiness must be a recognized value"
+            )
+        next_action = deal.get("next_action")
+        if not isinstance(next_action, str) or not next_action:
+            raise GrowthInputError(
+                f"{location}.next_action must be a non-empty string"
+            )
+        qualification = _require_object(
+            deal.get("qualification"),
+            f"{location}.qualification",
+        )
+        ci_provider = qualification.get("ci_provider")
+        if ci_provider is not None and (
+            not isinstance(ci_provider, str) or not ci_provider
+        ):
+            raise GrowthInputError(
+                f"{location}.qualification.ci_provider must be null or a "
+                "non-empty string"
+            )
+
+        expected_action: str | None = None
+        if readiness == "ready" and ci_provider is None:
+            expected_action = UNRESOLVED_CI_PROVIDER_ACTION
+        elif (
+            readiness == "ready"
+            and ci_provider != COPY_READY_CI_PROVIDER
+        ):
+            expected_action = CI_INTEGRATION_DECISION_ACTION
+        if expected_action is not None and next_action != expected_action:
+            raise GrowthInputError(
+                f"{location}.next_action does not preserve the ready CI "
+                "provider gate"
+            )
+
+    return bool(raw_deals)
 
 
 def _validate_pilot_totals(
@@ -715,6 +789,7 @@ def _choose_bottleneck(
     pilot_price_usd: int,
     target_pilots: int,
     annual_conversions: int,
+    provider_aware_sales_queue: bool,
 ) -> dict[str, str]:
     if change is None:
         return {
@@ -749,25 +824,48 @@ def _choose_bottleneck(
             "next_action": "Work the sales queue and qualify the team policy need.",
         }
     if offered_pilots == 0:
+        if provider_aware_sales_queue:
+            next_action = (
+                "Work the provider-aware pilot sales queue before sending the "
+                f"explicit ${pilot_price_usd} pilot terms."
+            )
+        else:
+            next_action = (
+                f"Send the explicit ${pilot_price_usd} pilot terms to a qualified "
+                "team."
+            )
         return {
             "stage": "offer",
             "reason": "Qualified pilot demand exists, but no offer is recorded.",
-            "next_action": (
-                f"Send the explicit ${pilot_price_usd} pilot terms to a qualified "
-                "team."
-            ),
+            "next_action": next_action,
         }
     if booked_pilots == 0:
+        if provider_aware_sales_queue:
+            next_action = (
+                "Work the provider-aware pilot sales queue before confirming "
+                "purchase or payment."
+            )
+        else:
+            next_action = "Resolve the top offered deal's purchase blocker."
         return {
             "stage": "payment",
             "reason": "A pilot offer exists, but no paid pilot is recorded.",
-            "next_action": "Resolve the top offered deal's purchase blocker.",
+            "next_action": next_action,
         }
     if booked_pilots < target_pilots:
+        if provider_aware_sales_queue:
+            next_action = (
+                "Work the provider-aware pilot sales queue before closing the "
+                "next pilot."
+            )
+        else:
+            next_action = (
+                "Repeat the best attributed source and close the next pilot."
+            )
         return {
             "stage": "pilot_target",
             "reason": "Booked revenue is real, but the founding-pilot target is open.",
-            "next_action": "Repeat the best attributed source and close the next pilot.",
+            "next_action": next_action,
         }
     if annual_conversions == 0:
         return {

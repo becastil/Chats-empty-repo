@@ -180,7 +180,10 @@ class PilotFunnelTests(unittest.TestCase):
         )
         self.assertEqual(
             report["sales_queue"]["deals"][0]["next_action"],
-            "Qualify the team and send the $299 pilot terms.",
+            (
+                "Confirm the CI provider and record the private integration "
+                "decision before any further pilot terms or payment action."
+            ),
         )
         self.assertEqual(report["sales_queue"]["deals"][0]["priority"], 1)
         self.assertEqual(
@@ -782,11 +785,13 @@ class PilotFunnelTests(unittest.TestCase):
         )
 
     def test_main_emits_stable_json_with_custom_commercial_targets(self) -> None:
+        payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
+        payload[0]["body"] += "\n\n### CI provider\n\nGitHub Actions"
         stdout = io.StringIO()
         with redirect_stdout(stdout):
             exit_code = main(
                 [
-                    str(FIXTURE),
+                    "-",
                     "--format",
                     "json",
                     "--pilot-price",
@@ -797,7 +802,8 @@ class PilotFunnelTests(unittest.TestCase):
                     "2026-07-10",
                     "--stale-days",
                     "10",
-                ]
+                ],
+                stdin=io.StringIO(json.dumps(payload)),
             )
 
         report = json.loads(stdout.getvalue())
@@ -858,7 +864,7 @@ class PilotFunnelTests(unittest.TestCase):
                 "updatedAt": updated_at,
                 "body": (
                     f"{source}\n\n### Purchase readiness\n\n{readiness}\n\n"
-                    f"{criterion}"
+                    f"{criterion}\n\n### CI provider\n\nGitHub Actions"
                 ),
                 "labels": stage_labels,
             }
@@ -947,6 +953,218 @@ class PilotFunnelTests(unittest.TestCase):
             "Confirm the purchase and payment path.",
             text_report,
         )
+
+    def test_sales_queue_requires_ci_decision_before_terms_or_payment(
+        self,
+    ) -> None:
+        def issue(
+            number: int,
+            *,
+            stage_labels: list[str],
+            ci_provider: str | None,
+            readiness: str | None = "Ready to purchase the $299 pilot",
+        ) -> dict[str, object]:
+            sections = [
+                "### Team size\n\n12",
+                "### Repository count\n\n6",
+            ]
+            if ci_provider is not None:
+                sections.append(f"### CI provider\n\n{ci_provider}")
+            sections.extend(
+                (
+                    "### Repository standard to enforce\n\n"
+                    "Use one reviewed repository policy.",
+                    "### How did you hear about Repo Scout?\n\n"
+                    "Repo Scout website",
+                    "### Primary purchase criterion\n\n"
+                    "Works across our repositories and CI",
+                )
+            )
+            if readiness is not None:
+                sections.append(f"### Purchase readiness\n\n{readiness}")
+            return {
+                "number": number,
+                "title": f"Pilot {number}",
+                "state": "OPEN",
+                "updatedAt": "2026-07-10T00:00:00Z",
+                "body": "\n\n".join(sections),
+                "labels": stage_labels,
+            }
+
+        payload = [
+            issue(
+                1,
+                stage_labels=[
+                    "pilot-lead",
+                    "pilot-qualified",
+                    "pilot-offered",
+                ],
+                ci_provider="GitHub Actions",
+            ),
+            issue(
+                2,
+                stage_labels=["pilot-lead"],
+                ci_provider="GitLab CI",
+            ),
+            issue(
+                3,
+                stage_labels=["pilot-lead", "pilot-qualified"],
+                ci_provider="CircleCI",
+            ),
+            issue(
+                4,
+                stage_labels=[
+                    "pilot-lead",
+                    "pilot-qualified",
+                    "pilot-offered",
+                ],
+                ci_provider="Buildkite",
+            ),
+            issue(
+                5,
+                stage_labels=[
+                    "pilot-lead",
+                    "pilot-qualified",
+                    "pilot-offered",
+                ],
+                ci_provider="Other",
+            ),
+            issue(
+                6,
+                stage_labels=[
+                    "pilot-lead",
+                    "pilot-qualified",
+                    "pilot-offered",
+                ],
+                ci_provider=None,
+            ),
+            issue(
+                7,
+                stage_labels=[
+                    "pilot-lead",
+                    "pilot-qualified",
+                    "pilot-offered",
+                ],
+                ci_provider="Edited provider",
+            ),
+            issue(
+                8,
+                stage_labels=["pilot-lead", "pilot-qualified"],
+                ci_provider="GitLab CI",
+                readiness="Need internal approval for $299",
+            ),
+            issue(
+                9,
+                stage_labels=[
+                    "pilot-lead",
+                    "pilot-qualified",
+                    "pilot-offered",
+                ],
+                ci_provider="CircleCI",
+                readiness="Exploring before requesting budget",
+            ),
+            issue(
+                10,
+                stage_labels=["pilot-lead"],
+                ci_provider="GitLab CI",
+                readiness=None,
+            ),
+            issue(
+                11,
+                stage_labels=["pilot-lead"],
+                ci_provider="GitLab CI",
+                readiness="Edited readiness",
+            ),
+            issue(
+                12,
+                stage_labels=[
+                    "pilot-lead",
+                    "pilot-qualified",
+                    "pilot-offered",
+                ],
+                ci_provider="_No response_",
+            ),
+        ]
+        ambiguous_provider = issue(
+            13,
+            stage_labels=[
+                "pilot-lead",
+                "pilot-qualified",
+                "pilot-offered",
+            ],
+            ci_provider="GitLab CI",
+        )
+        ambiguous_provider["body"] += "\n\n### CI provider\n\nCircleCI"
+        payload.append(ambiguous_provider)
+
+        report = build_funnel(payload, as_of=date(2026, 7, 20))
+        queue = {
+            deal["number"]: deal for deal in report["sales_queue"]["deals"]
+        }
+        integration_action = (
+            "Record the private CI integration decision before any further "
+            "pilot terms or payment action."
+        )
+        unresolved_action = (
+            "Confirm the CI provider and record the private integration "
+            "decision before any further pilot terms or payment action."
+        )
+
+        self.assertEqual(
+            queue[1]["next_action"],
+            "Confirm the purchase and payment path.",
+        )
+        for number in (2, 3, 4, 5):
+            with self.subTest(number=number):
+                self.assertEqual(queue[number]["next_action"], integration_action)
+                self.assertEqual(
+                    queue[number]["qualification"]["status"],
+                    "target",
+                )
+        for number in (6, 7, 12, 13):
+            with self.subTest(number=number):
+                self.assertEqual(queue[number]["next_action"], unresolved_action)
+                self.assertEqual(
+                    queue[number]["qualification"]["status"],
+                    "incomplete",
+                )
+        self.assertEqual(
+            queue[8]["next_action"],
+            "Send an internal approval brief.",
+        )
+        self.assertEqual(
+            queue[9]["next_action"],
+            "Confirm budget timing and decision criteria.",
+        )
+        for number in (10, 11):
+            with self.subTest(number=number):
+                self.assertEqual(
+                    queue[number]["next_action"],
+                    "Clarify purchase readiness before advancing.",
+                )
+
+        deals = {deal["number"]: deal for deal in report["deals"]}
+        follow_up = {
+            deal["number"]: deal for deal in report["follow_up"]["deals"]
+        }
+        for number, queue_deal in queue.items():
+            with self.subTest(consistency=number):
+                self.assertEqual(
+                    deals[number]["next_action"],
+                    queue_deal["next_action"],
+                )
+                self.assertEqual(
+                    follow_up[number]["next_action"],
+                    queue_deal["next_action"],
+                )
+
+        text_report = format_funnel(report)
+        self.assertEqual(
+            text_report.count("Confirm the purchase and payment path."),
+            1,
+        )
+        self.assertEqual(text_report.count(integration_action), 4)
+        self.assertEqual(text_report.count(unresolved_action), 4)
 
     def test_main_rejects_invalid_json(self) -> None:
         stderr = io.StringIO()

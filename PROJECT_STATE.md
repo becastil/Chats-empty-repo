@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 272 of
-1,000, with 728 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 273 of
+1,000, with 727 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -62,6 +62,11 @@ alignment take priority over commit volume.
   surrounding whitespace before operator output.
 - Generic operator warnings for unrecognized public form answers and pilot
   labels, retaining raw values only in structurally escaped JSON fields.
+- Provider-aware ready-buyer actions that preserve normal GitHub Actions terms
+  and payment guidance while routing non-GitHub or unresolved CI evidence to
+  the required integration decision before further commercial advancement,
+  with schema-7 growth ingestion validating that gate before its commercial
+  bottlenecks defer to the same sales queue.
 - Strict positive-integer pilot price, target, and inactivity controls that
   reject booleans, floats, and strings before revenue evidence is built.
 - Release-blocking installed-wheel proof that offers remain outside revenue,

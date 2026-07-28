@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- Required ready-to-purchase requests to identify GitHub Actions before the
+  pilot sales queue can recommend normal terms or payment actions.
+- Routed recognized non-GitHub providers to a private integration-decision
+  action and missing, edited, no-response, or ambiguous provider evidence to a
+  provider-clarification action without changing queue order or qualification.
+- Made schema-7 offer, payment, and open pilot-target growth bottlenecks defer
+  to that provider-aware queue instead of emitting a contradictory commercial
+  action; older aggregate schemas retain their existing recommendations.
+- Required growth ingestion to reconcile the schema-7 sales-action count and
+  reject missing queues or ready-buyer actions that predate the CI gate before
+  it describes that queue as provider-aware.
+- Added source and installed-command regressions across every supported
+  provider, all readiness buckets, legacy evidence, and the packaged $299
+  commercial workflow.
 - Normalized surrounding whitespace in pilot issue titles, then required
   non-empty printable text of at most 1,024 characters before funnel analysis.
 - Rejected line injection, terminal controls, bidirectional controls, Unicode

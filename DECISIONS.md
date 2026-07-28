@@ -4122,3 +4122,45 @@ cannot reach output.
 This protects the canonical $299/$897 revenue review from public-input display
 spoofing. It does not qualify a lead, approve or send outreach, deploy the site,
 prove willingness to pay, collect payment, or record revenue.
+
+## 2026-07-28: Gate Ready-Buyer Actions On Copy-Ready CI
+
+The paid delivery contract says GitHub Actions is the only copy-ready gate and
+requires an explicit private integration decision for every other provider
+before payment. The schema-7 pilot reporter already normalized CI provider
+evidence, but its sales action used only purchase readiness and funnel stage. A
+ready GitLab CI, CircleCI, Buildkite, `Other`, missing, or edited request could
+therefore tell an operator to send pilot terms or confirm payment before the
+required integration decision.
+
+Ready-to-purchase requests now receive the normal stage-specific action only
+when `qualification.ci_provider` is `github_actions`. Recognized non-GitHub
+providers receive one action to record the private CI integration decision
+before further terms or payment. Missing, no-response, edited, or ambiguous
+provider evidence receives a separate action to confirm both the provider and
+decision. Approval-dependent, exploratory, missing-readiness, and
+unrecognized-readiness actions retain their existing purpose because none
+directs the operator to terms or payment.
+
+The action stays identical in the deal, stale-follow-up, and sorted sales-queue
+views. Queue membership, readiness priority, stage and age ordering,
+qualification status, target-profile counts, labels, schema version, and
+revenue accounting do not change. Source regressions cover every recognized
+provider, unresolved provider shapes, every readiness bucket, all three
+pre-payment stages, and view consistency. The installed commercial smoke
+proves the packaged command withholds payment guidance for a ready GitLab
+request.
+
+The private delivery record remains the source of truth for an accepted
+non-GitHub integration. The public report cannot observe that decision and
+therefore continues to present the advisory gate; it does not add a lifecycle
+label or infer payment. Aggregate growth recommendations do not carry
+provider-level actionability, so schema-7 offer, payment, and open pilot-target
+bottlenecks with a sales action point back to the provider-aware queue instead
+of issuing a conflicting instruction. The offer handoff retains the validated
+pilot price. Growth does not infer that capability from the unchanged schema
+number alone: it reconciles the queue length and validates each ready
+non-GitHub or unresolved-provider action before deferring. Saved schema-7
+evidence carrying the former provider-blind action fails closed, while older
+pilot schemas keep their prior aggregate behavior. This does not approve
+outreach, make an integration decision, collect payment, or record revenue.

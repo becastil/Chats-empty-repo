@@ -80,9 +80,26 @@ pilot, including fresh deals. Priorities come only from the declared readiness
 answer: ready is `P1`, needs approval is `P2`, exploring is `P3`, and missing
 or unrecognized readiness is `P4`. Within one priority, offered deals come
 before qualified deals, then leads; older issue activity breaks ties before
-issue number. Each record includes a stage-specific `next_action`. The queue
-does not apply labels, send messages, infer willingness to pay, or count
-revenue.
+issue number. Each record includes a stage-specific `next_action`.
+
+For a ready-to-purchase request, GitHub Actions keeps that normal terms or
+payment action because it is the only copy-ready gate. GitLab CI, CircleCI,
+Buildkite, and `Other` instead require the operator to record the private CI
+integration decision before another terms or payment action. Missing,
+no-response, edited, or duplicate provider evidence requires provider
+clarification first. Approval-dependent, exploratory, and unclear readiness
+actions retain their existing purpose because they do not direct payment.
+These overrides do not change queue membership, priority, ordering,
+qualification status, or booked revenue. The queue cannot observe the private
+decision and therefore remains advisory; it does not apply labels, send
+messages, infer willingness to pay, or count revenue.
+Schema-7 growth reviews likewise defer offer, payment, and open pilot-target
+actions to this queue rather than reconstructing a provider-blind commercial
+recommendation. Older pilot-report schemas retain their existing aggregate
+actions because they predate qualification evidence. Before deferring, growth
+reconciles `summary.sales_actions` with the embedded queue and validates every
+ready non-GitHub or unresolved-provider action. Missing queues and saved
+schema-7 reports carrying the former provider-blind action fail closed.
 
 Every deal, stale-deal, and sales-queue record also contains a `qualification`
 object derived from the four required scope fields. It includes normalized

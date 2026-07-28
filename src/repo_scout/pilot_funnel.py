@@ -100,6 +100,15 @@ CI_PROVIDER_OPTIONS = (
 CI_PROVIDER_BY_ANSWER = {
     answer: provider for provider, answer in CI_PROVIDER_OPTIONS
 }
+COPY_READY_CI_PROVIDER = "github_actions"
+CI_INTEGRATION_DECISION_ACTION = (
+    "Record the private CI integration decision before any further pilot "
+    "terms or payment action."
+)
+UNRESOLVED_CI_PROVIDER_ACTION = (
+    "Confirm the CI provider and record the private integration decision "
+    "before any further pilot terms or payment action."
+)
 SALES_PRIORITY_BY_READINESS = {
     "ready": 1,
     "needs_approval": 2,
@@ -337,7 +346,12 @@ def build_funnel(
         next_action: str | None = None
         if stage in FOLLOW_UP_STAGES and issue.state == "OPEN":
             sales_priority = SALES_PRIORITY_BY_READINESS[readiness]
-            next_action = _sales_action(stage, readiness, pilot_price_usd)
+            next_action = _sales_action(
+                stage,
+                readiness,
+                pilot_price_usd,
+                qualification["ci_provider"],
+            )
             sales_actions.append(
                 {
                     "number": issue.number,
@@ -905,7 +919,17 @@ def _record_segment_totals(
     totals["lost_pilots"] += int(is_lost)
 
 
-def _sales_action(stage: str, readiness: str, pilot_price_usd: int) -> str:
+def _sales_action(
+    stage: str,
+    readiness: str,
+    pilot_price_usd: int,
+    ci_provider: str | None,
+) -> str:
+    if readiness == "ready":
+        if ci_provider is None:
+            return UNRESOLVED_CI_PROVIDER_ACTION
+        if ci_provider != COPY_READY_CI_PROVIDER:
+            return CI_INTEGRATION_DECISION_ACTION
     if readiness not in SALES_ACTIONS:
         return "Clarify purchase readiness before advancing."
     return SALES_ACTIONS[readiness][stage].format(

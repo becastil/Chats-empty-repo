@@ -1347,8 +1347,25 @@ Schema-7 reporting also turns every open pre-payment request into a prioritized
 sales action. Ready buyers surface first, approval-dependent buyers receive an
 approval-oriented action, exploratory buyers receive a proof or decision-criteria
 action, and unclear answers require clarification. Funnel stage and issue age
-order deals within those groups. The queue is an operating aid, not an automated
-decision, and it neither sends outreach nor changes booked-revenue semantics.
+order deals within those groups. A ready buyer receives normal terms or payment
+guidance only when the normalized provider is GitHub Actions, the sole
+copy-ready gate. Recognized non-GitHub providers require the existing private
+integration decision first, while missing, no-response, edited, or ambiguous
+provider evidence requires clarification. This changes only the pilot queue's
+next action: target-profile classification, ordering, counts, human-applied
+labels, and booked-revenue semantics remain unchanged. Because the private
+decision is not public evidence, the queue cannot infer that it was completed.
+The aggregate growth review also lacks provider-level actionability. When it
+reads schema 7 and open sales actions exist, its offer, payment, and open
+pilot-target recommendations therefore defer to the provider-aware queue
+instead of issuing a second commercial instruction. The offer-stage handoff
+still carries the report's validated pilot price. Growth first reconciles the
+reported action count with the embedded queue and verifies that every ready
+non-GitHub or unresolved-provider action preserves the gate. A saved schema-7
+report with the former provider-blind action fails closed instead of acquiring
+new meaning from its version number. Older pilot schemas retain their existing
+aggregate recommendations. The queue is an operating aid, not an automated
+decision, and it neither sends outreach nor records payment.
 
 Schema 7 also verifies the required application scope before an operator relies
 on a qualification label. It normalizes team size, repository count, and CI

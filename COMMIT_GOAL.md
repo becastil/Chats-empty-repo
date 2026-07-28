@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after rejecting unsafe pilot request text:
-  272 / 1,000 (27.2%).
-- Remaining after rejecting unsafe pilot request text:
-  728 commits.
+- Progress after gating non-copy-ready CI sales actions:
+  273 / 1,000 (27.3%).
+- Remaining after gating non-copy-ready CI sales actions:
+  727 commits.
 
 ## Commit Standard
 

@@ -365,6 +365,181 @@ class GrowthReportTests(unittest.TestCase):
             "Send the explicit $400 pilot terms to a qualified team.",
         )
 
+    def test_schema_seven_commercial_actions_defer_to_the_sales_queue(
+        self,
+    ) -> None:
+        def issue(
+            number: int,
+            *,
+            ci_provider: str,
+            labels: list[str],
+        ) -> dict[str, object]:
+            return {
+                "number": number,
+                "title": f"Pilot {number}",
+                "state": "OPEN",
+                "updatedAt": "2026-07-10T00:00:00Z",
+                "body": "\n\n".join(
+                    (
+                        "### Team size\n\n12",
+                        "### Repository count\n\n6",
+                        f"### CI provider\n\n{ci_provider}",
+                        "### Repository standard to enforce\n\n"
+                        "Use one reviewed repository policy.",
+                        "### How did you hear about Repo Scout?\n\n"
+                        "Repo Scout website",
+                        "### Purchase readiness\n\n"
+                        "Ready to purchase the $299 pilot",
+                        "### Primary purchase criterion\n\n"
+                        "Works across our repositories and CI",
+                    )
+                ),
+                "labels": labels,
+            }
+
+        cases = (
+            (
+                [
+                    issue(
+                        1,
+                        ci_provider="GitLab CI",
+                        labels=["pilot-lead", "pilot-qualified"],
+                    )
+                ],
+                "offer",
+                (
+                    "Work the provider-aware pilot sales queue before sending "
+                    "the explicit $400 pilot terms."
+                ),
+            ),
+            (
+                [
+                    issue(
+                        1,
+                        ci_provider="GitLab CI",
+                        labels=[
+                            "pilot-lead",
+                            "pilot-qualified",
+                            "pilot-offered",
+                        ],
+                    )
+                ],
+                "payment",
+                (
+                    "Work the provider-aware pilot sales queue before "
+                    "confirming purchase or payment."
+                ),
+            ),
+            (
+                [
+                    issue(
+                        1,
+                        ci_provider="GitLab CI",
+                        labels=[
+                            "pilot-lead",
+                            "pilot-qualified",
+                            "pilot-offered",
+                        ],
+                    ),
+                    issue(
+                        2,
+                        ci_provider="GitHub Actions",
+                        labels=[
+                            "pilot-lead",
+                            "pilot-qualified",
+                            "pilot-offered",
+                            "pilot-paid",
+                        ],
+                    ),
+                ],
+                "pilot_target",
+                (
+                    "Work the provider-aware pilot sales queue before closing "
+                    "the next pilot."
+                ),
+            ),
+        )
+
+        for issues, stage, expected_action in cases:
+            with self.subTest(stage=stage):
+                pilot = build_funnel(
+                    issues,
+                    pilot_price_usd=400,
+                    as_of=date(2026, 7, 10),
+                )
+                report = build_growth_report(self._distribution(), pilot)
+
+                self.assertEqual(report["bottleneck"]["stage"], stage)
+                self.assertEqual(
+                    report["bottleneck"]["next_action"],
+                    expected_action,
+                )
+                self.assertIn(
+                    "private CI integration decision",
+                    pilot["sales_queue"]["deals"][0]["next_action"],
+                )
+
+    def test_schema_seven_growth_rejects_an_untrusted_sales_queue_gate(
+        self,
+    ) -> None:
+        pilot = build_funnel(
+            [
+                {
+                    "number": 1,
+                    "title": "GitLab pilot",
+                    "state": "OPEN",
+                    "updatedAt": "2026-07-10T00:00:00Z",
+                    "body": "\n\n".join(
+                        (
+                            "### Team size\n\n12",
+                            "### Repository count\n\n6",
+                            "### CI provider\n\nGitLab CI",
+                            "### Repository standard to enforce\n\n"
+                            "Use one reviewed repository policy.",
+                            "### How did you hear about Repo Scout?\n\n"
+                            "Repo Scout website",
+                            "### Purchase readiness\n\n"
+                            "Ready to purchase the $299 pilot",
+                            "### Primary purchase criterion\n\n"
+                            "Works across our repositories and CI",
+                        )
+                    ),
+                    "labels": [
+                        "pilot-lead",
+                        "pilot-qualified",
+                        "pilot-offered",
+                    ],
+                }
+            ],
+            as_of=date(2026, 7, 10),
+        )
+
+        unsafe_action = json.loads(json.dumps(pilot))
+        unsafe_action["sales_queue"]["deals"][0]["next_action"] = (
+            "Confirm the purchase and payment path."
+        )
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            "next_action does not preserve the ready CI provider gate",
+        ):
+            build_growth_report(self._distribution(), unsafe_action)
+
+        missing_queue = json.loads(json.dumps(pilot))
+        del missing_queue["sales_queue"]
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            r"pilot report\.sales_queue must be a JSON object",
+        ):
+            build_growth_report(self._distribution(), missing_queue)
+
+        inconsistent_count = json.loads(json.dumps(pilot))
+        inconsistent_count["summary"]["sales_actions"] = 0
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            "sales_actions does not match sales_queue.deals",
+        ):
+            build_growth_report(self._distribution(), inconsistent_count)
+
     def test_requires_a_baseline_before_prioritizing_commercial_movement(self) -> None:
         distribution = self._distribution()
         distribution["change"] = None
@@ -602,6 +777,7 @@ class GrowthReportTests(unittest.TestCase):
                     "subset_scope_issues": 0,
                 }
             )
+            report["sales_queue"] = {"deals": []}
         return report
 
     @staticmethod

@@ -158,6 +158,55 @@ def verify_pilot_funnel(
         )
         checked.append("operator-text")
 
+        issue_export.write_text(
+            json.dumps(
+                [
+                    _issue(
+                        number=106,
+                        title="Non-GitHub team awaiting integration decision",
+                        source="Repo Scout website",
+                        readiness="Ready to purchase the $299 pilot",
+                        criterion="Works across our repositories and CI",
+                        labels=(
+                            "pilot-lead",
+                            "pilot-qualified",
+                            "pilot-offered",
+                        ),
+                        ci_provider="GitLab CI",
+                    )
+                ],
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        integration_report = _json_report(
+            pilot_command,
+            issue_export,
+            environment=environment,
+        )
+        integration_queue = integration_report.get("sales_queue", {}).get(
+            "deals", []
+        )
+        _require(
+            len(integration_queue) == 1,
+            "non-GitHub pre-payment request left the sales queue",
+        )
+        integration_action = integration_queue[0].get("next_action")
+        _require(
+            integration_action
+            == (
+                "Record the private CI integration decision before any "
+                "further pilot terms or payment action."
+            ),
+            "non-GitHub request was not gated on an integration decision",
+        )
+        _require(
+            "Confirm the purchase and payment path."
+            not in json.dumps(integration_report, sort_keys=True),
+            "non-GitHub request retained a payment-advancing action",
+        )
+        checked.append("ci-integration-payment-gate")
+
         pilot_report = Path(tmp) / "pilot-report.json"
         baseline_release_export = Path(tmp) / "baseline-releases.json"
         current_release_export = Path(tmp) / "current-releases.json"
@@ -270,6 +319,14 @@ def verify_pilot_funnel(
             growth.get("bottleneck", {}).get("stage") == "pilot_target",
             "growth bottleneck changed",
         )
+        _require(
+            growth.get("bottleneck", {}).get("next_action")
+            == (
+                "Work the provider-aware pilot sales queue before closing the "
+                "next pilot."
+            ),
+            "growth bottleneck bypassed the provider-aware sales queue",
+        )
         _require(not growth.get("warnings"), "valid growth evidence emitted warnings")
         measurement_note = growth.get("measurement_note", "")
         _require(
@@ -310,6 +367,31 @@ def verify_pilot_funnel(
             "repository-standard free text leaked into growth text",
         )
         checked.append("growth-boundaries")
+
+        integration_pilot_report = Path(tmp) / "integration-pilot-report.json"
+        integration_pilot_report.write_text(
+            json.dumps(integration_report, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+        integration_growth = _growth_report(
+            growth_command,
+            distribution_report,
+            integration_pilot_report,
+            environment=environment,
+        )
+        _require(
+            integration_growth.get("bottleneck", {}).get("stage") == "payment",
+            "non-GitHub growth bottleneck changed",
+        )
+        _require(
+            integration_growth.get("bottleneck", {}).get("next_action")
+            == (
+                "Work the provider-aware pilot sales queue before confirming "
+                "purchase or payment."
+            ),
+            "growth report bypassed the non-GitHub integration gate",
+        )
+        checked.append("growth-ci-integration-gate")
 
         distribution["change"]["primary_artifact_downloads_delta"] = 7
         distribution_report.write_text(
@@ -605,12 +687,13 @@ def _issue(
     readiness: str,
     criterion: str,
     labels: Sequence[str],
+    ci_provider: str = "GitHub Actions",
 ) -> dict[str, Any]:
     body = "\n\n".join(
         (
             "### Team size\n\n12",
             "### Repository count\n\n6",
-            "### CI provider\n\nGitHub Actions",
+            f"### CI provider\n\n{ci_provider}",
             f"### How did you hear about Repo Scout?\n\n{source}",
             f"### Repository standard to enforce\n\n{PRIVATE_STANDARD}",
             f"### Primary purchase criterion\n\n{criterion}",
