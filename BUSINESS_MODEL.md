@@ -181,6 +181,13 @@ Symlinks, special files, replacement, mutation, and oversized sparse evidence
 therefore fail before a cross-repository summary is emitted. This protects the
 paid delivery acceptance record without treating a bundle as customer
 activation, payment, demand, or revenue.
+Rollout branch metadata is also limited to null or a non-empty printable value
+of at most 1,024 characters without surrounding whitespace. Line breaks,
+terminal controls, bidirectional controls, and oversized values fail before
+counts-only or detailed output and are not echoed in the error. This prevents a
+customer-controlled bundle from forging operator metrics or changing terminal
+presentation; it does not establish customer activation, willingness to pay,
+payment, or revenue.
 Operators can start from a blank, copy-ready delivery record with exactly 10
 repository slots, but the completed copy belongs only in the
 customer-approved private system. The template records the CI decision, five

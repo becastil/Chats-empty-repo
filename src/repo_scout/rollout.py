@@ -19,6 +19,7 @@ SUPPORTED_ROLLOUT_SCHEMA_VERSIONS = {1, ROLLOUT_SCHEMA_VERSION}
 ROLLOUT_METADATA_START = "## Rollout Metadata\n\n```json\n"
 ROLLOUT_METADATA_END = "\n```"
 MAX_ROLLOUT_EVIDENCE_BYTES = 1024 * 1024
+MAX_GIT_BRANCH_CHARACTERS = 1024
 _POLICY_FINGERPRINT_PATTERN = re.compile(r"sha256:[0-9a-f]{64}")
 _GIT_COMMIT_PATTERN = re.compile(r"(?:[0-9a-f]{40}|[0-9a-f]{64})")
 
@@ -216,9 +217,8 @@ def validate_rollout_metadata(metadata: Any) -> dict[str, Any]:
     _require_exact_keys(git, git_keys, "git")
     if not isinstance(git["is_repo"], bool) or not isinstance(git["clean"], bool):
         raise RolloutEvidenceError("git repository and clean values must be booleans")
-    if git["branch"] is not None and not isinstance(git["branch"], str):
-        raise RolloutEvidenceError("git.branch must be a string or null")
-    if not git["is_repo"] and git["branch"] is not None:
+    branch = _validate_git_branch(git["branch"])
+    if not git["is_repo"] and branch is not None:
         raise RolloutEvidenceError("non-Git evidence cannot declare a branch")
     if not _is_non_negative_integer(git["dirty_files"]):
         raise RolloutEvidenceError("git.dirty_files must be non-negative")
@@ -269,13 +269,31 @@ def validate_rollout_metadata(metadata: Any) -> dict[str, Any]:
         },
         "git": {
             "is_repo": git["is_repo"],
-            "branch": git["branch"],
+            "branch": branch,
             **({"commit": git["commit"]} if schema_version >= 2 else {}),
             "dirty_files": git["dirty_files"],
             "clean": git["clean"],
         },
         "attention_findings": attention_findings,
     }
+
+
+def _validate_git_branch(value: Any) -> str | None:
+    if value is None:
+        return None
+    if (
+        not isinstance(value, str)
+        or not value
+        or len(value) > MAX_GIT_BRANCH_CHARACTERS
+        or value != value.strip()
+        or not value.isprintable()
+    ):
+        raise RolloutEvidenceError(
+            "git.branch must be null or a non-empty printable string "
+            f"of at most {MAX_GIT_BRANCH_CHARACTERS} characters without "
+            "surrounding whitespace"
+        )
+    return value
 
 
 def validate_repository_id(value: Any) -> str:

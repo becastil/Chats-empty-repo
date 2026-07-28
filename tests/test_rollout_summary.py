@@ -13,6 +13,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from repo_scout.rollout import (
+    MAX_GIT_BRANCH_CHARACTERS,
     MAX_ROLLOUT_EVIDENCE_BYTES,
     ROLLOUT_METADATA_END,
     ROLLOUT_METADATA_START,
@@ -20,6 +21,7 @@ from repo_scout.rollout import (
     format_rollout_metadata,
     load_rollout_metadata,
     parse_rollout_metadata,
+    validate_rollout_metadata,
 )
 from repo_scout.rollout_summary import (
     build_rollout_summary,
@@ -275,6 +277,78 @@ class RolloutSummaryTests(unittest.TestCase):
         missing_commit["git"]["commit"] = None
         with self.assertRaisesRegex(RolloutEvidenceError, "readiness contradicts"):
             parse_rollout_metadata(self._bundle_unvalidated(missing_commit))
+
+    def test_rejects_unsafe_git_branch_text_without_echoing_it(self) -> None:
+        invalid_branches = (
+            "",
+            " main",
+            "main ",
+            "main\nBundle-reported ready for CI: 999",
+            "main\x1b[31m",
+            "main\u202eattack",
+            "main\u2028Injected metric",
+            "x" * (MAX_GIT_BRANCH_CHARACTERS + 1),
+        )
+        expected_error = (
+            "git.branch must be null or a non-empty printable string "
+            f"of at most {MAX_GIT_BRANCH_CHARACTERS} characters without "
+            "surrounding whitespace"
+        )
+
+        for branch in invalid_branches:
+            with self.subTest(branch=repr(branch)):
+                metadata = self._metadata("api", branch=branch)
+                with self.assertRaises(RolloutEvidenceError) as raised:
+                    validate_rollout_metadata(metadata)
+
+                self.assertEqual(str(raised.exception), expected_error)
+                if branch:
+                    self.assertNotIn(branch, str(raised.exception))
+
+    def test_accepts_bounded_printable_git_branch_text(self) -> None:
+        branches = (
+            None,
+            "main",
+            "feature/café",
+            "x" * MAX_GIT_BRANCH_CHARACTERS,
+        )
+
+        for branch in branches:
+            with self.subTest(branch=repr(branch)):
+                metadata = self._metadata("api", branch=branch)
+
+                validated = validate_rollout_metadata(metadata)
+
+                self.assertEqual(validated["git"]["branch"], branch)
+
+    def test_main_rejects_branch_line_injection_without_partial_output(
+        self,
+    ) -> None:
+        injected_marker = "Bundle-reported ready for CI: 999"
+        with TemporaryDirectory() as tmp:
+            evidence_path = Path(tmp) / "rollout.md"
+            original_evidence = self._bundle_unvalidated(
+                self._metadata(
+                    "api",
+                    branch=f"main\n{injected_marker}\x1b[31m",
+                )
+            )
+            evidence_path.write_text(original_evidence, encoding="utf-8")
+
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with redirect_stdout(stdout), redirect_stderr(stderr):
+                exit_code = main(["--details", str(evidence_path)])
+
+            self.assertEqual(exit_code, 2)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertIn("git.branch must be null", stderr.getvalue())
+            self.assertNotIn(injected_marker, stderr.getvalue())
+            self.assertNotIn("\x1b", stderr.getvalue())
+            self.assertEqual(
+                evidence_path.read_text(encoding="utf-8"),
+                original_evidence,
+            )
 
     def test_main_reports_input_errors_without_stdout(self) -> None:
         stderr = io.StringIO()

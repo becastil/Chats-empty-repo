@@ -223,7 +223,10 @@ duplicate IDs, duplicate JSON keys, and malformed or contradictory metadata,
 performs no uploads, and requires no API key. Every input must be a direct
 regular-file leaf no larger than 1 MiB (1,048,576 bytes). The command parses
 one descriptor-bound UTF-8 buffer, then accepts it only if the exact bytes and
-requested leaf remain unchanged.
+requested leaf remain unchanged. Branch metadata must be null or a non-empty
+printable string of at most 1,024 characters without surrounding whitespace.
+Unsafe branch text fails with exit code 2 before any summary is emitted and is
+not echoed in the error.
 
 Initialize an offline starter policy for a common repository type:
 

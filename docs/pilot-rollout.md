@@ -90,6 +90,11 @@ result. Duplicate IDs, duplicate JSON keys, missing metadata, unknown fields,
 unsupported schemas, invalid types, and internally contradictory evidence
 fail with exit code 2 instead of being counted.
 
+Branch metadata must be null or a non-empty printable string of at most 1,024
+characters without surrounding whitespace. Newlines, terminal controls,
+bidirectional controls, and oversized values fail with exit code 2 before any
+text or JSON summary is emitted. The error does not echo the untrusted value.
+
 Each evidence argument must name a direct regular-file leaf no larger than
 1 MiB (1,048,576 bytes). Symlinks, directories, FIFOs, and other special files
 fail with exit code 2 before a summary is emitted. The command reads and parses

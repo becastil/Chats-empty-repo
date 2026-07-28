@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 270 of
-1,000, with 730 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 271 of
+1,000, with 729 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -334,6 +334,9 @@ alignment take priority over commit volume.
   that fail before summary output on redirection, mutation, or oversize.
 - Release-blocking installed-command proof that rollout evidence symlinks and
   oversized sparse bundles fail without emitting a cross-repository summary.
+- Bounded printable rollout branch metadata that rejects line, terminal-control,
+  bidirectional-control, whitespace, and oversized values before any operator
+  summary can be emitted.
 - Schema-2 rollout evidence with normalized policy fingerprints and exact Git commit IDs.
 - Backward-compatible schema-1 aggregation with explicit policy and commit identity coverage.
 - Shared-policy verification only for complete matching fingerprints across multiple repositories.

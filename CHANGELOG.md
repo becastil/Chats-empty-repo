@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Required rollout branch metadata to be null or a non-empty printable string
+  of at most 1,024 characters without surrounding whitespace.
+- Rejected line, terminal-control, bidirectional-control, and oversized branch
+  values with exit code 2 before text or JSON output, without echoing the
+  untrusted value.
+- Added source and installed-command regressions proving crafted branch evidence
+  cannot forge operator metrics, alter terminal output, or modify its bundle.
 - Required `repo-scout-rollout` inputs to remain direct regular-file leaves,
   rejecting symlinks and special files before cross-repository evidence reads.
 - Capped each rollout bundle at 1 MiB and bound parsing plus the acceptance

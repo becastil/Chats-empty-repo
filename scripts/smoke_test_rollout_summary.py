@@ -14,6 +14,7 @@ POLICY_FINGERPRINT = f"sha256:{'a' * 64}"
 API_COMMIT = "b" * 40
 WEB_COMMIT = "c" * 40
 MAX_ROLLOUT_EVIDENCE_BYTES = 1024 * 1024
+INJECTED_BRANCH_MARKER = "Bundle-reported ready for CI: 999"
 
 
 class SmokeTestError(RuntimeError):
@@ -191,6 +192,40 @@ def verify_rollout_summary(
         )
         checked.append("oversized-evidence-rejected")
 
+        unsafe_branch = root / "unsafe-branch.md"
+        _write_bundle(
+            unsafe_branch,
+            _metadata(
+                "company/unsafe",
+                commit=API_COMMIT,
+                branch=f"main\n{INJECTED_BRANCH_MARKER}\x1b[31m",
+            ),
+        )
+        original_unsafe_branch = unsafe_branch.read_bytes()
+        rejected = _run(
+            rollout_command,
+            (unsafe_branch,),
+            output_format="text",
+            details=True,
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(not rejected.stdout, "unsafe branch emitted a rollout summary")
+        _require(
+            "git.branch must be null" in rejected.stderr,
+            "unsafe branch did not produce its controlled error",
+        )
+        _require(
+            INJECTED_BRANCH_MARKER not in rejected.stderr
+            and "\x1b" not in rejected.stderr,
+            "unsafe branch value leaked into its rejection",
+        )
+        _require(
+            unsafe_branch.read_bytes() == original_unsafe_branch,
+            "unsafe branch evidence changed during rejection",
+        )
+        checked.append("unsafe-branch-rejected")
+
     return tuple(checked)
 
 
@@ -214,6 +249,7 @@ def _metadata(
     repository_id: str,
     *,
     commit: str,
+    branch: str = "main",
     policy_status: str = "pass",
     violations: int = 0,
     dirty_files: int = 0,
@@ -237,7 +273,7 @@ def _metadata(
         },
         "git": {
             "is_repo": True,
-            "branch": "main",
+            "branch": branch,
             "commit": commit,
             "dirty_files": dirty_files,
             "clean": clean,

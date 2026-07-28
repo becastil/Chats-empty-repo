@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after binding rollout aggregation inputs to stable evidence:
-  270 / 1,000 (27.0%).
-- Remaining after binding rollout aggregation inputs to stable evidence:
-  730 commits.
+- Progress after rejecting unsafe rollout branch evidence:
+  271 / 1,000 (27.1%).
+- Remaining after rejecting unsafe rollout branch evidence:
+  729 commits.
 
 ## Commit Standard
 

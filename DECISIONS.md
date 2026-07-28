@@ -4056,3 +4056,29 @@ This protects the counts-only acceptance record required by the $299 pilot.
 It adds no policy capability or acquisition asset, does not approve outreach or
 site deployment, and does not establish activation, demand, payment, or
 revenue.
+
+## 2026-07-28: Reject Unsafe Rollout Branch Text Before Output
+
+Schema-1 and schema-2 rollout metadata previously accepted any string for
+`git.branch`. Detailed text output interpolated that value directly, so a
+crafted evidence bundle could add a fake metric line or terminal control
+sequence to an otherwise valid operator summary. Even though rollout bundles
+are not authenticated, parsed evidence must not be able to change the
+structure or presentation of the command's own output.
+
+`git.branch` must now be null or a non-empty printable string of at most 1,024
+characters without surrounding whitespace. This permits normal Unicode branch
+names while rejecting newlines, escape sequences, bidirectional controls,
+Unicode line separators, blank values, and unbounded text. Rejection uses one
+generic error that never includes the supplied branch value.
+
+Validation happens before summary construction. Invalid evidence returns exit
+2 with no partial text or JSON report and leaves the input unchanged. Source
+tests cover each rejected class plus exact-limit and printable-Unicode
+acceptance. The installed rollout smoke reproduces the former fake-metric and
+terminal-control payload against the packaged command.
+
+This protects the paid pilot's counts-only and detailed acceptance evidence.
+It adds no acquisition asset or policy feature, does not approve outreach or
+site deployment, and does not establish activation, demand, payment, or
+revenue.
