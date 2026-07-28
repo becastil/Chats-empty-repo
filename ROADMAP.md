@@ -46,11 +46,12 @@
   identity or non-default-port drift must fail closed. Versions 46 and 47 are
   superseded and must not be deployed. Keep the replacement behind separate
   deployment approval and the immediate post-deployment production audit.
-- Human-review the five prepared, publicly qualified drafts. The first
-  owner-only `--write-review` bundle is ready in the ignored private workspace;
-  use its content-bound `--approve-next` or
-  `--decline-next` command emitted by each complete private review, send only
-  approved messages one at a time, record
+- Human-review the five prepared, publicly qualified drafts. The fresh
+  owner-only schema-5 bundle is ready at
+  `outreach-private/next-review-v5.md`; keep the July 21 schema-4 bundle
+  superseded, replace the chosen decision command's `YYYY-MM-DD` values with
+  the actual UTC decision date, and use its content-bound `--approve-next` or
+  `--decline-next` command. Send only approved messages one at a time, record
   each human send through guarded `--record-contact`, then record the one
   human-sent, day-seven follow-up through guarded `--record-follow-up`. Record
   any human-observed reply, pilot request, rejection, or opt-out through guarded

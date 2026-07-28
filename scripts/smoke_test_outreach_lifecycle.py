@@ -202,6 +202,11 @@ def verify_outreach_lifecycle(
             action="--approve-next",
             ledger=handoff_ledger,
         )
+        approval_arguments = _replace_event_date(
+            approval_arguments,
+            event_date="2026-07-02",
+            action="approval",
+        )
         handoff_approval = _run_arguments(
             outreach_command,
             approval_arguments,
@@ -319,6 +324,12 @@ def verify_outreach_lifecycle(
         _require(
             "--confirm-not-send" in decline_arguments,
             "decline handoff omitted human no-send confirmation",
+        )
+        decline_arguments = _replace_event_date(
+            decline_arguments,
+            event_date="2026-07-02",
+            action="decline",
+            placeholder_count=1,
         )
         decline_receipt = _run_arguments(
             outreach_command,
@@ -1112,10 +1123,15 @@ def _replace_event_date(
     *,
     event_date: str,
     action: str,
+    placeholder_count: int = 2,
 ) -> tuple[str, ...]:
+    placeholder_label = (
+        "placeholder" if placeholder_count == 1 else "placeholders"
+    )
     _require(
-        arguments.count(DATE_PLACEHOLDER) == 2,
-        f"{action} handoff must require two actual-date placeholders",
+        arguments.count(DATE_PLACEHOLDER) == placeholder_count,
+        f"{action} handoff must require {placeholder_count} "
+        f"actual-date {placeholder_label}",
     )
     return tuple(
         event_date if value == DATE_PLACEHOLDER else value

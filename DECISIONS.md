@@ -3737,3 +3737,26 @@ arguments, performs no remote-ref lookup, and remains a pending request rather
 than consent. The existing post-export pre-save mode remains the authoritative
 network and commit check. This change performs no source export, version save,
 deployment, customer contact, or revenue event.
+
+## 2026-07-28: Separate Outreach Review Content From Decision Time
+
+The first owner-only review bundle was prepared on July 21, but its generated
+approval command reused July 21 as both the ledger-audit date and the human
+approval date. The same date was included in the schema-4 content digest.
+Consequently, changing the command to the truthful later decision date made the
+receipt fail, while running it unchanged would backdate approval evidence. A
+bundle intended for asynchronous human review therefore became unusable after
+UTC midnight without clearly saying so.
+
+Schema-5 review receipts bind the normalized selected ledger row, selected
+private draft, and five displayed checks, but not the bundle's audit date. The
+generated approval and decline commands now use `YYYY-MM-DD` for the decision
+audit, and approval uses the same placeholder for `approved_on`. The operator
+must replace those values with the actual UTC decision date. Approval and
+decline still reload the current private files and recompute the digest, so any
+source, channel, draft, status, or checklist change forces a fresh review even
+when the calendar date changes.
+
+Existing schema-4 bundles do not acquire schema-5 meaning and must not be used
+for a later decision. This change records no review judgment, approval,
+contact, pilot request, payment, or revenue event.

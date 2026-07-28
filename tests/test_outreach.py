@@ -295,7 +295,7 @@ class OutreachReportTests(unittest.TestCase):
 
         report = build_next_outreach_review(rows, as_of=date(2026, 7, 13))
 
-        self.assertEqual(report["schema_version"], 4)
+        self.assertEqual(report["schema_version"], 5)
         self.assertTrue(report["human_review_required"])
         self.assertTrue(report["private_output"])
         self.assertFalse(report["private_evidence_included"])
@@ -1080,6 +1080,97 @@ class OutreachReportTests(unittest.TestCase):
             )
             self.assertEqual(text.count("--reviewed-private-draft"), 2)
             self.assertIn(shlex.quote(str(notes)), text)
+            self.assertEqual(text.count("--as-of YYYY-MM-DD"), 2)
+            self.assertIn("--approved-on YYYY-MM-DD", text)
+            self.assertNotIn("--as-of 2026-07-13 --approve-next", text)
+
+    def test_content_bound_review_can_be_decided_on_a_later_date(self) -> None:
+        cases = (
+            (
+                "approval",
+                (
+                    "--approve-next",
+                    "prospect-001",
+                    "--approved-on",
+                    "2026-07-15",
+                    "--confirm-reviewed",
+                ),
+                "approved",
+                "2026-07-15",
+            ),
+            (
+                "decline",
+                (
+                    "--decline-next",
+                    "prospect-001",
+                    "--confirm-not-send",
+                ),
+                "review-declined",
+                "",
+            ),
+        )
+        for decision, arguments, expected_status, expected_approved_on in cases:
+            with self.subTest(decision=decision), TemporaryDirectory() as tmp:
+                ledger = Path(tmp) / "ledger.csv"
+                notes = Path(tmp) / "drafts.md"
+                _write_ledger(
+                    ledger,
+                    [
+                        _row(
+                            status="drafted",
+                            contacted_on="",
+                            next_action_on="",
+                            approved_on="",
+                        )
+                    ],
+                )
+                notes.write_text(
+                    "## prospect-001\n\nReviewed private message\n",
+                    encoding="utf-8",
+                )
+                if os.name == "posix":
+                    notes.chmod(0o600)
+
+                review_stdout = io.StringIO()
+                with redirect_stdout(review_stdout):
+                    review_exit_code = main(
+                        [
+                            str(ledger),
+                            "--as-of",
+                            "2026-07-13",
+                            "--review-next",
+                            "--include-private-evidence",
+                            "--include-private-draft",
+                            str(notes),
+                            "--format",
+                            "json",
+                        ]
+                    )
+                self.assertEqual(review_exit_code, 0)
+                review_digest = json.loads(review_stdout.getvalue())[
+                    "review_digest"
+                ]
+
+                decision_stdout = io.StringIO()
+                with redirect_stdout(decision_stdout):
+                    decision_exit_code = main(
+                        [
+                            str(ledger),
+                            "--as-of",
+                            "2026-07-15",
+                            *arguments,
+                            "--review-digest",
+                            review_digest,
+                            "--reviewed-private-draft",
+                            str(notes),
+                        ]
+                    )
+
+                self.assertEqual(decision_exit_code, 0)
+                with ledger.open(newline="", encoding="utf-8") as ledger_file:
+                    row = next(csv.DictReader(ledger_file))
+                self.assertEqual(row["status"], expected_status)
+                self.assertEqual(row["approved_on"], expected_approved_on)
 
     def test_private_draft_notes_reject_missing_or_ambiguous_sections(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -2535,8 +2626,18 @@ class OutreachReportTests(unittest.TestCase):
                 [str(ledger), "--as-of", "2026-07-01", "--review-next"]
             )
             approval_command = command_for(review_output, "--approve-next")
-            self.assertNotIn(DATE_PLACEHOLDER, approval_command)
-            approval_output = run(approval_command)
+            self.assertEqual(approval_command.count(DATE_PLACEHOLDER), 2)
+            self.assertNotIn("2026-07-01", approval_command)
+            before_approval = ledger.read_bytes()
+            with redirect_stderr(io.StringIO()), self.assertRaises(
+                SystemExit
+            ) as ctx:
+                main(approval_command)
+            self.assertEqual(ctx.exception.code, 2)
+            self.assertEqual(ledger.read_bytes(), before_approval)
+            approval_output = run(
+                with_event_date(approval_command, "2026-07-02")
+            )
 
             contact_command = command_for(
                 approval_output, "--record-contact"
@@ -2632,7 +2733,7 @@ class OutreachReportTests(unittest.TestCase):
             self.assertEqual(report["summary"]["attempted_prospects"], 1)
             with ledger.open(newline="", encoding="utf-8") as ledger_file:
                 row = next(csv.DictReader(ledger_file))
-            self.assertEqual(row["approved_on"], "2026-07-01")
+            self.assertEqual(row["approved_on"], "2026-07-02")
             self.assertEqual(row["contacted_on"], "2026-07-03")
             self.assertEqual(row["followed_up_on"], "2026-07-10")
             self.assertEqual(row["status"], "pilot-requested")

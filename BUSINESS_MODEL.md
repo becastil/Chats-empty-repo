@@ -804,11 +804,14 @@ directories before reading private material. Counts-only validation of the
 empty public template remains available. This reduces accidental prospect-data
 disclosure; it does not approve a draft, create an attempt, or establish demand.
 The committed schema-9 checkpoint contains only aggregate counts. The first
-complete owner-only review bundle has been created in the ignored private
-workspace from the verified `v0.3.48` wheel without changing the ledger. All
-five remain `drafted`: approved messages, attempted outreach, replies, pilot
-requests, and revenue are still zero until a human reviews and sends each
-message through its published business channel.
+complete owner-only review bundle was created in the ignored private workspace
+from the verified `v0.3.48` wheel without changing the ledger, but its July 21
+schema-4 date binding is now superseded and must not be used for a later
+decision. A fresh schema-5 bundle now exists at
+`outreach-private/next-review-v5.md` with owner-only permissions and no ledger
+mutation. All five remain `drafted`: approved messages, attempted outreach,
+replies, pilot requests, and revenue are still zero until a human reviews and
+sends each message through its published business channel.
 
 The operator can now request one deterministic `--review-next` checklist. It
 names only the next private alias and permitted channel, reports qualification
@@ -832,14 +835,17 @@ history for aliases that progressed. This prevents stale or mismatched private
 material from entering a decision while keeping the ledger read-only. It does
 not let Repo Scout judge, approve, send, or count the message as demand or
 revenue.
-A complete evidence-and-draft review now emits a schema-4 SHA-256 receipt over
-the normalized selected ledger row, selected private draft, review date, and
-five human checks. Its generated approve and decline commands carry that
-receipt plus the reviewed notes path. Before either mutation, Repo Scout reloads
-the private files and recomputes the receipt; a changed source, channel, draft,
-date, or check fails without modifying the ledger or exposing the changed
-content. This binds a human decision to what was actually reviewed without
-making Repo Scout perform the judgment.
+A complete evidence-and-draft review now emits a schema-5 SHA-256 receipt over
+the normalized selected ledger row, selected private draft, and five human
+checks. Its generated approve and decline commands carry that receipt plus the
+reviewed notes path, while using actual-date placeholders instead of copying
+the bundle's ledger-audit date into a later human decision. Before either
+mutation, Repo Scout reloads the private files and recomputes the receipt; a
+changed source, channel, draft, or check fails without modifying the ledger or
+exposing the changed content. An unchanged review can therefore be decided on a
+later UTC date without backdating approval evidence. This binds a human
+decision to what was actually reviewed without making Repo Scout perform the
+judgment.
 The verified private notes revision now travels into the locked approval or
 decline commit as well. An editor save after receipt verification therefore
 forces a fresh review instead of recording a decision against content that no
@@ -999,12 +1005,14 @@ decision without hand-editing CSV. It requires the exact next alias, an explicit
 review date, and a confirmation flag; validates all rows before and after; and
 revalidates the content-bound receipt when the generated complete-review
 command is used; then it atomically preserves file permissions while changing
-only status and approval date. The receipt excludes evidence and review dates.
+only status and approval date. The approval result receipt excludes evidence
+and review dates.
 Approval still sends nothing, creates no contact or follow-up date, and is not
 an attempt, lead, pilot request, or revenue event. Private complete-review
-output carries the selected alias, review date, confirmation flag, review
-receipt, and shell-quoted private paths into a complete decision command. The
-approval receipt's contact handoff instead uses explicit date placeholders;
+output carries the selected alias, confirmation flag, review receipt,
+shell-quoted private paths, and actual-date placeholders into a complete
+decision command. The approval receipt's contact handoff instead uses explicit
+date placeholders;
 requiring the operator to replace them prevents a later manual send from
 inheriting the earlier approval date. This removes manual command reconstruction
 without completing a review, sending a message, or treating operator activity

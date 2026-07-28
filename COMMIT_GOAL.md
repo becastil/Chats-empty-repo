@@ -8,8 +8,9 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after making Sites export review copy-ready: 257 / 1,000 (25.7%).
-- Remaining after making Sites export review copy-ready: 743 commits.
+- Progress after making delayed outreach reviews date-truthful: 258 / 1,000
+  (25.8%).
+- Remaining after making delayed outreach reviews date-truthful: 742 commits.
 
 ## Commit Standard
 

@@ -12,6 +12,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from repo_scout.outreach import (  # noqa: E402
     LEDGER_FIELDS,
     PUBLIC_PILOT_INTAKE_URL,
+    REVIEW_SCHEMA_VERSION,
     SCHEMA_VERSION,
 )
 
@@ -87,6 +88,16 @@ class DirectOutreachContractTests(unittest.TestCase):
         self.assertIn("does not edit the ledger", normalized_playbook)
         self.assertIn("--review-digest", playbook)
         self.assertIn("--reviewed-private-draft", playbook)
+        self.assertIn(
+            f"Schema-{REVIEW_SCHEMA_VERSION} content receipt excludes the "
+            "bundle's ledger-audit date",
+            normalized_playbook,
+        )
+        self.assertIn(
+            "Replace both `YYYY-MM-DD` placeholders with the actual UTC "
+            "decision date",
+            normalized_playbook,
+        )
         self.assertIn("stale review content", normalized_playbook)
         self.assertIn("Without the flags, review output remains redacted", playbook)
         self.assertIn("## prospect-NNN", playbook)

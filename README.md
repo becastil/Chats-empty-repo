@@ -332,11 +332,14 @@ The command creates an owner-only private file only after the complete bundle
 has been written, keeps its alias and evidence out of terminal output, and
 refuses to overwrite an earlier review. The bundle contains the next ledger
 alias, qualification sources, draft, SHA-256 review receipt, and exact
-content-bound approval and decline commands. Remove or privately archive it
-after the human decision before writing the next review.
+content-bound approval and decline commands. Their `YYYY-MM-DD` placeholders
+must be replaced with the actual UTC decision date; the receipt remains valid
+across dates only while the reviewed row, draft, and checklist are unchanged.
+Remove or privately archive the bundle after the human decision before writing
+the next review.
 Omit `--as-of` to use the current UTC calendar date; the explicit UTC date in
-these examples keeps review receipts and later lifecycle records reproducible
-across operator timezones.
+these examples keeps the initial ledger audit reproducible across operator
+timezones without becoming a later approval date.
 
 After a human completes all five checks, record approval for that exact next
 alias with the exact command emitted by the review. Its shape is:

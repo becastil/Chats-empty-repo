@@ -29,7 +29,7 @@ elif os.name == "nt":
 
 
 SCHEMA_VERSION = 9
-REVIEW_SCHEMA_VERSION = 4
+REVIEW_SCHEMA_VERSION = 5
 APPROVAL_SCHEMA_VERSION = 1
 DECLINE_SCHEMA_VERSION = 2
 CONTACT_SCHEMA_VERSION = 1
@@ -1355,7 +1355,6 @@ def build_next_outreach_review(
             review_digest = _build_outreach_review_digest(
                 draft,
                 private_draft=review["private_draft"],
-                as_of=as_of,
             )
     return {
         "schema_version": REVIEW_SCHEMA_VERSION,
@@ -1380,10 +1379,8 @@ def _build_outreach_review_digest(
     draft: Mapping[str, str],
     *,
     private_draft: str,
-    as_of: date,
 ) -> str:
     payload = {
-        "as_of": as_of.isoformat(),
         "checks": list(HUMAN_REVIEW_CHECKS),
         "ledger_row": {field: draft[field] for field in LEDGER_FIELDS},
         "private_draft": private_draft,
@@ -1615,11 +1612,11 @@ def format_next_outreach_review(
                 _format_outreach_command(
                     ledger,
                     "--as-of",
-                    review_report["as_of"],
+                    DATE_PLACEHOLDER,
                     "--approve-next",
                     review["prospect_id"],
                     "--approved-on",
-                    review_report["as_of"],
+                    DATE_PLACEHOLDER,
                     "--confirm-reviewed",
                     *decision_guard,
                 ),
@@ -1627,7 +1624,7 @@ def format_next_outreach_review(
                 _format_outreach_command(
                     ledger,
                     "--as-of",
-                    review_report["as_of"],
+                    DATE_PLACEHOLDER,
                     "--decline-next",
                     review["prospect_id"],
                     "--confirm-not-send",

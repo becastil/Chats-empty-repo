@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Advanced private outreach reviews to schema 5 by excluding the bundle's
+  ledger-audit date from its content receipt, so an unchanged row, draft, and
+  checklist can be decided on a later UTC date without weakening stale-content
+  rejection.
+- Replaced copied review dates in generated approval and decline commands with
+  explicit `YYYY-MM-DD` placeholders, preventing a delayed human decision from
+  silently backdating approval evidence.
 - Added an offline, copy-ready pending Sites source-export request after
   independent candidate verification, with local canonical repository
   resolution, `origin` rejection, complete approval identity, explicit

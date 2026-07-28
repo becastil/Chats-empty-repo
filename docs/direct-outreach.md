@@ -147,11 +147,13 @@ not edit the ledger, and does not approve or send a message. The human reviewer
 must inspect the private evidence and saved draft before using a guarded review
 decision. The checklist is private operator material because it names a ledger
 alias; do not commit it as a measurement baseline. Text mode ends with complete,
-shell-quoted commands to approve or decline the selected alias using the current
-`as_of` date and supplied ledger path. Choose exactly one after human review.
+shell-quoted commands to approve or decline the selected alias using
+`YYYY-MM-DD` decision-date placeholders and the supplied ledger path. Choose
+exactly one after human review and replace every placeholder with that
+decision's actual UTC date.
 Omit `--as-of` to use the current UTC calendar date. The explicit UTC date in
-these examples prevents a local-midnight boundary from changing the review
-receipt or later lifecycle dates.
+these examples keeps the initial ledger audit reproducible across operator
+timezones; it is not the later human decision date.
 
 To inspect the selected draft and its qualification links without manually
 cross-referencing the CSV and notes file, request both explicitly in the same
@@ -171,10 +173,15 @@ showing anything, the opt-in requires a section for every ledger row still in
 Sections for review-declined, approved, or contacted aliases may remain as
 private history. The output then selects only the section matching the next
 ledger alias, maps every declared fit signal to its private HTTPS source, and
-marks both disclosures. A complete evidence-and-draft bundle also contains an
-opaque SHA-256 receipt over the normalized selected ledger row, private draft,
-review date, and five human checks. Both generated decision commands carry that
-receipt and the reviewed notes path.
+marks both disclosures. A complete evidence-and-draft bundle also contains a
+Schema-5 content receipt over the normalized selected ledger row, private draft,
+and five human checks. The Schema-5 content receipt excludes the bundle's
+ledger-audit date, so unchanged material can be approved or declined after the
+day the owner-only file was created. Both generated decision commands carry that
+receipt and the reviewed notes path, and use `YYYY-MM-DD` for both the new audit
+date and, on approval, `approved_on`. Replace both `YYYY-MM-DD` placeholders
+with the actual UTC decision date. Changing the row, draft, or checks still
+invalidates the receipt and requires a fresh review.
 
 `--write-review` keeps that complete text out of terminal logs. It requires
 `--review-next` text mode, an existing owner-only parent directory, and an
@@ -252,6 +259,9 @@ ledger before and after the transition, recomputes the content receipt,
 preserves file permissions, and atomically changes only `status` and
 `approved_on`. Missing confirmation, out-of-order aliases, stale review
 content, future dates, or invalid ledger state leave the file unchanged. The
+content receipt remains valid across dates only while the reviewed row, private
+draft, and five-check contract are unchanged. The generated command
+deliberately does not reuse the bundle's earlier ledger-audit date. The
 private receipt omits evidence URLs and the review date. This action records a
 human decision; it does not send outreach or create a contact or follow-up
 date. Its text receipt ends with a complete command for recording the manual
