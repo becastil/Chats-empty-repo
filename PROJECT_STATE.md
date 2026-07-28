@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 253 of
-1,000, with 747 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 254 of
+1,000, with 746 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -167,6 +167,14 @@ alignment take priority over commit volume.
   to share that same identity. Cleanup removes only recorded archive and
   directory identities, preserving uncertain replacements and failing instead
   of deleting them.
+- Receipt-staging-anchored Sites evidence that creates a private `0600` leaf
+  relative to the held receipt parent, writes, syncs, hashes, rechecks, and
+  publishes through one non-inheritable regular-file descriptor, and requires
+  the staged digest to equal the intended serialized JSON bytes. Publication
+  resolves the source leaf relative to that same held parent and requires it
+  to retain the held file's identity. Cleanup removes only the recorded
+  identity, preserves replacements, reports uncertainty, and closes both
+  staged and partially transferred published descriptors on failure.
 - Published-file-anchored Sites evidence checks that open each new archive and
   receipt relative to its held parent, require it to share the staged source's
   filesystem identity, retain non-inheritable file descriptors through the
@@ -625,15 +633,14 @@ outside-repository archive and receipt paths so any previously reviewed pair
 remains unchanged. Both requested paths must be direct regular-file leaves,
 not symlinks. Stable alternate case or Unicode spellings, whole-repository
 aliases, and aliases that expose only a repository subdirectory now fail by
-filesystem identity. Archive staging, staged archive reads, validation, and
-cleanup now stay anchored to descriptors held from preflight; a helper artifact
-written through a replaced visible parent is not accepted. Before treating a
-new pair as approval-ready, bind receipt staging, staged receipt reads, and
-cleanup to its held parent and file descriptors so concurrent parent or leaf
-replacement cannot cross the remaining check-to-open windows. Final archive
-and receipt publication holds each unique validated output-parent descriptor
-from preflight through the no-clobber link, then holds each exact published
-regular file through the final source and digest checks. Then obtain independent
+filesystem identity. Archive and receipt staging, staged reads, validation,
+publication, and cleanup now stay anchored to descriptors held from preflight;
+helper output written through a replaced visible archive parent is not
+accepted, staged receipt bytes must equal the intended serialization, and
+uncertain replacements are preserved instead of deleted. Final archive and
+receipt publication holds each unique validated output-parent descriptor from
+preflight through the no-clobber link, then holds each exact published regular
+file through the final source and digest checks. Obtain independent
 `--verify-only` evidence for
 its schema-4 complete-tree, duplicate-free,
 branch-bound, archive-stable, receipt-stable, test-bracketed evidence before

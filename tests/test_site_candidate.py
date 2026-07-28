@@ -1568,6 +1568,271 @@ class SiteCandidateTests(unittest.TestCase):
             self.assertTrue(archive.is_file())
             self.assertTrue(receipt.is_file())
 
+    def test_preparation_rejects_receipt_bytes_changed_before_hashing(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            hash_open_file = (
+                prepare_site_candidate._sha256_open_regular_file
+            )
+            mutated_receipt = False
+
+            def mutate_receipt_before_hashing(
+                descriptor: int,
+                label: str,
+            ) -> str:
+                nonlocal mutated_receipt
+                if label == "staged receipt output" and not mutated_receipt:
+                    prepare_site_candidate.os.lseek(
+                        descriptor,
+                        0,
+                        prepare_site_candidate.os.SEEK_END,
+                    )
+                    prepare_site_candidate.os.write(
+                        descriptor,
+                        b'{"substituted": true}\n',
+                    )
+                    prepare_site_candidate.os.fsync(descriptor)
+                    mutated_receipt = True
+                return hash_open_file(descriptor, label)
+
+            with (
+                patch.object(
+                    prepare_site_candidate,
+                    "_sha256_open_regular_file",
+                    side_effect=mutate_receipt_before_hashing,
+                ),
+                self.assertRaisesRegex(
+                    prepare_site_candidate.SiteCandidateError,
+                    "staged receipt output changed during candidate "
+                    "operation",
+                ),
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+
+            self.assertTrue(mutated_receipt)
+            self.assertTrue(archive.is_file())
+            self.assertFalse(receipt.exists())
+            self.assertEqual(
+                list(receipt.parent.glob(f".{receipt.name}.*.tmp")),
+                [],
+            )
+
+    def test_preparation_rejects_identical_receipt_leaf_replacement(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            publish_output = prepare_site_candidate._publish_new_output
+            replacement_content: list[bytes] = []
+
+            def replace_receipt_before_publication(
+                staged_path: Path,
+                output_path: Path,
+                label: str,
+                parent_fd: int,
+                *,
+                source_descriptor: int | None = None,
+                source_parent_descriptor: int | None = None,
+            ) -> prepare_site_candidate._PublishedOutput:
+                if label == "receipt":
+                    if (
+                        source_descriptor is None
+                        or source_parent_descriptor is None
+                    ):
+                        raise AssertionError(
+                            "receipt publication omitted staging "
+                            "descriptors"
+                        )
+                    prepare_site_candidate.os.lseek(
+                        source_descriptor,
+                        0,
+                        prepare_site_candidate.os.SEEK_SET,
+                    )
+                    content = b""
+                    while True:
+                        chunk = prepare_site_candidate.os.read(
+                            source_descriptor,
+                            1024 * 1024,
+                        )
+                        if not chunk:
+                            break
+                        content += chunk
+                    replacement_content.append(content)
+                    prepare_site_candidate.os.unlink(
+                        staged_path.name,
+                        dir_fd=source_parent_descriptor,
+                    )
+                    flags = (
+                        prepare_site_candidate.os.O_WRONLY
+                        | prepare_site_candidate.os.O_CREAT
+                        | prepare_site_candidate.os.O_EXCL
+                        | prepare_site_candidate.os.O_NOFOLLOW
+                    )
+                    if hasattr(prepare_site_candidate.os, "O_CLOEXEC"):
+                        flags |= prepare_site_candidate.os.O_CLOEXEC
+                    replacement_descriptor = (
+                        prepare_site_candidate.os.open(
+                            staged_path.name,
+                            flags,
+                            0o600,
+                            dir_fd=source_parent_descriptor,
+                        )
+                    )
+                    try:
+                        remaining = memoryview(content)
+                        while remaining:
+                            written = prepare_site_candidate.os.write(
+                                replacement_descriptor,
+                                remaining,
+                            )
+                            remaining = remaining[written:]
+                        prepare_site_candidate.os.fsync(
+                            replacement_descriptor
+                        )
+                    finally:
+                        prepare_site_candidate.os.close(
+                            replacement_descriptor
+                        )
+                return publish_output(
+                    staged_path,
+                    output_path,
+                    label,
+                    parent_fd,
+                    source_descriptor=source_descriptor,
+                    source_parent_descriptor=source_parent_descriptor,
+                )
+
+            with (
+                patch.object(
+                    prepare_site_candidate,
+                    "_publish_new_output",
+                    side_effect=replace_receipt_before_publication,
+                ),
+                self.assertRaisesRegex(
+                    prepare_site_candidate.SiteCandidateError,
+                    "receipt staging source changed during publication",
+                ),
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+
+            self.assertEqual(len(replacement_content), 1)
+            self.assertTrue(archive.is_file())
+            self.assertFalse(receipt.exists())
+            leaked_staging = list(
+                receipt.parent.glob(f".{receipt.name}.*.tmp")
+            )
+            self.assertEqual(len(leaked_staging), 1)
+            self.assertEqual(
+                leaked_staging[0].read_bytes(),
+                replacement_content[0],
+            )
+
+    def test_receipt_cleanup_failure_closes_published_descriptors(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            publish_output = prepare_site_candidate._publish_new_output
+            staged_receipt_descriptor = -1
+            published_receipt_descriptor = -1
+            displaced_staging: Path | None = None
+            replacement_staging: Path | None = None
+
+            def replace_receipt_before_cleanup(
+                staged_path: Path,
+                output_path: Path,
+                label: str,
+                parent_fd: int,
+                *,
+                source_descriptor: int | None = None,
+                source_parent_descriptor: int | None = None,
+            ) -> prepare_site_candidate._PublishedOutput:
+                nonlocal staged_receipt_descriptor
+                nonlocal published_receipt_descriptor
+                nonlocal displaced_staging
+                nonlocal replacement_staging
+                published = publish_output(
+                    staged_path,
+                    output_path,
+                    label,
+                    parent_fd,
+                    source_descriptor=source_descriptor,
+                    source_parent_descriptor=source_parent_descriptor,
+                )
+                if label == "receipt":
+                    if (
+                        source_descriptor is None
+                        or source_parent_descriptor is None
+                    ):
+                        raise AssertionError(
+                            "receipt publication omitted staging "
+                            "descriptors"
+                        )
+                    staged_receipt_descriptor = source_descriptor
+                    published_receipt_descriptor = published.fd
+                    displaced_staging = (
+                        receipt.parent / f"{staged_path.name}.displaced"
+                    )
+                    replacement_staging = receipt.parent / staged_path.name
+                    prepare_site_candidate.os.rename(
+                        staged_path.name,
+                        displaced_staging.name,
+                        src_dir_fd=source_parent_descriptor,
+                        dst_dir_fd=source_parent_descriptor,
+                    )
+                    replacement_staging.write_bytes(
+                        b'{"candidate": "replacement"}\n'
+                    )
+                return published
+
+            with (
+                patch.object(
+                    prepare_site_candidate,
+                    "_publish_new_output",
+                    side_effect=replace_receipt_before_cleanup,
+                ),
+                self.assertRaisesRegex(
+                    prepare_site_candidate.SiteCandidateError,
+                    "receipt output was published .* but staging cleanup "
+                    "failed",
+                ),
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+
+            self.assertTrue(archive.is_file())
+            self.assertTrue(receipt.is_file())
+            self.assertIsNotNone(displaced_staging)
+            self.assertIsNotNone(replacement_staging)
+            self.assertTrue(displaced_staging.is_file())
+            self.assertTrue(replacement_staging.is_file())
+            for descriptor in (
+                staged_receipt_descriptor,
+                published_receipt_descriptor,
+            ):
+                with self.assertRaises(OSError) as caught:
+                    prepare_site_candidate.os.fstat(descriptor)
+                self.assertEqual(caught.exception.errno, errno.EBADF)
+
     def test_preparation_rejects_byte_identical_archive_replacement(
         self,
     ) -> None:
@@ -3295,6 +3560,121 @@ class SiteCandidateTests(unittest.TestCase):
             tracker.assert_closed(self, 1)
             self.assertEqual(runner.commands, [])
 
+    def test_receipt_staging_file_is_private_and_cleans_on_failure(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            temporary_root = Path(tmp)
+            output_parent = temporary_root / "outputs"
+            output_parent.mkdir()
+            receipt = output_parent / "candidate.receipt.json"
+            content = b'{"candidate": "validated"}\n'
+            staging_descriptor = -1
+            staging_path: Path | None = None
+
+            with prepare_site_candidate._open_output_parents(
+                ((receipt, "receipt"),),
+                (),
+            ) as output_parents:
+                with self.assertRaisesRegex(
+                    RuntimeError,
+                    "forced staging failure",
+                ):
+                    with prepare_site_candidate._receipt_staging_file(
+                        output_parents["receipt"].fd,
+                        receipt,
+                        content,
+                    ) as staging:
+                        staging_descriptor = staging.fd
+                        staging_path = staging.visible_path
+                        details = prepare_site_candidate.os.fstat(
+                            staging.fd
+                        )
+                        staged_details = prepare_site_candidate.os.stat(
+                            staging.name,
+                            dir_fd=output_parents["receipt"].fd,
+                            follow_symlinks=False,
+                        )
+                        self.assertTrue(stat.S_ISREG(details.st_mode))
+                        self.assertEqual(
+                            stat.S_IMODE(details.st_mode),
+                            0o600,
+                        )
+                        if hasattr(prepare_site_candidate.os, "geteuid"):
+                            self.assertEqual(
+                                details.st_uid,
+                                prepare_site_candidate.os.geteuid(),
+                            )
+                        self.assertTrue(
+                            prepare_site_candidate.os.path.samestat(
+                                details,
+                                staged_details,
+                            )
+                        )
+                        self.assertFalse(
+                            prepare_site_candidate.os.get_inheritable(
+                                staging.fd
+                            )
+                        )
+                        self.assertEqual(
+                            prepare_site_candidate._sha256_open_regular_file(
+                                staging.fd,
+                                "staged receipt",
+                            ),
+                            hashlib.sha256(content).hexdigest(),
+                        )
+                        raise RuntimeError("forced staging failure")
+
+            self.assertIsNotNone(staging_path)
+            self.assertFalse(staging_path.exists())
+            with self.assertRaises(OSError) as caught:
+                prepare_site_candidate.os.fstat(staging_descriptor)
+            self.assertEqual(caught.exception.errno, errno.EBADF)
+
+    def test_receipt_cleanup_preserves_a_replacement_staging_file(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            temporary_root = Path(tmp)
+            output_parent = temporary_root / "outputs"
+            output_parent.mkdir()
+            receipt = output_parent / "candidate.receipt.json"
+            original = b'{"candidate": "validated"}\n'
+            replacement = b'{"candidate": "replacement"}\n'
+            staging_descriptor = -1
+            displaced_staging: Path | None = None
+            replacement_staging: Path | None = None
+
+            with prepare_site_candidate._open_output_parents(
+                ((receipt, "receipt"),),
+                (),
+            ) as output_parents:
+                with self.assertRaisesRegex(
+                    prepare_site_candidate.SiteCandidateError,
+                    "staging file entry changed; refusing to remove its "
+                    "replacement",
+                ):
+                    with prepare_site_candidate._receipt_staging_file(
+                        output_parents["receipt"].fd,
+                        receipt,
+                        original,
+                    ) as staging:
+                        staging_descriptor = staging.fd
+                        displaced_staging = (
+                            output_parent / f"{staging.name}.displaced"
+                        )
+                        replacement_staging = staging.visible_path
+                        staging.visible_path.rename(displaced_staging)
+                        replacement_staging.write_bytes(replacement)
+
+            self.assertIsNotNone(displaced_staging)
+            self.assertIsNotNone(replacement_staging)
+            self.assertEqual(displaced_staging.read_bytes(), original)
+            self.assertEqual(replacement_staging.read_bytes(), replacement)
+            with self.assertRaises(OSError) as caught:
+                prepare_site_candidate.os.fstat(staging_descriptor)
+            self.assertEqual(caught.exception.errno, errno.EBADF)
+
     def test_archive_staging_directory_is_private_and_cleans_on_failure(
         self,
     ) -> None:
@@ -3407,7 +3787,7 @@ class SiteCandidateTests(unittest.TestCase):
             self.assertTrue(displaced_staging.is_dir())
             self.assertTrue(replacement_staging.is_dir())
 
-    def test_archive_publication_uses_held_staging_descriptors(
+    def test_publication_uses_held_staging_descriptors(
         self,
     ) -> None:
         with TemporaryDirectory() as tmp:
@@ -3426,46 +3806,41 @@ class SiteCandidateTests(unittest.TestCase):
                 source_parent_descriptor: int | None = None,
             ) -> prepare_site_candidate._PublishedOutput:
                 observed_labels.append(label)
-                if label == "archive":
-                    if (
-                        source_descriptor is None
-                        or source_parent_descriptor is None
-                    ):
-                        raise AssertionError(
-                            "archive publication omitted staging "
-                            "descriptors"
-                        )
-                    source_details = prepare_site_candidate.os.fstat(
+                if (
+                    source_descriptor is None
+                    or source_parent_descriptor is None
+                ):
+                    raise AssertionError(
+                        f"{label} publication omitted staging descriptors"
+                    )
+                source_details = prepare_site_candidate.os.fstat(
+                    source_descriptor
+                )
+                staged_details = prepare_site_candidate.os.stat(
+                    staged_path.name,
+                    dir_fd=source_parent_descriptor,
+                    follow_symlinks=False,
+                )
+                self.assertTrue(stat.S_ISREG(source_details.st_mode))
+                self.assertTrue(
+                    prepare_site_candidate.os.path.samestat(
+                        source_details,
+                        staged_details,
+                    )
+                )
+                self.assertFalse(
+                    prepare_site_candidate.os.get_inheritable(
                         source_descriptor
                     )
-                    staged_details = prepare_site_candidate.os.stat(
-                        staged_path.name,
-                        dir_fd=source_parent_descriptor,
-                        follow_symlinks=False,
+                )
+                self.assertFalse(
+                    prepare_site_candidate.os.get_inheritable(
+                        source_parent_descriptor
                     )
-                    self.assertTrue(stat.S_ISREG(source_details.st_mode))
-                    self.assertTrue(
-                        prepare_site_candidate.os.path.samestat(
-                            source_details,
-                            staged_details,
-                        )
-                    )
-                    self.assertFalse(
-                        prepare_site_candidate.os.get_inheritable(
-                            source_descriptor
-                        )
-                    )
-                    self.assertFalse(
-                        prepare_site_candidate.os.get_inheritable(
-                            source_parent_descriptor
-                        )
-                    )
-                    observed_descriptors.extend(
-                        (source_descriptor, source_parent_descriptor)
-                    )
-                else:
-                    self.assertIsNone(source_descriptor)
-                    self.assertIsNone(source_parent_descriptor)
+                )
+                observed_descriptors.extend(
+                    (source_descriptor, source_parent_descriptor)
+                )
                 return publish_output(
                     staged_path,
                     output_path,
@@ -3489,7 +3864,7 @@ class SiteCandidateTests(unittest.TestCase):
                 )
 
             self.assertEqual(observed_labels, ["archive", "receipt"])
-            self.assertEqual(len(observed_descriptors), 2)
+            self.assertEqual(len(observed_descriptors), 4)
             for descriptor in observed_descriptors:
                 with self.assertRaises(OSError) as caught:
                     prepare_site_candidate.os.fstat(descriptor)
@@ -3703,6 +4078,22 @@ class SiteCandidateTests(unittest.TestCase):
                         displaced_parent.joinpath(
                             selected_output.name
                         ).is_file()
+                    )
+                    self.assertEqual(
+                        list(
+                            selected_parent.glob(
+                                f".{receipt.name}.*.tmp"
+                            )
+                        ),
+                        [],
+                    )
+                    self.assertEqual(
+                        list(
+                            displaced_parent.glob(
+                                f".{receipt.name}.*.tmp"
+                            )
+                        ),
+                        [],
                     )
 
     def test_preserves_an_archive_claimed_after_preflight(self) -> None:

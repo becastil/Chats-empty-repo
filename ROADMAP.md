@@ -24,11 +24,12 @@
   share a parent. Archive staging, staged archive reads, validation, and cleanup
   must remain bound to the archive-parent and staged-file descriptors now held
   across packaging; output written only through a replaced visible path must
-  remain untrusted. Hold each exact newly published regular file through final
-  source, digest, requested-parent, and requested-leaf identity checks. Bind
-  receipt staging, staged receipt reads, and cleanup to descriptors across the
-  remaining check-to-open windows before asking for explicit source-export
-  approval that records the printed `receipt_sha256`.
+  remain untrusted. Receipt staging, intended-byte validation, staged receipt
+  reads, publication, and identity-aware cleanup must likewise remain bound to
+  the held receipt-parent and regular-file descriptors now implemented. Hold
+  each exact newly published regular file through final source, digest,
+  requested-parent, and requested-leaf identity checks before asking for
+  explicit source-export approval that records the printed `receipt_sha256`.
   After approval, push its receipt-bound source to the separate Sites source
   repository, verify the unchanged archive and receipt again while requiring
   the approved digest and canonical Sites repository identity, and resolve

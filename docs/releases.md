@@ -194,6 +194,14 @@ site release:
    being deleted. If the visible archive parent is replaced, helper output
    written under that replacement remains untouched and cannot satisfy
    acceptance.
+   Receipt staging is a private `0600` leaf created relative to the held
+   receipt parent. Preparation writes, syncs, hashes, and rechecks one
+   non-inheritable regular-file descriptor, requiring its digest to equal the
+   exact serialized JSON bytes intended for the receipt. Publication resolves
+   the source name relative to that held parent and requires it to retain the
+   staged file identity before linking. Cleanup removes only the recorded
+   identity; a replacement is preserved and reported, and staged or partially
+   transferred descriptors close on failure.
    Each final no-clobber link names its leaf relative to its held parent, so
    replacing or renaming the parent path after preflight cannot redirect
    publication into a different directory. Publication opens the staged source
@@ -205,9 +213,8 @@ site release:
    match the held parent, and compares the leaf relative to it with the
    published file descriptor. Link-to-open substitution, byte-identical leaf
    replacement, and a replacement parent that re-links the same file therefore
-   fail. Receipt staging, staged receipt reads, and cleanup remain path-based.
-   Do not treat a candidate as approval-ready until those operations are
-   descriptor-bound.
+   fail. Archive and receipt staging, staged reads, publication, and cleanup
+   remain bound to the descriptors held from preflight.
    Persistent drift during receipt publication therefore leaves no
    approval-ready result. The success output includes `receipt_sha256`; retain
    that digest with the candidate evidence.

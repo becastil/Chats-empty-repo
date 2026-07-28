@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Bound Sites receipt staging to the output-parent descriptor held from
+  preflight, retaining one private `0600` regular-file descriptor through
+  writing, syncing, intended-byte digest validation, recheck, and no-clobber
+  publication. Cleanup removes only the recorded identity, preserves uncertain
+  replacements, reports failure, and closes staged or partially transferred
+  descriptors instead of deleting an unowned leaf.
 - Bound Sites archive staging to the output-parent descriptor held from
   preflight, retaining private staging-directory and regular archive
   descriptors through hashing, tar validation, source recheck, and publication.

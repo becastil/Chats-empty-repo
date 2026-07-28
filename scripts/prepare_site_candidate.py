@@ -130,6 +130,14 @@ class _ArchiveStagingDirectory:
     archive_identity: os.stat_result | None = None
 
 
+@dataclass(frozen=True)
+class _ReceiptStagingFile:
+    fd: int
+    name: str
+    visible_path: Path
+    identity: os.stat_result
+
+
 def prepare_site_candidate(
     root: Path,
     archive: Path,
@@ -1011,6 +1019,171 @@ def _close_descriptor(descriptor: int) -> None:
 
 
 @contextmanager
+def _receipt_staging_file(
+    parent_descriptor: int,
+    receipt_path: Path,
+    content: bytes,
+) -> Iterator[_ReceiptStagingFile]:
+    staging_descriptor: int | None = None
+    staging_name: str | None = None
+    staging_identity: os.stat_result | None = None
+    prefix = f".{receipt_path.name}."
+    flags = (
+        os.O_RDWR
+        | os.O_CREAT
+        | os.O_EXCL
+        | os.O_NOFOLLOW
+    )
+    if hasattr(os, "O_CLOEXEC"):
+        flags |= os.O_CLOEXEC
+
+    try:
+        for _ in range(_STAGING_NAME_ATTEMPTS):
+            candidate = f"{prefix}{secrets.token_hex(8)}.tmp"
+            try:
+                staging_descriptor = os.open(
+                    candidate,
+                    flags,
+                    0o600,
+                    dir_fd=parent_descriptor,
+                )
+            except FileExistsError:
+                continue
+            except OSError as exc:
+                raise SiteCandidateError(
+                    f"could not create receipt staging file "
+                    f"{receipt_path.parent / candidate}: {exc}"
+                ) from exc
+            staging_name = candidate
+            break
+
+        if staging_descriptor is None or staging_name is None:
+            raise SiteCandidateError(
+                "could not allocate a unique receipt staging file under "
+                f"{receipt_path.parent}"
+            )
+
+        staging_identity = os.fstat(staging_descriptor)
+        if not stat.S_ISREG(staging_identity.st_mode):
+            raise SiteCandidateError(
+                "receipt staging path must be a regular file: "
+                f"{receipt_path.parent / staging_name}"
+            )
+        if stat.S_IMODE(staging_identity.st_mode) != 0o600:
+            raise SiteCandidateError(
+                "receipt staging file must have mode 0600: "
+                f"{receipt_path.parent / staging_name}"
+            )
+        if (
+            hasattr(os, "geteuid")
+            and staging_identity.st_uid != os.geteuid()
+        ):
+            raise SiteCandidateError(
+                "receipt staging file must be owned by the current user: "
+                f"{receipt_path.parent / staging_name}"
+            )
+
+        remaining = memoryview(content)
+        while remaining:
+            written = os.write(staging_descriptor, remaining)
+            if written <= 0:
+                raise OSError("receipt staging write made no progress")
+            remaining = remaining[written:]
+        os.fsync(staging_descriptor)
+
+        yield _ReceiptStagingFile(
+            fd=staging_descriptor,
+            name=staging_name,
+            visible_path=receipt_path.parent / staging_name,
+            identity=staging_identity,
+        )
+    except SiteCandidateError:
+        raise
+    except OSError as exc:
+        raise SiteCandidateError(
+            f"could not stage {receipt_path}: {exc}"
+        ) from exc
+    finally:
+        cleanup_error = _cleanup_receipt_staging_file(
+            parent_descriptor,
+            staging_descriptor,
+            staging_name,
+            (
+                receipt_path.parent / staging_name
+                if staging_name is not None
+                else receipt_path.parent
+            ),
+            staging_identity,
+        )
+        if cleanup_error is not None:
+            active_error = sys.exc_info()[1]
+            if active_error is None:
+                raise cleanup_error
+            active_error.add_note(str(cleanup_error))
+
+
+def _cleanup_receipt_staging_file(
+    parent_descriptor: int,
+    staging_descriptor: int | None,
+    staging_name: str | None,
+    staging_path: Path,
+    staging_identity: os.stat_result | None,
+) -> SiteCandidateError | None:
+    errors: list[str] = []
+    if staging_name is None:
+        if staging_descriptor is not None:
+            errors.append("staging file name was not established")
+    elif staging_identity is None:
+        errors.append(
+            "staging file identity was not established; refusing to "
+            "remove it"
+        )
+    else:
+        try:
+            current_identity = os.stat(
+                staging_name,
+                dir_fd=parent_descriptor,
+                follow_symlinks=False,
+            )
+        except FileNotFoundError:
+            errors.append("staging file disappeared")
+        except OSError as exc:
+            errors.append(f"could not inspect staging file: {exc}")
+        else:
+            if (
+                not stat.S_ISREG(current_identity.st_mode)
+                or not os.path.samestat(
+                    staging_identity,
+                    current_identity,
+                )
+            ):
+                errors.append(
+                    "staging file entry changed; refusing to remove its "
+                    "replacement"
+                )
+            else:
+                try:
+                    os.unlink(
+                        staging_name,
+                        dir_fd=parent_descriptor,
+                    )
+                except OSError as exc:
+                    errors.append(
+                        f"could not remove staging file: {exc}"
+                    )
+
+    if staging_descriptor is not None:
+        _close_descriptor(staging_descriptor)
+
+    if not errors:
+        return None
+    return SiteCandidateError(
+        f"could not clean receipt staging file {staging_path}: "
+        + "; ".join(errors)
+    )
+
+
+@contextmanager
 def _archive_staging_directory(
     parent_descriptor: int,
     archive_path: Path,
@@ -1645,50 +1818,49 @@ def _atomic_create_json(
     label: str,
     parent_fd: int,
 ) -> tuple[str, _PublishedOutput]:
-    serialized = _serialize_json(payload)
-    temporary_path: Path | None = None
+    serialized = _serialize_json(payload).encode("utf-8")
+    expected_receipt_sha256 = hashlib.sha256(serialized).hexdigest()
+    receipt_sha256: str | None = None
     published_output: _PublishedOutput | None = None
     try:
-        with NamedTemporaryFile(
-            mode="w",
-            encoding="utf-8",
-            dir=path.parent,
-            prefix=f".{path.name}.",
-            suffix=".tmp",
-            delete=False,
-        ) as temporary:
-            temporary_path = Path(temporary.name)
-            temporary.write(serialized)
-            temporary.flush()
-            os.fsync(temporary.fileno())
-    except OSError as exc:
-        _remove_staged_file(temporary_path)
-        raise SiteCandidateError(f"could not stage {path}: {exc}") from exc
-
-    if temporary_path is None:
-        raise SiteCandidateError(f"could not stage {path}")
-    try:
-        receipt_sha256 = _sha256(temporary_path)
-        published_output = _publish_new_output(
-            temporary_path,
-            path,
-            label,
+        with _receipt_staging_file(
             parent_fd,
-        )
-    except SiteCandidateError:
-        _remove_staged_file(temporary_path)
+            path,
+            serialized,
+        ) as staged_receipt:
+            receipt_sha256 = _sha256_open_regular_file(
+                staged_receipt.fd,
+                f"staged {label} output",
+            )
+            if receipt_sha256 != expected_receipt_sha256:
+                raise SiteCandidateError(
+                    f"staged {label} output changed during candidate "
+                    "operation"
+                )
+            _require_same_open_regular_file(
+                staged_receipt.fd,
+                expected_receipt_sha256,
+                f"staged {label} output",
+            )
+            published_output = _publish_new_output(
+                staged_receipt.visible_path,
+                path,
+                label,
+                parent_fd,
+                source_descriptor=staged_receipt.fd,
+                source_parent_descriptor=parent_fd,
+            )
+    except SiteCandidateError as exc:
+        if published_output is not None:
+            _close_descriptor(published_output.fd)
+            raise SiteCandidateError(
+                f"{label} output was published to {path}, but staging "
+                f"cleanup failed: {exc}"
+            ) from exc
         raise
 
-    if published_output is None:
+    if receipt_sha256 is None or published_output is None:
         raise SiteCandidateError(f"could not publish {label} output {path}")
-    try:
-        temporary_path.unlink()
-    except OSError as exc:
-        _close_descriptor(published_output.fd)
-        raise SiteCandidateError(
-            f"{label} output was published to {path}, but staging cleanup "
-            f"failed for {temporary_path}: {exc}"
-        ) from exc
     return receipt_sha256, published_output
 
 
@@ -1791,15 +1963,6 @@ def _publish_new_output(
             _close_descriptor(source_fd)
         if output_fd is not None and not output_transferred:
             _close_descriptor(output_fd)
-
-
-def _remove_staged_file(path: Path | None) -> None:
-    if path is None:
-        return
-    try:
-        path.unlink(missing_ok=True)
-    except OSError:
-        pass
 
 
 def _serialize_json(payload: dict[str, object]) -> str:

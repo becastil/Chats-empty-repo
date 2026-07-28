@@ -419,6 +419,9 @@ class ReleaseManifestTests(unittest.TestCase):
             "publication source leaf is resolved relative to the held "
             "staging",
             "A replacement is preserved",
+            "Receipt staging is a private `0600` leaf",
+            "digest to equal the exact serialized JSON bytes",
+            "staged or partially transferred descriptors close on failure",
             "keeps the descriptor open and non-inheritable",
             "outputs in one parent reuse the same descriptor",
             "Each final no-clobber link names its leaf relative to its held "
@@ -428,10 +431,9 @@ class ReleaseManifestTests(unittest.TestCase):
             "non-inheritable",
             "requires it to match the held parent",
             "Link-to-open substitution, byte-identical leaf replacement",
-            "Receipt staging, staged receipt reads, and cleanup remain "
-            "path-based",
-            "Do not treat a candidate as approval-ready until those "
-            "operations are",
+            "Archive and receipt staging, staged reads, publication, and "
+            "cleanup",
+            "remain bound to the descriptors held from preflight",
             "supplied archive and receipt paths must themselves name regular "
             "files rather than symlinks",
             "`receipt_sha256`",

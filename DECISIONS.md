@@ -3631,3 +3631,37 @@ validation, and cleanup only. Receipt staging, staged receipt hashing, and
 receipt cleanup still use visible paths and remain required before replacement
 evidence is approval-ready. The change performs no source export, version
 save, deployment, approval, customer contact, or revenue event.
+
+## 2026-07-28: Anchor Sites Receipt Staging To Held Descriptors
+
+Archive staging and final publication were bound to descriptors held from
+preflight, but receipt staging still used `NamedTemporaryFile` under the
+visible parent, closed that file, and reopened its path independently for
+hashing and publication. Replacing the parent could split staging from its
+held publication destination. Replacing the staged leaf could also make
+different bytes become the trusted receipt and digest, while path-only cleanup
+could delete the replacement and leak the file the process actually created.
+
+Preparation now creates a high-entropy `0600` receipt staging leaf relative to
+the held receipt-parent descriptor with create-only, no-follow, close-on-exec
+semantics. It retains one read/write regular-file descriptor while writing and
+syncing the deterministic JSON, hashes that exact descriptor, requires the
+digest to equal the intended serialized bytes, and hashes it again immediately
+before publication. The hard-link source remains a name because Python cannot
+link directly from a file descriptor, so publication resolves that name
+relative to the same held parent and requires it to match the staged file
+immediately before linking. The published leaf must then share that identity.
+
+Cleanup compares the current temporary leaf with the identity recorded from
+the held staged descriptor. It unlinks only a matching regular file, preserves
+and reports a replacement or uncertain object, and closes the staged
+descriptor in every outcome. If cleanup fails after publication, the published
+descriptor is closed rather than transferred to the remaining candidate
+checks. As with archive staging, the portable POSIX name-to-link and
+name-to-unlink intervals cannot be made perfectly atomic, so the contract
+prefers a failed candidate and retained evidence over deleting an object it
+cannot prove it owns.
+
+This decision completes descriptor binding for both archive and receipt
+staging, reads, publication, and cleanup. It performs no source export, version
+save, deployment, approval, customer contact, or revenue event.

@@ -8,8 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after anchoring Sites archive staging: 253 / 1,000 (25.3%).
-- Remaining after anchoring Sites archive staging: 747 commits.
+- Progress after anchoring Sites receipt staging: 254 / 1,000 (25.4%).
+- Remaining after anchoring Sites receipt staging: 746 commits.
 
 ## Commit Standard
 

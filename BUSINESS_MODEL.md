@@ -512,16 +512,25 @@ the current leaf and directory with their recorded identities; a substitution
 is preserved for investigation and fails rather than being deleted. If the
 visible parent was replaced, any helper artifact written there is left
 untouched and cannot satisfy acceptance.
+Receipt staging now creates a private `0600` leaf relative to the receipt
+parent held from preflight and retains one non-inheritable regular-file
+descriptor through writing, syncing, hashing, recheck, and publication. The
+staged digest must equal the exact deterministic JSON bytes preparation
+intended to write, so same-inode mutation cannot silently become approval
+evidence. Publication resolves the source name relative to the held parent and
+requires it to match the staged file before linking. Cleanup removes only the
+recorded identity, preserves and reports a substituted or uncertain leaf, and
+closes staged or partially transferred descriptors on failure.
 Preparation keeps the exact archive and receipt descriptors non-inheritable and
 live through the final source and digest checks. Before success, it reopens each
 requested parent, requires that parent to match the held descriptor, and
 compares the leaf relative to it with the published file descriptor.
 Link-to-open substitution, byte-identical leaf replacement, and a replaced
-parent re-linking the same file therefore fail closed. Receipt staging, staged
-receipt validation, and cleanup remain path-based, and the replacement
-candidate remains blocked on those descriptor-bound operations. This
-strengthens paid-distribution integrity without exporting source, saving or
-deploying a version, or creating customer or revenue evidence.
+parent re-linking the same file therefore fail closed. Both archive and receipt
+staging now remain descriptor-bound through their acceptance and cleanup
+boundaries. This strengthens paid-distribution integrity without exporting
+source, saving or deploying a version, or creating customer or revenue
+evidence.
 A separate read-only hosted dependency contract runs for relevant lock and
 workflow changes, on manual dispatch, and weekly so a newly published advisory
 does not wait for another package edit. It uses the minimum supported Node
