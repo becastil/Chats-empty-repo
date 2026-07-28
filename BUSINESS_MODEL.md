@@ -1258,6 +1258,19 @@ Pilot issue JSON with duplicate keys is rejected before issue parsing, so
 conflicting `labels` fields cannot silently change booked-pilot or revenue
 totals. The controlled error identifies only the repeated field and emits no
 report.
+Public pilot issue titles are normalized around surrounding whitespace and
+limited to non-empty printable text of at most 1,024 characters. Any remaining
+line break, terminal control, bidirectional control, Unicode separator, or
+oversized value fails before commercial output without repeating the title.
+Issue URLs must be empty or printable text of at most 2,048 characters without
+surrounding whitespace and use the same no-echo rejection. This prevents a
+request author or edited export from forging revenue or sales-queue lines in an
+operator report; it does not qualify a lead, prove willingness to pay, collect
+payment, or record revenue.
+Unrecognized edited source, readiness, and purchase-criterion answers remain
+available in escaped JSON deal fields. Unknown pilot labels remain in escaped
+JSON warning fields. Operator-facing warning messages are generic and never
+interpolate those values into terminal output.
 
 Direct callers may change the pilot price, pilot target, and inactivity
 threshold only with genuine positive integers. Booleans, floats, and numeric

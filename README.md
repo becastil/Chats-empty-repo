@@ -330,6 +330,14 @@ conversion action without advancing labels automatically.
 Pilot issue JSON with duplicate keys is rejected before issue parsing, so
 conflicting `labels` fields cannot silently change booked-pilot or revenue
 totals.
+Issue titles are trimmed, then must be non-empty printable text of at most
+1,024 characters. Any remaining line break, terminal control, bidirectional
+control, Unicode separator, or oversized text fails with exit code 2 before a
+funnel report is emitted, and the error does not echo the title. Issue URLs
+must be empty or printable text of at most 2,048 characters without surrounding
+whitespace. Unrecognized edited form answers and pilot labels remain available
+in escaped JSON review fields, but terminal-facing warnings use generic
+messages and never interpolate those values.
 Schema-7 reports also normalize the required team size, repository count, and
 CI provider, confirm that a repository-standard answer exists without copying
 its text into reports, and mark each request as target, outside-target, or

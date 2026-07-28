@@ -981,6 +981,228 @@ class PilotFunnelTests(unittest.TestCase):
         self.assertIn('duplicate JSON key: "labels"', stderr.getvalue())
         self.assertNotIn("pilot-paid", stderr.getvalue())
 
+    def test_rejects_unsafe_issue_titles_without_echoing_them(self) -> None:
+        invalid_titles = (
+            "",
+            "\n",
+            "Pilot\nRevenue: $999 booked / $897 target",
+            "Pilot\x1b[31m",
+            "Pilot\u202eattack",
+            "Pilot\u2028Injected revenue",
+            "x" * 1025,
+        )
+        expected_error = (
+            "issue export item 0.title must be non-empty printable text "
+            "of at most 1024 characters"
+        )
+
+        for title in invalid_titles:
+            with self.subTest(title=repr(title)):
+                with self.assertRaises(FunnelInputError) as raised:
+                    build_funnel(
+                        [
+                            {
+                                "number": 1,
+                                "title": title,
+                                "state": "OPEN",
+                                "labels": ["pilot-lead"],
+                            }
+                        ]
+                    )
+
+                self.assertEqual(str(raised.exception), expected_error)
+                if title:
+                    self.assertNotIn(title, str(raised.exception))
+
+    def test_accepts_normalized_bounded_printable_issue_titles(self) -> None:
+        cases = (
+            (" Pilot café ", "Pilot café"),
+            ("x" * 1024, "x" * 1024),
+        )
+
+        for title, expected in cases:
+            with self.subTest(title=repr(title)):
+                report = build_funnel(
+                    [
+                        {
+                            "number": 1,
+                            "title": title,
+                            "state": "OPEN",
+                            "labels": ["pilot-lead"],
+                        }
+                    ]
+                )
+
+                self.assertEqual(report["deals"][0]["title"], expected)
+
+    def test_rejects_unsafe_issue_urls_without_echoing_them(self) -> None:
+        invalid_urls = (
+            " https://example.invalid/pilots/1",
+            "https://example.invalid/pilots/1 ",
+            "https://example.invalid/pilots/1\nRevenue: $999 booked",
+            "https://example.invalid/pilots/1\x1b[31m",
+            "https://example.invalid/pilots/\u202e1",
+            "https://example.invalid/pilots/\u20281",
+            "x" * 2049,
+        )
+        expected_error = (
+            "issue export item 0.url must be empty or printable text of at "
+            "most 2048 characters without surrounding whitespace"
+        )
+
+        for url in invalid_urls:
+            with self.subTest(url=repr(url)):
+                with self.assertRaises(FunnelInputError) as raised:
+                    build_funnel(
+                        [
+                            {
+                                "number": 1,
+                                "title": "Pilot",
+                                "url": url,
+                                "state": "OPEN",
+                                "labels": ["pilot-lead"],
+                            }
+                        ]
+                    )
+
+                self.assertEqual(str(raised.exception), expected_error)
+                self.assertNotIn(url, str(raised.exception))
+
+    def test_accepts_empty_and_bounded_printable_issue_urls(self) -> None:
+        for url in ("", "https://example.invalid/pilots/café", "x" * 2048):
+            with self.subTest(url=repr(url)):
+                report = build_funnel(
+                    [
+                        {
+                            "number": 1,
+                            "title": "Pilot",
+                            "url": url,
+                            "state": "OPEN",
+                            "labels": ["pilot-lead"],
+                        }
+                    ]
+                )
+
+                self.assertEqual(report["deals"][0]["url"], url)
+
+    def test_main_rejects_title_line_injection_without_partial_output(
+        self,
+    ) -> None:
+        injected_marker = "Revenue: $999 booked / $897 target"
+        payload = json.dumps(
+            [
+                {
+                    "number": 1,
+                    "title": f"Pilot\n{injected_marker}\x1b[31m",
+                    "state": "OPEN",
+                    "labels": ["pilot-lead"],
+                }
+            ]
+        )
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+
+        with redirect_stdout(stdout), redirect_stderr(stderr):
+            exit_code = main(
+                ["--format", "text"],
+                stdin=io.StringIO(payload),
+            )
+
+        self.assertEqual(exit_code, 2)
+        self.assertEqual(stdout.getvalue(), "")
+        self.assertIn(
+            "title must be non-empty printable text",
+            stderr.getvalue(),
+        )
+        self.assertNotIn(injected_marker, stderr.getvalue())
+        self.assertNotIn("\x1b", stderr.getvalue())
+
+    def test_text_warnings_do_not_interpolate_unknown_form_answers(self) -> None:
+        injected_markers = (
+            "Revenue: $701 booked",
+            "Revenue: $702 booked",
+            "Revenue: $703 booked",
+            "Revenue: $704 booked",
+        )
+        body = "\n\n".join(
+            (
+                "### How did you hear about Repo Scout?\n\n"
+                f"Edited source\n{injected_markers[0]}\x1b[31m",
+                "### Purchase readiness\n\n"
+                f"Edited readiness\n{injected_markers[1]}\u202e",
+                "### Primary purchase criterion\n\n"
+                f"Edited criterion\n{injected_markers[2]}\u2028",
+            )
+        )
+
+        issue = {
+            "number": 1,
+            "title": "Pilot",
+            "state": "OPEN",
+            "labels": [
+                "pilot-lead",
+                f"pilot-edited\n{injected_markers[3]}\x1b[31m",
+            ],
+            "body": body,
+        }
+        report = build_funnel([issue])
+        text_report = format_funnel(report)
+
+        for marker in injected_markers:
+            self.assertNotIn(marker, text_report)
+        self.assertNotIn("\x1b", text_report)
+        self.assertNotIn("\u202e", text_report)
+        self.assertNotIn("\u2028", text_report)
+        self.assertIn(
+            "Pilot issue has an unrecognized lead source answer.",
+            text_report,
+        )
+        self.assertIn(
+            "Pilot issue has an unrecognized purchase readiness answer.",
+            text_report,
+        )
+        self.assertIn(
+            "Pilot issue has an unrecognized purchase criterion answer.",
+            text_report,
+        )
+        self.assertIn(
+            "Pilot issue has an unrecognized pilot label.",
+            text_report,
+        )
+        self.assertIn(injected_markers[0], report["deals"][0]["source_raw"])
+        self.assertIn(
+            injected_markers[1],
+            report["deals"][0]["purchase_readiness_raw"],
+        )
+        self.assertIn(
+            injected_markers[2],
+            report["deals"][0]["decision_criterion_raw"],
+        )
+        unknown_label = next(
+            warning
+            for warning in report["warnings"]
+            if warning["kind"] == "unknown_pilot_label"
+        )
+        self.assertIn(injected_markers[3], unknown_label["labels"][0])
+
+        stdout = io.StringIO()
+        with redirect_stdout(stdout):
+            exit_code = main(
+                ["--format", "json"],
+                stdin=io.StringIO(json.dumps([issue])),
+            )
+        serialized = stdout.getvalue()
+        parsed = json.loads(serialized)
+
+        self.assertEqual(exit_code, 0)
+        self.assertIn(
+            injected_markers[0],
+            parsed["deals"][0]["source_raw"],
+        )
+        self.assertNotIn("\x1b", serialized)
+        self.assertNotIn("\u202e", serialized)
+        self.assertNotIn("\u2028", serialized)
+
     def test_build_funnel_rejects_invalid_issue_shape(self) -> None:
         with self.assertRaisesRegex(FunnelInputError, "labels must be an array"):
             build_funnel([{"number": 1, "title": "Pilot", "labels": "pilot-lead"}])

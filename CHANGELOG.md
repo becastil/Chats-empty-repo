@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Normalized surrounding whitespace in pilot issue titles, then required
+  non-empty printable text of at most 1,024 characters before funnel analysis.
+- Rejected line injection, terminal controls, bidirectional controls, Unicode
+  separators, and oversized titles with exit code 2, no report, and no echo of
+  the untrusted value.
+- Required issue URLs to remain empty or bounded one-line printable text
+  without surrounding whitespace before they can enter operator output.
+- Kept unrecognized form answers and pilot labels in escaped JSON review fields
+  while replacing terminal-facing warning interpolation with generic messages.
+- Added source and installed-command regressions proving public request text
+  cannot forge revenue or warning lines in the operator's $299/$897 report.
 - Required rollout branch metadata to be null or a non-empty printable string
   of at most 1,024 characters without surrounding whitespace.
 - Rejected line, terminal-control, bidirectional-control, and oversized branch

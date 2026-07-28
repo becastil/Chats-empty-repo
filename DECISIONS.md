@@ -4082,3 +4082,43 @@ This protects the paid pilot's counts-only and detailed acceptance evidence.
 It adds no acquisition asset or policy feature, does not approve outreach or
 site deployment, and does not establish activation, demand, payment, or
 revenue.
+
+## 2026-07-28: Keep Public Pilot Text Out Of Commercial Report Structure
+
+`repo-scout-pilot` printed each public issue title directly in its Deals,
+Stale deals, and Sales queue sections. A request author could put a newline and
+terminal control sequence in a title, causing the operator report to display a
+fake sibling line such as booked revenue even though the underlying funnel
+arithmetic was unchanged.
+Edited dropdown answers created the same risk because unknown source, readiness,
+and purchase-criterion values were interpolated into terminal-facing warning
+messages.
+Edited export URLs were also appended directly to three report sections, and
+unknown `pilot-*` label names were interpolated into warnings.
+
+The reporter now trims surrounding whitespace once, then requires the title to
+be non-empty printable text of at most 1,024 characters. Internal newlines,
+escape sequences, bidirectional controls, Unicode line separators, and
+oversized titles fail with one generic error that does not include the supplied
+value. Valid printable Unicode and the exact length boundary remain accepted.
+Issue URLs must be empty or printable text of at most 2,048 characters without
+surrounding whitespace. Unsafe URL errors likewise omit the supplied value.
+
+Validation occurs while the issue export is parsed, before funnel totals or
+text and JSON output are built. Invalid evidence returns exit 2 with no partial
+report. Source tests cover each rejected class, normalized and exact-limit
+acceptance, and no payload echo. The installed commercial smoke replays the
+former forged-revenue and ANSI payload through the packaged command and proves
+the export remains unchanged.
+
+Unknown edited form answers remain available in the report's raw JSON deal
+fields, and unknown labels remain in warning label arrays, where JSON escaping
+preserves structure. Human-facing warning messages now name only the
+unrecognized field, so public answer or label text cannot create sibling
+terminal lines. Source and installed smoke tests prove the warnings remain
+actionable without exposing injected values, and separately prove an unsafe URL
+cannot reach output.
+
+This protects the canonical $299/$897 revenue review from public-input display
+spoofing. It does not qualify a lead, approve or send outreach, deploy the site,
+prove willingness to pay, collect payment, or record revenue.

@@ -16,6 +16,8 @@ SCHEMA_VERSION = 7
 DEFAULT_PILOT_PRICE_USD = 299
 DEFAULT_TARGET_PILOTS = 3
 DEFAULT_STALE_DAYS = 7
+MAX_ISSUE_TITLE_CHARACTERS = 1024
+MAX_ISSUE_URL_CHARACTERS = 2048
 
 STAGE_LABELS = (
     "pilot-lead",
@@ -225,7 +227,7 @@ def build_funnel(
                 _warning(
                     issue,
                     "unknown_pilot_label",
-                    f"Unknown pilot label: {label}.",
+                    "Pilot issue has an unrecognized pilot label.",
                     labels=[label],
                 )
             )
@@ -794,12 +796,29 @@ def _parse_issue(raw_issue: Any, index: int) -> PilotIssue:
         raise FunnelInputError(f"{location}.number must be a positive integer")
 
     title = raw_issue.get("title")
-    if not isinstance(title, str) or not title.strip():
-        raise FunnelInputError(f"{location}.title must be a non-empty string")
+    normalized_title = title.strip() if isinstance(title, str) else ""
+    if (
+        not normalized_title
+        or len(normalized_title) > MAX_ISSUE_TITLE_CHARACTERS
+        or not normalized_title.isprintable()
+    ):
+        raise FunnelInputError(
+            f"{location}.title must be non-empty printable text of at most "
+            f"{MAX_ISSUE_TITLE_CHARACTERS} characters"
+        )
 
     url = raw_issue.get("url", "")
-    if not isinstance(url, str):
-        raise FunnelInputError(f"{location}.url must be a string")
+    if (
+        not isinstance(url, str)
+        or len(url) > MAX_ISSUE_URL_CHARACTERS
+        or url != url.strip()
+        or (url and not url.isprintable())
+    ):
+        raise FunnelInputError(
+            f"{location}.url must be empty or printable text of at most "
+            f"{MAX_ISSUE_URL_CHARACTERS} characters without surrounding "
+            "whitespace"
+        )
 
     raw_labels = raw_issue.get("labels")
     if not isinstance(raw_labels, list):
@@ -832,7 +851,7 @@ def _parse_issue(raw_issue: Any, index: int) -> PilotIssue:
         raise FunnelInputError(f"{location}.body must be a string or null")
     return PilotIssue(
         number,
-        title.strip(),
+        normalized_title,
         url,
         frozenset(labels),
         state.upper(),
@@ -939,7 +958,7 @@ def _classify_lead_source(
             _warning(
                 issue,
                 "unknown_lead_source",
-                f"Unknown lead source answer: {raw_answer}.",
+                "Pilot issue has an unrecognized lead source answer.",
             ),
         )
     return source, raw_answer, None
@@ -979,7 +998,7 @@ def _classify_purchase_readiness(
             _warning(
                 issue,
                 "unknown_purchase_readiness",
-                f"Unknown purchase readiness answer: {raw_answer}.",
+                "Pilot issue has an unrecognized purchase readiness answer.",
             ),
         )
     return readiness, raw_answer, None
@@ -1019,7 +1038,7 @@ def _classify_decision_criterion(
             _warning(
                 issue,
                 "unknown_decision_criterion",
-                f"Unknown purchase criterion answer: {raw_answer}.",
+                "Pilot issue has an unrecognized purchase criterion answer.",
             ),
         )
     return criterion, raw_answer, None

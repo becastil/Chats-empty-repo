@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after rejecting unsafe rollout branch evidence:
-  271 / 1,000 (27.1%).
-- Remaining after rejecting unsafe rollout branch evidence:
-  729 commits.
+- Progress after rejecting unsafe pilot request text:
+  272 / 1,000 (27.2%).
+- Remaining after rejecting unsafe pilot request text:
+  728 commits.
 
 ## Commit Standard
 

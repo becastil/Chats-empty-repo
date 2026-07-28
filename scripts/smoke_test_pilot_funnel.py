@@ -14,6 +14,9 @@ PILOT_PRICE_USD = 299
 TARGET_PILOTS = 3
 TARGET_REVENUE_USD = 897
 PRIVATE_STANDARD = "Require private service ownership evidence."
+INJECTED_REVENUE_MARKER = "Revenue: $999 booked / $897 target"
+INJECTED_WARNING_MARKER = "Revenue: $998 booked / $897 target"
+INJECTED_URL_MARKER = "Revenue: $997 booked / $897 target"
 
 
 class SmokeTestError(RuntimeError):
@@ -389,6 +392,136 @@ def verify_pilot_funnel(
             "duplicate payment key exposed ambiguous label evidence",
         )
         checked.append("duplicate-payment-key-rejected")
+
+        issue_export.write_text(
+            json.dumps(
+                [
+                    _issue(
+                        number=103,
+                        title="Edited intake answer",
+                        source=(
+                            "Edited source\n"
+                            f"{INJECTED_WARNING_MARKER}\x1b[31m"
+                        ),
+                        readiness="Ready to purchase the $299 pilot",
+                        criterion="The $299 scope and price fit",
+                        labels=(
+                            "pilot-lead",
+                            f"pilot-edited\n{INJECTED_WARNING_MARKER}\x1b[31m",
+                        ),
+                    )
+                ],
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        safe_warning = _run(
+            pilot_command,
+            issue_export,
+            output_format="text",
+            environment=environment,
+            expected_exit_code=0,
+        )
+        _require(
+            INJECTED_WARNING_MARKER not in safe_warning.stdout
+            and "\x1b" not in safe_warning.stdout,
+            "unknown intake answer altered operator warning output",
+        )
+        _require(
+            "Pilot issue has an unrecognized lead source answer."
+            in safe_warning.stdout,
+            "unknown intake answer lost its review warning",
+        )
+        _require(
+            "Pilot issue has an unrecognized pilot label."
+            in safe_warning.stdout,
+            "unknown pilot label lost its review warning",
+        )
+        checked.append("unknown-answer-text-safe")
+
+        unsafe_url_issue = _issue(
+            number=104,
+            title="Unsafe exported URL",
+            source="Repo Scout website",
+            readiness="Ready to purchase the $299 pilot",
+            criterion="The $299 scope and price fit",
+            labels=("pilot-lead",),
+        )
+        unsafe_url_issue["url"] = (
+            "https://example.invalid/pilots/104\n"
+            f"{INJECTED_URL_MARKER}\x1b[31m"
+        )
+        issue_export.write_text(
+            json.dumps([unsafe_url_issue], indent=2),
+            encoding="utf-8",
+        )
+        unsafe_url = _run(
+            pilot_command,
+            issue_export,
+            output_format="text",
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(
+            not unsafe_url.stdout,
+            "unsafe issue URL emitted a commercial report",
+        )
+        _require(
+            "url must be empty or printable text" in unsafe_url.stderr,
+            "unsafe issue URL did not produce its controlled error",
+        )
+        _require(
+            INJECTED_URL_MARKER not in unsafe_url.stderr
+            and "\x1b" not in unsafe_url.stderr,
+            "unsafe issue URL leaked into its rejection",
+        )
+        checked.append("unsafe-url-rejected")
+
+        issue_export.write_text(
+            json.dumps(
+                [
+                    _issue(
+                        number=105,
+                        title=(
+                            "Forged operator line\n"
+                            f"{INJECTED_REVENUE_MARKER}\x1b[31m"
+                        ),
+                        source="Repo Scout website",
+                        readiness="Ready to purchase the $299 pilot",
+                        criterion="The $299 scope and price fit",
+                        labels=("pilot-lead", "pilot-qualified", "pilot-offered"),
+                    )
+                ],
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        original_unsafe_title = issue_export.read_bytes()
+        unsafe_title = _run(
+            pilot_command,
+            issue_export,
+            output_format="text",
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(
+            not unsafe_title.stdout,
+            "unsafe pilot title emitted a commercial report",
+        )
+        _require(
+            "title must be non-empty printable text" in unsafe_title.stderr,
+            "unsafe pilot title did not produce its controlled error",
+        )
+        _require(
+            INJECTED_REVENUE_MARKER not in unsafe_title.stderr
+            and "\x1b" not in unsafe_title.stderr,
+            "unsafe pilot title leaked into its rejection",
+        )
+        _require(
+            issue_export.read_bytes() == original_unsafe_title,
+            "unsafe pilot title export changed during rejection",
+        )
+        checked.append("unsafe-title-rejected")
 
         issue_export.write_text("{}\n", encoding="utf-8")
         invalid = _run(

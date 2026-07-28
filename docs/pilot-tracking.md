@@ -168,6 +168,15 @@ outside the public issue.
 Pilot issue JSON with duplicate keys is rejected before issue parsing, so
 conflicting `labels` fields cannot silently change booked-pilot or revenue
 totals.
+Public issue titles are normalized around surrounding whitespace, then must be
+non-empty printable text of at most 1,024 characters. Any remaining line break,
+terminal control, bidirectional control, Unicode separator, or oversized text
+fails with exit code 2 before text or JSON output. Issue URLs must be empty or
+printable text of at most 2,048 characters without surrounding whitespace.
+Controlled errors do not repeat the unsafe title or URL.
+Unrecognized edited source, readiness, and purchase-criterion answers and
+unrecognized pilot labels remain in escaped JSON review fields. Text warnings
+are generic and do not interpolate those public values into terminal output.
 
 Resolved annual-conversion totals also require `pilot-paid`. A
 `pilot-converted` issue that skipped payment keeps its visible stage and

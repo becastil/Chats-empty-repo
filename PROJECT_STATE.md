@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 271 of
-1,000, with 729 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 272 of
+1,000, with 728 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -55,6 +55,13 @@ alignment take priority over commit volume.
 - Duplicate-key-safe pilot issue ingestion that rejects ambiguous payment
   labels before revenue reporting, with source and installed-command proof that
   no report or label value is emitted.
+- Bounded printable pilot issue titles that reject forged lines, terminal
+  controls, bidirectional controls, Unicode separators, and oversized text
+  before any commercial report can be emitted.
+- Empty-or-printable pilot issue URLs capped at 2,048 characters without
+  surrounding whitespace before operator output.
+- Generic operator warnings for unrecognized public form answers and pilot
+  labels, retaining raw values only in structurally escaped JSON fields.
 - Strict positive-integer pilot price, target, and inactivity controls that
   reject booleans, floats, and strings before revenue evidence is built.
 - Release-blocking installed-wheel proof that offers remain outside revenue,
