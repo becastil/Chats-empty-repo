@@ -409,6 +409,15 @@ digest, canonical source repository, source ref, and commit instead of leaving
 the target project to an operator inference. This reduces approval and save
 friction without granting consent, exporting source, saving or deploying a
 version, or creating customer, demand, payment, or revenue evidence.
+Plain independent verification can now accept the existing Sites source URL or
+configured alias solely to produce a copy-ready pending export request. It
+resolves that identity locally, rejects `origin`, and prints the release
+version, project ID, exact receipt digest, canonical repository, source ref,
+and commit with `deployment_approved=false`. The request cannot be combined
+with the later pre-save mode, does not query a remote ref, and grants no
+approval. This turns validated distribution evidence into a precise human
+decision without exporting source, saving or deploying a version, or creating
+customer, demand, payment, or revenue evidence.
 Candidate preparation now also repeats the complete clean
 `HEAD == origin/main` check after validation and packaging, requiring both
 observations to retain the original synchronized commit. Read-only verification

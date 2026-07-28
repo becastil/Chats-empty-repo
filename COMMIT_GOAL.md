@@ -8,9 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after naming the Sites project in export approval: 256 / 1,000
-  (25.6%).
-- Remaining after naming the Sites project in export approval: 744 commits.
+- Progress after making Sites export review copy-ready: 257 / 1,000 (25.7%).
+- Remaining after making Sites export review copy-ready: 743 commits.
 
 ## Commit Standard
 

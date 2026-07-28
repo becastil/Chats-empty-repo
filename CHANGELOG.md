@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added an offline, copy-ready pending Sites source-export request after
+  independent candidate verification, with local canonical repository
+  resolution, `origin` rejection, complete approval identity, explicit
+  `deployment_approved=false`, and strict separation from pre-save mode.
+- Renamed the candidate CLI's generic archive `sha256` label to
+  `archive_sha256` so archive and receipt digests remain unambiguous during
+  human review.
 - Exposed the receipt-bound existing Sites `project_id` in both candidate
   preparation and verification results and CLI output, and made it required
   source-export approval evidence alongside the release version, receipt

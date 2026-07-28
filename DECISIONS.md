@@ -3715,3 +3715,25 @@ project before any version-save step.
 The receipt schema and artifact bytes do not change. Printed identity is
 evidence rather than approval, and this change performs no source export,
 version save, deployment, customer contact, or revenue event.
+
+## 2026-07-28: Emit A Pending Sites Source-Export Request
+
+Independent verification produced every candidate-derived approval value, but
+the operator still had to resolve the existing Sites source repository and
+manually assemble it with the release version, project ID, receipt digest,
+source ref, and commit. That reconstruction left a completed integrity contract
+one manual transcription away from owner review.
+
+Plain `--verify-only` now accepts `--approval-source-repository` for this
+pre-approval purpose. After the archive and receipt pass independent
+verification, the command resolves the supplied credential-free URL or alias
+locally, canonicalizes protocol-equivalent identities, and rejects a repository
+matching `origin`. It then prints one copy-ready request containing the complete
+tuple and `deployment_approved=false`. The normal archive digest label is now
+`archive_sha256`, keeping it distinct from `receipt_sha256`.
+
+The request option cannot be combined with approved-receipt or exported-source
+arguments, performs no remote-ref lookup, and remains a pending request rather
+than consent. The existing post-export pre-save mode remains the authoritative
+network and commit check. This change performs no source export, version save,
+deployment, customer contact, or revenue event.

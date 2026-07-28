@@ -778,6 +778,31 @@ def _resolved_repository_identity(
     return _canonical_repository_identity(resolved, label)
 
 
+def _approval_source_repository_identity(
+    root: Path,
+    repository: str,
+    *,
+    run_command: CommandRunner | None = None,
+) -> str:
+    project_root = root.expanduser().resolve()
+    runner = run_command or _run_command
+    source_repository = _validated_source_repository(repository)
+    source_identity = _resolved_repository_identity(
+        source_repository,
+        "approval source repository",
+        project_root,
+        runner,
+    )
+    origin_identity = _resolved_repository_identity(
+        "origin",
+        "origin repository",
+        project_root,
+        runner,
+    )
+    _require_separate_repository(source_identity, origin_identity)
+    return source_identity
+
+
 def _require_remote_repository_identity(value: str, label: str) -> None:
     parsed = urlsplit(value)
     if (
@@ -2267,6 +2292,16 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--approval-source-repository",
+        help=(
+            "Credential-free URL or configured remote alias for the existing "
+            "Sites source repository. With plain --verify-only, resolve its "
+            "canonical identity locally, reject origin, and print a pending "
+            "source-export request without querying the remote or granting "
+            "approval."
+        ),
+    )
+    parser.add_argument(
         "--expected-receipt-sha256",
         help=(
             "Approved lowercase receipt SHA-256 to require during "
@@ -2298,11 +2333,27 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+    approval_repository_identity: str | None = None
     try:
         if args.verify_only:
             if args.package_script is not None:
                 parser.error(
                     "--package-script cannot be used with --verify-only"
+                )
+            if (
+                args.approval_source_repository is not None
+                and any(
+                    value is not None
+                    for value in (
+                        args.expected_receipt_sha256,
+                        args.exported_source_repository,
+                        args.expected_exported_source_repository,
+                    )
+                )
+            ):
+                parser.error(
+                    "--approval-source-repository cannot be combined with "
+                    "pre-save verification"
                 )
             if (
                 args.exported_source_repository is not None
@@ -2348,6 +2399,13 @@ def main(argv: Sequence[str] | None = None) -> int:
                     args.expected_exported_source_repository
                 ),
             )
+            if args.approval_source_repository is not None:
+                approval_repository_identity = (
+                    _approval_source_repository_identity(
+                        args.root,
+                        args.approval_source_repository,
+                    )
+                )
             action = "verified"
         else:
             if args.package_script is None:
@@ -2367,6 +2425,10 @@ def main(argv: Sequence[str] | None = None) -> int:
                     "--expected-exported-source-repository requires "
                     "--verify-only"
                 )
+            if args.approval_source_repository is not None:
+                parser.error(
+                    "--approval-source-repository requires --verify-only"
+                )
             result = prepare_site_candidate(
                 args.root,
                 args.archive,
@@ -2383,10 +2445,21 @@ def main(argv: Sequence[str] | None = None) -> int:
         f"release_version={result.release_version} "
         f"project_id={result.project_id} "
         f"archive={result.archive.name} "
-        f"sha256={result.archive_sha256} "
+        f"archive_sha256={result.archive_sha256} "
         f"receipt={result.receipt.name} "
         f"receipt_sha256={result.receipt_sha256}"
     )
+    if approval_repository_identity is not None:
+        print(
+            "source-export request pending: "
+            "deployment_approved=false "
+            f"release_version={result.release_version} "
+            f"project_id={result.project_id} "
+            f"receipt_sha256={result.receipt_sha256} "
+            f"source_repository={approval_repository_identity} "
+            f"source_ref={SOURCE_REF} "
+            f"commit={result.commit_sha}"
+        )
     return 0
 
 

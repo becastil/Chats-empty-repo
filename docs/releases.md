@@ -221,9 +221,9 @@ site release:
    fail. Archive and receipt staging, staged reads, publication, and cleanup
    remain bound to the descriptors held from preflight.
    Persistent drift during receipt publication therefore leaves no
-   approval-ready result. The success output includes the receipt-bound
-   `release_version`, Sites `project_id`, and `receipt_sha256`; retain all
-   three with the candidate evidence.
+   approval-ready result. The success output labels the archive digest
+   `archive_sha256` and includes the receipt-bound `release_version`, Sites
+   `project_id`, and `receipt_sha256`; retain them with the candidate evidence.
    Do not use `npm audit fix --force` when it proposes a framework downgrade;
    review and test a supported patch or explicit transitive override instead.
 2. Verify the archive and receipt immediately before asking for source-export
@@ -232,7 +232,8 @@ site release:
    ```bash
    python3 scripts/prepare_site_candidate.py --verify-only \
      --archive /tmp/repo-scout-site.tar.gz \
-     --receipt /tmp/repo-scout-site-receipt.json
+     --receipt /tmp/repo-scout-site-receipt.json \
+     --approval-source-repository "$SITES_SOURCE_REPOSITORY"
    ```
 
    This pre-approval verification is read-only and runs no Node, npm,
@@ -248,21 +249,28 @@ site release:
    `project_id`, and `receipt_sha256` with the source-export approval so later
    verification can require the exact receipt bytes and the approval remains
    tied to the existing Sites project and release identity the owner reviewed.
-   Resolve the existing Sites source repository's credential-free remote URL
-   before approval, confirm that it is not the local checkout or the repository
-   configured as `origin`, and record that canonical identity as
-   `APPROVED_SITES_SOURCE_REPOSITORY` in the same approval evidence. A
-   configured remote alias may be used for Git operations, but the approved
-   identity itself must be a remote URL rather than a mutable alias. Canonical
-   identity normalizes the standard Git, HTTP, HTTPS, and SSH ports across
-   protocol aliases but retains any non-default port as part of the approved
-   repository authority.
+   `SITES_SOURCE_REPOSITORY` may be the existing Sites source repository's
+   credential-free remote URL or a configured alias. The request mode resolves
+   that argument locally with Git, rejects the local checkout and the repository
+   configured as `origin`, and prints its canonical identity without querying a
+   remote ref. Canonical identity normalizes the standard Git, HTTP, HTTPS, and
+   SSH ports across protocol aliases but retains any non-default port as part of
+   the repository authority.
+   The second output line starts `source-export request pending`, carries the
+   public release version, Sites project ID, receipt digest, canonical source
+   repository, `refs/heads/main`, and receipt commit, and states
+   `deployment_approved=false`. It is a copy-ready request for a human decision,
+   not approval. Confirm that the canonical repository belongs to the printed
+   existing Sites project, then retain that identity as
+   `APPROVED_SITES_SOURCE_REPOSITORY` only if the owner approves the exact
+   request.
 3. Obtain explicit owner approval before pushing the exact committed source to
    the approved separate Sites source repository. The approval must identify
    the public release version, Sites project ID, receipt digest, canonical
-   repository identity, `refs/heads/main`, and receipt commit. This
-   source-export approval is separate from deployment approval, and the source
-   export does not authorize production deployment.
+   repository identity, `refs/heads/main`, and receipt commit from the exact
+   pending request. Request output is not consent. This source-export approval
+   is separate from deployment approval, and the source export does not
+   authorize production deployment.
 4. Push the receipt's exact source commit to the separate Sites source
    repository (the existing Sites source repository for this project), and
    reuse the existing Sites project in `.openai/hosting.json`.

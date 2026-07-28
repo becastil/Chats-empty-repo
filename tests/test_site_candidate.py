@@ -2314,6 +2314,63 @@ class SiteCandidateTests(unittest.TestCase):
             "Requires both exported source repository options.",
             help_text,
         )
+        self.assertIn(
+            "resolve its canonical identity locally, reject origin, and "
+            "print a pending source-export request without querying the "
+            "remote or granting approval",
+            help_text,
+        )
+
+    def test_resolves_a_separate_approval_source_repository_locally(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, _, _ = self._fixture(Path(tmp))
+            runner = FakeCommandRunner(root, archive)
+
+            identity = (
+                prepare_site_candidate._approval_source_repository_identity(
+                    root,
+                    SITES_SOURCE_REMOTE,
+                    run_command=runner,
+                )
+            )
+
+        self.assertEqual(identity, "sites.example/repo-scout")
+        self.assertEqual(
+            runner.commands,
+            [
+                (
+                    "git",
+                    "ls-remote",
+                    "--get-url",
+                    SITES_SOURCE_REMOTE,
+                ),
+                ("git", "ls-remote", "--get-url", "origin"),
+            ],
+        )
+
+    def test_rejects_origin_as_the_approval_source_repository(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, _, _ = self._fixture(Path(tmp))
+            runner = FakeCommandRunner(
+                root,
+                archive,
+                exported_source_repositories=(ORIGIN_REPOSITORY,),
+            )
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "must be separate from origin",
+            ):
+                (
+                    prepare_site_candidate
+                    ._approval_source_repository_identity(
+                        root,
+                        SITES_SOURCE_REMOTE,
+                        run_command=runner,
+                    )
+                )
 
     def test_verify_only_cli_does_not_require_a_packaging_helper(self) -> None:
         result = prepare_site_candidate.SiteCandidateResult(
@@ -2353,7 +2410,7 @@ class SiteCandidateTests(unittest.TestCase):
             f"release_version={RELEASE_VERSION} "
             f"project_id={PROJECT_ID} "
             "archive=candidate.tar.gz "
-            f"sha256={'c' * 64} "
+            f"archive_sha256={'c' * 64} "
             "receipt=candidate.json "
             f"receipt_sha256={'e' * 64}",
         )
@@ -2365,6 +2422,138 @@ class SiteCandidateTests(unittest.TestCase):
             exported_source_repository=None,
             expected_exported_source_repository=None,
         )
+
+    def test_verify_only_cli_prints_a_pending_source_export_request(
+        self,
+    ) -> None:
+        result = prepare_site_candidate.SiteCandidateResult(
+            commit_sha=COMMIT_SHA,
+            release_version=RELEASE_VERSION,
+            project_id=PROJECT_ID,
+            archive_sha256="c" * 64,
+            receipt_sha256="e" * 64,
+            archive=Path("/tmp/candidate.tar.gz"),
+            receipt=Path("/tmp/candidate.json"),
+        )
+
+        with (
+            patch.object(
+                prepare_site_candidate,
+                "verify_site_candidate",
+                return_value=result,
+            ) as verify,
+            patch.object(
+                prepare_site_candidate,
+                "_approval_source_repository_identity",
+                return_value="sites.example/repo-scout",
+            ) as repository_identity,
+        ):
+            stdout = StringIO()
+            with redirect_stdout(stdout):
+                status = prepare_site_candidate.main(
+                    [
+                        "--verify-only",
+                        "--root",
+                        "/tmp/project",
+                        "--archive",
+                        "/tmp/candidate.tar.gz",
+                        "--receipt",
+                        "/tmp/candidate.json",
+                        "--approval-source-repository",
+                        SITES_SOURCE_REMOTE,
+                    ]
+                )
+
+        self.assertEqual(status, 0)
+        self.assertEqual(
+            stdout.getvalue().splitlines()[-1],
+            "source-export request pending: "
+            "deployment_approved=false "
+            f"release_version={RELEASE_VERSION} "
+            f"project_id={PROJECT_ID} "
+            f"receipt_sha256={'e' * 64} "
+            "source_repository=sites.example/repo-scout "
+            "source_ref=refs/heads/main "
+            f"commit={COMMIT_SHA}",
+        )
+        verify.assert_called_once_with(
+            Path("/tmp/project"),
+            Path("/tmp/candidate.tar.gz"),
+            Path("/tmp/candidate.json"),
+            expected_receipt_sha256=None,
+            exported_source_repository=None,
+            expected_exported_source_repository=None,
+        )
+        repository_identity.assert_called_once_with(
+            Path("/tmp/project"),
+            SITES_SOURCE_REMOTE,
+        )
+
+    def test_approval_source_repository_rejects_pre_save_mode(
+        self,
+    ) -> None:
+        with patch.object(
+            prepare_site_candidate,
+            "verify_site_candidate",
+        ) as verify:
+            stderr = StringIO()
+            with redirect_stderr(stderr), self.assertRaises(SystemExit) as ctx:
+                prepare_site_candidate.main(
+                    [
+                        "--verify-only",
+                        "--root",
+                        "/tmp/project",
+                        "--archive",
+                        "/tmp/candidate.tar.gz",
+                        "--receipt",
+                        "/tmp/candidate.json",
+                        "--approval-source-repository",
+                        SITES_SOURCE_REMOTE,
+                        "--expected-receipt-sha256",
+                        "e" * 64,
+                        "--exported-source-repository",
+                        SITES_SOURCE_REMOTE,
+                        "--expected-exported-source-repository",
+                        SITES_SOURCE_REPOSITORY,
+                    ]
+                )
+
+        self.assertEqual(ctx.exception.code, 2)
+        self.assertIn(
+            "--approval-source-repository cannot be combined with "
+            "pre-save verification",
+            stderr.getvalue(),
+        )
+        verify.assert_not_called()
+
+    def test_approval_source_repository_requires_verify_only(self) -> None:
+        with patch.object(
+            prepare_site_candidate,
+            "prepare_site_candidate",
+        ) as prepare:
+            stderr = StringIO()
+            with redirect_stderr(stderr), self.assertRaises(SystemExit) as ctx:
+                prepare_site_candidate.main(
+                    [
+                        "--root",
+                        "/tmp/project",
+                        "--package-script",
+                        "/tmp/package-site.sh",
+                        "--archive",
+                        "/tmp/candidate.tar.gz",
+                        "--receipt",
+                        "/tmp/candidate.json",
+                        "--approval-source-repository",
+                        SITES_SOURCE_REMOTE,
+                    ]
+                )
+
+        self.assertEqual(ctx.exception.code, 2)
+        self.assertIn(
+            "--approval-source-repository requires --verify-only",
+            stderr.getvalue(),
+        )
+        prepare.assert_not_called()
 
     def test_verify_only_cli_rejects_digest_only_downgrade(self) -> None:
         with patch.object(
@@ -2480,7 +2669,7 @@ class SiteCandidateTests(unittest.TestCase):
             f"release_version={RELEASE_VERSION} "
             f"project_id={PROJECT_ID} "
             "archive=candidate.tar.gz "
-            f"sha256={'d' * 64} "
+            f"archive_sha256={'d' * 64} "
             "receipt=candidate.json "
             f"receipt_sha256={'f' * 64}",
         )

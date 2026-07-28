@@ -30,8 +30,12 @@
   the held receipt-parent and regular-file descriptors now implemented. Hold
   each exact newly published regular file through final source, digest,
   requested-parent, and requested-leaf identity checks before asking for
-  explicit source-export approval that records the printed `release_version`,
-  existing Sites `project_id`, and `receipt_sha256`.
+  explicit source-export approval. Use the offline request mode to locally
+  canonicalize the existing Sites source repository, reject `origin`, and
+  print one pending tuple containing `release_version`, existing Sites
+  `project_id`, `receipt_sha256`, canonical repository identity,
+  `refs/heads/main`, and commit while keeping
+  `deployment_approved=false`.
   After approval, push its receipt-bound source to the separate Sites source
   repository, verify the unchanged archive and receipt again while requiring
   the approved digest and canonical Sites repository identity, and resolve
