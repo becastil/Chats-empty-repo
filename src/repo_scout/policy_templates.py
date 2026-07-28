@@ -232,14 +232,12 @@ def prepare_bootstrap(
         target = root / "repo-scout-policy.toml"
     else:
         requested = Path(output).expanduser()
-        if requested.is_absolute():
-            target = requested
-        else:
-            target = (root / requested).resolve()
-            if root not in target.parents:
-                raise TemplateError(
-                    f"relative bootstrap output escapes repository: {output}"
-                )
+        candidate = requested if requested.is_absolute() else root / requested
+        target = candidate.parent.resolve() / candidate.name
+        if not requested.is_absolute() and root not in target.parents:
+            raise TemplateError(
+                f"relative bootstrap output escapes repository: {output}"
+            )
     name = recommendation["recommendation"]["name"]
     return recommendation, target, get_template(name)
 
@@ -261,10 +259,11 @@ def bootstrap_receipt(
         raise TemplateError(
             f"packaged policy template {selected['name']} is invalid: {exc}"
         ) from exc
+    requested_output = target.expanduser()
     return {
         "schema_version": BOOTSTRAP_SCHEMA_VERSION,
         "status": "replaced" if replaced else "created",
-        "output": str(target.expanduser().resolve()),
+        "output": str(requested_output.parent.resolve() / requested_output.name),
         "starter": {
             "name": selected["name"],
             "title": selected["title"],
@@ -554,7 +553,24 @@ def _write_template(
     content: str, output: str, force: bool, *, announce: bool = True
 ) -> int:
     target = Path(output).expanduser()
-    if target.exists() and not force:
+    try:
+        target_details = target.lstat()
+    except FileNotFoundError:
+        target_details = None
+    except OSError as exc:
+        print(
+            f"repo-scout-policy: could not inspect {target}: {exc}",
+            file=sys.stderr,
+        )
+        return OUTPUT_ERROR_EXIT_CODE
+
+    if target_details is not None and stat.S_ISLNK(target_details.st_mode):
+        print(
+            f"repo-scout-policy: output must not be a symlink: {target}",
+            file=sys.stderr,
+        )
+        return OUTPUT_ERROR_EXIT_CODE
+    if target_details is not None and not force:
         print(
             f"repo-scout-policy: output already exists: {target}; "
             "pass --force to replace it",
@@ -566,7 +582,9 @@ def _write_template(
         temporary_path: Path | None = None
         try:
             target_mode = (
-                stat.S_IMODE(target.stat().st_mode) if target.exists() else None
+                stat.S_IMODE(target_details.st_mode)
+                if target_details is not None
+                else None
             )
             with NamedTemporaryFile(
                 "w",

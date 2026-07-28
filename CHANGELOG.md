@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Required policy bootstrap and initialization outputs to be direct leaves,
+  rejecting initial and dangling symlinks even with `--force` before a policy
+  or bootstrap receipt can be written.
+- Preserved relative bootstrap output leaves during parent normalization and
+  added source plus installed-command proof that rejected links and targets
+  remain unchanged with no JSON receipt.
 - Rejected duplicate JSON keys at every depth of pilot issue exports before
   issue parsing, preventing last-key-wins `pilot-paid` evidence from changing
   booked-pilot and revenue totals.

@@ -8,8 +8,9 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after rejecting ambiguous pilot revenue JSON: 262 / 1,000 (26.2%).
-- Remaining after rejecting ambiguous pilot revenue JSON: 738 commits.
+- Progress after binding bootstrap receipts to direct outputs: 263 / 1,000
+  (26.3%).
+- Remaining after binding bootstrap receipts to direct outputs: 737 commits.
 
 ## Commit Standard
 

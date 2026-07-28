@@ -207,6 +207,42 @@ def verify_policy_activation(
                 )
             checked.append(label)
 
+    with TemporaryDirectory() as tmp:
+        root = Path(tmp) / "service"
+        root.mkdir()
+        (root / "pyproject.toml").write_text("[project]\n", encoding="utf-8")
+        config = root / "config"
+        config.mkdir()
+        existing_policy = root / "existing-policy.toml"
+        existing_policy.write_text("keep me\n", encoding="utf-8")
+        bootstrap_policy = config / "team-policy.toml"
+        bootstrap_policy.symlink_to(existing_policy)
+
+        symlink_bootstrap = _run(
+            [
+                *policy_command,
+                "bootstrap",
+                str(root),
+                "--output",
+                "config/team-policy.toml",
+                "--force",
+                "--format",
+                "json",
+            ],
+            cwd=root,
+            environment=environment,
+            expected_exit_code=4,
+        )
+        if symlink_bootstrap.stdout:
+            raise SmokeTestError("symlink bootstrap output emitted a receipt")
+        if "output must not be a symlink" not in symlink_bootstrap.stderr:
+            raise SmokeTestError("symlink bootstrap output was not rejected")
+        if not bootstrap_policy.is_symlink():
+            raise SmokeTestError("symlink bootstrap output replaced the link")
+        if existing_policy.read_text(encoding="utf-8") != "keep me\n":
+            raise SmokeTestError("symlink bootstrap output changed its target")
+        checked.append("symlink-bootstrap-output-rejected")
+
     return tuple(checked)
 
 

@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 262 of
-1,000, with 738 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 263 of
+1,000, with 737 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -626,12 +626,14 @@ alignment take priority over commit volume.
 - Installed-wheel recommendation proof for Python, agent-ready, baseline, and mixed Node/Python repositories.
 - One generalized release-blocking policy-activation smoke covering all recommendation routes and Node enforcement.
 - Guarded one-command policy bootstrap for recommendations that do not require review.
-- Repository-contained relative output, escape rejection, overwrite protection,
-  permission-preserving atomic force replacement, mutation-free permission
-  failures, and no implicit parent-directory creation for bootstrap.
+- Repository-contained relative output, escape rejection, direct-leaf symlink
+  refusal, overwrite protection, permission-preserving atomic force
+  replacement, mutation-free permission failures, and no implicit
+  parent-directory creation for bootstrap.
 - Explicit bootstrap refusal for mixed Node/Python repositories, with installed-wheel release proof across every route.
 - Stable schema-1 JSON bootstrap receipts proving create or replace status, resolved output, selected starter, policy version, and policy fingerprint.
-- No-success-receipt behavior for bootstrap review, overwrite, and write failures.
+- No-success-receipt behavior for bootstrap review, overwrite, symlink, and
+  write failures.
 - Installed-wheel release proof for machine-readable bootstrap receipts across every clear recommendation route.
 - Strict bootstrap-receipt verification against the current policy version and normalized fingerprint.
 - Stable text and JSON pass or drift evidence, policy-path overrides, and exit code 6 for missing, invalid, or changed policies.

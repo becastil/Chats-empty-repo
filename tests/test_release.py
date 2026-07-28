@@ -536,6 +536,7 @@ class ReleaseManifestTests(unittest.TestCase):
                 "agent-ready-service",
                 "service-baseline",
                 "polyglot-review",
+                "symlink-bootstrap-output-rejected",
             ),
         )
 

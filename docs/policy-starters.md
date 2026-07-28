@@ -44,7 +44,9 @@ repo-scout-policy bootstrap . --format json
 Bootstrap writes `repo-scout-policy.toml` inside the inspected repository,
 keeps the same overwrite protection as `init`, and supports `--force` plus a
 repository-relative `--output`. It does not create missing parent directories.
-Relative outputs cannot escape the inspected repository. When both Node and
+Relative outputs cannot escape the inspected repository. The requested output
+leaf must not be an initial or dangling symlink, including with `--force`;
+rejection leaves both the link and its target unchanged. When both Node and
 Python manifests are present, bootstrap refuses to write;
 use `recommend`, review both profiles, and combine the agreed team rules.
 
@@ -52,7 +54,7 @@ Successful `--format json` bootstrap runs emit a schema-1 receipt with
 `created` or `replaced` status, the resolved output path, the selected starter
 and reason, and the normalized policy version and SHA-256 fingerprint. Teams
 can archive that receipt as CI handoff evidence. Write conflicts, review
-requirements, and other failures emit no JSON receipt.
+requirements, symlink outputs, and other failures emit no JSON receipt.
 
 Archive and verify that handoff without trusting a filename alone:
 

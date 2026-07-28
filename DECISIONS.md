@@ -3842,3 +3842,24 @@ conflicting payment-label evidence without echoing either label value.
 This hardens the accounting input contract only. It does not create a pilot
 request, apply a payment label, contact a buyer, collect payment, or record
 revenue.
+
+## 2026-07-28: Bind Bootstrap Receipts To Direct Policy Outputs
+
+Bootstrap built its JSON receipt before writing the selected policy and
+resolved the receipt's output through any existing symlink leaf. Force mode
+then atomically replaced the symlink itself. The command could therefore
+succeed with a direct policy at the requested path while its receipt named the
+link's unchanged former target. A repository-relative custom output was worse:
+path preparation resolved through the leaf before the writer saw it, so force
+mode replaced the target instead.
+
+Relative bootstrap normalization now resolves only the output parent and
+preserves the requested leaf. The shared policy writer rejects initial and
+dangling symlink leaves before force or no-force writes. Bootstrap emits no
+receipt, and both link and target remain unchanged. Source regressions cover
+the default and custom relative paths; the installed activation smoke test
+proves the custom path through the packaged command.
+
+This protects free-to-paid policy activation and first-repository handoff
+evidence. It does not establish customer use, pilot demand, payment, or
+revenue.

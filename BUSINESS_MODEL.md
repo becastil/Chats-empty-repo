@@ -267,6 +267,12 @@ fully written temporary file before the atomic swap. A permission failure keeps
 the original policy and mode intact and removes the unused staging file. This
 protects shared policy access during free and paid activation; it does not prove
 customer usage, pilot demand, payment, or revenue.
+Bootstrap and initialization now require the requested output leaf to be a
+direct path rather than an initial or dangling symlink. Relative bootstrap
+normalization resolves the parent while preserving the requested leaf for this
+check. Rejection leaves the link and target untouched and emits no bootstrap
+receipt, preventing first-repository handoff evidence from naming a former
+symlink target.
 Successful automation can now retain a versioned bootstrap receipt containing
 the selected starter, destination, normalized policy version and fingerprint,
 and whether the file was created or replaced. This gives a team auditable

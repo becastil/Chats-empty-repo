@@ -226,7 +226,10 @@ repo-scout-policy init python-service
 is required. It refuses to overwrite an existing file and stops on mixed Node
 and Python repositories. Its stable JSON receipt records whether the policy was
 created or replaced, its output path, selected starter, policy version, and
-policy fingerprint for CI handoff evidence. Failed writes emit no receipt.
+policy fingerprint for CI handoff evidence. The output leaf must be a direct
+file path; initial and dangling symlinks fail even with `--force`, leave their
+targets unchanged, and emit no receipt. Other failed writes also emit no
+receipt.
 Save that JSON to a file and use `verify-receipt` to prove the current policy
 still has the recorded version and fingerprint. A moved policy can be selected
 with `--policy`; policy drift or a missing policy returns exit code 6 with

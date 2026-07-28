@@ -308,6 +308,65 @@ class PolicyTemplateTests(unittest.TestCase):
             self.assertEqual(replaced["status"], "replaced")
             self.assertEqual(replaced["policy"], created["policy"])
 
+    @unittest.skipUnless(
+        hasattr(os, "symlink"), "symlink semantics are unavailable"
+    )
+    def test_bootstrap_rejects_symlink_outputs_without_receipt(self) -> None:
+        cases = (
+            ("default", (), Path("repo-scout-policy.toml"), True),
+            (
+                "relative",
+                ("--output", "config/team-policy.toml"),
+                Path("config/team-policy.toml"),
+                True,
+            ),
+            ("dangling", (), Path("repo-scout-policy.toml"), False),
+        )
+
+        for label, output_arguments, output_relative, target_exists in cases:
+            with self.subTest(label=label), TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                (root / "pyproject.toml").write_text(
+                    "[project]\n",
+                    encoding="utf-8",
+                )
+                target = root / "existing-policy.toml"
+                if target_exists:
+                    target.write_text("keep me\n", encoding="utf-8")
+                output = root / output_relative
+                output.parent.mkdir(parents=True, exist_ok=True)
+                output.symlink_to(target)
+                stdout = io.StringIO()
+                stderr = io.StringIO()
+
+                with redirect_stdout(stdout), redirect_stderr(stderr):
+                    exit_code = main(
+                        [
+                            "bootstrap",
+                            str(root),
+                            *output_arguments,
+                            "--force",
+                            "--format",
+                            "json",
+                        ]
+                    )
+
+                self.assertEqual(exit_code, 4)
+                self.assertEqual(stdout.getvalue(), "")
+                self.assertIn("output must not be a symlink", stderr.getvalue())
+                self.assertTrue(output.is_symlink())
+                self.assertEqual(
+                    list(output.parent.glob(f".{output.name}.*")),
+                    [],
+                )
+                if target_exists:
+                    self.assertEqual(
+                        target.read_text(encoding="utf-8"),
+                        "keep me\n",
+                    )
+                else:
+                    self.assertFalse(target.exists())
+
     def test_verify_receipt_reports_matching_and_drifted_policy(self) -> None:
         with TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -574,6 +633,37 @@ class PolicyTemplateTests(unittest.TestCase):
                 get_template("python-service"),
             )
             self.assertEqual(stat.S_IMODE(target.stat().st_mode), 0o640)
+
+    @unittest.skipUnless(
+        hasattr(os, "symlink"), "symlink semantics are unavailable"
+    )
+    def test_init_rejects_symlink_output_before_force_replacement(self) -> None:
+        with TemporaryDirectory() as tmp:
+            target = Path(tmp) / "existing-policy.toml"
+            target.write_text("keep me\n", encoding="utf-8")
+            output = Path(tmp) / "team-policy.toml"
+            output.symlink_to(target)
+            stderr = io.StringIO()
+
+            with redirect_stderr(stderr):
+                exit_code = main(
+                    [
+                        "init",
+                        "python-service",
+                        "--output",
+                        str(output),
+                        "--force",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 4)
+            self.assertIn("output must not be a symlink", stderr.getvalue())
+            self.assertTrue(output.is_symlink())
+            self.assertEqual(target.read_text(encoding="utf-8"), "keep me\n")
+            self.assertEqual(
+                list(output.parent.glob(f".{output.name}.*")),
+                [],
+            )
 
     @unittest.skipUnless(
         os.name == "posix", "POSIX permission semantics required"
