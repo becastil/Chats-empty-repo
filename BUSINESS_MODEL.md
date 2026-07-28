@@ -402,6 +402,13 @@ invariant is watched by the read-only hosted site contract whenever either
 release-identity source changes. It strengthens paid-distribution review
 without approving export, saving or deploying a version, or creating customer,
 demand, payment, or revenue evidence.
+Preparation and independent verification now also expose the receipt-bound
+Sites `project_id` in their owner-facing result. Source-export approval records
+that existing project identity with the public release version, exact receipt
+digest, canonical source repository, source ref, and commit instead of leaving
+the target project to an operator inference. This reduces approval and save
+friction without granting consent, exporting source, saving or deploying a
+version, or creating customer, demand, payment, or revenue evidence.
 Candidate preparation now also repeats the complete clean
 `HEAD == origin/main` check after validation and packaging, requiring both
 observations to retain the original synchronized commit. Read-only verification

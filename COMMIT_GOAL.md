@@ -8,8 +8,9 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after binding Sites release identity: 255 / 1,000 (25.5%).
-- Remaining after binding Sites release identity: 745 commits.
+- Progress after naming the Sites project in export approval: 256 / 1,000
+  (25.6%).
+- Remaining after naming the Sites project in export approval: 744 commits.
 
 ## Commit Standard
 

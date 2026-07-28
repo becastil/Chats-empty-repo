@@ -3697,3 +3697,21 @@ contract instead of waiting for an unrelated dependency or script change.
 
 The change performs no candidate export, source push, version save, deployment,
 approval, customer contact, or revenue event.
+
+## 2026-07-28: Name The Existing Sites Project In Export Approval
+
+Schema-5 receipts already bound the existing Sites `project_id`, but candidate
+results and owner-facing success output omitted it. The source-export approval
+instructions therefore required the release version, receipt digest, canonical
+source repository, source ref, and commit while leaving the target Sites
+project to be inferred from the receipt or a later reuse instruction.
+
+Preparation and independent verification now carry the already validated
+`project_id` through `SiteCandidateResult` and print it beside the other
+approval evidence. The source-export handoff requires that value in the explicit
+owner approval, so the controlled source push remains tied to the existing
+project before any version-save step.
+
+The receipt schema and artifact bytes do not change. Printed identity is
+evidence rather than approval, and this change performs no source export,
+version save, deployment, customer contact, or revenue event.

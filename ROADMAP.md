@@ -30,8 +30,8 @@
   the held receipt-parent and regular-file descriptors now implemented. Hold
   each exact newly published regular file through final source, digest,
   requested-parent, and requested-leaf identity checks before asking for
-  explicit source-export approval that records the printed `release_version`
-  and `receipt_sha256`.
+  explicit source-export approval that records the printed `release_version`,
+  existing Sites `project_id`, and `receipt_sha256`.
   After approval, push its receipt-bound source to the separate Sites source
   repository, verify the unchanged archive and receipt again while requiring
   the approved digest and canonical Sites repository identity, and resolve

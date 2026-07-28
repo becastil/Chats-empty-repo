@@ -16,7 +16,7 @@ import sys
 import tarfile
 from tempfile import NamedTemporaryFile
 import tomllib
-from typing import Callable, Iterable, Iterator, Protocol, Sequence
+from typing import Callable, Iterable, Iterator, Protocol, Sequence, cast
 from urllib.parse import urlsplit
 
 
@@ -118,6 +118,7 @@ CommandRunner = Callable[[Sequence[str], Path], str]
 class SiteCandidateResult:
     commit_sha: str
     release_version: str
+    project_id: str
     archive_sha256: str
     receipt_sha256: str
     archive: Path
@@ -379,6 +380,7 @@ def _prepare_site_candidate_with_open_parents(
         return SiteCandidateResult(
             commit_sha=commit_sha,
             release_version=release_version,
+            project_id=cast(str, manifest["project_id"]),
             archive_sha256=archive_sha256,
             receipt_sha256=receipt_sha256,
             archive=archive_path,
@@ -632,6 +634,7 @@ def verify_site_candidate(
     return SiteCandidateResult(
         commit_sha=commit_sha,
         release_version=release_version,
+        project_id=cast(str, expected_candidate["project_id"]),
         archive_sha256=archive_sha256,
         receipt_sha256=receipt_sha256,
         archive=archive_path,
@@ -2378,6 +2381,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         f"site candidate {action}: "
         f"commit={result.commit_sha} "
         f"release_version={result.release_version} "
+        f"project_id={result.project_id} "
         f"archive={result.archive.name} "
         f"sha256={result.archive_sha256} "
         f"receipt={result.receipt.name} "

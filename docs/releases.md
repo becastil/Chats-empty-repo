@@ -221,8 +221,9 @@ site release:
    fail. Archive and receipt staging, staged reads, publication, and cleanup
    remain bound to the descriptors held from preflight.
    Persistent drift during receipt publication therefore leaves no
-   approval-ready result. The success output includes `release_version` and
-   `receipt_sha256`; retain both with the candidate evidence.
+   approval-ready result. The success output includes the receipt-bound
+   `release_version`, Sites `project_id`, and `receipt_sha256`; retain all
+   three with the candidate evidence.
    Do not use `npm audit fix --force` when it proposes a framework downgrade;
    review and test a supported patch or explicit transitive override instead.
 2. Verify the archive and receipt immediately before asking for source-export
@@ -243,9 +244,10 @@ site release:
    branch and synchronized commit still hold. The supplied archive and receipt
    paths must themselves name regular files rather than symlinks. It requires
    the same regular archive and digest once more at that final acceptance
-   checkpoint before reporting success. Record the printed `release_version`
-   and `receipt_sha256` with the source-export approval so later verification
-   can require the exact receipt bytes and release identity the owner reviewed.
+   checkpoint before reporting success. Record the printed `release_version`,
+   `project_id`, and `receipt_sha256` with the source-export approval so later
+   verification can require the exact receipt bytes and the approval remains
+   tied to the existing Sites project and release identity the owner reviewed.
    Resolve the existing Sites source repository's credential-free remote URL
    before approval, confirm that it is not the local checkout or the repository
    configured as `origin`, and record that canonical identity as
@@ -257,10 +259,10 @@ site release:
    repository authority.
 3. Obtain explicit owner approval before pushing the exact committed source to
    the approved separate Sites source repository. The approval must identify
-   the public release version, receipt digest, canonical repository identity,
-   `refs/heads/main`, and receipt commit. This source-export approval is
-   separate from deployment approval, and the source export does not authorize
-   production deployment.
+   the public release version, Sites project ID, receipt digest, canonical
+   repository identity, `refs/heads/main`, and receipt commit. This
+   source-export approval is separate from deployment approval, and the source
+   export does not authorize production deployment.
 4. Push the receipt's exact source commit to the separate Sites source
    repository (the existing Sites source repository for this project), and
    reuse the existing Sites project in `.openai/hosting.json`.

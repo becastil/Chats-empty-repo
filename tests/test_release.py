@@ -439,10 +439,11 @@ class ReleaseManifestTests(unittest.TestCase):
             "remain bound to the descriptors held from preflight",
             "supplied archive and receipt paths must themselves name regular "
             "files rather than symlinks",
-            "`release_version` and",
+            "`release_version`",
+            "Sites `project_id`",
             "`receipt_sha256`",
             "release identity the owner reviewed",
-            "public release version, receipt digest",
+            "public release version, Sites project ID, receipt digest",
             "--expected-receipt-sha256 APPROVED_RECEIPT_SHA256",
             '--exported-source-repository "$SITES_SOURCE_REPOSITORY"',
             "--expected-exported-source-repository "

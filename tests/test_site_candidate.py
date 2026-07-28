@@ -402,6 +402,7 @@ class SiteCandidateTests(unittest.TestCase):
             receipt_payload = json.loads(receipt.read_text(encoding="utf-8"))
             self.assertEqual(result.commit_sha, COMMIT_SHA)
             self.assertEqual(result.release_version, RELEASE_VERSION)
+            self.assertEqual(result.project_id, PROJECT_ID)
             self.assertEqual(receipt_payload["schema_version"], 5)
             self.assertEqual(
                 receipt_payload["candidate"],
@@ -531,6 +532,7 @@ class SiteCandidateTests(unittest.TestCase):
             )
 
             self.assertEqual(result.commit_sha, COMMIT_SHA)
+            self.assertEqual(result.project_id, PROJECT_ID)
             self.assertEqual(
                 verify_runner.commands,
                 [
@@ -2317,6 +2319,7 @@ class SiteCandidateTests(unittest.TestCase):
         result = prepare_site_candidate.SiteCandidateResult(
             commit_sha=COMMIT_SHA,
             release_version=RELEASE_VERSION,
+            project_id=PROJECT_ID,
             archive_sha256="c" * 64,
             receipt_sha256="e" * 64,
             archive=Path("/tmp/candidate.tar.gz"),
@@ -2348,6 +2351,7 @@ class SiteCandidateTests(unittest.TestCase):
             "site candidate verified: "
             f"commit={COMMIT_SHA} "
             f"release_version={RELEASE_VERSION} "
+            f"project_id={PROJECT_ID} "
             "archive=candidate.tar.gz "
             f"sha256={'c' * 64} "
             "receipt=candidate.json "
@@ -2395,6 +2399,7 @@ class SiteCandidateTests(unittest.TestCase):
         result = prepare_site_candidate.SiteCandidateResult(
             commit_sha=COMMIT_SHA,
             release_version=RELEASE_VERSION,
+            project_id=PROJECT_ID,
             archive_sha256="c" * 64,
             receipt_sha256="e" * 64,
             archive=Path("/tmp/candidate.tar.gz"),
@@ -2440,6 +2445,7 @@ class SiteCandidateTests(unittest.TestCase):
         result = prepare_site_candidate.SiteCandidateResult(
             commit_sha=COMMIT_SHA,
             release_version=RELEASE_VERSION,
+            project_id=PROJECT_ID,
             archive_sha256="d" * 64,
             receipt_sha256="f" * 64,
             archive=Path("/tmp/candidate.tar.gz"),
@@ -2472,6 +2478,7 @@ class SiteCandidateTests(unittest.TestCase):
             "site candidate ready: "
             f"commit={COMMIT_SHA} "
             f"release_version={RELEASE_VERSION} "
+            f"project_id={PROJECT_ID} "
             "archive=candidate.tar.gz "
             f"sha256={'d' * 64} "
             "receipt=candidate.json "

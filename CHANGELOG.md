@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Exposed the receipt-bound existing Sites `project_id` in both candidate
+  preparation and verification results and CLI output, and made it required
+  source-export approval evidence alongside the release version, receipt
+  digest, canonical repository identity, source ref, and commit.
 - Advanced Sites evidence to schema 5 by strictly reconciling
   `pyproject.toml` `project.version` with the website's single
   `RELEASE_VERSION` declaration before commands run, then binding that public

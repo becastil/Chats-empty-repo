@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 255 of
-1,000, with 745 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 256 of
+1,000, with 744 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -128,6 +128,11 @@ alignment take priority over commit volume.
   archived manifest and receipt, verifies it against the checkout, and prints
   it beside the commit and receipt digest for source-export approval. The
   read-only hosted site contract watches both release-identity sources.
+- Receipt-bound Sites project identity in preparation and verification results
+  and CLI output. Source-export approval now records the validated existing
+  `project_id` with the public release version, receipt digest, canonical source
+  repository, source ref, and commit instead of leaving the target project to
+  an operator inference.
 - Duplicate-free Sites JSON evidence across checkout hosting metadata,
   schema-5 receipts, and archived manifests. Repeated keys fail even when their
   values match, preventing approval identity from depending on decoder-specific
@@ -650,10 +655,11 @@ file through the final source and digest checks. Obtain independent
 `--verify-only` evidence for
 its schema-5 release-bound, complete-tree, duplicate-free,
 branch-bound, archive-stable, receipt-stable, test-bracketed evidence before
-recording the printed `release_version`, `receipt_sha256`, canonical remote
-Sites repository identity, `refs/heads/main`, and receipt commit in an explicit
-owner approval to push the receipt's exact patched source. Only after that
-approval, push the source, then verify the unchanged archive and receipt with
+recording the printed `release_version`, receipt-bound `project_id`,
+`receipt_sha256`, canonical remote Sites repository identity,
+`refs/heads/main`, and receipt commit in an explicit owner approval to push the
+receipt's exact patched source. Only after that approval, push the source, then
+verify the unchanged archive and receipt with
 `--expected-receipt-sha256` set to the approved digest,
 `--exported-source-repository` set to the URL or configured alias used for the
 push, and `--expected-exported-source-repository` set to the approved canonical
