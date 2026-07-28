@@ -8,9 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after making delayed outreach reviews date-truthful: 258 / 1,000
-  (25.8%).
-- Remaining after making delayed outreach reviews date-truthful: 742 commits.
+- Progress after keeping decline continuations owner-only: 259 / 1,000 (25.9%).
+- Remaining after keeping decline continuations owner-only: 741 commits.
 
 ## Commit Standard
 

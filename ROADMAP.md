@@ -51,7 +51,10 @@
   `outreach-private/next-review-v5.md`; keep the July 21 schema-4 bundle
   superseded, replace the chosen decision command's `YYYY-MM-DD` values with
   the actual UTC decision date, and use its content-bound `--approve-next` or
-  `--decline-next` command. Send only approved messages one at a time, record
+  `--decline-next` command. After a decline, replace
+  `PRIVATE-REVIEW-PATH` with a new ignored owner-only destination before
+  generating the next complete review. Send only approved messages one at a
+  time, record
   each human send through guarded `--record-contact`, then record the one
   human-sent, day-seven follow-up through guarded `--record-follow-up`. Record
   any human-observed reply, pilot request, rejection, or opt-out through guarded

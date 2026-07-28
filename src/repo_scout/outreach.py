@@ -42,6 +42,7 @@ MAX_PRIVATE_DRAFT_BYTES = 128 * 1024
 PRIVATE_OUTPUT_EXIT_CODE = 7
 DATE_PLACEHOLDER = "YYYY-MM-DD"
 OUTCOME_PLACEHOLDER = "OUTCOME"
+REVIEW_OUTPUT_PLACEHOLDER = "PRIVATE-REVIEW-PATH"
 PUBLIC_PILOT_INTAKE_URL = (
     "https://github.com/becastil/Chats-empty-repo/issues/new"
     "?template=founding-team-pilot.yml"
@@ -538,7 +539,16 @@ def _require_private_live_path(path: Path, *, label: str) -> None:
     _require_ignored_untracked_path(protected_path, label=label)
 
 
+def _is_review_output_placeholder(path: Path) -> bool:
+    return path.name == REVIEW_OUTPUT_PLACEHOLDER
+
+
 def _require_private_output_path(path: Path, *, label: str) -> Path:
+    if _is_review_output_placeholder(path):
+        raise OutreachInputError(
+            f"replace {REVIEW_OUTPUT_PLACEHOLDER} with a new owner-only "
+            "review output path"
+        )
     protected_path = path.parent.resolve() / path.name
     try:
         protected_path.lstat()
@@ -1696,12 +1706,20 @@ def format_outreach_decline(
         f"Drafts remaining: {drafts_remaining}",
     ]
     if drafts_remaining:
+        if private_drafts_path is not None:
+            next_review_note = (
+                "Next: replace YYYY-MM-DD with the actual UTC review date and "
+                f"{REVIEW_OUTPUT_PLACEHOLDER} with a new owner-only review "
+                "output path, then write the next complete review:"
+            )
+        else:
+            next_review_note = (
+                "Next: replace YYYY-MM-DD with the actual UTC review date, "
+                "then review the next drafted prospect:"
+            )
         lines.extend(
             [
-                (
-                    "Next: replace YYYY-MM-DD with the actual UTC review date, "
-                    "then review the next drafted prospect:"
-                ),
+                next_review_note,
                 _format_outreach_command(
                     ledger,
                     "--as-of",
@@ -1712,6 +1730,8 @@ def format_outreach_decline(
                             "--include-private-evidence",
                             "--include-private-draft",
                             str(private_drafts_path),
+                            "--write-review",
+                            REVIEW_OUTPUT_PLACEHOLDER,
                         )
                         if private_drafts_path is not None
                         else ()
@@ -2079,6 +2099,14 @@ def main(argv: Sequence[str] | None = None) -> int:
             raise OutreachInputError("--write-review requires --review-next")
         if args.write_review is not None and args.format != "text":
             raise OutreachInputError("--write-review requires --format text")
+        if (
+            args.write_review is not None
+            and _is_review_output_placeholder(args.write_review)
+        ):
+            raise OutreachInputError(
+                f"replace {REVIEW_OUTPUT_PLACEHOLDER} with a new owner-only "
+                "review output path"
+            )
         _validate_review_binding_options(
             review_digest=args.review_digest,
             private_drafts_path=args.reviewed_private_draft,

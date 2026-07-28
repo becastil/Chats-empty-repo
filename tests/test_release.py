@@ -551,6 +551,7 @@ class ReleaseManifestTests(unittest.TestCase):
                 "private-review-written",
                 "copy-ready-handoffs",
                 "draft-declined-without-contact",
+                "owner-only-decline-continuation",
                 "draft-reviewed",
                 "draft-ledger-drift-rejected",
                 "private-review-bundle",

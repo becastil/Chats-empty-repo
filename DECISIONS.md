@@ -3760,3 +3760,26 @@ when the calendar date changes.
 Existing schema-4 bundles do not acquire schema-5 meaning and must not be used
 for a later decision. This change records no review judgment, approval,
 contact, pilot request, payment, or revenue event.
+
+## 2026-07-28: Keep Decline Continuations Out Of Terminal Capture
+
+A content-bound no-send decision preserved the next review's private evidence
+and draft flags, but its generated continuation omitted `--write-review`.
+Following that command therefore printed the next prospect alias, qualification
+sources, and personalized message to the terminal even though the previous
+complete review had used an owner-only file. The queue retained content
+integrity while silently regressing its disclosure boundary.
+
+Nonterminal content-bound decline receipts now carry
+`--write-review PRIVATE-REVIEW-PATH` into the next review command. The operator
+must replace that literal with a new destination in the ignored owner-only
+workspace. An unchanged placeholder fails before Repo Scout reads the private
+ledger or draft notes. A valid replacement uses the existing no-clobber,
+owner-only writer, prints only its alias-free confirmation, and keeps the next
+alias, sources, message, checklist, and digest in the `600` review file.
+Alias-only continuations retain their existing terminal checklist, and terminal
+declines still emit no next command.
+
+The decline decision and the later review-file creation remain separate
+operations. This change does not approve or send outreach, create demand,
+collect payment, or record revenue.

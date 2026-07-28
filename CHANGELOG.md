@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Kept content-bound review queues owner-only after a human no-send decision by
+  carrying `--write-review PRIVATE-REVIEW-PATH` into the next complete review
+  command and rejecting the unchanged path before private material is read.
+- Proved that a replaced continuation path writes the next alias, evidence, and
+  draft only to a `600` review file while terminal output remains alias-free and
+  the declined ledger remains unchanged during review generation.
 - Advanced private outreach reviews to schema 5 by excluding the bundle's
   ledger-audit date from its content receipt, so an unchanged row, draft, and
   checklist can be decided on a later UTC date without weakening stale-content

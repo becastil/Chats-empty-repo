@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 258 of
-1,000, with 742 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 259 of
+1,000, with 741 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -501,7 +501,9 @@ alignment take priority over commit volume.
 - Actual-date placeholders in nonterminal decline handoffs so a later review
   cannot silently inherit the prior draft's decision date.
 - Complete-review continuity after a content-bound decline, preserving private
-  evidence, draft notes, and the exact notes path for the next fresh digest.
+  evidence, draft notes, and the exact notes path while requiring a replaced
+  `PRIVATE-REVIEW-PATH` to write the next `600` bundle without terminal
+  disclosure.
 - Full-ledger preflight and postflight validation plus permission-preserving,
   atomic approval writes that never create contact or follow-up dates.
 - Revision-checked, per-ledger lifecycle locking that preserves newer outreach

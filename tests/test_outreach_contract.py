@@ -13,6 +13,7 @@ from repo_scout.outreach import (  # noqa: E402
     LEDGER_FIELDS,
     PUBLIC_PILOT_INTAKE_URL,
     REVIEW_SCHEMA_VERSION,
+    REVIEW_OUTPUT_PLACEHOLDER,
     SCHEMA_VERSION,
 )
 
@@ -44,6 +45,14 @@ class DirectOutreachContractTests(unittest.TestCase):
         )
         self.assertIn("--require-counts-only", readme)
         self.assertIn("exits with code 7", normalized_readme)
+        self.assertIn(
+            f"`--write-review {REVIEW_OUTPUT_PLACEHOLDER}`",
+            readme,
+        )
+        self.assertIn(
+            "leaving it unchanged fails before private material is read",
+            normalized_readme,
+        )
 
     def test_playbook_preserves_offer_source_and_bounded_cadence(self) -> None:
         playbook = PLAYBOOK.read_text(encoding="utf-8")
@@ -115,6 +124,18 @@ class DirectOutreachContractTests(unittest.TestCase):
         )
         self.assertIn(
             "counts as closed but never as attempted outreach",
+            normalized_playbook,
+        )
+        self.assertIn(
+            f"`--write-review {REVIEW_OUTPUT_PLACEHOLDER}`",
+            playbook,
+        )
+        self.assertIn(
+            "fails before the private ledger or draft notes are read",
+            normalized_playbook,
+        )
+        self.assertIn(
+            "prints only an alias-free confirmation",
             normalized_playbook,
         )
         self.assertIn("number of drafts remaining", normalized_playbook)

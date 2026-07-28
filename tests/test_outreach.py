@@ -26,6 +26,7 @@ from repo_scout.outreach import (  # noqa: E402
     OutreachInputError,
     PRIVATE_OUTPUT_EXIT_CODE,
     PUBLIC_PILOT_INTAKE_URL,
+    REVIEW_OUTPUT_PLACEHOLDER,
     build_parser,
     build_next_outreach_review,
     build_outreach_report,
@@ -37,6 +38,7 @@ from repo_scout.outreach import (  # noqa: E402
     format_outreach_report,
     load_outreach_report,
     main,
+    _write_private_review,
 )
 
 
@@ -592,6 +594,9 @@ class OutreachReportTests(unittest.TestCase):
             private_directory.mkdir(mode=0o700)
             ledger = private_directory / "ledger.csv"
             review = private_directory / "review.md"
+            qualified_placeholder = (
+                private_directory / REVIEW_OUTPUT_PLACEHOLDER
+            )
             _write_ledger(
                 ledger,
                 [
@@ -616,17 +621,63 @@ class OutreachReportTests(unittest.TestCase):
                     ],
                     "requires --format text",
                 ),
+                (
+                    [
+                        "--review-next",
+                        "--write-review",
+                        REVIEW_OUTPUT_PLACEHOLDER,
+                    ],
+                    f"replace {REVIEW_OUTPUT_PLACEHOLDER}",
+                ),
+                (
+                    [
+                        "--review-next",
+                        "--write-review",
+                        str(qualified_placeholder),
+                    ],
+                    f"replace {REVIEW_OUTPUT_PLACEHOLDER}",
+                ),
             )
             for arguments, expected in cases:
                 with self.subTest(expected=expected):
+                    before_ledger = ledger.read_bytes()
+                    stdout = io.StringIO()
                     stderr = io.StringIO()
-                    with redirect_stderr(stderr):
+                    with redirect_stdout(stdout), redirect_stderr(stderr):
                         exit_code = main(
                             [str(ledger), "--as-of", "2026-07-13", *arguments]
                         )
                     self.assertEqual(exit_code, 2)
+                    self.assertEqual(stdout.getvalue(), "")
                     self.assertIn(expected, stderr.getvalue())
                     self.assertFalse(review.exists())
+                    self.assertFalse(qualified_placeholder.exists())
+                    self.assertEqual(ledger.read_bytes(), before_ledger)
+                    self.assertEqual(
+                        list(
+                            private_directory.glob(
+                                ".repo-scout-review.*.tmp"
+                            )
+                        ),
+                        [],
+                    )
+
+            with self.assertRaisesRegex(
+                OutreachInputError,
+                f"replace {REVIEW_OUTPUT_PLACEHOLDER}",
+            ):
+                _write_private_review(
+                    private_directory
+                    / "nested"
+                    / ".."
+                    / REVIEW_OUTPUT_PLACEHOLDER,
+                    "private review",
+                )
+            self.assertFalse(qualified_placeholder.exists())
+            self.assertEqual(
+                list(private_directory.glob(".repo-scout-review.*.tmp")),
+                [],
+            )
 
             if os.name == "posix":
                 private_directory.chmod(0o750)
@@ -1821,6 +1872,11 @@ class OutreachReportTests(unittest.TestCase):
                 command[command.index("--include-private-draft") + 1],
                 str(notes),
             )
+            self.assertIn("--write-review", command)
+            self.assertEqual(
+                command[command.index("--write-review") + 1],
+                REVIEW_OUTPUT_PLACEHOLDER,
+            )
             self.assertEqual(command[-2:], ["--", str(ledger)])
             before_review = ledger.read_bytes()
             with redirect_stderr(io.StringIO()), self.assertRaises(
@@ -1830,8 +1886,11 @@ class OutreachReportTests(unittest.TestCase):
             self.assertEqual(ctx.exception.code, 2)
             self.assertEqual(ledger.read_bytes(), before_review)
 
-            next_review_stdout = io.StringIO()
-            with redirect_stdout(next_review_stdout):
+            placeholder_stdout = io.StringIO()
+            placeholder_stderr = io.StringIO()
+            with redirect_stdout(placeholder_stdout), redirect_stderr(
+                placeholder_stderr
+            ):
                 self.assertEqual(
                     main(
                         [
@@ -1843,15 +1902,51 @@ class OutreachReportTests(unittest.TestCase):
                             for value in command
                         ]
                     ),
+                    2,
+                )
+            self.assertEqual(placeholder_stdout.getvalue(), "")
+            self.assertIn(
+                f"replace {REVIEW_OUTPUT_PLACEHOLDER}",
+                placeholder_stderr.getvalue(),
+            )
+            self.assertFalse(
+                (Path.cwd() / REVIEW_OUTPUT_PLACEHOLDER).exists()
+            )
+            self.assertEqual(
+                list(Path(tmp).glob(".repo-scout-review.*.tmp")),
+                [],
+            )
+            self.assertEqual(ledger.read_bytes(), before_review)
+
+            next_review_path = Path(tmp) / "next review.md"
+            next_review_stdout = io.StringIO()
+            with redirect_stdout(next_review_stdout):
+                self.assertEqual(
+                    main(
+                        [
+                            "2026-07-14"
+                            if value == DATE_PLACEHOLDER
+                            else str(next_review_path)
+                            if value == REVIEW_OUTPUT_PLACEHOLDER
+                            else value
+                            for value in command
+                        ]
+                    ),
                     0,
                 )
-            next_review = next_review_stdout.getvalue()
+            self.assertEqual(
+                next_review_stdout.getvalue(),
+                "Private review written with owner-only permissions.\n",
+            )
+            next_review = next_review_path.read_text(encoding="utf-8")
             self.assertIn("Prospect alias: prospect-002", next_review)
             self.assertIn("Private evidence (do not commit or share):", next_review)
             self.assertIn("Second private message", next_review)
             self.assertNotIn("First private message", next_review)
             self.assertIn("Content-bound review receipt: sha256:", next_review)
             self.assertIn("--review-digest sha256:", next_review)
+            if os.name == "posix":
+                self.assertEqual(next_review_path.stat().st_mode & 0o777, 0o600)
             self.assertEqual(ledger.read_bytes(), before_review)
 
     def test_decline_next_closes_without_contact_and_advances_queue(self) -> None:
@@ -1933,6 +2028,7 @@ class OutreachReportTests(unittest.TestCase):
                 f"--as-of {DATE_PLACEHOLDER} --review-next",
                 decline_text,
             )
+            self.assertNotIn("--write-review", decline_text)
             self.assertNotIn(
                 "--as-of 2026-07-13 --review-next",
                 decline_text,
@@ -1988,6 +2084,7 @@ class OutreachReportTests(unittest.TestCase):
             self.assertIn("Drafts remaining: 0", text)
             self.assertIn("Review queue complete", text)
             self.assertNotIn("--review-next", text)
+            self.assertNotIn("--write-review", text)
 
     def test_decline_next_rejects_unsafe_transitions_without_mutation(self) -> None:
         with TemporaryDirectory() as tmp:

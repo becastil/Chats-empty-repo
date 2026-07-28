@@ -1026,8 +1026,13 @@ preserves the private file boundary, reports the privacy-safe remaining-draft
 count, and records no action date. It emits the next review command only while
 another draft remains and ends truthfully when the bounded queue reaches zero.
 For a content-bound decline, that command retains the private evidence flag,
-draft flag, and exact notes path, ensuring the next prospect gets a fresh
-complete review and digest instead of a weaker alias-only checklist.
+draft flag, and exact notes path, then requires a new owner-only review output
+path before writing the next complete bundle. The literal
+`PRIVATE-REVIEW-PATH` fails before private files are read. A replaced path
+produces only an alias-free terminal confirmation while the selected alias,
+sources, message, and fresh digest remain in the `600` file. This avoids
+regressing a private review back to terminal disclosure after a no-send
+decision.
 That future review command requires an actual-date placeholder instead of
 reusing the decline date, so a delayed next decision cannot silently backdate
 its content receipt or approval evidence.

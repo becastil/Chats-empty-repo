@@ -36,6 +36,7 @@ OPT_OUT_REVIEW_CHECK = (
 )
 DATE_PLACEHOLDER = "YYYY-MM-DD"
 OUTCOME_PLACEHOLDER = "OUTCOME"
+REVIEW_OUTPUT_PLACEHOLDER = "PRIVATE-REVIEW-PATH"
 PUBLIC_PILOT_INTAKE_URL = (
     "https://github.com/becastil/Chats-empty-repo/issues/new"
     "?template=founding-team-pilot.yml"
@@ -388,6 +389,144 @@ def verify_outreach_lifecycle(
             "human no-send decision inflated outreach activity",
         )
         checked.append("draft-declined-without-contact")
+
+        continuation_ledger = Path(tmp) / "continuation ledger.csv"
+        with continuation_ledger.open(
+            "w", newline="", encoding="utf-8"
+        ) as ledger_file:
+            writer = csv.DictWriter(
+                ledger_file,
+                fieldnames=LEDGER_FIELDS,
+                lineterminator="\n",
+            )
+            writer.writeheader()
+            writer.writerows(
+                (
+                    _row(
+                        prospect_id="prospect-001",
+                        contacted_on="",
+                        status="drafted",
+                        next_action_on="",
+                        approved_on="",
+                    ),
+                    _row(
+                        prospect_id="prospect-002",
+                        contacted_on="",
+                        status="drafted",
+                        next_action_on="",
+                        approved_on="",
+                    ),
+                )
+            )
+        continuation_ledger.chmod(0o600)
+        continuation_drafts = Path(tmp) / "continuation drafts.md"
+        continuation_drafts.write_text(
+            "# Private drafts\n\n"
+            "## prospect-001\n\nFirst private message\n\n"
+            "## prospect-002\n\nSecond private message\n",
+            encoding="utf-8",
+        )
+        continuation_drafts.chmod(0o600)
+        continuation_review = _json_command(
+            outreach_command,
+            continuation_ledger,
+            as_of="2026-07-02",
+            arguments=(
+                "--review-next",
+                "--include-private-evidence",
+                "--include-private-draft",
+                str(continuation_drafts),
+            ),
+            environment=environment,
+        )
+        continuation_digest = continuation_review.get("review_digest")
+        _require(
+            isinstance(continuation_digest, str),
+            "content-bound continuation review omitted its digest",
+        )
+        continuation_decline = _run_arguments(
+            outreach_command,
+            (
+                "--as-of",
+                "2026-07-03",
+                "--decline-next",
+                "prospect-001",
+                "--confirm-not-send",
+                "--review-digest",
+                continuation_digest,
+                "--reviewed-private-draft",
+                str(continuation_drafts),
+                "--",
+                str(continuation_ledger),
+            ),
+            environment=environment,
+        )
+        continuation_arguments = _handoff_arguments(
+            continuation_decline.stdout,
+            action="--review-next",
+            ledger=continuation_ledger,
+        )
+        _require(
+            "--write-review" in continuation_arguments
+            and continuation_arguments[
+                continuation_arguments.index("--write-review") + 1
+            ]
+            == REVIEW_OUTPUT_PLACEHOLDER,
+            "content-bound decline did not require an owner-only review output",
+        )
+        date_only_arguments = _replace_event_date(
+            continuation_arguments,
+            event_date="2026-07-04",
+            action="continued review",
+            placeholder_count=1,
+        )
+        unchanged_ledger = continuation_ledger.read_bytes()
+        placeholder_rejection = _run_arguments(
+            outreach_command,
+            date_only_arguments,
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(
+            f"replace {REVIEW_OUTPUT_PLACEHOLDER}"
+            in placeholder_rejection.stderr,
+            "unchanged review output placeholder did not fail closed",
+        )
+        next_review_path = Path(tmp) / "next complete review.md"
+        next_review_arguments = tuple(
+            str(next_review_path)
+            if value == REVIEW_OUTPUT_PLACEHOLDER
+            else value
+            for value in date_only_arguments
+        )
+        next_review_result = _run_arguments(
+            outreach_command,
+            next_review_arguments,
+            environment=environment,
+        )
+        _require(
+            next_review_result.stdout
+            == "Private review written with owner-only permissions.\n",
+            "continued review disclosed alias-bearing terminal output",
+        )
+        next_review_text = next_review_path.read_text(encoding="utf-8")
+        _require(
+            "Prospect alias: prospect-002" in next_review_text
+            and "Second private message" in next_review_text
+            and "https://evidence.example" in next_review_text
+            and "prospect-002" not in next_review_result.stdout,
+            "continued review did not confine the next private bundle",
+        )
+        if os.name == "posix":
+            _require(
+                next_review_path.stat().st_mode & 0o777 == 0o600,
+                "continued review did not use owner-only permissions",
+            )
+        _require(
+            continuation_ledger.read_bytes() == unchanged_ledger,
+            "continued review generation modified the declined ledger",
+        )
+        checked.append("owner-only-decline-continuation")
 
         ledger = Path(tmp) / "outreach-ledger.csv"
         draft = _row(
@@ -1073,6 +1212,7 @@ def _run_arguments(
     arguments: Sequence[str],
     *,
     environment: Mapping[str, str] | None,
+    expected_exit_code: int = 0,
 ) -> subprocess.CompletedProcess[str]:
     completed = subprocess.run(
         [*command, *arguments],
@@ -1080,10 +1220,11 @@ def _run_arguments(
         text=True,
         env=dict(environment) if environment is not None else None,
     )
-    if completed.returncode != 0:
+    if completed.returncode != expected_exit_code:
         detail = completed.stderr.strip() or completed.stdout.strip() or "no output"
         raise SmokeTestError(
-            f"outreach handoff exited {completed.returncode}: {detail}"
+            f"outreach handoff exited {completed.returncode}; expected "
+            f"{expected_exit_code}: {detail}"
         )
     return completed
 

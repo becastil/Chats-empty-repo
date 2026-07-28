@@ -235,8 +235,13 @@ leaving it unchanged fails before the ledger is read or modified. At zero, the
 receipt reports that the bounded review queue is complete and emits no dead
 handoff. When the decline came from a complete evidence-and-draft review, the
 next command preserves both private review flags and the same shell-quoted notes
-path, so the following decision receives a fresh content-bound receipt instead
-of silently falling back to an alias-only checklist.
+path, and adds `--write-review PRIVATE-REVIEW-PATH`. Replace that path
+placeholder with a new destination in the ignored owner-only workspace after
+privately archiving or removing the completed review. Leaving it unchanged
+fails before the private ledger or draft notes are read. The command writes the
+next complete bundle with `600` permissions and prints only an alias-free
+confirmation, so the following decision receives a fresh content-bound receipt
+without returning the next alias, sources, or message to terminal capture.
 This status counts as closed but never as attempted outreach; it does not
 approve, send, schedule, or record contact.
 
