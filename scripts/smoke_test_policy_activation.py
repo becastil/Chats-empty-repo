@@ -243,6 +243,87 @@ def verify_policy_activation(
             raise SmokeTestError("symlink bootstrap output changed its target")
         checked.append("symlink-bootstrap-output-rejected")
 
+    with TemporaryDirectory() as tmp:
+        root = Path(tmp) / "service"
+        root.mkdir()
+        (root / "pyproject.toml").write_text("[project]\n", encoding="utf-8")
+        bootstrap = _run(
+            [
+                *policy_command,
+                "bootstrap",
+                str(root),
+                "--format",
+                "json",
+            ],
+            cwd=root,
+            environment=environment,
+        )
+        receipt_path = root / "bootstrap-receipt.json"
+        receipt_path.write_text(bootstrap.stdout, encoding="utf-8")
+        policy_path = root / "repo-scout-policy.toml"
+        invalid_receipt = json.loads(bootstrap.stdout)
+        invalid_receipt["output"] = policy_path.name
+        invalid_receipt_path = root / "relative-output-receipt.json"
+        invalid_receipt_path.write_text(
+            json.dumps(invalid_receipt),
+            encoding="utf-8",
+        )
+        invalid_verification = _run(
+            [
+                *policy_command,
+                "verify-receipt",
+                str(invalid_receipt_path),
+                "--policy",
+                str(policy_path),
+                "--format",
+                "json",
+            ],
+            cwd=root,
+            environment=environment,
+            expected_exit_code=2,
+        )
+        if invalid_verification.stdout:
+            raise SmokeTestError("relative receipt output emitted verification")
+        if "output must be an absolute path" not in invalid_verification.stderr:
+            raise SmokeTestError("relative receipt output was not rejected")
+        checked.append("relative-receipt-output-rejected")
+
+        moved_policy = root / "moved-policy.toml"
+        policy_path.replace(moved_policy)
+        policy_path.symlink_to(moved_policy)
+
+        verification = _run(
+            [
+                *policy_command,
+                "verify-receipt",
+                str(receipt_path),
+                "--format",
+                "json",
+            ],
+            cwd=root,
+            environment=environment,
+            expected_exit_code=6,
+        )
+        try:
+            result = json.loads(verification.stdout)
+        except json.JSONDecodeError as exc:
+            raise SmokeTestError(
+                "symlink policy verification did not emit valid JSON"
+            ) from exc
+        requested_policy = policy_path.parent.resolve() / policy_path.name
+        resolved_target = moved_policy.parent.resolve() / moved_policy.name
+        if result.get("status") != "fail" or result.get("actual") is not None:
+            raise SmokeTestError("symlink policy verification did not fail closed")
+        if result.get("policy") != str(requested_policy):
+            raise SmokeTestError("symlink policy verification changed its leaf")
+        if "policy path must not be a symlink" not in result.get("message", ""):
+            raise SmokeTestError("symlink policy verification omitted its reason")
+        if str(resolved_target) in verification.stdout:
+            raise SmokeTestError("symlink policy verification disclosed its target")
+        if not policy_path.is_symlink() or not moved_policy.is_file():
+            raise SmokeTestError("symlink policy verification changed policy evidence")
+        checked.append("symlink-receipt-policy-rejected")
+
     return tuple(checked)
 
 

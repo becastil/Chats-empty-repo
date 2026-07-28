@@ -231,9 +231,13 @@ file path; initial and dangling symlinks fail even with `--force`, leave their
 targets unchanged, and emit no receipt. Other failed writes also emit no
 receipt.
 Save that JSON to a file and use `verify-receipt` to prove the current policy
-still has the recorded version and fingerprint. A moved policy can be selected
-with `--policy`; policy drift or a missing policy returns exit code 6 with
-expected and actual identity evidence.
+still has the recorded version and fingerprint. Receipt output evidence must be
+an absolute, valid file leaf; relative or NUL-bearing values return exit code 2
+before an override is considered. A moved policy can be selected with
+`--policy`. The selected policy leaf must remain a direct path: an initial or
+dangling symlink returns exit code 6, preserves the requested leaf in the report,
+and neither follows nor names its target. Policy drift or a missing policy also
+returns exit code 6 with expected and actual identity evidence.
 `recommend` uses local manifests and lockfiles, can emit stable JSON, and flags
 mixed Python and Node repositories for review instead of presenting one starter
 as a complete team policy.

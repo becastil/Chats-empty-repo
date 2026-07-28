@@ -69,8 +69,13 @@ Verification parses both contracts strictly and compares the receipt's policy
 version and normalized fingerprint to the current TOML. A match returns 0.
 Missing, invalid, or changed policy files emit a report and return 6; malformed,
 duplicate-key, or unsupported receipts return 2 without a success report. The
-`--policy` override supports a policy moved after bootstrap while preserving
-the original receipt as evidence.
+archived `output` must be an absolute, valid file leaf; relative and NUL-bearing
+values fail before a `--policy` override can bypass that receipt contract. The
+override supports a policy moved after bootstrap while preserving the original
+receipt as evidence. Both the receipt-recorded policy and an override must name
+a direct leaf. An initial or dangling symlink returns 6 with the requested leaf
+and expected identity, reports the actual identity as unavailable, and leaves
+the link and target unchanged without naming the target.
 
 Recommendation is deterministic and local. A sole npm lockfile selects the
 npm-only profile; pnpm, Yarn, no lockfile yet, or multiple Node lockfiles select

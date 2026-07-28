@@ -310,26 +310,45 @@ def verify_bootstrap_receipt(
     receipt_source = Path(receipt_path).expanduser().resolve()
     receipt = load_bootstrap_receipt(receipt_source)
     target_value = receipt["output"] if policy_path is None else policy_path
-    target = Path(target_value).expanduser().resolve()
+    requested_target = Path(target_value).expanduser()
+    target = requested_target.parent.resolve() / requested_target.name
     expected = dict(receipt["policy"])
 
+    should_load = True
     try:
-        policy = load_policy(target)
-    except PolicyError as exc:
+        target_details = target.lstat()
+    except FileNotFoundError:
+        pass
+    except OSError as exc:
+        should_load = False
         actual = None
         status = "fail"
-        message = str(exc)
+        message = f"could not inspect policy path {target}: {exc}"
     else:
-        actual = {
-            "version": policy["version"],
-            "fingerprint": policy_fingerprint(policy),
-        }
-        status = "pass" if actual == expected else "fail"
-        message = (
-            "Policy matches bootstrap receipt."
-            if status == "pass"
-            else "Policy identity does not match bootstrap receipt."
-        )
+        if stat.S_ISLNK(target_details.st_mode):
+            should_load = False
+            actual = None
+            status = "fail"
+            message = f"policy path must not be a symlink: {target}"
+
+    if should_load:
+        try:
+            policy = load_policy(target)
+        except PolicyError as exc:
+            actual = None
+            status = "fail"
+            message = str(exc)
+        else:
+            actual = {
+                "version": policy["version"],
+                "fingerprint": policy_fingerprint(policy),
+            }
+            status = "pass" if actual == expected else "fail"
+            message = (
+                "Policy matches bootstrap receipt."
+                if status == "pass"
+                else "Policy identity does not match bootstrap receipt."
+            )
 
     return {
         "schema_version": RECEIPT_VERIFICATION_SCHEMA_VERSION,
@@ -647,9 +666,26 @@ def _validate_bootstrap_receipt(receipt: Any) -> dict[str, Any]:
         raise TemplateError(
             "bootstrap receipt status must be created or replaced"
         )
-    if not isinstance(receipt["output"], str) or not receipt["output"]:
+    output = receipt["output"]
+    if not isinstance(output, str) or not output:
         raise TemplateError(
             "bootstrap receipt output must be a non-empty string"
+        )
+    if "\0" in output:
+        raise TemplateError("bootstrap receipt output must not contain NUL")
+    try:
+        output_path = Path(output)
+    except (OSError, ValueError) as exc:
+        raise TemplateError(
+            "bootstrap receipt output must be a valid path"
+        ) from exc
+    if not output_path.is_absolute():
+        raise TemplateError(
+            "bootstrap receipt output must be an absolute path"
+        )
+    if output_path.name in {"", ".", ".."}:
+        raise TemplateError(
+            "bootstrap receipt output must identify a file leaf"
         )
 
     starter = receipt["starter"]

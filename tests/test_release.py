@@ -537,6 +537,8 @@ class ReleaseManifestTests(unittest.TestCase):
                 "service-baseline",
                 "polyglot-review",
                 "symlink-bootstrap-output-rejected",
+                "relative-receipt-output-rejected",
+                "symlink-receipt-policy-rejected",
             ),
         )
 

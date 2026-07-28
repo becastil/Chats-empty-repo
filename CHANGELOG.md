@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Preserved the receipt-recorded or overridden policy leaf during bootstrap
+  receipt verification and rejected initial or dangling symlinks with normal
+  exit-6 mismatch evidence instead of following their targets.
+- Required archived bootstrap outputs to be absolute, valid file leaves,
+  rejecting relative and NUL-bearing values with a controlled receipt error
+  before any policy override can be honored.
+- Added source proof for recorded and override paths plus installed-command
+  proof that malformed outputs fail and symlink verification keeps the
+  requested leaf, withholds target identity, and leaves both link and policy
+  evidence unchanged.
 - Required policy bootstrap and initialization outputs to be direct leaves,
   rejecting initial and dangling symlinks even with `--force` before a policy
   or bootstrap receipt can be written.

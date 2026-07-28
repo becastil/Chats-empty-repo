@@ -440,6 +440,77 @@ class PolicyTemplateTests(unittest.TestCase):
             self.assertEqual(drift["expected"], receipt["policy"])
             self.assertNotEqual(drift["actual"], drift["expected"])
 
+    @unittest.skipUnless(
+        hasattr(os, "symlink"), "symlink semantics are unavailable"
+    )
+    def test_verify_receipt_rejects_symlink_policy_paths(self) -> None:
+        for label in ("recorded", "override"):
+            with self.subTest(label=label), TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                (root / "pyproject.toml").write_text(
+                    "[project]\n",
+                    encoding="utf-8",
+                )
+                bootstrap_stdout = io.StringIO()
+                with redirect_stdout(bootstrap_stdout), redirect_stderr(
+                    io.StringIO()
+                ):
+                    bootstrap_exit_code = main(
+                        ["bootstrap", str(root), "--format", "json"]
+                    )
+                receipt = json.loads(bootstrap_stdout.getvalue())
+                receipt_path = root / "bootstrap-receipt.json"
+                receipt_path.write_text(
+                    bootstrap_stdout.getvalue(),
+                    encoding="utf-8",
+                )
+                generated_policy = root / "repo-scout-policy.toml"
+
+                if label == "recorded":
+                    target = root / "moved-policy.toml"
+                    generated_policy.replace(target)
+                    policy_path = generated_policy
+                else:
+                    target = generated_policy
+                    policy_path = root / "policy-override.toml"
+                policy_path.symlink_to(target)
+
+                stdout = io.StringIO()
+                stderr = io.StringIO()
+                arguments = [
+                    "verify-receipt",
+                    str(receipt_path),
+                    "--format",
+                    "json",
+                ]
+                if label == "override":
+                    arguments.extend(["--policy", str(policy_path)])
+                with redirect_stdout(stdout), redirect_stderr(stderr):
+                    exit_code = main(arguments)
+                verification = json.loads(stdout.getvalue())
+
+                self.assertEqual(bootstrap_exit_code, 0)
+                self.assertEqual(exit_code, 6)
+                self.assertEqual(stderr.getvalue(), "")
+                self.assertEqual(verification["status"], "fail")
+                expected_policy_path = (
+                    policy_path.parent.resolve() / policy_path.name
+                )
+                self.assertEqual(
+                    verification["policy"],
+                    str(expected_policy_path),
+                )
+                self.assertEqual(verification["expected"], receipt["policy"])
+                self.assertIsNone(verification["actual"])
+                self.assertIn(
+                    "policy path must not be a symlink",
+                    verification["message"],
+                )
+                expected_target = target.parent.resolve() / target.name
+                self.assertNotIn(str(expected_target), stdout.getvalue())
+                self.assertTrue(policy_path.is_symlink())
+                self.assertTrue(target.is_file())
+
     def test_verify_receipt_rejects_malformed_evidence_and_reports_missing_policy(
         self,
     ) -> None:
@@ -513,6 +584,74 @@ class PolicyTemplateTests(unittest.TestCase):
                     self.assertEqual(malformed_exit_code, 2)
                     self.assertEqual(malformed_stdout.getvalue(), "")
                     self.assertIn(expected_error, malformed_stderr.getvalue())
+
+    def test_verify_receipt_rejects_invalid_output_before_policy_override(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "pyproject.toml").write_text(
+                "[project]\n",
+                encoding="utf-8",
+            )
+            bootstrap_stdout = io.StringIO()
+            with redirect_stdout(bootstrap_stdout), redirect_stderr(
+                io.StringIO()
+            ):
+                bootstrap_exit_code = main(
+                    ["bootstrap", str(root), "--format", "json"]
+                )
+            valid_receipt = json.loads(bootstrap_stdout.getvalue())
+            policy_path = root / "repo-scout-policy.toml"
+            cases = (
+                (
+                    "relative",
+                    os.path.relpath(policy_path, Path.cwd()),
+                    "must be an absolute path",
+                ),
+                (
+                    "nul",
+                    f"{policy_path}\0untrusted",
+                    "must not contain NUL",
+                ),
+                (
+                    "no-leaf",
+                    Path.cwd().anchor,
+                    "must identify a file leaf",
+                ),
+            )
+
+            self.assertEqual(bootstrap_exit_code, 0)
+            for label, output, expected_error in cases:
+                for override in (False, True):
+                    with self.subTest(label=label, override=override):
+                        malformed_receipt = json.loads(
+                            json.dumps(valid_receipt)
+                        )
+                        malformed_receipt["output"] = output
+                        receipt_path = root / (
+                            f"{label}-{'override' if override else 'recorded'}.json"
+                        )
+                        receipt_path.write_text(
+                            json.dumps(malformed_receipt),
+                            encoding="utf-8",
+                        )
+                        arguments = [
+                            "verify-receipt",
+                            str(receipt_path),
+                            "--format",
+                            "json",
+                        ]
+                        if override:
+                            arguments.extend(["--policy", str(policy_path)])
+                        stdout = io.StringIO()
+                        stderr = io.StringIO()
+                        with redirect_stdout(stdout), redirect_stderr(stderr):
+                            exit_code = main(arguments)
+
+                        self.assertEqual(exit_code, 2)
+                        self.assertEqual(stdout.getvalue(), "")
+                        self.assertIn(expected_error, stderr.getvalue())
 
     def test_bootstrap_refuses_polyglot_policy_without_writing(self) -> None:
         with TemporaryDirectory() as tmp:

@@ -8,9 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after binding bootstrap receipts to direct outputs: 263 / 1,000
-  (26.3%).
-- Remaining after binding bootstrap receipts to direct outputs: 737 commits.
+- Progress after keeping receipt verification on direct policy leaves:
+  264 / 1,000 (26.4%).
+- Remaining after keeping receipt verification on direct policy leaves:
+  736 commits.
 
 ## Commit Standard
 

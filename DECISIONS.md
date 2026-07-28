@@ -3863,3 +3863,33 @@ proves the custom path through the packaged command.
 This protects free-to-paid policy activation and first-repository handoff
 evidence. It does not establish customer use, pilot demand, payment, or
 revenue.
+
+## 2026-07-28: Keep Receipt Verification On Direct Policy Leaves
+
+Bootstrap required a direct output leaf, but later receipt verification
+resolved the receipt-recorded path or `--policy` override through any symlink
+before loading the policy. Replacing a valid bootstrap output with a link to an
+identical policy therefore returned `pass` and changed the report's policy path
+to the referent. The archived receipt could appear to validate its named
+first-repository output while the verifier had inspected another leaf.
+
+Verification now resolves only the selected policy's parent and preserves its
+requested leaf. It inspects that leaf without following it and returns the
+existing exit-6 mismatch contract for an initial or dangling symlink. The report
+retains the requested policy path and expected version and fingerprint, marks
+actual identity unavailable, and neither names nor modifies the referent.
+Source regressions cover both the receipt-recorded path and an explicit
+override; the installed activation journey covers the packaged default path.
+
+Because every successful bootstrap emits an absolute, parent-resolved output
+with a file leaf, receipt parsing now enforces that contract before honoring a
+policy override. Relative outputs and embedded NUL characters fail as malformed
+receipt evidence with exit 2 and no report. A crafted receipt can no longer
+select a matching file relative to the verifier's working directory, hide a
+malformed recorded path behind `--policy`, or raise an uncaught path error. The
+installed activation journey also proves the relative-output rejection through
+the packaged command.
+
+This keeps free-to-paid policy activation evidence tied to the policy location
+under review. It does not establish customer use, pilot demand, payment, or
+revenue.

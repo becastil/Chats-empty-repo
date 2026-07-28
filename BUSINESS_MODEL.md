@@ -283,6 +283,18 @@ version and fingerprint to the policy a team is about to commit or enforce.
 It produces stable drift evidence and a CI failure without uploading either
 file. This is useful free activation proof; paid value remains resolving drift
 and operating one reviewed standard across repositories and teams.
+Verification now preserves the receipt-recorded or explicitly overridden policy
+leaf instead of resolving through it. An initial or dangling symlink fails with
+the normal policy-mismatch exit, retains expected identity evidence, reports no
+actual identity, and does not expose or change the referent. This keeps a
+first-repository handoff from passing against a policy stored somewhere other
+than the path under review; it does not prove customer use, pilot demand,
+payment, or revenue.
+The strict receipt loader also requires bootstrap `output` evidence to be an
+absolute, valid file leaf and rejects relative or NUL-bearing values before an
+override is considered. A forged receipt therefore cannot reinterpret its
+original policy location against an operator's working directory, bypass a
+malformed path through `--policy`, or crash CI while parsing evidence.
 
 An AI can recreate a scanner, but that is not the commercial claim being
 tested. The active website experiment presents the paid outcome in plain
