@@ -221,9 +221,10 @@ site release:
    fail. Archive and receipt staging, staged reads, publication, and cleanup
    remain bound to the descriptors held from preflight.
    Persistent drift during receipt publication therefore leaves no
-   approval-ready result. The success output labels the archive digest
-   `archive_sha256` and includes the receipt-bound `release_version`, Sites
-   `project_id`, and `receipt_sha256`; retain them with the candidate evidence.
+   approval-ready result. The stable `site candidate ready:` prefix is followed
+   by one compact JSON object. Its archive digest field is `archive_sha256` and
+   it includes the receipt-bound `release_version`, Sites `project_id`, and
+   `receipt_sha256`; parse and retain that record with the candidate evidence.
    Do not use `npm audit fix --force` when it proposes a framework downgrade;
    review and test a supported patch or explicit transitive override instead.
 2. Verify the archive and receipt immediately before asking for source-export
@@ -264,6 +265,12 @@ site release:
    existing Sites project, then retain that identity as
    `APPROVED_SITES_SOURCE_REPOSITORY` only if the owner approves the exact
    request.
+   The stable `source-export request pending:` prefix is followed by one compact
+   JSON object. Parse that object rather than splitting its contents on spaces;
+   `deployment_approved` is the boolean `false`, and opaque values cannot add a
+   sibling field or terminal line. Configured aliases and resolved repository
+   URLs containing raw whitespace fail closed. Percent-encode any legitimate
+   URL path space, for example `%20`, before requesting approval.
 3. Obtain explicit owner approval before pushing the exact committed source to
    the approved separate Sites source repository. The approval must identify
    the public release version, Sites project ID, receipt digest, canonical

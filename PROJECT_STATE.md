@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 259 of
-1,000, with 741 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 260 of
+1,000, with 740 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -135,9 +135,12 @@ alignment take priority over commit volume.
   an operator inference.
 - A copy-ready pending Sites source-export request emitted only after offline
   independent verification. The request locally canonicalizes the existing
-  source repository, rejects `origin`, carries the complete approval tuple,
-  and states `deployment_approved=false`; it cannot be combined with the
-  post-export pre-save mode or mistaken for tool-granted consent.
+  source repository, rejects `origin`, and carries the complete approval tuple
+  in one compact JSON record with boolean `deployment_approved=false`.
+  Candidate status is also single-line JSON, so opaque IDs and filenames cannot
+  inject sibling fields or terminal lines. Raw repository whitespace fails
+  while percent-encoded URL paths remain valid. The request cannot be combined
+  with the post-export pre-save mode or mistaken for tool-granted consent.
 - Duplicate-free Sites JSON evidence across checkout hosting metadata,
   schema-5 receipts, and archived manifests. Repeated keys fail even when their
   values match, preventing approval identity from depending on decoder-specific
@@ -670,9 +673,11 @@ recording the printed `release_version`, receipt-bound `project_id`,
 receipt's exact patched source. Generate that copy-ready pending tuple by
 passing the existing Sites source URL or alias through
 `--approval-source-repository`; confirm the printed canonical repository
-belongs to the printed project, and treat `deployment_approved=false` as a hard
-boundary rather than consent. Only after explicit source-export approval, push
-the source, then verify the unchanged archive and receipt with
+belongs to the printed project, parse the complete single-line JSON request,
+and treat boolean `deployment_approved=false` as a hard boundary rather than
+consent. Raw spaces in a remote URL must be percent-encoded. Only after explicit
+source-export approval, push the source, then verify the unchanged archive and
+receipt with
 `--expected-receipt-sha256` set to the approved digest,
 `--exported-source-repository` set to the URL or configured alias used for the
 push, and `--expected-exported-source-repository` set to the approved canonical

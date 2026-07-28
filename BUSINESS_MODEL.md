@@ -413,11 +413,16 @@ Plain independent verification can now accept the existing Sites source URL or
 configured alias solely to produce a copy-ready pending export request. It
 resolves that identity locally, rejects `origin`, and prints the release
 version, project ID, exact receipt digest, canonical repository, source ref,
-and commit with `deployment_approved=false`. The request cannot be combined
-with the later pre-save mode, does not query a remote ref, and grants no
-approval. This turns validated distribution evidence into a precise human
-decision without exporting source, saving or deploying a version, or creating
-customer, demand, payment, or revenue evidence.
+and commit in one compact JSON record with boolean
+`deployment_approved=false`. Candidate status uses the same single-line JSON
+boundary, preserving opaque project IDs and filenames without letting their
+contents create sibling approval fields or extra terminal lines. Configured or
+resolved source repository identities containing raw whitespace fail; URL path
+spaces must be percent-encoded and remain exact after canonicalization. The
+request cannot be combined with the later pre-save mode, does not query a
+remote ref, and grants no approval. This turns validated distribution evidence
+into a precise human decision without exporting source, saving or deploying a
+version, or creating customer, demand, payment, or revenue evidence.
 Candidate preparation now also repeats the complete clean
 `HEAD == origin/main` check after validation and packaging, requiring both
 observations to retain the original synchronized commit. Read-only verification

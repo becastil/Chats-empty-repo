@@ -34,8 +34,11 @@
   canonicalize the existing Sites source repository, reject `origin`, and
   print one pending tuple containing `release_version`, existing Sites
   `project_id`, `receipt_sha256`, canonical repository identity,
-  `refs/heads/main`, and commit while keeping
-  `deployment_approved=false`.
+  `refs/heads/main`, and commit as one compact JSON record while keeping
+  `deployment_approved=false` as a boolean. Candidate status must use the same
+  single-line JSON boundary so opaque IDs and filenames cannot inject approval
+  fields or lines. Reject raw whitespace in source repository identities and
+  require percent-encoded URL paths where needed.
   After approval, push its receipt-bound source to the separate Sites source
   repository, verify the unchanged archive and receipt again while requiring
   the approved digest and canonical Sites repository identity, and resolve

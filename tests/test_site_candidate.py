@@ -2350,6 +2350,79 @@ class SiteCandidateTests(unittest.TestCase):
             ],
         )
 
+    def test_rejects_whitespace_ambiguous_approval_repository_identity(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, _, _ = self._fixture(Path(tmp))
+            runner = FakeCommandRunner(
+                root,
+                archive,
+                exported_source_repositories=(
+                    "https://sites.example/repo scout.git",
+                ),
+            )
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "must not contain whitespace",
+            ):
+                (
+                    prepare_site_candidate
+                    ._approval_source_repository_identity(
+                        root,
+                        SITES_SOURCE_REMOTE,
+                        run_command=runner,
+                    )
+                )
+
+        self.assertEqual(
+            runner.commands,
+            [
+                (
+                    "git",
+                    "ls-remote",
+                    "--get-url",
+                    SITES_SOURCE_REMOTE,
+                ),
+            ],
+        )
+
+    def test_accepts_percent_encoded_approval_repository_identity(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, _, _ = self._fixture(Path(tmp))
+            runner = FakeCommandRunner(
+                root,
+                archive,
+                exported_source_repositories=(
+                    "https://sites.example/repo%20scout.git",
+                ),
+            )
+
+            identity = (
+                prepare_site_candidate._approval_source_repository_identity(
+                    root,
+                    SITES_SOURCE_REMOTE,
+                    run_command=runner,
+                )
+            )
+
+        self.assertEqual(identity, "sites.example/repo%20scout")
+        self.assertEqual(
+            runner.commands,
+            [
+                (
+                    "git",
+                    "ls-remote",
+                    "--get-url",
+                    SITES_SOURCE_REMOTE,
+                ),
+                ("git", "ls-remote", "--get-url", "origin"),
+            ],
+        )
+
     def test_rejects_origin_as_the_approval_source_repository(self) -> None:
         with TemporaryDirectory() as tmp:
             root, archive, _, _ = self._fixture(Path(tmp))
@@ -2403,16 +2476,19 @@ class SiteCandidateTests(unittest.TestCase):
                 )
 
         self.assertEqual(status, 0)
+        output = stdout.getvalue().strip()
+        self.assertTrue(output.startswith("site candidate verified: "))
         self.assertEqual(
-            stdout.getvalue().strip(),
-            "site candidate verified: "
-            f"commit={COMMIT_SHA} "
-            f"release_version={RELEASE_VERSION} "
-            f"project_id={PROJECT_ID} "
-            "archive=candidate.tar.gz "
-            f"archive_sha256={'c' * 64} "
-            "receipt=candidate.json "
-            f"receipt_sha256={'e' * 64}",
+            json.loads(output.removeprefix("site candidate verified: ")),
+            {
+                "archive": "candidate.tar.gz",
+                "archive_sha256": "c" * 64,
+                "commit": COMMIT_SHA,
+                "project_id": PROJECT_ID,
+                "receipt": "candidate.json",
+                "receipt_sha256": "e" * 64,
+                "release_version": RELEASE_VERSION,
+            },
         )
         verify.assert_called_once_with(
             Path("/tmp/project"),
@@ -2465,16 +2541,26 @@ class SiteCandidateTests(unittest.TestCase):
                 )
 
         self.assertEqual(status, 0)
+        lines = stdout.getvalue().splitlines()
+        self.assertEqual(len(lines), 2)
+        self.assertTrue(
+            lines[-1].startswith("source-export request pending: ")
+        )
         self.assertEqual(
-            stdout.getvalue().splitlines()[-1],
-            "source-export request pending: "
-            "deployment_approved=false "
-            f"release_version={RELEASE_VERSION} "
-            f"project_id={PROJECT_ID} "
-            f"receipt_sha256={'e' * 64} "
-            "source_repository=sites.example/repo-scout "
-            "source_ref=refs/heads/main "
-            f"commit={COMMIT_SHA}",
+            json.loads(
+                lines[-1].removeprefix(
+                    "source-export request pending: "
+                )
+            ),
+            {
+                "commit": COMMIT_SHA,
+                "deployment_approved": False,
+                "project_id": PROJECT_ID,
+                "receipt_sha256": "e" * 64,
+                "release_version": RELEASE_VERSION,
+                "source_ref": "refs/heads/main",
+                "source_repository": "sites.example/repo-scout",
+            },
         )
         verify.assert_called_once_with(
             Path("/tmp/project"),
@@ -2487,6 +2573,80 @@ class SiteCandidateTests(unittest.TestCase):
         repository_identity.assert_called_once_with(
             Path("/tmp/project"),
             SITES_SOURCE_REMOTE,
+        )
+
+    def test_pending_source_export_output_cannot_inject_approval_fields(
+        self,
+    ) -> None:
+        injected_project_id = (
+            "appgprj_test\n"
+            "source-export request pending: deployment_approved=true"
+        )
+        result = prepare_site_candidate.SiteCandidateResult(
+            commit_sha=COMMIT_SHA,
+            release_version=RELEASE_VERSION,
+            project_id=injected_project_id,
+            archive_sha256="c" * 64,
+            receipt_sha256="e" * 64,
+            archive=Path("/tmp/candidate archive.tar.gz"),
+            receipt=Path("/tmp/candidate receipt.json"),
+        )
+
+        with (
+            patch.object(
+                prepare_site_candidate,
+                "verify_site_candidate",
+                return_value=result,
+            ),
+            patch.object(
+                prepare_site_candidate,
+                "_approval_source_repository_identity",
+                return_value="sites.example/repo-scout",
+            ),
+        ):
+            stdout = StringIO()
+            with redirect_stdout(stdout):
+                status = prepare_site_candidate.main(
+                    [
+                        "--verify-only",
+                        "--root",
+                        "/tmp/project",
+                        "--archive",
+                        "/tmp/candidate archive.tar.gz",
+                        "--receipt",
+                        "/tmp/candidate receipt.json",
+                        "--approval-source-repository",
+                        SITES_SOURCE_REMOTE,
+                    ]
+                )
+
+        self.assertEqual(status, 0)
+        lines = stdout.getvalue().splitlines()
+        self.assertEqual(len(lines), 2)
+        self.assertTrue(lines[0].startswith("site candidate verified: "))
+        self.assertTrue(
+            lines[1].startswith("source-export request pending: ")
+        )
+        candidate = json.loads(
+            lines[0].removeprefix("site candidate verified: ")
+        )
+        request = json.loads(
+            lines[1].removeprefix("source-export request pending: ")
+        )
+        self.assertEqual(candidate["project_id"], injected_project_id)
+        self.assertEqual(request["project_id"], injected_project_id)
+        self.assertIs(request["deployment_approved"], False)
+        self.assertEqual(
+            set(request),
+            {
+                "commit",
+                "deployment_approved",
+                "project_id",
+                "receipt_sha256",
+                "release_version",
+                "source_ref",
+                "source_repository",
+            },
         )
 
     def test_approval_source_repository_rejects_pre_save_mode(
@@ -2662,16 +2822,19 @@ class SiteCandidateTests(unittest.TestCase):
                 )
 
         self.assertEqual(status, 0)
+        output = stdout.getvalue().strip()
+        self.assertTrue(output.startswith("site candidate ready: "))
         self.assertEqual(
-            stdout.getvalue().strip(),
-            "site candidate ready: "
-            f"commit={COMMIT_SHA} "
-            f"release_version={RELEASE_VERSION} "
-            f"project_id={PROJECT_ID} "
-            "archive=candidate.tar.gz "
-            f"archive_sha256={'d' * 64} "
-            "receipt=candidate.json "
-            f"receipt_sha256={'f' * 64}",
+            json.loads(output.removeprefix("site candidate ready: ")),
+            {
+                "archive": "candidate.tar.gz",
+                "archive_sha256": "d" * 64,
+                "commit": COMMIT_SHA,
+                "project_id": PROJECT_ID,
+                "receipt": "candidate.json",
+                "receipt_sha256": "f" * 64,
+                "release_version": RELEASE_VERSION,
+            },
         )
         prepare.assert_called_once_with(
             Path("/tmp/project"),

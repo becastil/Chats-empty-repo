@@ -3783,3 +3783,24 @@ declines still emit no next command.
 The decline decision and the later review-file creation remain separate
 operations. This change does not approve or send outreach, create demand,
 collect payment, or record revenue.
+
+## 2026-07-28: Encode Sites Approval Evidence As Single-Line JSON
+
+The offline Sites source-export request used a flat, space-delimited list of
+`key=value` fields. Candidate status used the same representation. Repository
+identities with raw spaces made the approval tuple ambiguous, while an opaque
+project ID or output filename containing a newline could create a misleading
+sibling field or extra terminal line. The receipt still bound the real value,
+but the copy-ready owner evidence could present another interpretation.
+
+Candidate status and the pending source-export request now keep their stable
+human-readable prefixes and place every field in a compact, deterministic JSON
+object. Opaque values remain exact JSON strings, and
+`deployment_approved=false` is a boolean that embedded text cannot replace or
+duplicate as a sibling field. Configured and resolved source repository
+identities reject raw whitespace; legitimate URL path spaces must be
+percent-encoded and remain unchanged through canonicalization.
+
+This hardens the existing approval handoff only. It does not run Node or npm,
+query a remote ref, export source, save or deploy a Sites version, approve
+publication, contact a customer, or create revenue evidence.

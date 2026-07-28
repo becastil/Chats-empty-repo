@@ -8,8 +8,9 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after keeping decline continuations owner-only: 259 / 1,000 (25.9%).
-- Remaining after keeping decline continuations owner-only: 741 commits.
+- Progress after making Sites approval records injection-safe: 260 / 1,000
+  (26.0%).
+- Remaining after making Sites approval records injection-safe: 740 commits.
 
 ## Commit Standard
 

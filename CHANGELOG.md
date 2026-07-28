@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Emitted Sites candidate status and pending source-export approval evidence as
+  compact single-line JSON records, preventing opaque project IDs or output
+  filenames from injecting misleading fields or extra terminal lines.
+- Rejected raw whitespace in configured or resolved Sites source repository
+  identities while preserving percent-encoded URL paths, so the canonical
+  repository recorded for approval remains unambiguous.
 - Kept content-bound review queues owner-only after a human no-send decision by
   carrying `--write-review PRIVATE-REVIEW-PATH` into the next complete review
   command and rejecting the unchanged path before private material is read.

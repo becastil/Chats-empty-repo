@@ -741,6 +741,11 @@ def _validated_source_repository(value: str) -> str:
             "exported source repository must be a non-empty Git repository "
             "identity without control characters"
         )
+    if any(character.isspace() for character in value):
+        raise SiteCandidateError(
+            "exported source repository must not contain whitespace; "
+            "percent-encode spaces in remote URL paths"
+        )
     parsed = urlsplit(value)
     if (
         parsed.password is not None
@@ -2439,26 +2444,32 @@ def main(argv: Sequence[str] | None = None) -> int:
     except SiteCandidateError as exc:
         print(f"site-candidate: {exc}", file=sys.stderr)
         return 2
+    candidate_record = {
+        "archive": result.archive.name,
+        "archive_sha256": result.archive_sha256,
+        "commit": result.commit_sha,
+        "project_id": result.project_id,
+        "receipt": result.receipt.name,
+        "receipt_sha256": result.receipt_sha256,
+        "release_version": result.release_version,
+    }
     print(
         f"site candidate {action}: "
-        f"commit={result.commit_sha} "
-        f"release_version={result.release_version} "
-        f"project_id={result.project_id} "
-        f"archive={result.archive.name} "
-        f"archive_sha256={result.archive_sha256} "
-        f"receipt={result.receipt.name} "
-        f"receipt_sha256={result.receipt_sha256}"
+        f"{json.dumps(candidate_record, sort_keys=True, separators=(',', ':'))}"
     )
     if approval_repository_identity is not None:
+        request_record = {
+            "commit": result.commit_sha,
+            "deployment_approved": False,
+            "project_id": result.project_id,
+            "receipt_sha256": result.receipt_sha256,
+            "release_version": result.release_version,
+            "source_ref": SOURCE_REF,
+            "source_repository": approval_repository_identity,
+        }
         print(
             "source-export request pending: "
-            "deployment_approved=false "
-            f"release_version={result.release_version} "
-            f"project_id={result.project_id} "
-            f"receipt_sha256={result.receipt_sha256} "
-            f"source_repository={approval_repository_identity} "
-            f"source_ref={SOURCE_REF} "
-            f"commit={result.commit_sha}"
+            f"{json.dumps(request_record, sort_keys=True, separators=(',', ':'))}"
         )
     return 0
 
