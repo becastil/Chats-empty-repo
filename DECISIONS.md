@@ -3588,3 +3588,46 @@ Staging-directory creation, staged archive validation, and staging cleanup
 still resolve paths and remain required before replacement evidence is
 approval-ready. This change performs no source export, version save,
 deployment, approval, customer contact, or revenue event.
+
+## 2026-07-28: Anchor Sites Archive Staging To Held Descriptors
+
+The archive destination parent was held from preflight and each published
+evidence file was retained through final checks, but the private staging
+directory, staged archive read, tar validation, and cleanup still reopened
+visible paths. Replacing the archive parent could make the external helper
+write a valid package under a different directory from the one held for final
+publication. A staged-leaf replacement could also move validation and
+publication onto different inodes, while path cleanup could delete an object
+the candidate process did not create.
+
+Preparation now creates a high-entropy `0700` staging directory relative to
+the archive-parent descriptor held from preflight, opens it without following
+links, and verifies its identity, mode, and owner. The external packaging
+helper still receives the visible path it requires, but acceptance opens only
+the regular archive leaf relative to the held staging directory with
+no-follow, nonblocking, close-on-exec semantics. Hashing, tar validation,
+post-packaging source validation, digest recheck, and publication all borrow
+that exact archive descriptor. The hard-link source remains a name resolved
+relative to the held staging directory because Python cannot link directly
+from a file descriptor; the new destination is therefore opened and required
+to share the held archive's filesystem identity before it can advance. The
+source leaf is also checked against the held archive immediately before that
+name-based link, narrowing the unavoidable interval to the link syscall while
+the destination check catches a substitution within it.
+
+Cleanup records both staging-directory and accepted archive identities. It
+unlinks only a matching archive leaf and removes only the matching staging
+directory. Missing objects are tolerated where ownership is unambiguous, while
+a replacement, unverified helper artifact, unknown extra entry, or failed
+identity lookup is preserved and reported. The final check-to-remove interval
+cannot be made perfectly atomic with portable POSIX directory APIs, so the
+operator contract intentionally prefers a failed candidate and retained
+artifact over deleting an uncertain object. If the visible parent path was
+replaced, helper output written there is neither chased nor removed and cannot
+satisfy acceptance.
+
+This decision completes descriptor binding for archive staging, reads,
+validation, and cleanup only. Receipt staging, staged receipt hashing, and
+receipt cleanup still use visible paths and remain required before replacement
+evidence is approval-ready. The change performs no source export, version
+save, deployment, approval, customer contact, or revenue event.

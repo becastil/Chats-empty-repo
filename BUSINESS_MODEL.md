@@ -491,25 +491,37 @@ paid distribution evidence without exporting source, saving or deploying a
 version, or creating customer or revenue evidence.
 Final candidate publication now narrows the concurrent replacement boundary
 too. Both direct output parents must already exist on a POSIX host with
-descriptor-relative hard-link support. Preparation opens each unique parent
-without following a symlink before running commands, verifies repository
-containment and requested-leaf absence through that descriptor, and keeps it
-non-inheritable and live through validation and publication. Archive and
-receipt paths sharing one parent reuse one descriptor, preventing two opens
+descriptor-relative staging and hard-link support. Preparation opens each
+unique parent without following a symlink before running commands, verifies
+repository containment and requested-leaf absence through that descriptor, and
+keeps it non-inheritable and live through validation and publication. Archive
+and receipt paths sharing one parent reuse one descriptor, preventing two opens
 from binding one candidate pair to different directory instances. Each leaf is
 created relative to its held parent, so later path replacement cannot redirect
 publication. Publication now opens the staged source without following links,
 opens the new leaf relative to the held parent, and requires both descriptors
-to identify the same regular file. It keeps the exact archive and receipt
-descriptors non-inheritable and live through the final source and digest
-checks. Before success, it reopens each requested parent, requires that parent
-to match the held descriptor, and compares the leaf relative to it with the
-published file descriptor. Link-to-open substitution, byte-identical leaf
-replacement, and a replaced parent re-linking the same file therefore fail
-closed. Staging, staged-file validation, and cleanup remain path-based, and the
-replacement candidate remains blocked on those descriptor-bound operations.
-This strengthens paid-distribution integrity without exporting source, saving
-or deploying a version, or creating customer or revenue evidence.
+to identify the same regular file.
+Archive staging now uses a private `0700` directory created and opened relative
+to the held archive parent. The packaging helper still receives a visible path,
+but preparation accepts only the regular archive opened relative to the held
+staging descriptor, then hashes, validates, rechecks, and publishes while
+holding that exact file. The hard-link source name is resolved relative to the
+held staging directory only after its inode is rechecked against the held
+archive; the published inode must match again after the link. Cleanup compares
+the current leaf and directory with their recorded identities; a substitution
+is preserved for investigation and fails rather than being deleted. If the
+visible parent was replaced, any helper artifact written there is left
+untouched and cannot satisfy acceptance.
+Preparation keeps the exact archive and receipt descriptors non-inheritable and
+live through the final source and digest checks. Before success, it reopens each
+requested parent, requires that parent to match the held descriptor, and
+compares the leaf relative to it with the published file descriptor.
+Link-to-open substitution, byte-identical leaf replacement, and a replaced
+parent re-linking the same file therefore fail closed. Receipt staging, staged
+receipt validation, and cleanup remain path-based, and the replacement
+candidate remains blocked on those descriptor-bound operations. This
+strengthens paid-distribution integrity without exporting source, saving or
+deploying a version, or creating customer or revenue evidence.
 A separate read-only hosted dependency contract runs for relevant lock and
 workflow changes, on manual dispatch, and weekly so a newly published advisory
 does not wait for another package edit. It uses the minimum supported Node

@@ -412,19 +412,26 @@ class ReleaseManifestTests(unittest.TestCase):
             "preparation",
             "whole-repository or subdirectory-only aliases",
             "Both output parent directories must already exist",
-            "descriptor-relative hard-link support",
+            "descriptor-relative staging and hard-link support",
             "opens each unique direct parent without following a symlink",
+            "Archive staging is a private `0700` directory",
+            "accepts only the regular archive opened relative to the held",
+            "publication source leaf is resolved relative to the held "
+            "staging",
+            "A replacement is preserved",
             "keeps the descriptor open and non-inheritable",
             "outputs in one parent reuse the same descriptor",
-            "Each final no-clobber link names its leaf relative to that held "
-            "descriptor",
+            "Each final no-clobber link names its leaf relative to its held "
+            "parent",
             "requires both descriptors to identify the same regular file",
             "exact archive and receipt descriptors remain open and "
             "non-inheritable",
             "requires it to match the held parent",
             "Link-to-open substitution, byte-identical leaf replacement",
-            "Staging, staged-file reads, and cleanup remain path-based",
-            "those operations are descriptor-bound",
+            "Receipt staging, staged receipt reads, and cleanup remain "
+            "path-based",
+            "Do not treat a candidate as approval-ready until those "
+            "operations are",
             "supplied archive and receipt paths must themselves name regular "
             "files rather than symlinks",
             "`receipt_sha256`",

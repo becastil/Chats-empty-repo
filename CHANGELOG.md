@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Bound Sites archive staging to the output-parent descriptor held from
+  preflight, retaining private staging-directory and regular archive
+  descriptors through hashing, tar validation, source recheck, and publication.
+  Cleanup removes only recorded filesystem identities, preserves uncertain
+  replacements for investigation, and rejects helper output written through a
+  replaced visible parent.
 - Held the exact newly published Sites archive and receipt descriptors through
   final source and digest checks, rejecting link-to-open substitution,
   byte-identical leaf replacement, and replaced requested parents before

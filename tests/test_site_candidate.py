@@ -102,12 +102,17 @@ class PublishedOutputTracker:
         output_path: Path,
         label: str,
         parent_fd: int,
+        *,
+        source_descriptor: int | None = None,
+        source_parent_descriptor: int | None = None,
     ) -> prepare_site_candidate._PublishedOutput:
         output = self._publish(
             staged_path,
             output_path,
             label,
             parent_fd,
+            source_descriptor=source_descriptor,
+            source_parent_descriptor=source_parent_descriptor,
         )
         self.outputs.append(output)
         return output
@@ -685,8 +690,15 @@ class SiteCandidateTests(unittest.TestCase):
                 path: Path,
                 manifest: dict[str, object],
                 payload_sha256: str,
+                *,
+                descriptor: int | None = None,
             ) -> None:
-                validate_archive(path, manifest, payload_sha256)
+                validate_archive(
+                    path,
+                    manifest,
+                    payload_sha256,
+                    descriptor=descriptor,
+                )
                 with path.open("ab") as target:
                     target.write(b"changed after validation\n")
 
@@ -713,6 +725,66 @@ class SiteCandidateTests(unittest.TestCase):
             self.assertFalse(archive.exists())
             self.assertFalse(receipt.exists())
 
+    def test_preparation_rejects_identical_archive_leaf_replacement(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            validate_archive = prepare_site_candidate._verify_archive
+            replacement_content: list[bytes] = []
+
+            def validate_then_replace(
+                path: Path,
+                manifest: dict[str, object],
+                payload_sha256: str,
+                *,
+                descriptor: int | None = None,
+            ) -> None:
+                validate_archive(
+                    path,
+                    manifest,
+                    payload_sha256,
+                    descriptor=descriptor,
+                )
+                content = path.read_bytes()
+                replacement_content.append(content)
+                path.unlink()
+                path.write_bytes(content)
+
+            with (
+                patch.object(
+                    prepare_site_candidate,
+                    "_verify_archive",
+                    side_effect=validate_then_replace,
+                ),
+                self.assertRaisesRegex(
+                    prepare_site_candidate.SiteCandidateError,
+                    "archive staging source changed during publication",
+                ),
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+
+            self.assertEqual(len(replacement_content), 1)
+            self.assertFalse(archive.exists())
+            self.assertFalse(receipt.exists())
+            leaked_staging = list(
+                archive.parent.glob(f".{archive.name}.*")
+            )
+            self.assertEqual(len(leaked_staging), 1)
+            self.assertTrue(
+                leaked_staging[0].joinpath(archive.name).is_file()
+            )
+            self.assertEqual(
+                leaked_staging[0].joinpath(archive.name).read_bytes(),
+                replacement_content[0],
+            )
+
     def test_verification_rejects_archive_changed_after_validation(self) -> None:
         with TemporaryDirectory() as tmp:
             root, archive, receipt, package_script = self._fixture(Path(tmp))
@@ -729,8 +801,15 @@ class SiteCandidateTests(unittest.TestCase):
                 path: Path,
                 manifest: dict[str, object],
                 payload_sha256: str,
+                *,
+                descriptor: int | None = None,
             ) -> None:
-                validate_archive(path, manifest, payload_sha256)
+                validate_archive(
+                    path,
+                    manifest,
+                    payload_sha256,
+                    descriptor=descriptor,
+                )
                 with path.open("ab") as target:
                     target.write(b"changed after validation\n")
 
@@ -769,8 +848,15 @@ class SiteCandidateTests(unittest.TestCase):
                 path: Path,
                 manifest: dict[str, object],
                 payload_sha256: str,
+                *,
+                descriptor: int | None = None,
             ) -> None:
-                validate_archive(path, manifest, payload_sha256)
+                validate_archive(
+                    path,
+                    manifest,
+                    payload_sha256,
+                    descriptor=descriptor,
+                )
                 with receipt.open("ab") as target:
                     target.write(b"changed after validation\n")
 
@@ -809,8 +895,15 @@ class SiteCandidateTests(unittest.TestCase):
                 path: Path,
                 manifest: dict[str, object],
                 payload_sha256: str,
+                *,
+                descriptor: int | None = None,
             ) -> None:
-                validate_archive(path, manifest, payload_sha256)
+                validate_archive(
+                    path,
+                    manifest,
+                    payload_sha256,
+                    descriptor=descriptor,
+                )
                 receipt.unlink()
                 receipt.symlink_to(archive)
 
@@ -2270,14 +2363,16 @@ class SiteCandidateTests(unittest.TestCase):
             root, archive, receipt, package_script = self._fixture(Path(tmp))
             moved_sha = "b" * 40
             runner = FakeCommandRunner(root, archive)
-            real_sha256 = prepare_site_candidate._sha256
+            hash_open_file = (
+                prepare_site_candidate._sha256_open_regular_file
+            )
 
-            def hash_and_move_source(path: Path) -> str:
-                digest = real_sha256(path)
-                if (
-                    runner.packaged_archives
-                    and path == runner.packaged_archives[-1]
-                ):
+            def hash_and_move_source(
+                descriptor: int,
+                label: str,
+            ) -> str:
+                digest = hash_open_file(descriptor, label)
+                if label == "staged Sites candidate archive":
                     runner.head_shas[:] = [moved_sha]
                     runner.origin_shas[:] = [moved_sha]
                 return digest
@@ -2285,7 +2380,7 @@ class SiteCandidateTests(unittest.TestCase):
             with (
                 patch.object(
                     prepare_site_candidate,
-                    "_sha256",
+                    "_sha256_open_regular_file",
                     side_effect=hash_and_move_source,
                 ),
                 self.assertRaisesRegex(
@@ -2981,8 +3076,8 @@ class SiteCandidateTests(unittest.TestCase):
                     ),
                     self.assertRaisesRegex(
                         prepare_site_candidate.SiteCandidateError,
-                        "requires descriptor-relative hard-link publication "
-                        "support",
+                        "requires descriptor-relative staging and hard-link "
+                        "publication support",
                     ),
                 ):
                     prepare_site_candidate.prepare_site_candidate(
@@ -3200,6 +3295,206 @@ class SiteCandidateTests(unittest.TestCase):
             tracker.assert_closed(self, 1)
             self.assertEqual(runner.commands, [])
 
+    def test_archive_staging_directory_is_private_and_cleans_on_failure(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            temporary_root = Path(tmp)
+            output_parent = temporary_root / "outputs"
+            output_parent.mkdir()
+            archive = output_parent / "candidate.tar.gz"
+            staging_descriptor = -1
+            staging_path: Path | None = None
+
+            with prepare_site_candidate._open_output_parents(
+                ((archive, "archive"),),
+                (),
+            ) as output_parents:
+                with self.assertRaisesRegex(
+                    RuntimeError,
+                    "forced staging failure",
+                ):
+                    with prepare_site_candidate._archive_staging_directory(
+                        output_parents["archive"].fd,
+                        archive,
+                    ) as staging:
+                        staging_descriptor = staging.fd
+                        staging_path = staging.visible_path
+                        details = prepare_site_candidate.os.fstat(
+                            staging.fd
+                        )
+                        self.assertTrue(stat.S_ISDIR(details.st_mode))
+                        self.assertEqual(
+                            stat.S_IMODE(details.st_mode),
+                            0o700,
+                        )
+                        self.assertFalse(
+                            prepare_site_candidate.os.get_inheritable(
+                                staging.fd
+                            )
+                        )
+                        flags = (
+                            prepare_site_candidate.os.O_WRONLY
+                            | prepare_site_candidate.os.O_CREAT
+                            | prepare_site_candidate.os.O_EXCL
+                        )
+                        if hasattr(prepare_site_candidate.os, "O_CLOEXEC"):
+                            flags |= prepare_site_candidate.os.O_CLOEXEC
+                        leaf_descriptor = prepare_site_candidate.os.open(
+                            archive.name,
+                            flags,
+                            0o600,
+                            dir_fd=staging.fd,
+                        )
+                        try:
+                            prepare_site_candidate.os.write(
+                                leaf_descriptor,
+                                b"staged archive\n",
+                            )
+                        finally:
+                            prepare_site_candidate.os.close(leaf_descriptor)
+                        self.assertTrue(
+                            staging.visible_path.joinpath(
+                                archive.name
+                            ).is_file()
+                        )
+                        with prepare_site_candidate._open_staged_archive(
+                            staging,
+                            archive.name,
+                        ):
+                            pass
+                        raise RuntimeError("forced staging failure")
+
+            self.assertIsNotNone(staging_path)
+            self.assertFalse(staging_path.exists())
+            with self.assertRaises(OSError) as caught:
+                prepare_site_candidate.os.fstat(staging_descriptor)
+            self.assertEqual(caught.exception.errno, errno.EBADF)
+
+    def test_archive_cleanup_preserves_a_replacement_staging_directory(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            temporary_root = Path(tmp)
+            output_parent = temporary_root / "outputs"
+            output_parent.mkdir()
+            archive = output_parent / "candidate.tar.gz"
+            displaced_staging: Path | None = None
+            replacement_staging: Path | None = None
+
+            with prepare_site_candidate._open_output_parents(
+                ((archive, "archive"),),
+                (),
+            ) as output_parents:
+                with self.assertRaisesRegex(
+                    prepare_site_candidate.SiteCandidateError,
+                    "staging directory entry changed; refusing to remove "
+                    "its replacement",
+                ):
+                    with prepare_site_candidate._archive_staging_directory(
+                        output_parents["archive"].fd,
+                        archive,
+                    ) as staging:
+                        displaced_staging = (
+                            output_parent / f"{staging.name}.displaced"
+                        )
+                        replacement_staging = staging.visible_path
+                        staging.visible_path.rename(displaced_staging)
+                        replacement_staging.mkdir(mode=0o700)
+
+            self.assertIsNotNone(displaced_staging)
+            self.assertIsNotNone(replacement_staging)
+            self.assertTrue(displaced_staging.is_dir())
+            self.assertTrue(replacement_staging.is_dir())
+
+    def test_archive_publication_uses_held_staging_descriptors(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            publish_output = prepare_site_candidate._publish_new_output
+            observed_labels: list[str] = []
+            observed_descriptors: list[int] = []
+
+            def inspect_publication_source(
+                staged_path: Path,
+                output_path: Path,
+                label: str,
+                parent_fd: int,
+                *,
+                source_descriptor: int | None = None,
+                source_parent_descriptor: int | None = None,
+            ) -> prepare_site_candidate._PublishedOutput:
+                observed_labels.append(label)
+                if label == "archive":
+                    if (
+                        source_descriptor is None
+                        or source_parent_descriptor is None
+                    ):
+                        raise AssertionError(
+                            "archive publication omitted staging "
+                            "descriptors"
+                        )
+                    source_details = prepare_site_candidate.os.fstat(
+                        source_descriptor
+                    )
+                    staged_details = prepare_site_candidate.os.stat(
+                        staged_path.name,
+                        dir_fd=source_parent_descriptor,
+                        follow_symlinks=False,
+                    )
+                    self.assertTrue(stat.S_ISREG(source_details.st_mode))
+                    self.assertTrue(
+                        prepare_site_candidate.os.path.samestat(
+                            source_details,
+                            staged_details,
+                        )
+                    )
+                    self.assertFalse(
+                        prepare_site_candidate.os.get_inheritable(
+                            source_descriptor
+                        )
+                    )
+                    self.assertFalse(
+                        prepare_site_candidate.os.get_inheritable(
+                            source_parent_descriptor
+                        )
+                    )
+                    observed_descriptors.extend(
+                        (source_descriptor, source_parent_descriptor)
+                    )
+                else:
+                    self.assertIsNone(source_descriptor)
+                    self.assertIsNone(source_parent_descriptor)
+                return publish_output(
+                    staged_path,
+                    output_path,
+                    label,
+                    parent_fd,
+                    source_descriptor=source_descriptor,
+                    source_parent_descriptor=source_parent_descriptor,
+                )
+
+            with patch.object(
+                prepare_site_candidate,
+                "_publish_new_output",
+                side_effect=inspect_publication_source,
+            ):
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+
+            self.assertEqual(observed_labels, ["archive", "receipt"])
+            self.assertEqual(len(observed_descriptors), 2)
+            for descriptor in observed_descriptors:
+                with self.assertRaises(OSError) as caught:
+                    prepare_site_candidate.os.fstat(descriptor)
+                self.assertEqual(caught.exception.errno, errno.EBADF)
+
     def test_held_parent_descriptor_cannot_be_redirected(self) -> None:
         with TemporaryDirectory() as tmp:
             temporary_root = Path(tmp)
@@ -3354,6 +3649,12 @@ class SiteCandidateTests(unittest.TestCase):
                         selected_parent.mkdir()
                     return result
 
+                expected_error = (
+                    "could not open staged Sites candidate archive"
+                    if label == "archive"
+                    else "Sites candidate receipt changed during candidate "
+                    "operation"
+                )
                 with (
                     patch.object(
                         prepare_site_candidate.os,
@@ -3362,8 +3663,7 @@ class SiteCandidateTests(unittest.TestCase):
                     ),
                     self.assertRaisesRegex(
                         prepare_site_candidate.SiteCandidateError,
-                        rf"Sites candidate {label} changed during candidate "
-                        "operation",
+                        expected_error,
                     ),
                 ):
                     prepare_site_candidate.prepare_site_candidate(
@@ -3376,9 +3676,34 @@ class SiteCandidateTests(unittest.TestCase):
 
                 tracker.assert_closed(self, 2)
                 self.assertFalse(selected_output.exists())
-                self.assertTrue(
-                    displaced_parent.joinpath(selected_output.name).is_file()
-                )
+                if label == "archive":
+                    self.assertFalse(
+                        displaced_parent.joinpath(
+                            selected_output.name
+                        ).exists()
+                    )
+                    self.assertEqual(
+                        list(
+                            displaced_parent.glob(
+                                f".{archive.name}.*"
+                            )
+                        ),
+                        [],
+                    )
+                    visible_staging = list(
+                        selected_parent.glob(f".{archive.name}.*")
+                    )
+                    self.assertEqual(len(visible_staging), 1)
+                    self.assertTrue(
+                        visible_staging[0].joinpath(archive.name).is_file()
+                    )
+                    self.assertFalse(receipt.exists())
+                else:
+                    self.assertTrue(
+                        displaced_parent.joinpath(
+                            selected_output.name
+                        ).is_file()
+                    )
 
     def test_preserves_an_archive_claimed_after_preflight(self) -> None:
         with TemporaryDirectory() as tmp:

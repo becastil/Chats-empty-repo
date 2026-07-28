@@ -175,24 +175,39 @@ site release:
    identities stop directory cycles, and reported traversal or ambiguous
    identity lookup failures stop preparation. Both output parent directories
    must already exist, and candidate preparation requires POSIX
-   descriptor-relative hard-link support. Before any Git or Node command, it
-   opens each unique direct parent without following a symlink, verifies its
-   filesystem identity and both requested leaves through that descriptor, and
-   keeps the descriptor open and non-inheritable through validation and
-   publication. Archive and receipt outputs in one parent reuse the same
-   descriptor. Each final no-clobber link names its leaf relative to that held
-   descriptor, so replacing or renaming the parent path after preflight cannot
-   redirect publication into a different directory. Publication opens the
-   staged source without following links, opens the new leaf relative to the
-   held parent, and requires both descriptors to identify the same regular
-   file. The exact archive and receipt descriptors remain open and
-   non-inheritable through the final synchronized-source and digest checks.
+   descriptor-relative staging and hard-link support. Before any Git or Node
+   command, it opens each unique direct parent without following a symlink,
+   verifies its filesystem identity and both requested leaves through that
+   descriptor, and keeps the descriptor open and non-inheritable through
+   validation and publication. Archive and receipt outputs in one parent reuse
+   the same descriptor.
+   Archive staging is a private `0700` directory created and opened relative
+   to the held archive parent. The external helper receives its visible path,
+   but preparation accepts only the regular archive opened relative to the held
+   staging descriptor. That exact file remains open and non-inheritable through
+   hashing, tar validation, the synchronized-source recheck, and publication.
+   The publication source leaf is resolved relative to the held staging
+   directory only after its identity is rechecked against the held archive; the
+   new output must share that identity again after the link. Cleanup removes the
+   archive and staging directory only when their current identities match the
+   recorded objects. A replacement is preserved and fails cleanup instead of
+   being deleted. If the visible archive parent is replaced, helper output
+   written under that replacement remains untouched and cannot satisfy
+   acceptance.
+   Each final no-clobber link names its leaf relative to its held parent, so
+   replacing or renaming the parent path after preflight cannot redirect
+   publication into a different directory. Publication opens the staged source
+   without following links, opens the new leaf relative to the held parent, and
+   requires both descriptors to identify the same regular file. The exact
+   archive and receipt descriptors remain open and non-inheritable through the
+   final synchronized-source and digest checks.
    Before success, preparation reopens each requested parent, requires it to
    match the held parent, and compares the leaf relative to it with the
    published file descriptor. Link-to-open substitution, byte-identical leaf
    replacement, and a replacement parent that re-links the same file therefore
-   fail. Staging, staged-file reads, and cleanup remain path-based. Do not treat
-   a candidate as approval-ready until those operations are descriptor-bound.
+   fail. Receipt staging, staged receipt reads, and cleanup remain path-based.
+   Do not treat a candidate as approval-ready until those operations are
+   descriptor-bound.
    Persistent drift during receipt publication therefore leaves no
    approval-ready result. The success output includes `receipt_sha256`; retain
    that digest with the candidate evidence.

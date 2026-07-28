@@ -9,11 +9,12 @@ import json
 import os
 from pathlib import Path, PurePosixPath
 import re
+import secrets
 import stat
 import subprocess
 import sys
 import tarfile
-from tempfile import NamedTemporaryFile, TemporaryDirectory
+from tempfile import NamedTemporaryFile
 from typing import Callable, Iterable, Iterator, Protocol, Sequence
 from urllib.parse import urlsplit
 
@@ -77,6 +78,11 @@ CANDIDATE_KEYS = frozenset(
 )
 ARCHIVE_KEYS = frozenset(("name", "payload_sha256", "sha256"))
 _OPEN_SUPPORTS_DIR_FD = os.open in getattr(os, "supports_dir_fd", ())
+_STAGING_SUPPORTS_DIR_FD = all(
+    function in getattr(os, "supports_dir_fd", ())
+    for function in (os.mkdir, os.rmdir, os.unlink)
+)
+_STAGING_NAME_ATTEMPTS = 128
 
 
 class SiteCandidateError(RuntimeError):
@@ -113,6 +119,15 @@ class _OutputParent:
 @dataclass(frozen=True)
 class _PublishedOutput:
     fd: int
+
+
+@dataclass
+class _ArchiveStagingDirectory:
+    fd: int
+    name: str
+    visible_path: Path
+    directory_identity: os.stat_result
+    archive_identity: os.stat_result | None = None
 
 
 def prepare_site_candidate(
@@ -234,11 +249,11 @@ def _prepare_site_candidate_with_open_parents(
         )
 
     with ExitStack() as published_outputs:
-        with TemporaryDirectory(
-            dir=archive_path.parent,
-            prefix=f".{archive_path.name}.",
-        ) as staging_directory:
-            staged_archive = Path(staging_directory) / archive_path.name
+        with _archive_staging_directory(
+            output_parents["archive"].fd,
+            archive_path,
+        ) as staging:
+            staged_archive = staging.visible_path / archive_path.name
             runner(
                 (
                     *PACKAGING_COMMAND_PREFIX,
@@ -248,38 +263,48 @@ def _prepare_site_candidate_with_open_parents(
                 ),
                 project_root,
             )
-            _require_regular_file(staged_archive, "Sites candidate archive")
-            archive_sha256 = _sha256(staged_archive)
-            _verify_archive(
-                staged_archive,
-                manifest,
-                payload_sha256,
-            )
+            with _open_staged_archive(
+                staging,
+                archive_path.name,
+            ) as staged_archive_descriptor:
+                archive_sha256 = _sha256_open_regular_file(
+                    staged_archive_descriptor,
+                    "staged Sites candidate archive",
+                )
+                _verify_archive(
+                    staged_archive,
+                    manifest,
+                    payload_sha256,
+                    descriptor=staged_archive_descriptor,
+                )
 
-            _require_same_synchronized_commit(
-                project_root,
-                commit_sha,
-                runner,
-            )
-            _require_same_archive(
-                staged_archive,
-                archive_sha256,
-            )
-            published_archive = _publish_new_output(
-                staged_archive,
-                archive_path,
-                "archive",
-                output_parents["archive"].fd,
-            )
-            published_outputs.callback(
-                _close_descriptor,
-                published_archive.fd,
-            )
-            _require_same_open_regular_file(
-                published_archive.fd,
-                archive_sha256,
-                "Sites candidate archive",
-            )
+                _require_same_synchronized_commit(
+                    project_root,
+                    commit_sha,
+                    runner,
+                )
+                _require_same_open_regular_file(
+                    staged_archive_descriptor,
+                    archive_sha256,
+                    "Sites candidate archive",
+                )
+                published_archive = _publish_new_output(
+                    staged_archive,
+                    archive_path,
+                    "archive",
+                    output_parents["archive"].fd,
+                    source_descriptor=staged_archive_descriptor,
+                    source_parent_descriptor=staging.fd,
+                )
+                published_outputs.callback(
+                    _close_descriptor,
+                    published_archive.fd,
+                )
+                _require_same_open_regular_file(
+                    published_archive.fd,
+                    archive_sha256,
+                    "Sites candidate archive",
+                )
         receipt_payload = {
             "schema_version": SCHEMA_VERSION,
             "candidate": manifest,
@@ -985,12 +1010,265 @@ def _close_descriptor(descriptor: int) -> None:
         pass
 
 
+@contextmanager
+def _archive_staging_directory(
+    parent_descriptor: int,
+    archive_path: Path,
+) -> Iterator[_ArchiveStagingDirectory]:
+    staging_name: str | None = None
+    prefix = f".{archive_path.name}."
+    for _ in range(_STAGING_NAME_ATTEMPTS):
+        candidate = f"{prefix}{secrets.token_hex(8)}"
+        try:
+            os.mkdir(
+                candidate,
+                mode=0o700,
+                dir_fd=parent_descriptor,
+            )
+        except FileExistsError:
+            continue
+        except OSError as exc:
+            raise SiteCandidateError(
+                "could not create archive staging directory "
+                f"{archive_path.parent / candidate}: {exc}"
+            ) from exc
+        staging_name = candidate
+        break
+
+    if staging_name is None:
+        raise SiteCandidateError(
+            "could not allocate a unique archive staging directory under "
+            f"{archive_path.parent}"
+        )
+
+    staging_descriptor: int | None = None
+    directory_identity: os.stat_result | None = None
+    staging: _ArchiveStagingDirectory | None = None
+    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+    if hasattr(os, "O_CLOEXEC"):
+        flags |= os.O_CLOEXEC
+
+    try:
+        directory_identity = os.stat(
+            staging_name,
+            dir_fd=parent_descriptor,
+            follow_symlinks=False,
+        )
+        staging_descriptor = os.open(
+            staging_name,
+            flags,
+            dir_fd=parent_descriptor,
+        )
+        details = os.fstat(staging_descriptor)
+        if (
+            not stat.S_ISDIR(details.st_mode)
+            or not os.path.samestat(directory_identity, details)
+        ):
+            raise SiteCandidateError(
+                "archive staging path must remain a directory: "
+                f"{archive_path.parent / staging_name}"
+            )
+        if stat.S_IMODE(details.st_mode) != 0o700:
+            raise SiteCandidateError(
+                "archive staging directory must have mode 0700: "
+                f"{archive_path.parent / staging_name}"
+            )
+        if (
+            hasattr(os, "geteuid")
+            and details.st_uid != os.geteuid()
+        ):
+            raise SiteCandidateError(
+                "archive staging directory must be owned by the current "
+                f"user: {archive_path.parent / staging_name}"
+            )
+        staging = _ArchiveStagingDirectory(
+            fd=staging_descriptor,
+            name=staging_name,
+            visible_path=archive_path.parent / staging_name,
+            directory_identity=directory_identity,
+        )
+        yield staging
+    except SiteCandidateError:
+        raise
+    except OSError as exc:
+        raise SiteCandidateError(
+            "could not bind archive staging directory "
+            f"{archive_path.parent / staging_name}: {exc}"
+        ) from exc
+    finally:
+        cleanup_error = _cleanup_archive_staging_directory(
+            parent_descriptor,
+            staging_descriptor,
+            staging_name,
+            archive_path.name,
+            archive_path.parent / staging_name,
+            directory_identity,
+            staging.archive_identity if staging is not None else None,
+        )
+        if cleanup_error is not None:
+            active_error = sys.exc_info()[1]
+            if active_error is None:
+                raise cleanup_error
+            active_error.add_note(str(cleanup_error))
+
+
+def _cleanup_archive_staging_directory(
+    parent_descriptor: int,
+    staging_descriptor: int | None,
+    staging_name: str,
+    archive_name: str,
+    staging_path: Path,
+    directory_identity: os.stat_result | None,
+    archive_identity: os.stat_result | None,
+) -> SiteCandidateError | None:
+    errors: list[str] = []
+    staging_contents_are_owned = True
+    if staging_descriptor is not None:
+        if archive_identity is None:
+            try:
+                os.stat(
+                    archive_name,
+                    dir_fd=staging_descriptor,
+                    follow_symlinks=False,
+                )
+            except FileNotFoundError:
+                pass
+            except OSError as exc:
+                staging_contents_are_owned = False
+                errors.append(
+                    f"could not inspect unverified staged archive: {exc}"
+                )
+            else:
+                staging_contents_are_owned = False
+                errors.append(
+                    "unverified staged archive remains; refusing to "
+                    "remove it"
+                )
+        else:
+            try:
+                current_archive_identity = os.stat(
+                    archive_name,
+                    dir_fd=staging_descriptor,
+                    follow_symlinks=False,
+                )
+            except FileNotFoundError:
+                pass
+            except OSError as exc:
+                staging_contents_are_owned = False
+                errors.append(f"could not inspect staged archive: {exc}")
+            else:
+                if not os.path.samestat(
+                    archive_identity,
+                    current_archive_identity,
+                ):
+                    staging_contents_are_owned = False
+                    errors.append(
+                        "staged archive entry changed; refusing to remove "
+                        "its replacement"
+                    )
+                else:
+                    try:
+                        os.unlink(
+                            archive_name,
+                            dir_fd=staging_descriptor,
+                        )
+                    except OSError as exc:
+                        staging_contents_are_owned = False
+                        errors.append(
+                            f"could not remove staged archive: {exc}"
+                        )
+        _close_descriptor(staging_descriptor)
+    else:
+        staging_contents_are_owned = False
+        errors.append(
+            "staging directory descriptor was not established; refusing "
+            "to remove it"
+        )
+
+    if directory_identity is None:
+        errors.append(
+            "staging directory identity was not established"
+        )
+    else:
+        try:
+            current_directory_identity = os.stat(
+                staging_name,
+                dir_fd=parent_descriptor,
+                follow_symlinks=False,
+            )
+        except FileNotFoundError:
+            errors.append("staging directory disappeared")
+        except OSError as exc:
+            errors.append(f"could not inspect staging directory: {exc}")
+        else:
+            if not os.path.samestat(
+                directory_identity,
+                current_directory_identity,
+            ):
+                errors.append(
+                    "staging directory entry changed; refusing to remove "
+                    "its replacement"
+                )
+            elif staging_contents_are_owned:
+                try:
+                    os.rmdir(staging_name, dir_fd=parent_descriptor)
+                except OSError as exc:
+                    errors.append(
+                        f"could not remove staging directory: {exc}"
+                    )
+
+    if not errors:
+        return None
+    return SiteCandidateError(
+        f"could not clean archive staging directory {staging_path}: "
+        + "; ".join(errors)
+    )
+
+
+@contextmanager
+def _open_staged_archive(
+    staging: _ArchiveStagingDirectory,
+    archive_name: str,
+) -> Iterator[int]:
+    flags = os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK
+    if hasattr(os, "O_CLOEXEC"):
+        flags |= os.O_CLOEXEC
+
+    descriptor: int | None = None
+    archive_path = staging.visible_path / archive_name
+    try:
+        descriptor = os.open(
+            archive_name,
+            flags,
+            dir_fd=staging.fd,
+        )
+        details = os.fstat(descriptor)
+        if not stat.S_ISREG(details.st_mode):
+            raise SiteCandidateError(
+                f"staged Sites candidate archive must be a regular file: "
+                f"{archive_path}"
+            )
+        staging.archive_identity = details
+        yield descriptor
+    except SiteCandidateError:
+        raise
+    except OSError as exc:
+        raise SiteCandidateError(
+            f"could not open staged Sites candidate archive "
+            f"{archive_path}: {exc}"
+        ) from exc
+    finally:
+        if descriptor is not None:
+            _close_descriptor(descriptor)
+
+
 def _require_descriptor_relative_publication() -> None:
     if (
         os.name != "posix"
         or not hasattr(os, "O_DIRECTORY")
         or not hasattr(os, "O_NOFOLLOW")
         or not _OPEN_SUPPORTS_DIR_FD
+        or not _STAGING_SUPPORTS_DIR_FD
         or os.stat not in getattr(os, "supports_dir_fd", ())
         or os.stat not in getattr(os, "supports_follow_symlinks", ())
         or os.link not in getattr(os, "supports_dir_fd", ())
@@ -998,7 +1276,7 @@ def _require_descriptor_relative_publication() -> None:
     ):
         raise SiteCandidateError(
             "Sites candidate preparation requires descriptor-relative "
-            "hard-link publication support"
+            "staging and hard-link publication support"
         )
 
 
@@ -1153,9 +1431,22 @@ def _require_same_open_regular_file(
     label: str,
 ) -> None:
     try:
+        actual_sha256 = _sha256_open_regular_file(descriptor, label)
+    except SiteCandidateError as exc:
+        raise SiteCandidateError(
+            f"{label} changed during candidate operation"
+        ) from exc
+    if actual_sha256 != expected_sha256:
+        raise SiteCandidateError(
+            f"{label} changed during candidate operation"
+        )
+
+
+def _sha256_open_regular_file(descriptor: int, label: str) -> str:
+    try:
         details = os.fstat(descriptor)
         if not stat.S_ISREG(details.st_mode):
-            raise OSError(f"{label} is no longer a regular file")
+            raise OSError(f"{label} is not a regular file")
 
         digest = hashlib.sha256()
         os.lseek(descriptor, 0, os.SEEK_SET)
@@ -1165,13 +1456,8 @@ def _require_same_open_regular_file(
         ):
             digest.update(chunk)
     except OSError as exc:
-        raise SiteCandidateError(
-            f"{label} changed during candidate operation"
-        ) from exc
-    if digest.hexdigest() != expected_sha256:
-        raise SiteCandidateError(
-            f"{label} changed during candidate operation"
-        )
+        raise SiteCandidateError(f"could not hash {label}: {exc}") from exc
+    return digest.hexdigest()
 
 
 def _require_path_matches_open_file(
@@ -1411,25 +1697,65 @@ def _publish_new_output(
     output_path: Path,
     label: str,
     parent_fd: int,
+    *,
+    source_descriptor: int | None = None,
+    source_parent_descriptor: int | None = None,
 ) -> _PublishedOutput:
+    if (source_descriptor is None) != (
+        source_parent_descriptor is None
+    ):
+        raise SiteCandidateError(
+            f"{label} publication source descriptor is incomplete"
+        )
+
     flags = os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK
     if hasattr(os, "O_CLOEXEC"):
         flags |= os.O_CLOEXEC
 
-    source_fd: int | None = None
+    source_fd = source_descriptor
+    owns_source_descriptor = source_fd is None
     output_fd: int | None = None
     output_transferred = False
     try:
-        source_fd = os.open(staged_path, flags)
+        if source_fd is None:
+            source_fd = os.open(staged_path, flags)
         source_details = os.fstat(source_fd)
         if not stat.S_ISREG(source_details.st_mode):
             raise SiteCandidateError(
                 f"staged {label} output must be a regular file: "
                 f"{staged_path}"
             )
+        if source_parent_descriptor is not None:
+            try:
+                current_source_details = os.stat(
+                    staged_path.name,
+                    dir_fd=source_parent_descriptor,
+                    follow_symlinks=False,
+                )
+            except OSError as exc:
+                raise SiteCandidateError(
+                    f"{label} staging source changed during publication: "
+                    f"{staged_path}"
+                ) from exc
+            if (
+                not stat.S_ISREG(current_source_details.st_mode)
+                or not os.path.samestat(
+                    source_details,
+                    current_source_details,
+                )
+            ):
+                raise SiteCandidateError(
+                    f"{label} staging source changed during publication: "
+                    f"{staged_path}"
+                )
         os.link(
-            staged_path,
+            (
+                staged_path.name
+                if source_parent_descriptor is not None
+                else staged_path
+            ),
             output_path.name,
+            src_dir_fd=source_parent_descriptor,
             dst_dir_fd=parent_fd,
             follow_symlinks=False,
         )
@@ -1461,7 +1787,7 @@ def _publish_new_output(
     except SiteCandidateError:
         raise
     finally:
-        if source_fd is not None:
+        if source_fd is not None and owns_source_descriptor:
             _close_descriptor(source_fd)
         if output_fd is not None and not output_transferred:
             _close_descriptor(output_fd)
@@ -1485,13 +1811,41 @@ def _serialize_json(payload: dict[str, object]) -> str:
     ) + "\n"
 
 
+@contextmanager
+def _open_archive_bundle(
+    archive: Path,
+    descriptor: int | None,
+) -> Iterator[tarfile.TarFile]:
+    if descriptor is None:
+        with tarfile.open(archive, "r:gz") as bundle:
+            yield bundle
+        return
+
+    duplicate: int | None = os.dup(descriptor)
+    try:
+        source = os.fdopen(duplicate, "rb")
+        duplicate = None
+        with source:
+            source.seek(0)
+            with tarfile.open(
+                fileobj=source,
+                mode="r:gz",
+            ) as bundle:
+                yield bundle
+    finally:
+        if duplicate is not None:
+            _close_descriptor(duplicate)
+
+
 def _verify_archive(
     archive: Path,
     expected_manifest: dict[str, object],
     expected_payload_sha256: str,
+    *,
+    descriptor: int | None = None,
 ) -> None:
     try:
-        with tarfile.open(archive, "r:gz") as bundle:
+        with _open_archive_bundle(archive, descriptor) as bundle:
             members: dict[str, tarfile.TarInfo] = {}
             for member in bundle.getmembers():
                 name = member.name.rstrip("/")
