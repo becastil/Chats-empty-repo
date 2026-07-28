@@ -15,6 +15,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+import repo_scout.policy_templates as policy_templates_module
 from repo_scout.policy import (
     evaluate_policy,
     load_policy,
@@ -763,6 +764,373 @@ class PolicyTemplateTests(unittest.TestCase):
             )
             self.assertTrue(original.is_file())
             self.assertTrue(policy_path.is_file())
+
+    def test_verify_receipt_rechecks_policy_bytes_after_fingerprinting(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "pyproject.toml").write_text(
+                "[project]\n",
+                encoding="utf-8",
+            )
+            bootstrap_stdout = io.StringIO()
+            with redirect_stdout(bootstrap_stdout), redirect_stderr(
+                io.StringIO()
+            ):
+                bootstrap_exit_code = main(
+                    ["bootstrap", str(root), "--format", "json"]
+                )
+            receipt = json.loads(bootstrap_stdout.getvalue())
+            receipt_path = root / "bootstrap-receipt.json"
+            receipt_path.write_text(
+                bootstrap_stdout.getvalue(),
+                encoding="utf-8",
+            )
+            policy_path = root / "repo-scout-policy.toml"
+            original_details = policy_path.stat()
+            policy_rewritten = False
+
+            def rewrite_after_fingerprint(policy: dict[str, object]) -> str:
+                nonlocal policy_rewritten
+                fingerprint = policy_fingerprint(policy)
+                policy_path.write_text(
+                    "version = 999\n",
+                    encoding="utf-8",
+                )
+                policy_rewritten = True
+                return fingerprint
+
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with patch(
+                "repo_scout.policy_templates.policy_fingerprint",
+                side_effect=rewrite_after_fingerprint,
+            ), redirect_stdout(stdout), redirect_stderr(stderr):
+                exit_code = main(
+                    [
+                        "verify-receipt",
+                        str(receipt_path),
+                        "--format",
+                        "json",
+                    ]
+                )
+            verification = json.loads(stdout.getvalue())
+
+            self.assertEqual(bootstrap_exit_code, 0)
+            self.assertTrue(policy_rewritten)
+            self.assertTrue(
+                os.path.samestat(original_details, policy_path.stat())
+            )
+            self.assertEqual(exit_code, 6)
+            self.assertEqual(stderr.getvalue(), "")
+            self.assertEqual(verification["status"], "fail")
+            self.assertEqual(verification["expected"], receipt["policy"])
+            self.assertIsNone(verification["actual"])
+            self.assertIn(
+                "policy changed during verification",
+                verification["message"],
+            )
+
+    @unittest.skipUnless(
+        hasattr(os, "symlink") and hasattr(os, "mkfifo"),
+        "symlink and FIFO semantics are unavailable",
+    )
+    def test_verify_receipt_rejects_non_regular_receipt_paths_before_read(
+        self,
+    ) -> None:
+        for kind in ("symlink", "directory", "fifo"):
+            with self.subTest(kind=kind), TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                (root / "pyproject.toml").write_text(
+                    "[project]\n",
+                    encoding="utf-8",
+                )
+                bootstrap_stdout = io.StringIO()
+                with redirect_stdout(bootstrap_stdout), redirect_stderr(
+                    io.StringIO()
+                ):
+                    bootstrap_exit_code = main(
+                        ["bootstrap", str(root), "--format", "json"]
+                    )
+                receipt_path = root / "bootstrap-receipt.json"
+                receipt_path.write_text(
+                    bootstrap_stdout.getvalue(),
+                    encoding="utf-8",
+                )
+                receipt_target = root / "stored-receipt.json"
+                if kind == "symlink":
+                    receipt_path.replace(receipt_target)
+                    receipt_path.symlink_to(receipt_target)
+                elif kind == "directory":
+                    receipt_path.unlink()
+                    receipt_path.mkdir()
+                else:
+                    receipt_path.unlink()
+                    os.mkfifo(receipt_path)
+
+                stdout = io.StringIO()
+                stderr = io.StringIO()
+                with patch.object(
+                    Path,
+                    "read_text",
+                    side_effect=AssertionError(
+                        "non-regular receipt path must not be read"
+                    ),
+                ), redirect_stdout(stdout), redirect_stderr(stderr):
+                    exit_code = main(
+                        [
+                            "verify-receipt",
+                            str(receipt_path),
+                            "--format",
+                            "json",
+                        ]
+                    )
+
+                self.assertEqual(bootstrap_exit_code, 0)
+                self.assertEqual(exit_code, 2)
+                self.assertEqual(stdout.getvalue(), "")
+                self.assertIn(
+                    (
+                        "bootstrap receipt path must not be a symlink"
+                        if kind == "symlink"
+                        else "bootstrap receipt path must be a regular file"
+                    ),
+                    stderr.getvalue(),
+                )
+                self.assertIn(str(receipt_path), stderr.getvalue())
+                if kind == "symlink":
+                    self.assertNotIn(str(receipt_target), stderr.getvalue())
+                    self.assertTrue(receipt_path.is_symlink())
+                    self.assertTrue(receipt_target.is_file())
+                elif kind == "directory":
+                    self.assertTrue(receipt_path.is_dir())
+                else:
+                    self.assertTrue(
+                        stat.S_ISFIFO(receipt_path.lstat().st_mode)
+                    )
+
+    @unittest.skipUnless(
+        hasattr(os, "symlink"), "symlink semantics are unavailable"
+    )
+    def test_verify_receipt_rejects_receipt_leaf_replacement_before_read(
+        self,
+    ) -> None:
+        for replacement_kind in ("symlink", "regular"):
+            with self.subTest(
+                replacement_kind=replacement_kind
+            ), TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                (root / "pyproject.toml").write_text(
+                    "[project]\n",
+                    encoding="utf-8",
+                )
+                bootstrap_stdout = io.StringIO()
+                with redirect_stdout(bootstrap_stdout), redirect_stderr(
+                    io.StringIO()
+                ):
+                    bootstrap_exit_code = main(
+                        ["bootstrap", str(root), "--format", "json"]
+                    )
+                receipt_path = root / "bootstrap-receipt.json"
+                receipt_path.write_text(
+                    bootstrap_stdout.getvalue(),
+                    encoding="utf-8",
+                )
+                expected_receipt_path = (
+                    receipt_path.parent.resolve() / receipt_path.name
+                )
+                replacement = root / "replacement-receipt.json"
+                replacement.write_text(
+                    receipt_path.read_text(encoding="utf-8"),
+                    encoding="utf-8",
+                )
+                original = root / "original-receipt.json"
+                original_lstat = Path.lstat
+                replacement_made = False
+
+                def replace_after_lstat(path: Path) -> os.stat_result:
+                    nonlocal replacement_made
+                    details = original_lstat(path)
+                    if (
+                        path == expected_receipt_path
+                        and not replacement_made
+                    ):
+                        receipt_path.replace(original)
+                        if replacement_kind == "symlink":
+                            receipt_path.symlink_to(original)
+                        else:
+                            replacement.replace(receipt_path)
+                        replacement_made = True
+                    return details
+
+                stdout = io.StringIO()
+                stderr = io.StringIO()
+                with patch.object(
+                    Path,
+                    "lstat",
+                    replace_after_lstat,
+                ), redirect_stdout(stdout), redirect_stderr(stderr):
+                    exit_code = main(
+                        [
+                            "verify-receipt",
+                            str(receipt_path),
+                            "--format",
+                            "json",
+                        ]
+                    )
+
+                self.assertEqual(bootstrap_exit_code, 0)
+                self.assertTrue(replacement_made)
+                self.assertEqual(exit_code, 2)
+                self.assertEqual(stdout.getvalue(), "")
+                self.assertIn(
+                    "bootstrap receipt path changed during verification",
+                    stderr.getvalue(),
+                )
+                self.assertIn(str(receipt_path), stderr.getvalue())
+                self.assertNotIn(str(original), stderr.getvalue())
+                self.assertTrue(original.is_file())
+                if replacement_kind == "symlink":
+                    self.assertTrue(receipt_path.is_symlink())
+                    self.assertTrue(replacement.is_file())
+                else:
+                    self.assertTrue(receipt_path.is_file())
+                    self.assertFalse(receipt_path.is_symlink())
+
+    def test_verify_receipt_rechecks_receipt_leaf_after_validation(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "pyproject.toml").write_text(
+                "[project]\n",
+                encoding="utf-8",
+            )
+            bootstrap_stdout = io.StringIO()
+            with redirect_stdout(bootstrap_stdout), redirect_stderr(
+                io.StringIO()
+            ):
+                bootstrap_exit_code = main(
+                    ["bootstrap", str(root), "--format", "json"]
+                )
+            receipt_path = root / "bootstrap-receipt.json"
+            receipt_path.write_text(
+                bootstrap_stdout.getvalue(),
+                encoding="utf-8",
+            )
+            replacement = root / "replacement-receipt.json"
+            replacement.write_text(
+                receipt_path.read_text(encoding="utf-8"),
+                encoding="utf-8",
+            )
+            original = root / "original-receipt.json"
+            original_validator = (
+                policy_templates_module._validate_bootstrap_receipt
+            )
+            replacement_made = False
+
+            def replace_after_validation(
+                receipt: object,
+            ) -> dict[str, object]:
+                nonlocal replacement_made
+                validated = original_validator(receipt)
+                receipt_path.replace(original)
+                replacement.replace(receipt_path)
+                replacement_made = True
+                return validated
+
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with patch(
+                "repo_scout.policy_templates._validate_bootstrap_receipt",
+                side_effect=replace_after_validation,
+            ), redirect_stdout(stdout), redirect_stderr(stderr):
+                exit_code = main(
+                    [
+                        "verify-receipt",
+                        str(receipt_path),
+                        "--format",
+                        "json",
+                    ]
+                )
+
+            self.assertEqual(bootstrap_exit_code, 0)
+            self.assertTrue(replacement_made)
+            self.assertEqual(exit_code, 2)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertIn(
+                "bootstrap receipt path changed during verification",
+                stderr.getvalue(),
+            )
+            self.assertTrue(original.is_file())
+            self.assertTrue(receipt_path.is_file())
+
+    def test_verify_receipt_rechecks_receipt_bytes_after_validation(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "pyproject.toml").write_text(
+                "[project]\n",
+                encoding="utf-8",
+            )
+            bootstrap_stdout = io.StringIO()
+            with redirect_stdout(bootstrap_stdout), redirect_stderr(
+                io.StringIO()
+            ):
+                bootstrap_exit_code = main(
+                    ["bootstrap", str(root), "--format", "json"]
+                )
+            receipt_path = root / "bootstrap-receipt.json"
+            receipt_path.write_text(
+                bootstrap_stdout.getvalue(),
+                encoding="utf-8",
+            )
+            original_details = receipt_path.stat()
+            original_validator = (
+                policy_templates_module._validate_bootstrap_receipt
+            )
+            receipt_rewritten = False
+
+            def rewrite_after_validation(
+                receipt: object,
+            ) -> dict[str, object]:
+                nonlocal receipt_rewritten
+                validated = original_validator(receipt)
+                receipt_path.write_text(
+                    '{"schema_version": 999}\n',
+                    encoding="utf-8",
+                )
+                receipt_rewritten = True
+                return validated
+
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with patch(
+                "repo_scout.policy_templates._validate_bootstrap_receipt",
+                side_effect=rewrite_after_validation,
+            ), redirect_stdout(stdout), redirect_stderr(stderr):
+                exit_code = main(
+                    [
+                        "verify-receipt",
+                        str(receipt_path),
+                        "--format",
+                        "json",
+                    ]
+                )
+
+            self.assertEqual(bootstrap_exit_code, 0)
+            self.assertTrue(receipt_rewritten)
+            self.assertTrue(
+                os.path.samestat(original_details, receipt_path.stat())
+            )
+            self.assertEqual(exit_code, 2)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertIn(
+                "bootstrap receipt changed during verification",
+                stderr.getvalue(),
+            )
 
     def test_verify_receipt_rejects_malformed_evidence_and_reports_missing_policy(
         self,

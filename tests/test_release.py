@@ -538,6 +538,8 @@ class ReleaseManifestTests(unittest.TestCase):
                 "polyglot-review",
                 "symlink-bootstrap-output-rejected",
                 "relative-receipt-output-rejected",
+                "symlink-bootstrap-receipt-rejected",
+                "nonregular-bootstrap-receipt-rejected",
                 "symlink-receipt-policy-rejected",
                 "nonregular-receipt-policy-rejected",
             ),

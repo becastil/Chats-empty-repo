@@ -283,6 +283,12 @@ version and fingerprint to the policy a team is about to commit or enforce.
 It produces stable drift evidence and a CI failure without uploading either
 file. This is useful free activation proof; paid value remains resolving drift
 and operating one reviewed standard across repositories and teams.
+The archived receipt argument must now name a direct regular-file leaf before
+JSON is read. Receipt validation stays on one descriptor and accepts the
+evidence only after the same requested leaf and exact bytes survive a final
+check. Symlinks, special files, path replacement, and same-inode mutation fail
+as command-input errors without a verification report, preventing untrusted
+handoff evidence from redirecting or stalling first-repository activation.
 Verification now preserves the receipt-recorded or explicitly overridden policy
 leaf instead of resolving through it. An initial or dangling symlink fails with
 the normal policy-mismatch exit, retains expected identity evidence, reports no
@@ -302,8 +308,9 @@ activation check while preserving the normal mismatch evidence contract.
 Receipt verification now also binds parsing and fingerprinting to one opened
 regular-file descriptor. The descriptor must match the initially inspected
 leaf, and that requested leaf must still identify the same file after the
-fingerprint is calculated. A symlink redirect or different regular-file
-replacement therefore cannot turn identical policy bytes into false
+fingerprint is calculated. The exact opened bytes are reread at that acceptance
+point as well. A symlink redirect, different regular-file replacement, or
+same-inode mutation therefore cannot turn stale policy bytes into false
 first-repository or paid-CI activation evidence. This strengthens the free
 activation proof without establishing customer use, pilot demand, payment, or
 revenue.

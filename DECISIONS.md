@@ -3937,3 +3937,32 @@ fingerprinting. All three paths fail closed without disclosing a referent.
 This keeps free first-repository and paid-CI activation evidence tied to the
 policy leaf under review. It does not deploy the site, approve outreach,
 establish customer use, validate demand, collect payment, or record revenue.
+
+## 2026-07-28: Bind Bootstrap Receipt Inputs To Stable Evidence
+
+`verify-receipt` resolved the receipt argument through its leaf and then used a
+path-based text read. A symlink could silently select another receipt, a FIFO
+could block the command before policy verification, and a different file could
+replace the receipt between reading and acceptance. The archived evidence had
+strict JSON semantics but no matching filesystem boundary.
+
+Receipt normalization now resolves only the parent and preserves the requested
+leaf. The leaf must be a direct regular file before opening. JSON bytes are read
+and validated through one non-inheritable descriptor opened with no-follow and
+nonblocking flags where available. Before validated evidence is returned, the
+descriptor bytes are reread exactly and the requested leaf must still identify
+the originally inspected file. Symlinks, special files, different-inode
+replacement, and same-inode mutation all fail with exit 2 and no verification
+report.
+
+The shared descriptor helper now gives policy fingerprinting the same
+exact-byte acceptance check in addition to its existing leaf-identity check.
+Source regressions cover symlink, directory, FIFO, pre-read replacement,
+post-validation replacement, and in-place mutation. The installed activation
+journey proves the packaged command rejects symlink and non-regular receipt
+inputs without changing or disclosing their evidence.
+
+This prevents untrusted receipt input from redirecting or stalling free
+first-repository and paid-CI activation. It does not approve outreach, export
+or deploy the site, establish customer use, validate demand, collect payment,
+or record revenue.

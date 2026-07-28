@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
 from dataclasses import dataclass
 from importlib import resources
 import json
@@ -10,7 +11,7 @@ import re
 import stat
 import sys
 from tempfile import NamedTemporaryFile
-from typing import Any, Sequence
+from typing import Any, Iterator, Sequence
 
 from .version import add_version_argument
 
@@ -64,6 +65,14 @@ TEMPLATE_BY_NAME = {template.name: template for template in TEMPLATES}
 
 class TemplateError(RuntimeError):
     """Raised when a packaged policy template cannot be read."""
+
+
+class _StablePathError(RuntimeError):
+    """Raised when an inspected file leaf changes during one operation."""
+
+
+class _StableContentError(RuntimeError):
+    """Raised when an opened file's bytes change during one operation."""
 
 
 def get_template(name: str) -> str:
@@ -277,38 +286,72 @@ def bootstrap_receipt(
 
 
 def load_bootstrap_receipt(path: str | Path) -> dict[str, Any]:
-    source = Path(path).expanduser().resolve()
+    source = _bootstrap_receipt_source(path)
+    return _load_bootstrap_receipt_source(source)
+
+
+def _bootstrap_receipt_source(path: str | Path) -> Path:
+    requested = Path(path).expanduser()
     try:
-        content = source.read_text(encoding="utf-8")
+        return requested.parent.resolve() / requested.name
+    except (OSError, ValueError) as exc:
+        raise TemplateError("bootstrap receipt path is invalid") from exc
+
+
+def _load_bootstrap_receipt_source(source: Path) -> dict[str, Any]:
+    try:
+        source_details = source.lstat()
     except FileNotFoundError as exc:
         raise TemplateError(f"bootstrap receipt does not exist: {source}") from exc
+    except OSError as exc:
+        raise TemplateError(
+            f"could not inspect bootstrap receipt path {source}: {exc}"
+        ) from exc
+    if stat.S_ISLNK(source_details.st_mode):
+        raise TemplateError(
+            f"bootstrap receipt path must not be a symlink: {source}"
+        )
+    if not stat.S_ISREG(source_details.st_mode):
+        raise TemplateError(
+            f"bootstrap receipt path must be a regular file: {source}"
+        )
+
+    try:
+        with _read_stable_regular_file(source, source_details) as content:
+            try:
+                receipt = json.loads(
+                    content,
+                    object_pairs_hook=_reject_duplicate_json_keys,
+                )
+            except json.JSONDecodeError as exc:
+                raise TemplateError(
+                    f"invalid bootstrap receipt JSON in {source}: {exc.msg}"
+                ) from exc
+            except TemplateError as exc:
+                raise TemplateError(
+                    f"invalid bootstrap receipt JSON in {source}: {exc}"
+                ) from exc
+            return _validate_bootstrap_receipt(receipt)
+    except _StablePathError as exc:
+        raise TemplateError(
+            f"bootstrap receipt path changed during verification: {source}"
+        ) from exc
+    except _StableContentError as exc:
+        raise TemplateError(
+            f"bootstrap receipt changed during verification: {source}"
+        ) from exc
     except (OSError, UnicodeDecodeError) as exc:
         raise TemplateError(
             f"could not read bootstrap receipt {source}: {exc}"
         ) from exc
-
-    try:
-        receipt = json.loads(
-            content,
-            object_pairs_hook=_reject_duplicate_json_keys,
-        )
-    except json.JSONDecodeError as exc:
-        raise TemplateError(
-            f"invalid bootstrap receipt JSON in {source}: {exc.msg}"
-        ) from exc
-    except TemplateError as exc:
-        raise TemplateError(
-            f"invalid bootstrap receipt JSON in {source}: {exc}"
-        ) from exc
-    return _validate_bootstrap_receipt(receipt)
 
 
 def verify_bootstrap_receipt(
     receipt_path: str | Path,
     policy_path: str | Path | None = None,
 ) -> dict[str, Any]:
-    receipt_source = Path(receipt_path).expanduser().resolve()
-    receipt = load_bootstrap_receipt(receipt_source)
+    receipt_source = _bootstrap_receipt_source(receipt_path)
+    receipt = _load_bootstrap_receipt_source(receipt_source)
     target_value = receipt["output"] if policy_path is None else policy_path
     requested_target = Path(target_value).expanduser()
     target = requested_target.parent.resolve() / requested_target.name
@@ -371,6 +414,32 @@ def _load_stable_policy_identity(
     target: Path,
     expected_details: os.stat_result,
 ) -> dict[str, Any]:
+    try:
+        with _read_stable_regular_file(target, expected_details) as content:
+            policy = parse_policy(content, source=f"policy file {target}")
+            return {
+                "version": policy["version"],
+                "fingerprint": policy_fingerprint(policy),
+            }
+    except _StablePathError as exc:
+        raise PolicyError(
+            f"policy path changed during verification: {target}"
+        ) from exc
+    except _StableContentError as exc:
+        raise PolicyError(
+            f"policy changed during verification: {target}"
+        ) from exc
+    except (OSError, UnicodeDecodeError) as exc:
+        raise PolicyError(
+            f"could not read policy file {target}: {exc}"
+        ) from exc
+
+
+@contextmanager
+def _read_stable_regular_file(
+    target: Path,
+    expected_details: os.stat_result,
+) -> Iterator[str]:
     flags = os.O_RDONLY
     for flag_name in ("O_BINARY", "O_CLOEXEC", "O_NOFOLLOW", "O_NONBLOCK"):
         flags |= getattr(os, flag_name, 0)
@@ -381,59 +450,36 @@ def _load_stable_policy_identity(
             descriptor = os.open(target, flags)
         except OSError as exc:
             if not _regular_path_matches(target, expected_details):
-                raise PolicyError(
-                    f"policy path changed during verification: {target}"
-                ) from exc
-            raise PolicyError(
-                f"could not read policy file {target}: {exc}"
-            ) from exc
+                raise _StablePathError from exc
+            raise
 
-        try:
-            os.set_inheritable(descriptor, False)
-            opened_details = os.fstat(descriptor)
-        except OSError as exc:
-            raise PolicyError(
-                f"could not read policy file {target}: {exc}"
-            ) from exc
+        os.set_inheritable(descriptor, False)
+        opened_details = os.fstat(descriptor)
         if (
             not stat.S_ISREG(opened_details.st_mode)
             or not os.path.samestat(expected_details, opened_details)
         ):
-            raise PolicyError(
-                f"policy path changed during verification: {target}"
-            )
-
-        chunks: list[bytes] = []
-        try:
-            while True:
-                chunk = os.read(descriptor, 65536)
-                if not chunk:
-                    break
-                chunks.append(chunk)
-        except OSError as exc:
-            raise PolicyError(
-                f"could not read policy file {target}: {exc}"
-            ) from exc
-        try:
-            content = b"".join(chunks).decode("utf-8")
-        except UnicodeDecodeError as exc:
-            raise PolicyError(
-                f"could not read policy file {target}: {exc}"
-            ) from exc
-        policy = parse_policy(content, source=f"policy file {target}")
-        actual = {
-            "version": policy["version"],
-            "fingerprint": policy_fingerprint(policy),
-        }
-
+            raise _StablePathError
+        original_content = _read_descriptor_bytes(descriptor)
+        yield original_content.decode("utf-8")
+        os.lseek(descriptor, 0, os.SEEK_SET)
+        if _read_descriptor_bytes(descriptor) != original_content:
+            raise _StableContentError
         if not _regular_path_matches(target, opened_details):
-            raise PolicyError(
-                f"policy path changed during verification: {target}"
-            )
-        return actual
+            raise _StablePathError
     finally:
         if descriptor is not None:
             os.close(descriptor)
+
+
+def _read_descriptor_bytes(descriptor: int) -> bytes:
+    chunks: list[bytes] = []
+    while True:
+        chunk = os.read(descriptor, 65536)
+        if not chunk:
+            break
+        chunks.append(chunk)
+    return b"".join(chunks)
 
 
 def _regular_path_matches(

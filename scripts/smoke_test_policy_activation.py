@@ -288,6 +288,73 @@ def verify_policy_activation(
             raise SmokeTestError("relative receipt output was not rejected")
         checked.append("relative-receipt-output-rejected")
 
+        stored_receipt = root / "stored-bootstrap-receipt.json"
+        receipt_path.replace(stored_receipt)
+        receipt_path.symlink_to(stored_receipt)
+        symlink_receipt_verification = _run(
+            [
+                *policy_command,
+                "verify-receipt",
+                str(receipt_path),
+                "--format",
+                "json",
+            ],
+            cwd=root,
+            environment=environment,
+            expected_exit_code=2,
+        )
+        if symlink_receipt_verification.stdout:
+            raise SmokeTestError(
+                "symlink bootstrap receipt emitted verification"
+            )
+        if (
+            "bootstrap receipt path must not be a symlink"
+            not in symlink_receipt_verification.stderr
+        ):
+            raise SmokeTestError("symlink bootstrap receipt was not rejected")
+        if str(stored_receipt) in symlink_receipt_verification.stderr:
+            raise SmokeTestError("symlink bootstrap receipt disclosed its target")
+        if not receipt_path.is_symlink() or not stored_receipt.is_file():
+            raise SmokeTestError(
+                "symlink bootstrap receipt verification changed evidence"
+            )
+        checked.append("symlink-bootstrap-receipt-rejected")
+
+        receipt_path.unlink()
+        stored_receipt.replace(receipt_path)
+        receipt_path.replace(stored_receipt)
+        receipt_path.mkdir()
+        non_regular_receipt_verification = _run(
+            [
+                *policy_command,
+                "verify-receipt",
+                str(receipt_path),
+                "--format",
+                "json",
+            ],
+            cwd=root,
+            environment=environment,
+            expected_exit_code=2,
+        )
+        if non_regular_receipt_verification.stdout:
+            raise SmokeTestError(
+                "non-regular bootstrap receipt emitted verification"
+            )
+        if (
+            "bootstrap receipt path must be a regular file"
+            not in non_regular_receipt_verification.stderr
+        ):
+            raise SmokeTestError(
+                "non-regular bootstrap receipt was not rejected"
+            )
+        if not receipt_path.is_dir() or not stored_receipt.is_file():
+            raise SmokeTestError(
+                "non-regular bootstrap receipt verification changed evidence"
+            )
+        checked.append("nonregular-bootstrap-receipt-rejected")
+
+        receipt_path.rmdir()
+        stored_receipt.replace(receipt_path)
         moved_policy = root / "moved-policy.toml"
         policy_path.replace(moved_policy)
         policy_path.symlink_to(moved_policy)

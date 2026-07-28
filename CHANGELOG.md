@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Required bootstrap receipt arguments to name direct regular-file leaves,
+  rejecting symlinks and special files before reads with exit 2 and no
+  verification report.
+- Bound receipt JSON parsing and validation to one descriptor, then rechecked
+  its exact bytes and requested leaf before use; the shared verifier now also
+  detects same-inode policy mutation after fingerprinting.
+- Added source activation proof across receipt symlinks, directories, FIFOs,
+  pre-read replacement, post-validation replacement, and in-place byte
+  mutation, plus installed-command proof for symlink and directory inputs.
 - Bound bootstrap-receipt parsing and fingerprinting to one opened regular-file
   descriptor, requiring the selected leaf to retain the same filesystem
   identity before a match can pass.

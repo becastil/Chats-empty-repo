@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after binding receipt verification to one policy descriptor:
-  266 / 1,000 (26.6%).
-- Remaining after binding receipt verification to one policy descriptor:
-  734 commits.
+- Progress after binding bootstrap receipt input to stable evidence:
+  267 / 1,000 (26.7%).
+- Remaining after binding bootstrap receipt input to stable evidence:
+  733 commits.
 
 ## Commit Standard
 
