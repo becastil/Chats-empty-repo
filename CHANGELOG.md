@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Rejected duplicate JSON keys at every depth of pilot issue exports before
+  issue parsing, preventing last-key-wins `pilot-paid` evidence from changing
+  booked-pilot and revenue totals.
+- Extended source and installed-command commercial checks to prove an
+  ambiguous payment-label export emits no report or label value.
 - Kept generated content-bound decline continuations copy-ready by always
   shell-quoting the `PRIVATE-REVIEW-PATH` marker, so literal replacement with
   an owner-only destination containing spaces remains one argument.

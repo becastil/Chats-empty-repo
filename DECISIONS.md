@@ -3823,3 +3823,22 @@ lifecycle smoke test proves the same behavior through the packaged command.
 This change preserves the private review handoff after a human no-send
 decision. It does not make that decision, approve or send outreach, save or
 deploy a Sites version, validate willingness to pay, or record revenue.
+
+## 2026-07-28: Reject Ambiguous Pilot JSON Before Revenue Accounting
+
+The pilot reporter decoded issue exports with normal JSON last-key-wins
+semantics. An otherwise valid issue object could therefore contain two
+`labels` keys, with one omitting `pilot-paid` and the other including it. The
+decoder silently selected the latter value before the funnel applied its
+otherwise strict payment rules, allowing ambiguous input to change booked
+pilot and revenue totals.
+
+Pilot issue ingestion now rejects duplicate JSON keys at every object depth
+before issue parsing. The controlled error names only the repeated field and
+emits no report. A source regression proves the fail-closed CLI boundary, and
+the installed commercial smoke test proves the packaged command rejects
+conflicting payment-label evidence without echoing either label value.
+
+This hardens the accounting input contract only. It does not create a pilot
+request, apply a payment label, contact a buyer, collect payment, or record
+revenue.

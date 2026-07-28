@@ -354,6 +354,42 @@ def verify_pilot_funnel(
         )
         checked.append("invalid-distribution-rejected")
 
+        issue_export.write_text(
+            """[
+  {
+    "number": 103,
+    "title": "Ambiguous payment evidence",
+    "state": "OPEN",
+    "updatedAt": "2026-07-13T12:00:00Z",
+    "body": null,
+    "labels": ["pilot-lead"],
+    "labels": ["pilot-lead", "pilot-paid"]
+  }
+]
+""",
+            encoding="utf-8",
+        )
+        duplicate_key = _run(
+            pilot_command,
+            issue_export,
+            output_format="json",
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(
+            not duplicate_key.stdout,
+            "duplicate payment key emitted a pilot report",
+        )
+        _require(
+            'duplicate JSON key: "labels"' in duplicate_key.stderr,
+            "duplicate payment key did not produce its controlled error",
+        )
+        _require(
+            "pilot-paid" not in duplicate_key.stderr,
+            "duplicate payment key exposed ambiguous label evidence",
+        )
+        checked.append("duplicate-payment-key-rejected")
+
         issue_export.write_text("{}\n", encoding="utf-8")
         invalid = _run(
             pilot_command,

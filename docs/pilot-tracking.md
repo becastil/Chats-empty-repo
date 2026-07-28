@@ -165,6 +165,9 @@ substitute for missing payment evidence. A later `pilot-lost` label does not
 erase cash already received. If a payment is refunded, remove `pilot-paid` and
 later paid-stage labels before the next report, and retain the refund evidence
 outside the public issue.
+Pilot issue JSON with duplicate keys is rejected before issue parsing, so
+conflicting `labels` fields cannot silently change booked-pilot or revenue
+totals.
 
 Resolved annual-conversion totals also require `pilot-paid`. A
 `pilot-converted` issue that skipped payment keeps its visible stage and

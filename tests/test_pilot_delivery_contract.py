@@ -247,6 +247,17 @@ class PilotDeliveryContractTests(unittest.TestCase):
                 self.assertNotIn("or a later paid stage", normalized)
                 self.assertNotIn("Only `pilot-paid` and later", normalized)
 
+    def test_commercial_docs_reject_ambiguous_pilot_json(self) -> None:
+        duplicate_key_rule = (
+            "Pilot issue JSON with duplicate keys is rejected before issue "
+            "parsing, so conflicting `labels` fields cannot silently change "
+            "booked-pilot or revenue totals."
+        )
+        for path in (BUSINESS_MODEL, PILOT_TRACKING, ROOT / "README.md"):
+            with self.subTest(path=path.name):
+                normalized = " ".join(path.read_text(encoding="utf-8").split())
+                self.assertIn(duplicate_key_rule, normalized)
+
     def test_public_activation_label_requires_private_handoff_evidence(self) -> None:
         tracking = " ".join(PILOT_TRACKING.read_text(encoding="utf-8").split())
 

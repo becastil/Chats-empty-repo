@@ -956,6 +956,31 @@ class PilotFunnelTests(unittest.TestCase):
         self.assertEqual(exit_code, 2)
         self.assertIn("invalid JSON", stderr.getvalue())
 
+    def test_main_rejects_duplicate_json_keys_before_revenue_reporting(
+        self,
+    ) -> None:
+        payload = """[
+          {
+            "number": 1,
+            "title": "Ambiguous payment evidence",
+            "state": "OPEN",
+            "updatedAt": "2026-07-01T00:00:00Z",
+            "body": null,
+            "labels": ["pilot-lead"],
+            "labels": ["pilot-lead", "pilot-paid"]
+          }
+        ]"""
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+
+        with redirect_stdout(stdout), redirect_stderr(stderr):
+            exit_code = main(["--format", "json"], stdin=io.StringIO(payload))
+
+        self.assertEqual(exit_code, 2)
+        self.assertEqual(stdout.getvalue(), "")
+        self.assertIn('duplicate JSON key: "labels"', stderr.getvalue())
+        self.assertNotIn("pilot-paid", stderr.getvalue())
+
     def test_build_funnel_rejects_invalid_issue_shape(self) -> None:
         with self.assertRaisesRegex(FunnelInputError, "labels must be an array"):
             build_funnel([{"number": 1, "title": "Pilot", "labels": "pilot-lead"}])

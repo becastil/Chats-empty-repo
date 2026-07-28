@@ -288,6 +288,9 @@ implementation capacity, and commercial fit, so repeated paid outcomes can
 shape stronger policy packs and rollout playbooks. A deterministic sales queue ranks every open
 pre-payment deal by declared readiness and funnel stage, then names the next
 conversion action without advancing labels automatically.
+Pilot issue JSON with duplicate keys is rejected before issue parsing, so
+conflicting `labels` fields cannot silently change booked-pilot or revenue
+totals.
 Schema-7 reports also normalize the required team size, repository count, and
 CI provider, confirm that a repository-standard answer exists without copying
 its text into reports, and mark each request as target, outside-target, or

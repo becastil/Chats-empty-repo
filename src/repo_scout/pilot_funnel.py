@@ -760,11 +760,28 @@ def _read_payload(source: str, stdin: TextIO) -> Any:
         raise FunnelInputError(f"could not read {source}: {exc}") from exc
 
     try:
-        return json.loads(content)
+        return json.loads(
+            content,
+            object_pairs_hook=_reject_duplicate_json_keys,
+        )
     except json.JSONDecodeError as exc:
         raise FunnelInputError(
             f"invalid JSON at line {exc.lineno}, column {exc.colno}: {exc.msg}"
         ) from exc
+
+
+def _reject_duplicate_json_keys(
+    pairs: list[tuple[str, Any]],
+) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise FunnelInputError(
+                "issue export contains duplicate JSON key: "
+                f"{json.dumps(key)}"
+            )
+        result[key] = value
+    return result
 
 
 def _parse_issue(raw_issue: Any, index: int) -> PilotIssue:

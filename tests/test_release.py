@@ -614,6 +614,7 @@ class ReleaseManifestTests(unittest.TestCase):
                 "growth-boundaries",
                 "invalid-growth-rejected",
                 "invalid-distribution-rejected",
+                "duplicate-payment-key-rejected",
                 "invalid-export-rejected",
             ),
         )

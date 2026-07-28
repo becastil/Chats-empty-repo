@@ -8,9 +8,8 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after keeping decline continuation paths shell-safe: 261 / 1,000
-  (26.1%).
-- Remaining after keeping decline continuation paths shell-safe: 739 commits.
+- Progress after rejecting ambiguous pilot revenue JSON: 262 / 1,000 (26.2%).
+- Remaining after rejecting ambiguous pilot revenue JSON: 738 commits.
 
 ## Commit Standard
 

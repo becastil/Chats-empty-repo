@@ -1182,6 +1182,10 @@ dependency-free `repo-scout-pilot` report. Booked revenue requires the
 evidence. Qualified leads and written offers remain pipeline, not booked
 revenue. Label warnings must be resolved before totals are used in a roadmap or
 sales decision.
+Pilot issue JSON with duplicate keys is rejected before issue parsing, so
+conflicting `labels` fields cannot silently change booked-pilot or revenue
+totals. The controlled error identifies only the repeated field and emits no
+report.
 
 Direct callers may change the pilot price, pilot target, and inactivity
 threshold only with genuine positive integers. Booleans, floats, and numeric
