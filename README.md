@@ -327,6 +327,12 @@ revenue for each self-reported discovery channel, readiness state, and purchase
 criterion without treating intent as cash. They validate global and per-segment
 activation counts from detailed deals and prioritize any
 booked-but-unactivated pilot before another sale, retention work, or expansion.
+For schema-9+ evidence, the joined report also emits a public-safe activation
+queue with the exact issue number, lifecycle stage, source, readiness, purchase
+criterion, and canonical delivery or reconciliation action for every
+booked-but-unactivated pilot. It never copies issue titles, repository
+standards, contracts, payment details, or customer acknowledgement into that
+queue.
 The report also groups the primary purchase criterion
 behind each request, including policy fit, rollout fit, evidence, privacy,
 implementation capacity, and commercial fit, so repeated paid outcomes can
@@ -579,10 +585,12 @@ every segment. Schema 9 adds payment-backed activation evidence and inserts an
 activation bottleneck after payment but before another pilot sale. Schema 10
 attributes activation across source, readiness, and purchase criterion and
 rejects segment totals that do not reproduce the detailed deals. Schemas 5
-through 8 remain readable with activation marked unavailable rather than zero. The
-review never calculates a download-to-lead conversion rate: GitHub artifact
-requests are not unique people and cannot be assigned to a discovery source or
-purchase criterion.
+through 8 remain readable with activation and its action queue marked
+unavailable rather than zero or empty. Schema-9+ reviews derive one ordered
+action for each booked-but-unactivated deal, prioritizing live paid delivery
+before terminal lifecycle reconciliation. The review never calculates a
+download-to-lead conversion rate: GitHub artifact requests are not unique
+people and cannot be assigned to a discovery source or purchase criterion.
 
 The reviewed public or counts-only baseline under [`metrics/`](metrics/)
 provides the current comparison point and records why cumulative GitHub

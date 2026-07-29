@@ -4666,3 +4666,28 @@ The new rows are directional buyer and channel evidence, not causal
 attribution, authentication of a saved report, proof of private acceptance,
 permission to contact a customer, payment evidence, or a real activation
 event.
+
+## 2026-07-29: Derive A Public-Safe Paid-Delivery Action Queue
+
+The activation bottleneck correctly stopped another sale when booked pilots
+had not reached `pilot-active`, but it exposed only an aggregate count and one
+generic instruction. An operator still had to inspect the detailed report to
+find the exact paid record and decide whether it required live delivery or
+terminal lifecycle reconciliation. That gap is especially costly after
+payment, when fulfillment should be the product's first priority.
+
+Schema-9+ joined growth now derives one activation action from every validated
+booked-but-unactivated detailed deal. Each member carries only the public issue
+number, lifecycle stage, normalized source, readiness, purchase criterion, and
+a canonical next action. Live `paid` delivery is ordered before `conflict`,
+`converted`, and `lost` reconciliation, with issue number as the deterministic
+tie-breaker. The action count must equal booked pilots minus activated pilots,
+and completed activation removes the record from the queue.
+
+Schemas 5 through 8 expose both the queue and action count as unavailable
+rather than as an invented empty result. Titles, free text, repository
+identity, access evidence, contracts, payment details, acknowledgement,
+closeout, and refund records remain outside the joined report. The queue makes
+paid fulfillment operationally specific; it does not authenticate a rewritten
+report, verify private delivery, apply a lifecycle label, contact a customer,
+collect payment, or record a real activation.

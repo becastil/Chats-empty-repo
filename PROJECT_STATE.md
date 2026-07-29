@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 291 of
-1,000, with 709 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 292 of
+1,000, with 708 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -100,7 +100,12 @@ alignment take priority over commit volume.
   Schema 10 additionally attributes that milestone across source, purchase
   readiness, and purchase criterion. All three activation segment families
   must reconcile to the global total and independently reproduce detailed
-  deal evidence before joined growth can use them.
+  deal evidence before joined growth can use them. Schema-9+ joined growth also
+  derives a public-safe, paid-first activation queue from every validated
+  booked-but-unactivated deal, with canonical delivery or terminal
+  reconciliation actions and `null` legacy semantics. The queue omits titles,
+  free text, repository identity, and all private acceptance, payment,
+  acknowledgement, closeout, and refund evidence.
   Request, qualification, offer, booked-pilot, annual-conversion, and
   resolved-loss attribution by source, purchase readiness, and purchase
   criterion must also reproduce the recognized values on every schema-8+
@@ -437,6 +442,10 @@ alignment take priority over commit volume.
   retention, and validation. Schema-9+ booked-but-unactivated delivery takes
   precedence over another sale; older pilot schemas retain their prior behavior
   with activation evidence unavailable rather than zero.
+- Ordered schema-9+ activation actions that identify each exact
+  booked-but-unactivated issue using only validated normalized lifecycle and
+  attribution fields, prioritize live paid delivery before terminal
+  reconciliation, and become an explicit empty queue after activation.
 - Explicit refusal to calculate download-to-lead conversion rates from non-unique artifact requests.
 - Release-blocking installed-wheel proof that raw GitHub release exports become
   a complete schema-2 baseline comparison before signed reach movement joins to

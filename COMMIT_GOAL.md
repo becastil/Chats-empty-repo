@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after adding paid activation attribution:
-  291 / 1,000 (29.1%).
-- Remaining after adding paid activation attribution:
-  709 commits.
+- Progress after adding the paid-delivery activation queue:
+  292 / 1,000 (29.2%).
+- Remaining after adding the paid-delivery activation queue:
+  708 commits.
 
 ## Commit Standard
 

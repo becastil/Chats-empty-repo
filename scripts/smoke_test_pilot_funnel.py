@@ -484,6 +484,25 @@ def verify_pilot_funnel(
             ),
             "growth bottleneck did not prioritize paid delivery",
         )
+        activation_queue = growth.get("activation_queue")
+        _require(
+            growth_summary.get("activation_actions") == 1
+            and activation_queue
+            == [
+                {
+                    "number": 102,
+                    "stage": "paid",
+                    "source": "outreach",
+                    "purchase_readiness": "ready",
+                    "decision_criterion": "commercial_fit",
+                    "next_action": (
+                        "Verify the private paid-delivery contract and complete "
+                        "first-repository activation before applying pilot-active."
+                    ),
+                }
+            ],
+            "growth activation queue changed",
+        )
         _require(not growth.get("warnings"), "valid growth evidence emitted warnings")
         measurement_note = growth.get("measurement_note", "")
         _require(
@@ -504,6 +523,7 @@ def verify_pilot_funnel(
             "repository-standard free text leaked into growth output",
         )
         checked.append("joined-growth-review")
+        checked.append("paid-delivery-activation-queue")
 
         active_issue_export = Path(tmp) / "active-pilot-issues.json"
         active_issues = json.loads(json.dumps(journey_issues))
@@ -554,6 +574,11 @@ def verify_pilot_funnel(
         _require(
             active_growth.get("bottleneck", {}).get("stage") == "pilot_target",
             "activation evidence did not reopen the founding-pilot target",
+        )
+        _require(
+            active_growth.get("summary", {}).get("activation_actions") == 0
+            and active_growth.get("activation_queue") == [],
+            "completed activation remained in the delivery queue",
         )
         _require(
             next(
@@ -689,6 +714,7 @@ def verify_pilot_funnel(
             "Qualification scope: 2 complete / 2 target / 0 review / "
             "0 subset required",
             "Bottleneck: activation",
+            "Activation queue:\n  #102 [paid, outreach, ready, commercial_fit]",
             "Warnings:\n  none",
         ):
             _require(expected_line in growth_text, "operator growth text changed")

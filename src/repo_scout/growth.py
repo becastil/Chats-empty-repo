@@ -43,6 +43,30 @@ REPAIR_SALES_QUEUE_REASON = (
 REPAIR_SALES_QUEUE_ACTION = (
     "Reconcile open pilot lifecycle labels before selecting another sales action."
 )
+ACTIVATION_STAGE_ORDER = {
+    "paid": 0,
+    "conflict": 1,
+    "converted": 2,
+    "lost": 3,
+}
+ACTIVATION_ACTIONS = {
+    "paid": (
+        "Verify the private paid-delivery contract and complete first-repository "
+        "activation before applying pilot-active."
+    ),
+    "conflict": (
+        "Resolve the conflicting terminal labels and reconcile the private "
+        "paid-delivery record before another sale."
+    ),
+    "converted": (
+        "Reconcile the missing pilot-active milestone against the private "
+        "paid-delivery record before expansion."
+    ),
+    "lost": (
+        "Reconcile paid closeout or refund evidence against the private delivery "
+        "record before another sale; do not infer pilot-active."
+    ),
+}
 DELTA_FIELDS = (
     "primary_artifact_downloads_delta",
     "portable_downloads_delta",
@@ -95,6 +119,7 @@ def build_growth_report(
     source_rows = pilot["sources"]
     readiness_rows = pilot["purchase_readiness"]
     criterion_rows = pilot["decision_criteria"]
+    activation_queue = pilot["activation_queue"]
     qualified_pilots = sum(row["qualified_pilots"] for row in source_rows)
     offered_pilots = sum(row["offered_pilots"] for row in source_rows)
 
@@ -217,6 +242,9 @@ def build_growth_report(
             "offered_pilots": offered_pilots,
             "booked_pilots": pilot_summary["booked_pilots"],
             "activated_pilots": pilot_summary.get("activated_pilots"),
+            "activation_actions": (
+                None if activation_queue is None else len(activation_queue)
+            ),
             "activation_reporting_available": pilot[
                 "activation_reporting_available"
             ],
@@ -259,6 +287,7 @@ def build_growth_report(
         "sources": source_rows,
         "purchase_readiness": readiness_rows,
         "decision_criteria": criterion_rows,
+        "activation_queue": activation_queue,
         "bottleneck": bottleneck,
         "evidence_quality": {
             "distribution_warnings": distribution["warning_count"],
@@ -302,7 +331,9 @@ def build_growth_report(
             "payment-backed pilot-active evidence and is not inferred from "
             "rollout or conversion labels. Segment activation counts are "
             "descriptive attribution, not proof that a source, readiness answer, "
-            "or purchase criterion caused activation."
+            "or purchase criterion caused activation. Activation queue actions "
+            "are derived from public lifecycle evidence and cannot verify private "
+            "delivery, acknowledgement, closeout, or refund records."
         ),
     }
 
@@ -354,8 +385,21 @@ def format_growth_report(report: dict[str, Any]) -> str:
         f"Bottleneck: {report['bottleneck']['stage']}",
         f"Reason: {report['bottleneck']['reason']}",
         f"Next action: {report['bottleneck']['next_action']}",
-        "Sources:",
     ]
+    lines.append("Activation queue:")
+    if report["activation_queue"] is None:
+        lines.append("  schema-9+ pilot report required")
+    elif report["activation_queue"]:
+        for action in report["activation_queue"]:
+            lines.append(
+                f"  #{action['number']} [{action['stage']}, "
+                f"{action['source']}, {action['purchase_readiness']}, "
+                f"{action['decision_criterion']}] {action['next_action']}"
+            )
+    else:
+        lines.append("  none")
+
+    lines.append("Sources:")
     if report["sources"]:
         for source in report["sources"]:
             activation = (
@@ -785,6 +829,19 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
             include_progression=schema >= 8,
             include_activation=schema >= 10,
         )
+    activation_queue = _build_activation_queue(
+        root,
+        available=schema >= 9,
+    )
+    if (
+        activation_queue is not None
+        and len(activation_queue)
+        != summary["booked_pilots"] - summary["activated_pilots"]
+    ):
+        raise GrowthInputError(
+            "pilot report activation queue does not reconcile to booked and "
+            "activated pilots"
+        )
 
     raw_warnings = root.get("warnings")
     if not isinstance(raw_warnings, list):
@@ -800,10 +857,51 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
         "qualification_reporting_available": schema >= 7,
         "activation_reporting_available": schema >= 9,
         "activation_attribution_reporting_available": schema >= 10,
+        "activation_queue": activation_queue,
         "sales_queue_state": sales_queue_state,
         "decision_criteria": decision_criteria,
         "warning_count": len(raw_warnings),
     }
+
+
+def _build_activation_queue(
+    root: dict[str, Any],
+    *,
+    available: bool,
+) -> list[dict[str, Any]] | None:
+    if not available:
+        return None
+
+    actions: list[dict[str, Any]] = []
+    for raw_deal in root["deals"]:
+        deal = _require_object(raw_deal, "pilot report.deals activation member")
+        if not deal["booked"] or deal["activated"]:
+            continue
+        stage = deal["stage"]
+        next_action = ACTIVATION_ACTIONS.get(stage)
+        if next_action is None:
+            raise GrowthInputError(
+                "pilot report booked unactivated deal has no valid activation "
+                "action"
+            )
+        actions.append(
+            {
+                "number": deal["number"],
+                "stage": stage,
+                "source": deal["source"],
+                "purchase_readiness": deal["purchase_readiness"],
+                "decision_criterion": deal["decision_criterion"],
+                "next_action": next_action,
+            }
+        )
+
+    return sorted(
+        actions,
+        key=lambda action: (
+            ACTIVATION_STAGE_ORDER[action["stage"]],
+            action["number"],
+        ),
+    )
 
 
 def _validate_qualification_aware_sales_queue(

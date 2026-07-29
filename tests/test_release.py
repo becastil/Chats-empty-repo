@@ -624,6 +624,7 @@ class ReleaseManifestTests(unittest.TestCase):
                 "qualification-scope-payment-gate",
                 "distribution-evidence",
                 "joined-growth-review",
+                "paid-delivery-activation-queue",
                 "payment-backed-activation-transition",
                 "schema-eight-progression-gate",
                 "schema-ten-activation-gate",

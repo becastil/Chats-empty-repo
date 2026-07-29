@@ -219,6 +219,19 @@ activation total therefore fails before it can redirect channel or buyer-profile
 learning. Schema 9 remains readable with global activation available and
 segment activation attribution explicitly unavailable.
 
+Schema-9+ growth output also includes `summary.activation_actions` and an
+`activation_queue`. Each member is derived from a validated
+booked-but-unactivated detailed deal and contains only its issue number, stage,
+normalized source, normalized readiness, normalized purchase criterion, and a
+canonical next action. Live `paid` work is ordered before `conflict`,
+`converted`, and `lost` reconciliation, with issue number as the stable
+tie-breaker. A completed activation removes the deal from the queue. Schema-5
+through schema-8 reports use `null` for both fields to distinguish unavailable
+evidence from a schema-9+ empty queue. The queue does not contain titles, free
+text, repository identity, access evidence, contracts, payment details,
+acknowledgement, closeout, or refund records, and it cannot verify any private
+delivery condition.
+
 Source attribution is self-reported discovery data. It does not prove which
 touchpoint caused a purchase, and it should be used directionally when deciding
 where to focus outreach. Repo Scout does not add cookies, tracking pixels, or a

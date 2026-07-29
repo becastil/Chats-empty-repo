@@ -1330,6 +1330,19 @@ attribution, authenticate a rewritten report, or replace private acceptance
 evidence. Schema 9 remains readable with global activation available and
 segment activation attribution unavailable.
 
+Joined growth now turns that aggregate activation gap into an exact,
+public-safe work queue. For schema-9+ evidence it derives one action from every
+validated booked-but-unactivated detailed deal, carrying only the issue number,
+terminal or paid stage, normalized source, readiness, purchase criterion, and a
+canonical delivery or reconciliation instruction. Live paid delivery comes
+before terminal reconciliation, and completed activation removes the record.
+Schemas 5 through 8 expose the queue and action count as unavailable rather
+than inventing zero work. This gives an operator a bounded paid-fulfillment
+list without publishing titles, repository standards, customer identity,
+contracts, payment details, acknowledgement, closeout, or refund evidence. It
+does not verify private delivery, apply `pilot-active`, contact a customer,
+collect payment, or record a real activation.
+
 Joined growth also consumes the complete schema-7+ purchase-readiness table
 instead of leaving that willingness-to-pay signal outside the review. It
 requires the exact public readiness taxonomy, reconciles every readiness funnel

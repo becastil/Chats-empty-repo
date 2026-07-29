@@ -1304,11 +1304,31 @@ class GrowthReportTests(unittest.TestCase):
         self.assertEqual(paid["schema_version"], 10)
         self.assertFalse(paid["deals"][0]["activated"])
         self.assertEqual(paid["summary"]["activated_pilots"], 0)
+        paid_growth = build_growth_report(self._distribution(), paid)
         self.assertEqual(
-            build_growth_report(self._distribution(), paid)["bottleneck"][
-                "stage"
-            ],
+            paid_growth["bottleneck"]["stage"],
             "activation",
+        )
+        self.assertEqual(paid_growth["summary"]["activation_actions"], 1)
+        self.assertEqual(
+            paid_growth["activation_queue"],
+            [
+                {
+                    "number": 1,
+                    "stage": "paid",
+                    "source": "website",
+                    "purchase_readiness": "ready",
+                    "decision_criterion": "rollout_fit",
+                    "next_action": (
+                        "Verify the private paid-delivery contract and complete "
+                        "first-repository activation before applying pilot-active."
+                    ),
+                }
+            ],
+        )
+        self.assertIn(
+            "Activation queue:\n  #1 [paid, website, ready, rollout_fit]",
+            format_growth_report(paid_growth),
         )
 
         active = build_funnel(
@@ -1339,6 +1359,8 @@ class GrowthReportTests(unittest.TestCase):
         )
         self.assertEqual(active_growth["bottleneck"]["stage"], "pilot_target")
         self.assertEqual(active_growth["summary"]["activated_pilots"], 1)
+        self.assertEqual(active_growth["summary"]["activation_actions"], 0)
+        self.assertEqual(active_growth["activation_queue"], [])
         self.assertTrue(
             active_growth["summary"][
                 "activation_attribution_reporting_available"
@@ -1363,12 +1385,49 @@ class GrowthReportTests(unittest.TestCase):
         self.assertFalse(
             converted_without_activation["deals"][0]["activated"]
         )
+        converted_growth = build_growth_report(
+            self._distribution(),
+            converted_without_activation,
+        )
         self.assertEqual(
-            build_growth_report(
-                self._distribution(),
-                converted_without_activation,
-            )["bottleneck"]["stage"],
+            converted_growth["bottleneck"]["stage"],
             "activation",
+        )
+        self.assertEqual(
+            converted_growth["activation_queue"][0]["next_action"],
+            (
+                "Reconcile the missing pilot-active milestone against the private "
+                "paid-delivery record before expansion."
+            ),
+        )
+
+        mixed_activation_queue = build_growth_report(
+            self._distribution(),
+            build_funnel(
+                [
+                    {
+                        **raw_issue,
+                        "number": 2,
+                        "title": "Live paid pilot",
+                    },
+                    {
+                        **raw_issue,
+                        "state": "CLOSED",
+                        "labels": [
+                            *raw_issue["labels"],
+                            "pilot-converted",
+                        ],
+                    },
+                ],
+                as_of=date(2026, 7, 10),
+            ),
+        )["activation_queue"]
+        self.assertEqual(
+            [
+                (action["number"], action["stage"])
+                for action in mixed_activation_queue
+            ],
+            [(2, "paid"), (1, "converted")],
         )
 
         lost_after_activation = build_funnel(
@@ -1387,13 +1446,15 @@ class GrowthReportTests(unittest.TestCase):
         )
         self.assertEqual(lost_after_activation["deals"][0]["stage"], "lost")
         self.assertTrue(lost_after_activation["deals"][0]["activated"])
+        lost_growth = build_growth_report(
+            self._distribution(),
+            lost_after_activation,
+        )
         self.assertEqual(
-            build_growth_report(
-                self._distribution(),
-                lost_after_activation,
-            )["bottleneck"]["stage"],
+            lost_growth["bottleneck"]["stage"],
             "pilot_target",
         )
+        self.assertEqual(lost_growth["activation_queue"], [])
 
         malformed = json.loads(json.dumps(paid))
         malformed["deals"][0]["activated"] = 1
@@ -1455,6 +1516,14 @@ class GrowthReportTests(unittest.TestCase):
                 "activation_attribution_reporting_available"
             ]
         )
+        self.assertEqual(
+            legacy_schema_nine_growth["summary"]["activation_actions"],
+            1,
+        )
+        self.assertEqual(
+            legacy_schema_nine_growth["activation_queue"][0]["stage"],
+            "paid",
+        )
         self.assertNotIn(
             "activated_pilots",
             legacy_schema_nine_growth["sources"][0],
@@ -1489,6 +1558,8 @@ class GrowthReportTests(unittest.TestCase):
             legacy_growth["summary"]["activation_reporting_available"]
         )
         self.assertIsNone(legacy_growth["summary"]["activated_pilots"])
+        self.assertIsNone(legacy_growth["summary"]["activation_actions"])
+        self.assertIsNone(legacy_growth["activation_queue"])
         self.assertEqual(legacy_growth["bottleneck"]["stage"], "pilot_target")
 
         no_baseline = self._distribution()

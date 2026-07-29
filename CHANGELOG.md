@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added an ordered schema-9+ activation queue that names every exact
+  booked-but-unactivated issue and its canonical paid-delivery or terminal
+  reconciliation action using only validated public lifecycle fields.
+- Preserved explicit `null` queue semantics for schema 5 through schema 8 and
+  removed completed activations from the schema-9+ queue without exposing
+  titles, free text, or private delivery evidence.
+- Extended source and installed-command regressions across live paid,
+  converted-without-activation, completed activation, queue ordering, text
+  output, and private-text boundaries.
 - Upgraded pilot reporting to schema 10 with payment-backed activation totals
   by source, purchase readiness, and purchase criterion.
 - Derived every schema-10 activation segment from detailed deal evidence and
