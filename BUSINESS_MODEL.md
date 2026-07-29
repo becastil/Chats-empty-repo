@@ -1283,43 +1283,44 @@ available in escaped JSON deal fields. Unknown pilot labels remain in escaped
 JSON warning fields. Operator-facing warning messages are generic and never
 interpolate those values into terminal output.
 
-Schema-7 joined growth now requires every detailed deal to carry an explicit
-boolean `booked` value and reconciles their total to `summary.booked_pilots`
-before it computes revenue or selects a bottleneck. Pre-payment and untracked
-stages cannot claim booking evidence, and the paid stage cannot omit it.
+Schema-7 and schema-8 joined growth require every detailed deal to carry an
+explicit boolean `booked` value and reconcile their total to
+`summary.booked_pilots` before computing revenue or selecting a bottleneck.
+Pre-payment and untracked stages cannot claim booking evidence, and the paid
+stage cannot omit it.
 Coordinating only the summary, source, and purchase-criterion aggregates can no
 longer turn an offered deal into $299 of booked revenue. Growth also derives
 request and booked-pilot counts independently for each detailed source and
 purchase criterion. A coordinated aggregate rewrite therefore cannot move
-request volume to another channel or buyer criterion. Because schema 7 uses
+request volume to another channel or buyer criterion. Because schema 7+ uses
 one validated $299 price and requires every segment's revenue to equal price
 times booked pilots, a coordinated booked-count-and-revenue swap cannot move
-payment evidence either. Per-segment qualification and offer progression
-remain aggregate evidence until detailed historical records expose those
-cumulative milestones. These checks establish internal saved-report
-consistency, not authentication of a wholly rewritten report, causal
-attribution, or proof that payment occurred outside the human-applied
-`pilot-paid` label.
+payment evidence either. Schema 8 now records explicit boolean `qualified` and
+`offered` milestones on every detailed deal, so growth also derives those
+counts by source, purchase readiness, and purchase criterion. Schema 7 remains
+readable with aggregate qualification and offer progression checks. These
+checks establish internal saved-report consistency, not authentication of a
+wholly rewritten report, causal attribution, or proof that payment occurred
+outside the human-applied `pilot-paid` label.
 
-Joined growth now also consumes the complete schema-7 purchase-readiness table
+Joined growth also consumes the complete schema-7+ purchase-readiness table
 instead of leaving that willingness-to-pay signal outside the review. It
 requires the exact public readiness taxonomy, reconciles every readiness funnel
 total and all five readiness summary counters to source totals, and derives
 request, booking, conversion, and loss attribution from each detailed deal's
 recognized readiness value. The validated rows appear in both JSON and text
 growth output, so a coordinated aggregate edit cannot turn approval-dependent
-or exploratory demand into ready-buyer evidence. Qualification and offer
-progression within each readiness segment remain aggregate evidence until
-detailed historical records expose those cumulative milestones. Readiness
-remains self-reported intent, not payment, authenticated evidence, or proof of
-willingness to pay.
+or exploratory demand into ready-buyer evidence. Schema 8 additionally derives
+qualification and offer progression for each readiness segment from detailed
+milestones. Readiness remains self-reported intent, not payment, authenticated
+evidence, or proof of willingness to pay.
 
 Direct callers may change the pilot target and inactivity threshold only with
 genuine positive integers. Booleans, floats, and numeric strings fail before
-issue parsing. Schema-7 pilot pricing is additionally bound to the $299 price
+issue parsing. Schema-7+ pilot pricing is additionally bound to the $299 price
 named in public readiness and commercial-fit answers. Another configured price
 fails before issue parsing, booked-revenue arithmetic, or sales actions, and
-joined growth applies the same boundary to saved schema-7 evidence. Older
+joined growth applies the same boundary to saved schema-7+ evidence. Older
 aggregate schemas remain readable, but current public intake cannot be used as
 evidence of willingness to pay a different price.
 
@@ -1400,7 +1401,7 @@ This creates structured customer learning before outreach scales, but a stated
 criterion is not a moat or proof of demand. Repeated paid outcomes must show
 which policy packs, evidence patterns, and rollout playbooks are defensible.
 
-Schema-7 reporting also turns every open pre-payment request into a prioritized
+Schema-7+ reporting also turns every open pre-payment request into a prioritized
 sales action. Ready buyers surface first, approval-dependent buyers receive an
 approval-oriented action, exploratory buyers receive a proof or decision-criteria
 action, and unclear answers require clarification. Funnel stage and issue age
@@ -1415,14 +1416,14 @@ scope before commercial advancement. This changes only the pilot queue's next
 action: target-profile classification, ordering, counts, human-applied labels,
 and booked-revenue semantics remain unchanged. Because private decisions are
 not public evidence, the queue cannot infer that they were completed.
-The aggregate growth review also lacks deal-level actionability. When it
-reads schema 7 and open sales actions exist, its offer, payment, and open
+The aggregate growth review also lacks deal-level actionability. When it reads
+schema-7+ reports and open sales actions exist, its offer, payment, and open
 pilot-target recommendations therefore defer to the qualification-aware queue
 instead of issuing a second commercial instruction. The offer-stage handoff
 still carries the report's validated pilot price. Growth first reconciles the
 reported action count with the embedded queue and verifies every queued stage,
 readiness, qualification status, repository scope, provider, price-derived
-action, and exact next action. A saved schema-7 report with a provider-blind,
+action, and exact next action. A saved schema-7+ report with a provider-blind,
 scope-blind, or stage-skipping action fails closed instead of acquiring new
 meaning from its version number. Queue identity and stage must also reconcile
 exactly to every open pre-payment deal. Readiness and the action-driving
@@ -1433,13 +1434,13 @@ age must equal the canonical `follow_up.as_of` date minus its canonical UTC
 `updated_at`, and the queue timestamp must match that detailed evidence.
 Missing timestamps retain null age, future activity retains negative age, and
 source offsets remain valid after producer normalization to UTC. Detailed deal
-stages must reproduce `by_stage`, and visible qualification and offer
-progression must also agree with cumulative `by_source` totals. Deleting an
-entry and changing the saved count, coordinating false ages to place a newer
-peer ahead of an older buyer, self-authorizing a copy-ready
-provider, or escalating both detail and queue stage without changing aggregate
-evidence therefore fails.
-During qualification through an open pilot target, a valid but empty schema-7
+stages must reproduce `by_stage`. Schema 8 additionally derives qualification
+and offer progression by source, purchase readiness, and purchase criterion
+from explicit detailed milestones. Deleting an entry and changing the saved
+count, coordinating false ages to place a newer peer ahead of an older buyer,
+self-authorizing a copy-ready provider, or escalating both detail and queue
+stage without changing aggregate evidence therefore fails.
+During qualification through an open pilot target, a valid but empty schema-7+
 queue is not treated as a legacy report: cumulative qualification, offer,
 payment, and loss history remains visible, but growth states that no open
 pre-payment deal exists and recommends replenishing the queue instead of
@@ -1450,7 +1451,7 @@ schemas retain their existing aggregate recommendations. The queue is an
 operating aid, not an automated decision, and it neither sends outreach nor
 records payment.
 
-Schema 7 also verifies the required application scope before an operator relies
+Schema 7+ also verifies the required application scope before an operator relies
 on a qualification label. It normalizes team size, repository count, and CI
 provider, records only whether the requested standard is present, and marks the
 request as target, outside-target, or incomplete with explicit review reasons.
@@ -1511,11 +1512,11 @@ with zero pilot requests, it confirms that acquisition remains the honest
 bottleneck.
 
 The dependency-free `repo-scout-growth` review places those signed deltas beside
-schema-5, schema-6, or schema-7 pilot source, qualification, offer, payment, and
-revenue totals. It names one current commercial bottleneck and next action so
-weekly roadmap work responds to the paid funnel instead of optimizing raw
-download counts. Input warnings and missing or ambiguous source answers remain
-visible.
+schema-5, schema-6, schema-7, or schema-8 pilot source, qualification, offer,
+payment, and revenue totals. It names one current commercial bottleneck and
+next action so weekly roadmap work responds to the paid funnel instead of
+optimizing raw download counts. Input warnings and missing or ambiguous source
+answers remain visible.
 Because release requests are neither unique people nor attributable sessions,
 the review never computes a download-to-lead conversion rate or assigns request
 movement to a discovery source.
@@ -1523,7 +1524,7 @@ movement to a discovery source.
 The installed commercial smoke test now processes baseline and current raw
 GitHub release exports through the built wheel's public
 `repo-scout-distribution` command before feeding the resulting signed
-six-request delta and its synthetic schema-7 pilot report through the public
+six-request delta and its synthetic schema-8 pilot report through the public
 `repo-scout-growth` command. The pilot report also comes from the installed
 `repo-scout-pilot` command. Release attestation requires all three entry points
 to exist and execute the complete artifact contract, two attributed

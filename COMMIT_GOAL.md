@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after validating purchase-readiness attribution:
-  287 / 1,000 (28.7%).
-- Remaining after validating purchase-readiness attribution:
-  713 commits.
+- Progress after preserving qualification and offer attribution:
+  288 / 1,000 (28.8%).
+- Remaining after preserving qualification and offer attribution:
+  712 commits.
 
 ## Commit Standard
 

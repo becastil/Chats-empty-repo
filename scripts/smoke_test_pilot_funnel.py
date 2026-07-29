@@ -77,7 +77,7 @@ def verify_pilot_funnel(
             issue_export,
             environment=environment,
         )
-        _require(report.get("schema_version") == 7, "pilot schema changed")
+        _require(report.get("schema_version") == 8, "pilot schema changed")
         _require(
             report.get("pricing")
             == {
@@ -133,6 +133,17 @@ def verify_pilot_funnel(
         _require(
             PRIVATE_STANDARD not in json.dumps(report, sort_keys=True),
             "repository-standard free text leaked into the report",
+        )
+        deals = report.get("deals", [])
+        _require(
+            len(deals) == 2
+            and all(type(deal.get("qualified")) is bool for deal in deals)
+            and all(type(deal.get("offered")) is bool for deal in deals),
+            "detailed progression evidence changed",
+        )
+        _require(
+            all(deal["qualified"] and deal["offered"] for deal in deals),
+            "detailed progression does not match offered and paid stages",
         )
         checked.append("qualified-segmentation")
 

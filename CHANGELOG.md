@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Upgraded pilot reporting to schema 8 with explicit boolean qualification and
+  offer milestones on every detailed deal while preserving schema-7 growth
+  compatibility.
+- Derived qualification and offer attribution from schema-8 deals across
+  source, purchase readiness, and purchase criterion, rejecting globally
+  balanced milestone redistribution before commercial decisions use it.
 - Added validated schema-7 purchase-readiness rows to joined JSON and text
   growth reviews, reconciling every readiness segment and summary counter to
   source totals.

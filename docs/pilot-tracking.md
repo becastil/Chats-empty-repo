@@ -73,10 +73,14 @@ For direct API calls, only `as_of=None` selects the current UTC date. Any
 supplied `as_of` value must be a real `date`; falsey booleans, numbers, and
 strings fail instead of silently changing the report window to today.
 
-Funnel JSON declares `schema_version: 7`. Its `follow_up` object records the
+Funnel JSON declares `schema_version: 8`. Its `follow_up` object records the
 UTC `as_of` date, the inactivity threshold, and a deterministic deal list.
 Omit `--as-of` to use the current UTC date. `--stale-days` changes the default
 seven-day threshold.
+
+Every schema-8 detailed deal carries boolean `qualified` and `offered`
+milestones in addition to its current stage and booking evidence. These values
+preserve cumulative lifecycle history after a deal advances or closes.
 
 The `sales_queue.deals` array contains every open lead, qualified, or offered
 pilot, including fresh deals. Priorities come only from the declared readiness
@@ -84,7 +88,7 @@ answer: ready is `P1`, needs approval is `P2`, exploring is `P3`, and missing
 or unrecognized readiness is `P4`. Within one priority, offered deals come
 before qualified deals, then leads; older issue activity breaks ties before
 issue number. Each record includes a stage-specific `next_action`.
-Joined growth accepts that schema-7 queue only when each priority and age
+Joined growth accepts that schema-7+ queue only when each priority and age
 matches the canonical detailed deal and the list preserves the same
 readiness-stage-age-number order. A reordered saved queue fails before growth
 can defer a commercial action to it.
@@ -107,11 +111,11 @@ change queue membership, priority, ordering, qualification status, or booked
 revenue. The queue cannot observe private decisions and therefore remains
 advisory; it does not apply labels, send messages, infer willingness to pay, or
 count revenue.
-Schema-7 growth reviews likewise defer offer, payment, and open pilot-target
+Schema-7+ growth reviews likewise defer offer, payment, and open pilot-target
 actions to this queue rather than reconstructing a provider-blind commercial
 recommendation. Older pilot-report schemas retain their existing aggregate
 actions because they predate qualification evidence. During qualification
-through an open pilot target, a validated empty schema-7 queue remains distinct
+through an open pilot target, a validated empty schema-7+ queue remains distinct
 from those legacy reports: growth preserves cumulative milestone history,
 states that no open pre-payment deal is available, and recommends replenishing
 the queue rather than sending terms, confirming payment, closing, or naming a
@@ -122,11 +126,12 @@ retain their existing evidence priorities.
 Before deferring, growth reconciles `summary.sales_actions` with the embedded
 queue, requires every open pre-payment deal identity, stage, readiness, and
 action-driving qualification field to appear exactly once, and requires
-detailed deal stages to reproduce `by_stage` and visible qualification and
-offer progression to agree with cumulative `by_source` totals. It then
+detailed deal stages to reproduce `by_stage`. Schema 8 also requires explicit
+qualification and offer milestones to reproduce cumulative totals by source,
+purchase readiness, and purchase criterion. It then
 validates each queued deal's public-intake-bound pilot price and exact next
 action. Missing, incomplete, self-authorized, stage-divergent, or
-aggregate-divergent queues and saved schema-7 reports carrying a provider-blind,
+aggregate-divergent queues and saved schema-7+ reports carrying a provider-blind,
 scope-blind, or stage-skipping action fail closed.
 
 Every deal, stale-deal, and sales-queue record also contains a `qualification`
@@ -187,11 +192,13 @@ match the taxonomy, or duplicate criterion headings, use `unknown`. Both remain
 visible in summary totals and warnings. Sales priority remains based on purchase
 readiness, not on the criterion selected.
 
-`repo-scout-growth` consumes these schema-6 and schema-7 criterion totals in its weekly
-commercial review. It requires the exact taxonomy, validates each cumulative
-stage and revenue value, and reconciles aggregate criterion outcomes to source
-outcomes. Schema-5 pilot reports remain readable with criterion reporting marked
-unavailable rather than zero.
+`repo-scout-growth` consumes these schema-6, schema-7, and schema-8 criterion
+totals in its weekly commercial review. It requires the exact taxonomy,
+validates each cumulative stage and revenue value, and reconciles aggregate
+criterion outcomes to source outcomes. For schema 8, qualification and offer
+totals must also derive from each detailed deal's explicit milestones. Schema-5
+pilot reports remain readable with criterion reporting marked unavailable
+rather than zero.
 
 Source attribution is self-reported discovery data. It does not prove which
 touchpoint caused a purchase, and it should be used directionally when deciding

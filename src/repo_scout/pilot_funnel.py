@@ -12,7 +12,7 @@ from typing import Any, Sequence, TextIO
 from .version import add_version_argument
 
 
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 8
 PUBLIC_INTAKE_PILOT_PRICE_USD = 299
 DEFAULT_PILOT_PRICE_USD = PUBLIC_INTAKE_PILOT_PRICE_USD
 DEFAULT_TARGET_PILOTS = 3
@@ -476,6 +476,8 @@ def build_funnel(
                 "decision_criterion": decision_criterion,
                 "decision_criterion_raw": decision_criterion_raw,
                 "qualification": qualification,
+                "qualified": is_qualified,
+                "offered": is_offered,
                 "booked": is_booked,
                 "state": issue.state,
                 "updated_at": _format_timestamp(issue.updated_at),

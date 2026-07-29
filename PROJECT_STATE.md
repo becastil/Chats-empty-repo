@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 287 of
-1,000, with 713 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 288 of
+1,000, with 712 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -67,13 +67,13 @@ alignment take priority over commit volume.
   10-repository offer. Non-GitHub or unresolved CI evidence retains its
   integration gate, incomplete or outside-target GitHub evidence requires
   scope review, and larger target requests require an explicit first-10 scope.
-  Schema-7 growth ingestion validates every queue action against its stage,
+  Schema-7+ growth ingestion validates every queue action against its stage,
   readiness, qualification, CI provider, and public-intake-bound price before
   its commercial bottlenecks defer to that queue.
-- Public-intake-bound schema-7 pilot pricing that rejects a configured price
+- Public-intake-bound schema-7+ pilot pricing that rejects a configured price
   other than the disclosed $299 before issue parsing, revenue accounting, or
   sales actions. Joined growth ingestion applies the same boundary to saved
-  schema-7 reports, while target and inactivity controls remain configurable
+  schema-7+ reports, while target and inactivity controls remain configurable
   positive integers.
 - Four-state joined-growth handling that distinguishes legacy, active, empty,
   and repair-required evidence. Queue membership is reconciled to open
@@ -92,16 +92,17 @@ alignment take priority over commit volume.
   paid stage cannot discard its payment evidence. Annual conversions must
   derive from booked converted deals, resolved losses must derive from
   lost-stage deals, and terminal conflicts count as neither outcome.
-  Request, booked-pilot, annual-conversion, and resolved-loss attribution by
-  source, purchase readiness, and purchase criterion must also reproduce the
-  recognized values on every detailed deal instead of relying on globally
-  reconciled segment tables. Schema-7 purchase-readiness rows use the exact
-  public taxonomy, reconcile every funnel total to `by_source`, and appear in
-  joined text and JSON growth reviews. The five readiness summary counters
-  must also reproduce those segment request counts. Qualification and offer
-  progression within each readiness segment remain aggregate evidence until
-  detailed deals expose those cumulative milestones.
-  Because schema 7 fixes one $299 pilot price and each segment's revenue must
+  Request, qualification, offer, booked-pilot, annual-conversion, and
+  resolved-loss attribution by source, purchase readiness, and purchase
+  criterion must also reproduce the recognized values on every schema-8
+  detailed deal instead of relying on globally reconciled segment tables.
+  Schema 8 records explicit boolean qualification and offer milestones on
+  every detailed deal; schema 7 remains readable with aggregate progression
+  validation. Schema-7+ purchase-readiness rows use the exact public taxonomy,
+  reconcile every funnel total to `by_source`, and appear in joined text and
+  JSON growth reviews. The five readiness summary counters must also reproduce
+  those segment request counts.
+  Because schema 7+ fixes one $299 pilot price and each segment's revenue must
   equal price times booked pilots, detailed booking attribution also binds
   segment revenue. Complete, target-profile, review-required, and first-10
   subset counts must likewise derive from validated qualification status,
@@ -426,7 +427,7 @@ alignment take priority over commit volume.
 - Explicit refusal to calculate download-to-lead conversion rates from non-unique artifact requests.
 - Release-blocking installed-wheel proof that raw GitHub release exports become
   a complete schema-2 baseline comparison before signed reach movement joins to
-  schema-7 qualification, attribution, $299 revenue, and the open pilot target.
+  schema-8 qualification, attribution, $299 revenue, and the open pilot target.
 - Controlled rejection of duplicate release assets and inconsistent growth
   deltas without emitting reports or inventing conversion rates.
 - Release-blocking behavioral proof through the installed `repo-scout-pilot`,
@@ -450,10 +451,10 @@ alignment take priority over commit volume.
   window and automation caveats.
 - Required self-reported primary purchase criteria in public pilot intake.
 - Schema-6 criterion totals for qualification, offers, booked revenue, conversion, and loss.
-- Schema-7 scope qualification from required team size, repository count, CI provider, and repository-standard answers.
+- Schema-7+ scope qualification from required team size, repository count, CI provider, and repository-standard answers.
 - Target, outside-target, incomplete, and first-10-repository subset classifications without repeating free-text standards.
 - Normalized criterion evidence across deals, stale follow-up, and sales queues with explicit missing, edited, and duplicate-answer warnings.
-- Backward-compatible schema-5, schema-6, and schema-7 pilot support in weekly growth reviews.
+- Backward-compatible schema-5, schema-6, schema-7, and schema-8 pilot support in weekly growth reviews.
 - Schema-2 growth reviews with ordered purchase-criterion qualification, offer, payment, conversion, and loss outcomes.
 - Exact criterion-taxonomy and cross-segment reconciliation against source totals.
 - Explicit schema-5 criterion unavailability and schema-6 missing or ambiguous criterion evidence warnings.

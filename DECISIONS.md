@@ -4563,3 +4563,26 @@ This protects directional intent and paid-outcome learning. Qualification and
 offer progression within readiness segments remain aggregate evidence until
 detailed records expose those cumulative milestones. Self-reported readiness
 is not payment, authenticated evidence, or proof of willingness to pay.
+
+## 2026-07-29: Preserve Detailed Qualification And Offer Milestones
+
+Schema-7 detailed deals exposed only their current terminal stage. Joined
+growth could derive requests, bookings, conversions, and losses from those
+records, but qualification and offer totals still came from aggregate segment
+tables. A saved report could therefore move qualification or offer evidence
+between sources, readiness states, or purchase criteria while preserving every
+global funnel total and terminal deal stage.
+
+Schema 8 adds explicit boolean `qualified` and `offered` milestones to every
+detailed deal. The funnel producer sets them from cumulative lifecycle
+evidence, and joined growth derives both milestones by source, purchase
+readiness, and purchase criterion before trusting the corresponding aggregates.
+An offered deal must also be qualified, and booked evidence must also be
+offered. Schema 7 remains readable with its aggregate progression checks.
+
+Regression coverage independently swaps qualification and offer counts across
+all three segment tables, rejects non-boolean milestone evidence and impossible
+progression, and preserves valid cumulative history for active and terminal
+deals. This protects directional acquisition, qualification, and offer
+conversion decisions. It does not authenticate a wholly rewritten report,
+infer willingness to pay, contact a buyer, collect payment, or record revenue.

@@ -1392,6 +1392,8 @@ class GrowthReportTests(unittest.TestCase):
             as_of=date(2026, 7, 10),
         )
         self.assertEqual(conflict["deals"][0]["stage"], "conflict")
+        self.assertTrue(conflict["deals"][0]["qualified"])
+        self.assertTrue(conflict["deals"][0]["offered"])
         self.assertEqual(conflict["summary"]["annual_conversions"], 0)
         self.assertEqual(conflict["summary"]["lost_pilots"], 0)
         build_growth_report(self._distribution(), conflict)
@@ -1862,6 +1864,216 @@ class GrowthReportTests(unittest.TestCase):
             format_growth_report(report),
         )
 
+    def test_schema_eight_growth_derives_progression_attribution(
+        self,
+    ) -> None:
+        def issue(
+            number: int,
+            title: str,
+            source: str,
+            readiness: str,
+            criterion: str,
+            labels: list[str],
+        ) -> dict[str, object]:
+            return {
+                "number": number,
+                "title": title,
+                "state": "CLOSED",
+                "updatedAt": "2026-07-10T00:00:00Z",
+                "body": "\n\n".join(
+                    (
+                        "### Team size\n\n12",
+                        "### Repository count\n\n6",
+                        "### CI provider\n\nGitHub Actions",
+                        "### Repository standard to enforce\n\n"
+                        "Use one reviewed repository policy.",
+                        f"### How did you hear about Repo Scout?\n\n{source}",
+                        f"### Purchase readiness\n\n{readiness}",
+                        f"### Primary purchase criterion\n\n{criterion}",
+                    )
+                ),
+                "labels": labels,
+            }
+
+        lead = ["pilot-lead"]
+        qualified = [*lead, "pilot-qualified"]
+        offered = [*qualified, "pilot-offered"]
+        pilot = build_funnel(
+            [
+                issue(
+                    1,
+                    "Website offered pilot",
+                    "Repo Scout website",
+                    "Ready to purchase the $299 pilot",
+                    "Supports our required repository standards",
+                    offered,
+                ),
+                issue(
+                    2,
+                    "Website qualified pilot",
+                    "Repo Scout website",
+                    "Ready to purchase the $299 pilot",
+                    "Supports our required repository standards",
+                    qualified,
+                ),
+                issue(
+                    3,
+                    "Website lead",
+                    "Repo Scout website",
+                    "Ready to purchase the $299 pilot",
+                    "Supports our required repository standards",
+                    lead,
+                ),
+                issue(
+                    4,
+                    "Outreach qualified pilot",
+                    "Direct outreach",
+                    "Need internal approval for $299",
+                    "Works across our repositories and CI",
+                    qualified,
+                ),
+                issue(
+                    5,
+                    "Outreach lead",
+                    "Direct outreach",
+                    "Need internal approval for $299",
+                    "Works across our repositories and CI",
+                    lead,
+                ),
+            ],
+            target_pilots=1,
+            as_of=date(2026, 7, 10),
+        )
+        self.assertEqual(pilot["schema_version"], 8)
+        build_growth_report(self._distribution(), pilot)
+
+        cases = (
+            ("by_source", "website", "outreach"),
+            ("by_readiness", "ready", "needs_approval"),
+            (
+                "by_decision_criterion",
+                "policy_fit",
+                "rollout_fit",
+            ),
+        )
+        for table, larger_segment, smaller_segment in cases:
+            for field in ("qualified_pilots", "offered_pilots"):
+                with self.subTest(table=table, field=field):
+                    forged = json.loads(json.dumps(pilot))
+                    rows = forged[table]
+                    rows[larger_segment][field], rows[smaller_segment][
+                        field
+                    ] = (
+                        rows[smaller_segment][field],
+                        rows[larger_segment][field],
+                    )
+                    with self.assertRaisesRegex(
+                        GrowthInputError,
+                        (
+                            rf"{table}\.{larger_segment}\.{field} "
+                            r"does not match deals"
+                        ),
+                    ):
+                        build_growth_report(self._distribution(), forged)
+
+        malformed = json.loads(json.dumps(pilot))
+        malformed["deals"][0]["qualified"] = 1
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            r"deals\[0\]\.qualified must be a boolean",
+        ):
+            build_growth_report(self._distribution(), malformed)
+
+        missing_offered = json.loads(json.dumps(pilot))
+        del missing_offered["deals"][0]["offered"]
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            r"deals\[0\]\.offered must be a boolean",
+        ):
+            build_growth_report(self._distribution(), missing_offered)
+
+        contradictory = json.loads(json.dumps(pilot))
+        contradictory["deals"][0]["qualified"] = False
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            r"deals\[0\]\.offered requires qualified progression",
+        ):
+            build_growth_report(self._distribution(), contradictory)
+
+        booked_without_offer = build_funnel(
+            [
+                issue(
+                    6,
+                    "Paid website pilot",
+                    "Repo Scout website",
+                    "Ready to purchase the $299 pilot",
+                    "Supports our required repository standards",
+                    [*offered, "pilot-paid"],
+                )
+            ],
+            target_pilots=1,
+            as_of=date(2026, 7, 10),
+        )
+        booked_without_offer["deals"][0]["offered"] = False
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            r"deals\[0\]\.booked requires offered progression",
+        ):
+            build_growth_report(self._distribution(), booked_without_offer)
+
+    def test_schema_eight_growth_accepts_lost_progression_histories(
+        self,
+    ) -> None:
+        body = "\n\n".join(
+            (
+                "### Team size\n\n12",
+                "### Repository count\n\n6",
+                "### CI provider\n\nGitHub Actions",
+                "### Repository standard to enforce\n\n"
+                "Use one reviewed repository policy.",
+                "### How did you hear about Repo Scout?\n\n"
+                "Repo Scout website",
+                "### Purchase readiness\n\n"
+                "Ready to purchase the $299 pilot",
+                "### Primary purchase criterion\n\n"
+                "Supports our required repository standards",
+            )
+        )
+        histories = (
+            ["pilot-lead", "pilot-lost"],
+            ["pilot-lead", "pilot-qualified", "pilot-lost"],
+            [
+                "pilot-lead",
+                "pilot-qualified",
+                "pilot-offered",
+                "pilot-lost",
+            ],
+        )
+        pilot = build_funnel(
+            [
+                {
+                    "number": index,
+                    "title": f"Lost pilot history {index}",
+                    "state": "CLOSED",
+                    "updatedAt": "2026-07-10T00:00:00Z",
+                    "body": body,
+                    "labels": labels,
+                }
+                for index, labels in enumerate(histories, start=1)
+            ],
+            target_pilots=1,
+            as_of=date(2026, 7, 10),
+        )
+
+        self.assertEqual(
+            [
+                (deal["qualified"], deal["offered"])
+                for deal in pilot["deals"]
+            ],
+            [(False, False), (True, False), (True, True)],
+        )
+        build_growth_report(self._distribution(), pilot)
+
     def test_schema_seven_growth_derives_qualification_from_deals(
         self,
     ) -> None:
@@ -2011,7 +2223,7 @@ class GrowthReportTests(unittest.TestCase):
         )
         cases = [
             ({**valid_distribution, "schema_version": 3}, valid_pilot, "schema_version"),
-            (valid_distribution, {**valid_pilot, "schema_version": 8}, "schema_version"),
+            (valid_distribution, {**valid_pilot, "schema_version": 9}, "schema_version"),
             (
                 {**valid_distribution, "change": {"portable_downloads_delta": 1}},
                 valid_pilot,
@@ -2186,7 +2398,7 @@ class GrowthReportTests(unittest.TestCase):
                 }
             )
             report["by_decision_criterion"] = criterion_totals
-        if schema_version == 7:
+        if schema_version >= 7:
             report["summary"].update(
                 {
                     "complete_qualification_issues": tracked,
@@ -2267,6 +2479,16 @@ class GrowthReportTests(unittest.TestCase):
             }
             for deal in report["deals"]:
                 deal["purchase_readiness"] = "ready"
+                if schema_version >= 8:
+                    deal["qualified"] = deal["stage"] not in {
+                        "lead",
+                        "untracked",
+                    }
+                    deal["offered"] = deal["stage"] not in {
+                        "lead",
+                        "qualified",
+                        "untracked",
+                    }
         return report
 
     @staticmethod

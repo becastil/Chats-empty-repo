@@ -318,9 +318,10 @@ gh issue list --repo becastil/Chats-empty-repo --state all --label pilot-lead --
 
 The dependency-free reporter counts booked pilots, booked revenue, remaining
 distance to the three-pilot goal, annual conversions, losses, label drift, and
-open pre-payment issues inactive for at least seven UTC calendar days. It also
-attributes qualification and booked revenue to the request form's self-reported
-discovery channel and groups ready, approval-dependent, and exploratory intent
+open pre-payment issues inactive for at least seven UTC calendar days. Schema 8
+preserves qualification and offer milestones on every detailed deal, allowing
+growth reviews to derive that progression alongside booked revenue for each
+self-reported discovery channel, readiness state, and purchase criterion
 without treating intent as cash. It also groups the primary purchase criterion
 behind each request, including policy fit, rollout fit, evidence, privacy,
 implementation capacity, and commercial fit, so repeated paid outcomes can
@@ -335,7 +336,7 @@ missing, edited, no-response, or ambiguous provider evidence requires provider
 clarification. Ready GitHub requests with incomplete or outside-target evidence
 require qualification review, while larger target requests require an explicit
 first-10 scope. Queue membership, ranking, classification, and revenue
-accounting remain unchanged. Schema-7 growth bottlenecks that would send terms,
+accounting remain unchanged. Schema-7+ growth bottlenecks that would send terms,
 confirm payment, or close the next pilot point back to this
 qualification-aware queue after validating each exact action against its stage,
 readiness, qualification, provider, and public-intake-bound price. When that
@@ -344,7 +345,7 @@ historical milestones but says no open pre-payment deal exists and recommends
 replenishing the queue instead of inventing a deal action. At those pre-target
 stages, an open request with untracked or conflicting lifecycle evidence
 requires label repair before another sales action, even when another deal is
-already queued. Saved schema-7 evidence that omits or adds an open queue member,
+already queued. Saved schema-7+ evidence that omits or adds an open queue member,
 changes its stage, readiness, or action-driving qualification fields, disagrees
 with stage totals or cumulative source progression, or bypasses another queue
 boundary fails growth ingestion.
@@ -566,9 +567,10 @@ repo-scout-growth distribution-current.json pilot-current.json
 The growth review reports signed reach movement, attributed pilot progress,
 booked revenue, purchase-criterion outcomes, evidence warnings, and one current
 bottleneck from acquisition through retention. Schema-5 pilot reports remain
-readable with criterion evidence marked unavailable; schema-6 and schema-7
-reports reconcile every criterion total to the same deals and revenue as source
-reporting. The
+readable with criterion evidence marked unavailable; schema-6, schema-7, and
+schema-8 reports reconcile every criterion total to the same deals and revenue
+as source reporting. Schema 8 additionally derives qualification and offer
+progression from detailed deals across every segment. The
 review never calculates a download-to-lead conversion rate: GitHub artifact
 requests are not unique people and cannot be assigned to a discovery source or
 purchase criterion.

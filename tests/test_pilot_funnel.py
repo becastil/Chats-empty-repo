@@ -101,7 +101,7 @@ class PilotFunnelTests(unittest.TestCase):
 
         report = build_funnel(payload, as_of=date(2026, 7, 10))
 
-        self.assertEqual(report["schema_version"], 7)
+        self.assertEqual(report["schema_version"], 8)
         self.assertEqual(report["summary"]["tracked_issues"], 8)
         self.assertEqual(report["summary"]["ignored_issues"], 1)
         self.assertEqual(report["summary"]["booked_pilots"], 3)
@@ -268,10 +268,32 @@ class PilotFunnelTests(unittest.TestCase):
             report["summary"]["tracked_issues"],
         )
         self.assertEqual(report["deals"][0]["purchase_readiness"], "ready")
+        self.assertTrue(
+            all(type(deal["qualified"]) is bool for deal in report["deals"])
+        )
+        self.assertTrue(
+            all(type(deal["offered"]) is bool for deal in report["deals"])
+        )
+        self.assertEqual(
+            sum(deal["qualified"] for deal in report["deals"]),
+            sum(
+                totals["qualified_pilots"]
+                for totals in report["by_source"].values()
+            ),
+        )
+        self.assertEqual(
+            sum(deal["offered"] for deal in report["deals"]),
+            sum(
+                totals["offered_pilots"]
+                for totals in report["by_source"].values()
+            ),
+        )
         active_drift = next(
             deal for deal in report["deals"] if deal["number"] == 4
         )
         self.assertEqual(active_drift["stage"], "active")
+        self.assertTrue(active_drift["qualified"])
+        self.assertTrue(active_drift["offered"])
         self.assertFalse(active_drift["booked"])
         self.assertEqual(
             report,

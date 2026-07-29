@@ -28,7 +28,7 @@ from .pilot_funnel import (
 
 SCHEMA_VERSION = 2
 SUPPORTED_DISTRIBUTION_SCHEMAS = {2}
-SUPPORTED_PILOT_SCHEMAS = {5, 6, 7}
+SUPPORTED_PILOT_SCHEMAS = {5, 6, 7, 8}
 LEGACY_SALES_QUEUE_STATE = "legacy"
 EMPTY_SALES_QUEUE_STATE = "empty"
 ACTIVE_SALES_QUEUE_STATE = "active"
@@ -65,6 +65,10 @@ DETAILED_ATTRIBUTION_FIELDS = (
     "booked_pilots",
     "annual_conversions",
     "lost_pilots",
+)
+DETAILED_PROGRESSION_FIELDS = (
+    "qualified_pilots",
+    "offered_pilots",
 )
 READINESS_SUMMARY_FIELDS = (
     ("ready_issues", "ready"),
@@ -312,7 +316,7 @@ def format_growth_report(report: dict[str, Any]) -> str:
             f"${summary['target_revenue_usd']} target"
         ),
         (
-            "Qualification scope: schema-7 pilot report required"
+            "Qualification scope: schema-7+ pilot report required"
             if not summary["qualification_reporting_available"]
             else (
                 f"Qualification scope: "
@@ -341,7 +345,7 @@ def format_growth_report(report: dict[str, Any]) -> str:
 
     lines.append("Purchase readiness:")
     if report["purchase_readiness"] is None:
-        lines.append("  schema-7 pilot report required")
+        lines.append("  schema-7+ pilot report required")
     elif report["purchase_readiness"]:
         for readiness in report["purchase_readiness"]:
             lines.append(
@@ -410,7 +414,10 @@ def build_parser() -> argparse.ArgumentParser:
         "pilot_report",
         type=Path,
         metavar="PILOT_REPORT",
-        help="Schema-5, schema-6, or schema-7 repo-scout-pilot JSON report.",
+        help=(
+            "Schema-5, schema-6, schema-7, or schema-8 "
+            "repo-scout-pilot JSON report."
+        ),
     )
     parser.add_argument(
         "--format",
@@ -527,7 +534,7 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
         )
     }
     if (
-        schema == 7
+        schema >= 7
         and pricing["pilot_price_usd"] != PUBLIC_INTAKE_PILOT_PRICE_USD
     ):
         raise GrowthInputError(
@@ -535,7 +542,7 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
             f"price of ${PUBLIC_INTAKE_PILOT_PRICE_USD}"
         )
     sales_queue_state = LEGACY_SALES_QUEUE_STATE
-    if schema == 7:
+    if schema >= 7:
         report_date = _validated_follow_up_date(root)
         for field in (
             "complete_qualification_issues",
@@ -618,17 +625,17 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
             sources.append({"source": source, **totals})
 
     _validate_pilot_totals(summary, pricing, sources)
-    if schema == 7:
+    if schema >= 7:
         _validate_visible_stage_progression(root, sources)
     readiness_rows: list[dict[str, Any]] | None = None
-    if schema == 7:
+    if schema >= 7:
         raw_readiness = _require_object(
             root.get("by_readiness"),
             "pilot report.by_readiness",
         )
         if set(raw_readiness) != set(READINESS_KEYS):
             raise GrowthInputError(
-                "pilot report.by_readiness keys must match schema 7"
+                "pilot report.by_readiness keys must match schema 7+"
             )
         readiness_rows = []
         for readiness in READINESS_KEYS:
@@ -703,7 +710,7 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
                 decision_criteria.append({"criterion": criterion, **totals})
         _validate_criterion_totals(summary, decision_criteria, sources)
     if (
-        schema == 7
+        schema >= 7
         and readiness_rows is not None
         and decision_criteria is not None
     ):
@@ -712,6 +719,7 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
             sources,
             readiness_rows,
             decision_criteria,
+            include_progression=schema >= 8,
         )
 
     raw_warnings = root.get("warnings")
@@ -725,7 +733,7 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
         "sources": sources,
         "purchase_readiness": readiness_rows,
         "decision_criterion_reporting_available": schema >= 6,
-        "qualification_reporting_available": schema == 7,
+        "qualification_reporting_available": schema >= 7,
         "sales_queue_state": sales_queue_state,
         "decision_criteria": decision_criteria,
         "warning_count": len(raw_warnings),
@@ -1309,17 +1317,22 @@ def _validate_detailed_segment_attribution(
     sources: list[dict[str, Any]],
     readiness_rows: list[dict[str, Any]],
     criteria: list[dict[str, Any]],
+    *,
+    include_progression: bool,
 ) -> None:
+    detailed_fields = DETAILED_ATTRIBUTION_FIELDS
+    if include_progression:
+        detailed_fields += DETAILED_PROGRESSION_FIELDS
     observed_by_source = {
-        source: {field: 0 for field in DETAILED_ATTRIBUTION_FIELDS}
+        source: {field: 0 for field in detailed_fields}
         for source in SOURCE_KEYS
     }
     observed_by_criterion = {
-        criterion: {field: 0 for field in DETAILED_ATTRIBUTION_FIELDS}
+        criterion: {field: 0 for field in detailed_fields}
         for criterion in DECISION_CRITERION_KEYS
     }
     observed_by_readiness = {
-        readiness: {field: 0 for field in DETAILED_ATTRIBUTION_FIELDS}
+        readiness: {field: 0 for field in detailed_fields}
         for readiness in READINESS_KEYS
     }
     raw_deals = root["deals"]
@@ -1353,12 +1366,22 @@ def _validate_detailed_segment_attribution(
         is_booked = deal["booked"]
         is_converted = is_booked and deal["stage"] == "converted"
         is_lost = deal["stage"] == "lost"
+        is_qualified = False
+        is_offered = False
+        if include_progression:
+            is_qualified, is_offered = _validated_deal_progression(
+                deal,
+                location,
+            )
         for totals in (
             observed_by_source[source],
             observed_by_readiness[readiness],
             observed_by_criterion[criterion],
         ):
             totals["deals"] += 1
+            if include_progression:
+                totals["qualified_pilots"] += int(is_qualified)
+                totals["offered_pilots"] += int(is_offered)
             totals["booked_pilots"] += int(is_booked)
             totals["annual_conversions"] += int(is_converted)
             totals["lost_pilots"] += int(is_lost)
@@ -1387,6 +1410,44 @@ def _validate_detailed_segment_attribution(
                         f"pilot report {location}.{segment}.{field} "
                         "does not match deals"
                     )
+
+
+def _validated_deal_progression(
+    deal: dict[str, Any],
+    location: str,
+) -> tuple[bool, bool]:
+    qualified = deal.get("qualified")
+    if not isinstance(qualified, bool):
+        raise GrowthInputError(f"{location}.qualified must be a boolean")
+    offered = deal.get("offered")
+    if not isinstance(offered, bool):
+        raise GrowthInputError(f"{location}.offered must be a boolean")
+    if offered and not qualified:
+        raise GrowthInputError(
+            f"{location}.offered requires qualified progression"
+        )
+    if deal["booked"] and not offered:
+        raise GrowthInputError(
+            f"{location}.booked requires offered progression"
+        )
+
+    stage = deal["stage"]
+    expected_progression = {
+        "untracked": (False, False),
+        "lead": (False, False),
+        "qualified": (True, False),
+        "offered": (True, True),
+        "paid": (True, True),
+        "active": (True, True),
+        "converted": (True, True),
+        "conflict": (True, True),
+    }
+    expected = expected_progression.get(stage)
+    if expected is not None and (qualified, offered) != expected:
+        raise GrowthInputError(
+            f"{location} progression does not match its stage"
+        )
+    return qualified, offered
 
 
 def _validate_segment_totals(
