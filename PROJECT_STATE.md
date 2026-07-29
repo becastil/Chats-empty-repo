@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 279 of
-1,000, with 721 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 280 of
+1,000, with 720 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -84,7 +84,9 @@ alignment take priority over commit volume.
   opportunities, and open untracked evidence takes repair precedence over
   another sales action. Active queue priority and age must match the canonical
   detailed deal, and the queue sequence must preserve readiness, stage, age,
-  and issue-number ordering before joined growth can defer to it.
+  and issue-number ordering before joined growth can defer to it. Every
+  actionable age must also equal canonical `follow_up.as_of` minus the deal's
+  canonical UTC `updated_at`, with queue timestamps bound to detailed evidence.
 - Release-blocking installed-wheel proof that offers remain outside revenue,
   paid pilots book $299 toward the $897 target, and qualification, attribution,
   sales queues, and non-sensitive reporting retain their commercial semantics.

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Derived every actionable schema-7 deal age from the report's canonical date
+  and UTC activity timestamp before joined growth trusts queue ordering.
+- Rejected coordinated detail/queue age edits, malformed report dates, and
+  queue timestamp drift while preserving valid missing, future, and
+  offset-normalized activity evidence.
 - Rejected reordered schema-7 pilot sales queues during joined growth
   validation instead of accepting their members as an unordered mapping.
 - Bound each queued priority and age to its canonical detailed deal and reused

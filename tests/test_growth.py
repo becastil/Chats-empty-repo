@@ -835,7 +835,7 @@ class GrowthReportTests(unittest.TestCase):
         forged_age["sales_queue"]["deals"][0]["age_days"] = 4
         with self.assertRaisesRegex(
             GrowthInputError,
-            "sales_queue.deals does not match open pre-payment deals",
+            "age_days does not match updated_at and follow_up.as_of",
         ):
             build_growth_report(self._distribution(), forged_age)
 
@@ -994,6 +994,169 @@ class GrowthReportTests(unittest.TestCase):
                         self._distribution(),
                         missing_qualification_field,
                     )
+
+    def test_schema_seven_growth_derives_queue_age_from_activity(
+        self,
+    ) -> None:
+        body = "\n\n".join(
+            (
+                "### Team size\n\n12",
+                "### Repository count\n\n6",
+                "### CI provider\n\nGitHub Actions",
+                "### Repository standard to enforce\n\n"
+                "Use one reviewed repository policy.",
+                "### How did you hear about Repo Scout?\n\n"
+                "Repo Scout website",
+                "### Purchase readiness\n\n"
+                "Ready to purchase the $299 pilot",
+                "### Primary purchase criterion\n\n"
+                "Works across our repositories and CI",
+            )
+        )
+        pilot = build_funnel(
+            [
+                {
+                    "number": 1,
+                    "title": "Older ready buyer",
+                    "state": "OPEN",
+                    "updatedAt": "2026-07-05T00:00:00Z",
+                    "body": body,
+                    "labels": [
+                        "pilot-lead",
+                        "pilot-qualified",
+                        "pilot-offered",
+                    ],
+                },
+                {
+                    "number": 2,
+                    "title": "Newer ready buyer",
+                    "state": "OPEN",
+                    "updatedAt": "2026-07-09T00:00:00Z",
+                    "body": body,
+                    "labels": [
+                        "pilot-lead",
+                        "pilot-qualified",
+                        "pilot-offered",
+                    ],
+                },
+            ],
+            as_of=date(2026, 7, 10),
+        )
+        self.assertEqual(
+            [deal["number"] for deal in pilot["sales_queue"]["deals"]],
+            [1, 2],
+        )
+
+        forged = json.loads(json.dumps(pilot))
+        details_by_number = {
+            deal["number"]: deal for deal in forged["deals"]
+        }
+        queue_by_number = {
+            deal["number"]: deal for deal in forged["sales_queue"]["deals"]
+        }
+        details_by_number[1]["age_days"] = 0
+        queue_by_number[1]["age_days"] = 0
+        details_by_number[2]["age_days"] = 6
+        queue_by_number[2]["age_days"] = 6
+        forged["sales_queue"]["deals"].reverse()
+
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            "age_days does not match updated_at and follow_up.as_of",
+        ):
+            build_growth_report(self._distribution(), forged)
+
+        for as_of in (None, "", "20260710", "2026-7-10"):
+            with self.subTest(as_of=as_of):
+                malformed_date = json.loads(json.dumps(pilot))
+                if as_of is None:
+                    del malformed_date["follow_up"]["as_of"]
+                else:
+                    malformed_date["follow_up"]["as_of"] = as_of
+                with self.assertRaisesRegex(
+                    GrowthInputError,
+                    r"follow_up\.as_of must be canonical YYYY-MM-DD",
+                ):
+                    build_growth_report(
+                        self._distribution(),
+                        malformed_date,
+                    )
+
+        timestamp_drift = json.loads(json.dumps(pilot))
+        timestamp_drift["sales_queue"]["deals"][0].update(
+            {
+                "updated_at": "2026-07-06T00:00:00Z",
+                "age_days": 4,
+            }
+        )
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            "sales_queue.deals does not match open pre-payment deals",
+        ):
+            build_growth_report(self._distribution(), timestamp_drift)
+
+        edge_timestamps = build_funnel(
+            [
+                {
+                    "number": 10,
+                    "title": "Missing activity",
+                    "state": "OPEN",
+                    "body": body,
+                    "labels": [
+                        "pilot-lead",
+                        "pilot-qualified",
+                        "pilot-offered",
+                    ],
+                },
+                {
+                    "number": 11,
+                    "title": "Future activity",
+                    "state": "OPEN",
+                    "updatedAt": "2026-07-11T00:00:00Z",
+                    "body": body,
+                    "labels": [
+                        "pilot-lead",
+                        "pilot-qualified",
+                        "pilot-offered",
+                    ],
+                },
+                {
+                    "number": 12,
+                    "title": "Offset activity",
+                    "state": "OPEN",
+                    "updatedAt": "2026-07-04T00:30:00+02:00",
+                    "body": body,
+                    "labels": [
+                        "pilot-lead",
+                        "pilot-qualified",
+                        "pilot-offered",
+                    ],
+                },
+            ],
+            as_of=date(2026, 7, 10),
+        )
+
+        edge_report = build_growth_report(
+            self._distribution(),
+            edge_timestamps,
+        )
+
+        self.assertEqual(edge_report["summary"]["open_sales_actions"], 3)
+        self.assertEqual(
+            [
+                (
+                    deal["number"],
+                    deal["updated_at"],
+                    deal["age_days"],
+                )
+                for deal in edge_timestamps["sales_queue"]["deals"]
+            ],
+            [
+                (12, "2026-07-03T22:30:00Z", 7),
+                (10, None, None),
+                (11, "2026-07-11T00:00:00Z", -1),
+            ],
+        )
 
     def test_requires_a_baseline_before_prioritizing_commercial_movement(self) -> None:
         distribution = self._distribution()
@@ -1258,6 +1421,11 @@ class GrowthReportTests(unittest.TestCase):
             report["by_stage"] = {
                 stage: stage_plan.count(stage)
                 for stage in DISPLAY_STAGES
+            }
+            report["follow_up"] = {
+                "as_of": "2026-07-10",
+                "stale_days": 7,
+                "deals": [],
             }
             report["sales_queue"] = {"deals": []}
         return report

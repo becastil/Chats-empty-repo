@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after authenticating paid-pilot sales queue order:
-  279 / 1,000 (27.9%).
-- Remaining after authenticating paid-pilot sales queue order:
-  721 commits.
+- Progress after deriving pilot queue age from activity evidence:
+  280 / 1,000 (28.0%).
+- Remaining after deriving pilot queue age from activity evidence:
+  720 commits.
 
 ## Commit Standard
 

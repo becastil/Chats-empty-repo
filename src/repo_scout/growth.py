@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import date, datetime, timezone
 import json
 from pathlib import Path
 import sys
@@ -502,6 +503,7 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
         )
     sales_queue_state = LEGACY_SALES_QUEUE_STATE
     if schema == 7:
+        report_date = _validated_follow_up_date(root)
         for field in (
             "complete_qualification_issues",
             "target_profile_issues",
@@ -543,6 +545,7 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
             root,
             summary,
             pricing["pilot_price_usd"],
+            report_date,
         )
         sales_queue_state = (
             REPAIR_SALES_QUEUE_STATE
@@ -648,11 +651,13 @@ def _validate_qualification_aware_sales_queue(
     root: dict[str, Any],
     summary: dict[str, int],
     pilot_price_usd: int,
+    report_date: date,
 ) -> tuple[bool, bool]:
     expected_members, needs_lifecycle_repair = _expected_sales_queue_members(
         root,
         summary,
         pilot_price_usd,
+        report_date,
     )
     queue = _require_object(
         root.get("sales_queue"),
@@ -685,6 +690,7 @@ def _validate_qualification_aware_sales_queue(
             deal,
             location,
             pilot_price_usd,
+            report_date,
             priority_field="priority",
         )
         actual_order.append(number)
@@ -713,6 +719,7 @@ def _expected_sales_queue_members(
     root: dict[str, Any],
     summary: dict[str, int],
     pilot_price_usd: int,
+    report_date: date,
 ) -> tuple[dict[int, dict[str, Any]], bool]:
     raw_deals = root.get("deals")
     if not isinstance(raw_deals, list):
@@ -757,6 +764,7 @@ def _expected_sales_queue_members(
                 deal,
                 location,
                 pilot_price_usd,
+                report_date,
                 priority_field="sales_priority",
             )
         elif stage in {"conflict", "untracked"}:
@@ -789,6 +797,7 @@ def _validate_sales_action_contract(
     deal: dict[str, Any],
     location: str,
     pilot_price_usd: int,
+    report_date: date,
     *,
     priority_field: str,
 ) -> dict[str, Any]:
@@ -895,13 +904,10 @@ def _validate_sales_action_contract(
         raise GrowthInputError(
             f"{location}.{priority_field} does not match purchase readiness"
         )
-    if "age_days" not in deal:
-        raise GrowthInputError(f"{location}.age_days must be present")
-    raw_age_days = deal["age_days"]
-    age_days = (
-        None
-        if raw_age_days is None
-        else _require_int(raw_age_days, f"{location}.age_days")
+    updated_at, age_days = _validated_activity_age(
+        deal,
+        location,
+        report_date,
     )
 
     return {
@@ -910,7 +916,85 @@ def _validate_sales_action_contract(
         "qualification": normalized_qualification,
         "priority": priority,
         "age_days": age_days,
+        "updated_at": updated_at,
     }
+
+
+def _validated_follow_up_date(root: dict[str, Any]) -> date:
+    follow_up = _require_object(
+        root.get("follow_up"),
+        "pilot report.follow_up",
+    )
+    raw_as_of = follow_up.get("as_of")
+    if not isinstance(raw_as_of, str) or not raw_as_of:
+        raise GrowthInputError(
+            "pilot report.follow_up.as_of must be canonical YYYY-MM-DD"
+        )
+    try:
+        parsed = date.fromisoformat(raw_as_of)
+    except ValueError as exc:
+        raise GrowthInputError(
+            "pilot report.follow_up.as_of must be canonical YYYY-MM-DD"
+        ) from exc
+    if parsed.isoformat() != raw_as_of:
+        raise GrowthInputError(
+            "pilot report.follow_up.as_of must be canonical YYYY-MM-DD"
+        )
+    return parsed
+
+
+def _validated_activity_age(
+    deal: dict[str, Any],
+    location: str,
+    report_date: date,
+) -> tuple[str | None, int | None]:
+    if "updated_at" not in deal:
+        raise GrowthInputError(f"{location}.updated_at must be present")
+    raw_updated_at = deal["updated_at"]
+    if raw_updated_at is None:
+        updated_at = None
+        expected_age = None
+    else:
+        if not isinstance(raw_updated_at, str) or not raw_updated_at:
+            raise GrowthInputError(
+                f"{location}.updated_at must be a canonical UTC timestamp or null"
+            )
+        normalized = (
+            f"{raw_updated_at[:-1]}+00:00"
+            if raw_updated_at.endswith("Z")
+            else raw_updated_at
+        )
+        try:
+            parsed = datetime.fromisoformat(normalized)
+        except ValueError as exc:
+            raise GrowthInputError(
+                f"{location}.updated_at must be a canonical UTC timestamp or null"
+            ) from exc
+        if parsed.tzinfo is None:
+            raise GrowthInputError(
+                f"{location}.updated_at must be a canonical UTC timestamp or null"
+            )
+        parsed_utc = parsed.astimezone(timezone.utc)
+        updated_at = parsed_utc.isoformat().replace("+00:00", "Z")
+        if updated_at != raw_updated_at:
+            raise GrowthInputError(
+                f"{location}.updated_at must be a canonical UTC timestamp or null"
+            )
+        expected_age = (report_date - parsed_utc.date()).days
+
+    if "age_days" not in deal:
+        raise GrowthInputError(f"{location}.age_days must be present")
+    raw_age_days = deal["age_days"]
+    age_days = (
+        None
+        if raw_age_days is None
+        else _require_int(raw_age_days, f"{location}.age_days")
+    )
+    if age_days != expected_age:
+        raise GrowthInputError(
+            f"{location}.age_days does not match updated_at and follow_up.as_of"
+        )
+    return updated_at, age_days
 
 
 def _validate_visible_stage_progression(

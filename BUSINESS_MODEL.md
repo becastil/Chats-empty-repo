@@ -1384,11 +1384,16 @@ exactly to every open pre-payment deal. Readiness and the action-driving
 qualification fields, priority, and issue age must match that canonical deal.
 The queue sequence must reproduce the funnel producer's shared readiness,
 stage, age, and issue-number order before growth can defer to it. Detailed deal
+age must equal the canonical `follow_up.as_of` date minus its canonical UTC
+`updated_at`, and the queue timestamp must match that detailed evidence.
+Missing timestamps retain null age, future activity retains negative age, and
+source offsets remain valid after producer normalization to UTC. Detailed deal
 stages must reproduce `by_stage`, and visible qualification and offer
 progression must also agree with cumulative `by_source` totals. Deleting an
-entry and changing the saved count, reordering lower-intent work ahead of a
-ready buyer, self-authorizing a copy-ready provider, or escalating both detail
-and queue stage without changing aggregate evidence therefore fails.
+entry and changing the saved count, coordinating false ages to place a newer
+peer ahead of an older buyer, self-authorizing a copy-ready
+provider, or escalating both detail and queue stage without changing aggregate
+evidence therefore fails.
 During qualification through an open pilot target, a valid but empty schema-7
 queue is not treated as a legacy report: cumulative qualification, offer,
 payment, and loss history remains visible, but growth states that no open

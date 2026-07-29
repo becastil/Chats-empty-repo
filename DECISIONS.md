@@ -4353,3 +4353,26 @@ the producer's older-first order, then rejects its reversal along with priority
 and age drift. This protects the paid-pilot operating cadence without changing
 the public issue, applying a lifecycle label, sending outreach, selecting a
 buyer automatically, collecting payment, or recording revenue.
+
+## 2026-07-29: Derive Pilot Queue Age From Activity Evidence
+
+The previous queue-order correction bound each queued age to its detailed deal,
+but both values were copied from the same schema-7 report. Joined growth did not
+read `follow_up.as_of` or `updated_at`. Coordinating both age copies could
+therefore make a newer issue appear older, reorder otherwise valid queue
+members, and pass the shared sort contract while the unchanged activity
+timestamps contradicted that order.
+
+Schema-7 growth ingestion now requires a canonical `YYYY-MM-DD` report date and
+derives every actionable deal age from that date and a canonical UTC activity
+timestamp. Missing timestamps require null age, future timestamps retain their
+negative age, and source offsets remain valid after the funnel producer
+normalizes them to UTC. The normalized queue timestamp is included in the
+existing queue/detail reconciliation before canonical order is checked.
+
+Regressions reject coordinated age-and-order edits, missing and noncanonical
+report dates, and a queue timestamp that drifts from its detailed deal. They
+also preserve producer-generated null, future, and UTC-offset activity cases.
+This makes paid-pilot prioritization internally consistent with its own public
+activity evidence. It does not authenticate a wholly rewritten report, contact
+a buyer, apply a lifecycle label, collect payment, or record revenue.

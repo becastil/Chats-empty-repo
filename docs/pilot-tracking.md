@@ -88,6 +88,10 @@ Joined growth accepts that schema-7 queue only when each priority and age
 matches the canonical detailed deal and the list preserves the same
 readiness-stage-age-number order. A reordered saved queue fails before growth
 can defer a commercial action to it.
+It also derives each actionable age from `follow_up.as_of` and the canonical
+UTC `updated_at` value. Changing both copied ages cannot reorder the queue while
+the activity timestamps remain unchanged; queue timestamps must also match the
+detailed deal.
 
 For a ready-to-purchase request, GitHub Actions keeps the normal terms or
 payment action only when the qualification is `target` and
