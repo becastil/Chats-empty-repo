@@ -543,7 +543,7 @@ def build_funnel(
             ),
         },
         "sales_queue": {
-            "deals": sorted(sales_actions, key=_sales_queue_sort_key),
+            "deals": sorted(sales_actions, key=sales_queue_sort_key),
         },
         "by_stage": by_stage,
         "by_source": by_source,
@@ -980,7 +980,7 @@ def expected_sales_action(
     )
 
 
-def _sales_queue_sort_key(deal: dict[str, Any]) -> tuple[int, int, int, int]:
+def sales_queue_sort_key(deal: dict[str, Any]) -> tuple[int, int, int, int]:
     age_days = deal["age_days"]
     age_rank = -age_days if isinstance(age_days, int) and age_days >= 0 else 1
     return (

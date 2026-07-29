@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Rejected reordered schema-7 pilot sales queues during joined growth
+  validation instead of accepting their members as an unordered mapping.
+- Bound each queued priority and age to its canonical detailed deal and reused
+  the funnel producer's readiness-stage-age-number sort contract before growth
+  can defer a paid-pilot action to that queue.
 - Made Sites pre-save verification accept the exact canonical source-repository
   identity emitted by the pending approval request, so the documented approval
   tuple can be replayed without translating it back into a URL.

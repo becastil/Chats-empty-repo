@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after binding Sites approval to exact repository identity:
-  278 / 1,000 (27.8%).
-- Remaining after binding Sites approval to exact repository identity:
-  722 commits.
+- Progress after authenticating paid-pilot sales queue order:
+  279 / 1,000 (27.9%).
+- Remaining after authenticating paid-pilot sales queue order:
+  721 commits.
 
 ## Commit Standard
 

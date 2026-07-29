@@ -4328,3 +4328,28 @@ absolute SCP form. This makes the owner-approved source-export tuple executable
 without weakening repository identity. It does not grant approval, export
 source, save or deploy a Sites version, or create customer, demand, payment, or
 revenue evidence.
+
+## 2026-07-29: Authenticate Schema-7 Sales Queue Order In Growth
+
+The pilot funnel emits a deterministic sales queue ordered by disclosed
+purchase readiness, funnel stage, issue age, and issue number. Joined growth
+validated the same queue by converting both the reported entries and canonical
+open deals into dictionaries keyed by issue number. That proved membership and
+action content but discarded list order. A saved report could therefore place
+lower-intent work ahead of a ready buyer and still be treated as an active
+qualification-aware queue.
+
+Schema-7 growth validation now preserves the reported issue sequence and
+derives the expected sequence with the funnel producer's shared sort key.
+Queued priority must match the normalized readiness answer, and both priority
+and age must match the canonical detailed deal before ordering is checked.
+Membership, stage, qualification, CI-provider, scope, price-derived action, and
+aggregate progression checks remain unchanged. Reordering two otherwise valid
+entries, forging priority, or drifting queue age from deal age now fails before
+growth can defer a commercial action to the queue.
+
+The regression uses two ready offered deals with different issue ages, confirms
+the producer's older-first order, then rejects its reversal along with priority
+and age drift. This protects the paid-pilot operating cadence without changing
+the public issue, applying a lifecycle label, sending outreach, selecting a
+buyer automatically, collecting payment, or recording revenue.

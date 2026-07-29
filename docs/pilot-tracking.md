@@ -84,6 +84,10 @@ answer: ready is `P1`, needs approval is `P2`, exploring is `P3`, and missing
 or unrecognized readiness is `P4`. Within one priority, offered deals come
 before qualified deals, then leads; older issue activity breaks ties before
 issue number. Each record includes a stage-specific `next_action`.
+Joined growth accepts that schema-7 queue only when each priority and age
+matches the canonical detailed deal and the list preserves the same
+readiness-stage-age-number order. A reordered saved queue fails before growth
+can defer a commercial action to it.
 
 For a ready-to-purchase request, GitHub Actions keeps the normal terms or
 payment action only when the qualification is `target` and

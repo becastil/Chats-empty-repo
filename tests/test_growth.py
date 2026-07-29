@@ -793,6 +793,52 @@ class GrowthReportTests(unittest.TestCase):
         ):
             build_growth_report(self._distribution(), forged_empty_queue)
 
+        canonical_queue = build_funnel(
+            [
+                {
+                    **raw_issue,
+                    "number": 2,
+                    "updatedAt": "2026-07-05T00:00:00Z",
+                },
+                {
+                    **raw_issue,
+                    "number": 3,
+                    "updatedAt": "2026-07-09T00:00:00Z",
+                },
+            ],
+            as_of=date(2026, 7, 10),
+        )
+        self.assertEqual(
+            [
+                deal["number"]
+                for deal in canonical_queue["sales_queue"]["deals"]
+            ],
+            [2, 3],
+        )
+        reordered_queue = json.loads(json.dumps(canonical_queue))
+        reordered_queue["sales_queue"]["deals"].reverse()
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            "sales_queue.deals is not in canonical priority order",
+        ):
+            build_growth_report(self._distribution(), reordered_queue)
+
+        forged_priority = json.loads(json.dumps(canonical_queue))
+        forged_priority["sales_queue"]["deals"][0]["priority"] = 2
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            "priority does not match purchase readiness",
+        ):
+            build_growth_report(self._distribution(), forged_priority)
+
+        forged_age = json.loads(json.dumps(canonical_queue))
+        forged_age["sales_queue"]["deals"][0]["age_days"] = 4
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            "sales_queue.deals does not match open pre-payment deals",
+        ):
+            build_growth_report(self._distribution(), forged_age)
+
         unsafe_scope = build_funnel(
             [
                 {

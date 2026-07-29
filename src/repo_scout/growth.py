@@ -18,7 +18,9 @@ from .pilot_funnel import (
     PUBLIC_INTAKE_PILOT_PRICE_USD,
     QUALIFICATION_STATUSES,
     READINESS_KEYS,
+    SALES_PRIORITY_BY_READINESS,
     expected_sales_action,
+    sales_queue_sort_key,
 )
 
 
@@ -667,6 +669,7 @@ def _validate_qualification_aware_sales_queue(
         )
 
     actual_members: dict[int, dict[str, Any]] = {}
+    actual_order: list[int] = []
     for index, raw_deal in enumerate(raw_deals):
         location = f"pilot report.sales_queue.deals[{index}]"
         deal = _require_object(raw_deal, location)
@@ -682,11 +685,26 @@ def _validate_qualification_aware_sales_queue(
             deal,
             location,
             pilot_price_usd,
+            priority_field="priority",
         )
+        actual_order.append(number)
 
     if actual_members != expected_members:
         raise GrowthInputError(
             "pilot report sales_queue.deals does not match open pre-payment deals"
+        )
+    expected_order = [
+        number
+        for number, _ in sorted(
+            expected_members.items(),
+            key=lambda item: sales_queue_sort_key(
+                {"number": item[0], **item[1]}
+            ),
+        )
+    ]
+    if actual_order != expected_order:
+        raise GrowthInputError(
+            "pilot report sales_queue.deals is not in canonical priority order"
         )
     return bool(raw_deals), needs_lifecycle_repair
 
@@ -739,6 +757,7 @@ def _expected_sales_queue_members(
                 deal,
                 location,
                 pilot_price_usd,
+                priority_field="sales_priority",
             )
         elif stage in {"conflict", "untracked"}:
             needs_lifecycle_repair = True
@@ -770,6 +789,8 @@ def _validate_sales_action_contract(
     deal: dict[str, Any],
     location: str,
     pilot_price_usd: int,
+    *,
+    priority_field: str,
 ) -> dict[str, Any]:
     readiness = deal.get("purchase_readiness")
     if readiness not in READINESS_KEYS:
@@ -866,10 +887,29 @@ def _validate_sales_action_contract(
             "action contract"
         )
 
+    priority = _require_positive_int(
+        deal.get(priority_field),
+        f"{location}.{priority_field}",
+    )
+    if priority != SALES_PRIORITY_BY_READINESS[readiness]:
+        raise GrowthInputError(
+            f"{location}.{priority_field} does not match purchase readiness"
+        )
+    if "age_days" not in deal:
+        raise GrowthInputError(f"{location}.age_days must be present")
+    raw_age_days = deal["age_days"]
+    age_days = (
+        None
+        if raw_age_days is None
+        else _require_int(raw_age_days, f"{location}.age_days")
+    )
+
     return {
         "stage": stage,
         "purchase_readiness": readiness,
         "qualification": normalized_qualification,
+        "priority": priority,
+        "age_days": age_days,
     }
 
 
