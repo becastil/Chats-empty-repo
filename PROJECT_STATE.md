@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 295 of
-1,000, with 705 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 296 of
+1,000, with 704 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -413,6 +413,9 @@ alignment take priority over commit volume.
   bidirectional-control, whitespace, and oversized values before bundle
   generation or cross-repository output, with installed-command proof that
   unsafe IDs cannot forge detailed operator metrics.
+- Non-conflicting Markdown code-span fences for printable rollout repository
+  IDs containing one or more backticks, preserving the exact metadata value
+  while preventing inline formatting from escaping the visible identity.
 - Bounded printable rollout branch metadata that rejects line, terminal-control,
   bidirectional-control, whitespace, and oversized values before any operator
   summary can be emitted.

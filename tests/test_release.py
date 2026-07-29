@@ -664,6 +664,7 @@ class ReleaseManifestTests(unittest.TestCase):
         self.assertEqual(
             checked,
             (
+                "markdown-repository-id-contained",
                 "counts-only-summary",
                 "shared-policy-remediation",
                 "explicit-details",
@@ -674,6 +675,23 @@ class ReleaseManifestTests(unittest.TestCase):
                 "unsafe-repository-id-rejected",
             ),
         )
+
+    def test_rollout_summary_smoke_requires_primary_installed_command(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            rollout_command = Path(tmp) / "repo-scout-rollout"
+            rollout_command.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+            rollout_command.chmod(0o755)
+
+            with self.assertRaisesRegex(
+                smoke_test_rollout_summary.SmokeTestError,
+                r"installed command is missing or not executable: .*repo-scout$",
+            ):
+                smoke_test_rollout_summary.verify_rollout_summary(
+                    sys.executable,
+                    command_directory=tmp,
+                )
 
     def test_writes_deterministic_checksums_for_exact_artifacts(self) -> None:
         with TemporaryDirectory() as tmp:

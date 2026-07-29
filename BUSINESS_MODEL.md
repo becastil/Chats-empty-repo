@@ -196,6 +196,14 @@ customer-controlled identity cannot use those controls to forge detailed text
 metrics or alter terminal presentation. This protects the paid delivery record;
 it does not authenticate a repository, establish customer activation, or
 create payment or revenue.
+Printable IDs can still contain Markdown backticks. Bundle generation now uses
+a code-span fence longer than the longest embedded run and adds delimiter
+padding only when an ID begins or ends with a backtick. The visible identity
+cannot close its own code span, while schema-2 metadata retains the exact
+logical ID. Installed release smoke runs the packaged `repo-scout` producer and
+requires that containment before the packaged aggregator checks the synthetic
+bundles. This is rendering integrity for paid acceptance evidence, not
+authentication, freshness, customer activation, payment, or revenue.
 Rollout branch metadata is also limited to null or a non-empty printable value
 of at most 1,024 characters without surrounding whitespace. Line breaks,
 terminal controls, bidirectional controls, and oversized values fail before
@@ -1234,8 +1242,10 @@ fingerprint and Git commit coverage, and verified shared policy identity. It
 also proves the default summary omits repository IDs, fingerprints, commits,
 and evidence paths while explicit details remain available, and rejects a
 duplicate repository or presentation-unsafe repository identity before
-emitting a report. Synthetic bundles validate the distribution contract; they
-are not pilot usage or customer evidence.
+emitting a report. It also generates one repository ID containing Markdown
+backticks through the packaged primary command and requires exact metadata plus
+one contained visible code span. Synthetic bundles validate the distribution
+contract; they are not pilot usage or customer evidence.
 
 The hosted offer now leads with this cross-repository outcome: complete policy
 and commit identity coverage, shared-policy verification, and visible

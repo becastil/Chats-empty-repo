@@ -95,6 +95,11 @@ without surrounding whitespace. Newlines, terminal controls, bidirectional
 controls, Unicode separators, and oversized values fail before either the
 primary CLI generates a bundle or the aggregator emits text or JSON. The error
 does not echo the untrusted value.
+Printable repository IDs may contain backticks. The Markdown bundle uses a
+code-span delimiter longer than the longest embedded run, adding delimiter
+padding only when an ID starts or ends with a backtick. The visible identity
+therefore remains one inline code value while the metadata preserves the exact
+ID.
 
 Branch metadata must be null or a non-empty printable string of at most 1,024
 characters without surrounding whitespace. Newlines, terminal controls,

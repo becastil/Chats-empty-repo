@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Replaced backslash-escaped Markdown backticks with a delimiter longer than the
+  longest backtick run in each inline code value.
+- Preserved the exact printable rollout repository ID in schema-2 metadata while
+  keeping embedded backticks inside one visible Markdown code span.
+- Extended the installed rollout smoke to require both packaged producer and
+  aggregator commands and prove code-span containment before release.
 - Required rollout repository IDs to remain non-empty printable strings of at
   most 128 characters without surrounding whitespace.
 - Rejected line, terminal-control, bidirectional-control, Unicode-separator,

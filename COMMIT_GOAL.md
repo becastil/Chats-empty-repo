@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after bounding paid-rollout repository identities:
-  295 / 1,000 (29.5%).
-- Remaining after bounding paid-rollout repository identities:
-  705 commits.
+- Progress after containing rollout IDs in Markdown code spans:
+  296 / 1,000 (29.6%).
+- Remaining after containing rollout IDs in Markdown code spans:
+  704 commits.
 
 ## Commit Standard
 

@@ -32,10 +32,59 @@ def verify_rollout_summary(
         python_command,
         command_directory=command_directory,
     )
+    primary_command = _primary_command(
+        python_command,
+        command_directory=command_directory,
+    )
     checked: list[str] = []
 
     with TemporaryDirectory() as tmp:
         root = Path(tmp)
+        repository = root / "repository"
+        repository.mkdir()
+        (repository / "README.md").write_text(
+            "# Synthetic repository\n",
+            encoding="utf-8",
+        )
+        policy = root / "policy.toml"
+        policy.write_text(
+            """version = 1
+[repository]
+required_files = ["README.md"]
+""",
+            encoding="utf-8",
+        )
+        markdown_repository_id = "`company/api`` **pilot-active** `"
+        generated = _run_primary(
+            primary_command,
+            repository,
+            policy,
+            markdown_repository_id,
+            environment=environment,
+        )
+        repository_lines = [
+            line
+            for line in generated.splitlines()
+            if line.startswith("- **Repository ID:**")
+        ]
+        _require(
+            repository_lines
+            == [
+                "- **Repository ID:** "
+                "``` `company/api`` **pilot-active** ` ```"
+            ],
+            "rollout repository ID escaped its Markdown code span",
+        )
+        _require(
+            "\\`" not in repository_lines[0],
+            "rollout repository ID retained invalid backslash escaping",
+        )
+        _require(
+            '"repository_id": "`company/api`` **pilot-active** `"' in generated,
+            "rollout metadata changed the repository ID",
+        )
+        checked.append("markdown-repository-id-contained")
+
         api = root / "api.md"
         web = root / "web.md"
         _write_bundle(api, _metadata("company/api", commit=API_COMMIT))
@@ -284,6 +333,55 @@ def _rollout_command(
             f"installed command is missing or not executable: {path}"
         )
     return (str(path),)
+
+
+def _primary_command(
+    python: str,
+    *,
+    command_directory: str | Path | None,
+) -> tuple[str, ...]:
+    if command_directory is None:
+        return (python, "-m", "repo_scout")
+
+    path = Path(command_directory) / "repo-scout"
+    if not path.is_file() or not os.access(path, os.X_OK):
+        raise SmokeTestError(
+            f"installed command is missing or not executable: {path}"
+        )
+    return (str(path),)
+
+
+def _run_primary(
+    command: Sequence[str],
+    repository: Path,
+    policy: Path,
+    repository_id: str,
+    *,
+    environment: Mapping[str, str] | None,
+) -> str:
+    completed = subprocess.run(
+        [
+            *command,
+            "--format",
+            "markdown",
+            "--policy",
+            str(policy),
+            "--rollout-checklist",
+            "--repository-id",
+            repository_id,
+            str(repository),
+        ],
+        capture_output=True,
+        text=True,
+        env=dict(environment) if environment is not None else None,
+    )
+    if completed.returncode != 0:
+        detail = completed.stderr.strip() or completed.stdout.strip() or "no output"
+        raise SmokeTestError(
+            "primary rollout command exited "
+            f"{completed.returncode}; expected 0: {detail}"
+        )
+    return completed.stdout
 
 
 def _metadata(

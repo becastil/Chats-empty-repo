@@ -802,8 +802,19 @@ def _signed(value: int) -> str:
 
 
 def _markdown_code(value: str) -> str:
-    escaped = value.replace("`", "\\`")
-    return f"`{escaped}`"
+    longest_run = 0
+    current_run = 0
+    for character in value:
+        if character == "`":
+            current_run += 1
+            longest_run = max(longest_run, current_run)
+        else:
+            current_run = 0
+
+    fence = "`" * (longest_run + 1)
+    # Edge backticks need spaces so they do not merge with the delimiter run.
+    padding = " " if value.startswith("`") or value.endswith("`") else ""
+    return f"{fence}{padding}{value}{padding}{fence}"
 
 
 def _markdown_cell(value: str) -> str:

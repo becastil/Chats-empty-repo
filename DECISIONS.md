@@ -4766,3 +4766,29 @@ the packaged command and requires exit code 2 with no report.
 This protects the paid pilot's bundle-reported acceptance record; it does not
 authenticate a repository, verify freshness, prove customer activation,
 approve outreach, collect payment, or create revenue.
+
+## 2026-07-29: Fence Printable Rollout IDs Instead Of Backslash-Escaping Them
+
+The rollout identity validator now blocks presentation controls, but printable
+backticks remain valid logical-ID characters. Markdown backslash escapes do not
+apply inside code spans. The existing helper wrapped every inline value in one
+backtick and inserted backslashes before embedded backticks, so a printable
+repository ID could close its visible code span and introduce formatted text
+into a paid rollout bundle even though the schema-2 metadata remained exact.
+
+Markdown inline code now uses a delimiter one backtick longer than the longest
+run in the value. A value beginning or ending with a backtick receives one
+delimiter-padding space on both sides so edge backticks cannot merge with the
+fence; CommonMark removes that padding from the rendered code value. Values
+without backticks retain their previous output byte for byte. The algorithm is
+dependency-free and applies to the existing shared inline-code renderer rather
+than introducing a rollout-only escaping dialect.
+
+Source tests cover ordinary, internal, consecutive, leading-only,
+trailing-only, and both-edge backticks. The primary CLI regression requires a
+combined adversarial repository ID to remain one visible code span and preserve
+its exact metadata value. Installed release smoke now requires both packaged
+`repo-scout` and `repo-scout-rollout`, reproduces that producer case, and then
+continues through aggregate paid-delivery evidence. This protects Markdown
+acceptance rendering; it does not authenticate a repository, prove freshness
+or customer activation, approve outreach, collect payment, or create revenue.

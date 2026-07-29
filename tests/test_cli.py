@@ -14,11 +14,25 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from repo_scout.cli import main
+from repo_scout.cli import _markdown_code, main
 from repo_scout.rollout import parse_rollout_metadata
 
 
 class CliTests(unittest.TestCase):
+    def test_markdown_code_uses_non_conflicting_backtick_fences(self) -> None:
+        cases = (
+            ("platform/api", "`platform/api`"),
+            ("platform/api`preview", "``platform/api`preview``"),
+            ("platform/api``preview", "```platform/api``preview```"),
+            ("`platform/api", "`` `platform/api ``"),
+            ("platform/api`", "`` platform/api` ``"),
+            ("`platform/api`", "`` `platform/api` ``"),
+        )
+
+        for value, expected in cases:
+            with self.subTest(value=value):
+                self.assertEqual(_markdown_code(value), expected)
+
     def test_cli_can_emit_json_snapshot(self) -> None:
         with TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -302,6 +316,57 @@ require_clean_git = true
             self.assertTrue(metadata["git"]["clean"])
             self.assertRegex(
                 metadata["git"]["commit"], r"^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+            )
+
+    def test_cli_contains_rollout_repository_id_backticks_in_one_code_span(
+        self,
+    ) -> None:
+        repository_id = "`platform/api`` **pilot-active** `"
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "README.md").write_text("# Example\n", encoding="utf-8")
+            policy_path = root / "repo-scout-policy.toml"
+            policy_path.write_text(
+                """version = 1
+[repository]
+required_files = ["README.md"]
+""",
+                encoding="utf-8",
+            )
+
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        "--format",
+                        "markdown",
+                        "--policy",
+                        str(policy_path),
+                        "--rollout-checklist",
+                        "--repository-id",
+                        repository_id,
+                        str(root),
+                    ]
+                )
+
+            report = stdout.getvalue()
+            self.assertEqual(exit_code, 0)
+            self.assertIn(
+                (
+                    "- **Repository ID:** "
+                    "``` `platform/api`` **pilot-active** ` ```"
+                ),
+                report,
+            )
+            repository_line = next(
+                line
+                for line in report.splitlines()
+                if line.startswith("- **Repository ID:**")
+            )
+            self.assertNotIn("\\`", repository_line)
+            self.assertEqual(
+                parse_rollout_metadata(report)["repository_id"],
+                repository_id,
             )
 
     def test_rollout_requires_an_initial_commit_for_ci_readiness(self) -> None:

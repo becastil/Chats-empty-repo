@@ -228,7 +228,9 @@ strings of at most 128 characters without surrounding whitespace, and branch
 metadata must be null or a non-empty printable string of at most 1,024
 characters without surrounding whitespace. Values outside those contracts fail
 with exit code 2 before bundle generation or summary output and are not echoed
-in the error.
+in the error. Printable IDs may contain backticks; Markdown output selects a
+code-span delimiter longer than the longest embedded run so the exact ID stays
+inside one inline code value and remains unchanged in rollout metadata.
 
 Initialize an offline starter policy for a common repository type:
 
