@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after deriving pilot outcome attribution from detailed deals:
-  284 / 1,000 (28.4%).
-- Remaining after deriving pilot outcome attribution from detailed deals:
-  716 commits.
+- Progress after deriving booked revenue attribution from detailed deals:
+  285 / 1,000 (28.5%).
+- Remaining after deriving booked revenue attribution from detailed deals:
+  715 commits.
 
 ## Commit Standard
 

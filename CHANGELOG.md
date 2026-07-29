@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Derived schema-7 booked-pilot attribution from detailed deals by source and
+  purchase criterion, binding each segment's revenue through the fixed $299
+  price formula.
+- Rejected coordinated booked-count and booked-revenue swaps that preserve
+  global revenue while assigning payment to a different channel or criterion.
 - Derived schema-7 conversion and resolved-loss attribution from each detailed
   deal's recognized source and purchase criterion.
 - Rejected globally balanced source or criterion outcome swaps and malformed

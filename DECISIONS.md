@@ -4485,3 +4485,31 @@ errors. This protects directional acquisition and purchase-criterion learning
 inside a saved report. It does not derive causal attribution, authenticate a
 wholly rewritten report, contact a buyer, collect payment, observe an external
 outcome, or record revenue.
+
+## 2026-07-29: Derive Booked Revenue Attribution From Detailed Deals
+
+Schema-7 growth already proved the global booked-pilot total matched explicit
+boolean booking evidence on every detailed deal. Its source and purchase-
+criterion rows still needed only to agree with that global total. A saved
+report could therefore move one booked pilot and $299 from website to outreach,
+or from policy fit to rollout fit, while preserving every global booking and
+revenue value.
+
+The detailed commercial-attribution pass now derives booked-pilot counts for
+each recognized source and purchase criterion alongside conversion and loss.
+Every corresponding segment must match. Schema 7 fixes the public pilot price
+at $299, and the existing segment validator requires booked revenue to equal
+that price times booked pilots, so the detailed count uniquely binds the
+reported dollars without duplicating revenue arithmetic.
+
+Regression coverage preserves one closed paid-active website request selected
+for policy fit and one closed unpaid offered outreach request selected for
+rollout fit. It then independently swaps both booked count and revenue across
+the source and criterion tables and requires joined growth to reject each
+otherwise globally balanced report. Existing coverage retains open and closed
+bookings, paid losses and conflicts, converted records with and without
+payment, and edited-answer fallback buckets. This protects directional paid
+channel and purchase-criterion evidence under the fixed-price schema. It does
+not support future per-deal discounts, refunds, or currencies, derive causal
+attribution, authenticate a wholly rewritten report, collect payment, or record
+revenue.

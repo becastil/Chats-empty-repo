@@ -60,7 +60,8 @@ SOURCE_TOTAL_FIELDS = (
     "annual_conversions",
     "lost_pilots",
 )
-RESOLVED_OUTCOME_FIELDS = (
+DETAILED_ATTRIBUTION_FIELDS = (
+    "booked_pilots",
     "annual_conversions",
     "lost_pilots",
 )
@@ -635,7 +636,7 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
                 decision_criteria.append({"criterion": criterion, **totals})
         _validate_criterion_totals(summary, decision_criteria, sources)
     if schema == 7 and decision_criteria is not None:
-        _validate_detailed_outcome_attribution(
+        _validate_detailed_commercial_attribution(
             root,
             sources,
             decision_criteria,
@@ -1204,17 +1205,17 @@ def _validate_criterion_totals(
             )
 
 
-def _validate_detailed_outcome_attribution(
+def _validate_detailed_commercial_attribution(
     root: dict[str, Any],
     sources: list[dict[str, Any]],
     criteria: list[dict[str, Any]],
 ) -> None:
     observed_by_source = {
-        source: {field: 0 for field in RESOLVED_OUTCOME_FIELDS}
+        source: {field: 0 for field in DETAILED_ATTRIBUTION_FIELDS}
         for source in SOURCE_KEYS
     }
     observed_by_criterion = {
-        criterion: {field: 0 for field in RESOLVED_OUTCOME_FIELDS}
+        criterion: {field: 0 for field in DETAILED_ATTRIBUTION_FIELDS}
         for criterion in DECISION_CRITERION_KEYS
     }
     raw_deals = root["deals"]
@@ -1237,14 +1238,14 @@ def _validate_detailed_outcome_attribution(
             raise GrowthInputError(
                 f"{location}.decision_criterion must be a recognized value"
             )
-        is_converted = (
-            deal["booked"] and deal["stage"] == "converted"
-        )
+        is_booked = deal["booked"]
+        is_converted = is_booked and deal["stage"] == "converted"
         is_lost = deal["stage"] == "lost"
         for totals in (
             observed_by_source[source],
             observed_by_criterion[criterion],
         ):
+            totals["booked_pilots"] += int(is_booked)
             totals["annual_conversions"] += int(is_converted)
             totals["lost_pilots"] += int(is_lost)
 

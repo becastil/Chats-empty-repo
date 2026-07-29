@@ -1531,6 +1531,90 @@ class GrowthReportTests(unittest.TestCase):
                 ):
                     build_growth_report(self._distribution(), malformed)
 
+    def test_schema_seven_growth_derives_booking_attribution(
+        self,
+    ) -> None:
+        body = "\n\n".join(
+            (
+                "### Team size\n\n12",
+                "### Repository count\n\n6",
+                "### CI provider\n\nGitHub Actions",
+                "### Repository standard to enforce\n\n"
+                "Use one reviewed repository policy.",
+                "### How did you hear about Repo Scout?\n\n"
+                "Repo Scout website",
+                "### Purchase readiness\n\n"
+                "Ready to purchase the $299 pilot",
+                "### Primary purchase criterion\n\n"
+                "Supports our required repository standards",
+            )
+        )
+        booked_issue = {
+            "number": 1,
+            "title": "Paid website pilot",
+            "state": "CLOSED",
+            "updatedAt": "2026-07-10T00:00:00Z",
+            "body": body,
+            "labels": [
+                "pilot-lead",
+                "pilot-qualified",
+                "pilot-offered",
+                "pilot-paid",
+                "pilot-active",
+            ],
+        }
+        offered_issue = {
+            **booked_issue,
+            "number": 2,
+            "title": "Offered outreach pilot",
+            "body": body.replace(
+                "Repo Scout website",
+                "Direct outreach",
+            ).replace(
+                "Supports our required repository standards",
+                "Works across our repositories and CI",
+            ),
+            "labels": [
+                "pilot-lead",
+                "pilot-qualified",
+                "pilot-offered",
+            ],
+        }
+        pilot = build_funnel(
+            [booked_issue, offered_issue],
+            target_pilots=1,
+            as_of=date(2026, 7, 10),
+        )
+        build_growth_report(self._distribution(), pilot)
+
+        cases = (
+            ("by_source", "website", "outreach"),
+            (
+                "by_decision_criterion",
+                "policy_fit",
+                "rollout_fit",
+            ),
+        )
+        for table, booked_segment, offered_segment in cases:
+            with self.subTest(table=table):
+                forged = json.loads(json.dumps(pilot))
+                rows = forged[table]
+                for field in ("booked_pilots", "booked_revenue_usd"):
+                    rows[booked_segment][field], rows[offered_segment][
+                        field
+                    ] = (
+                        rows[offered_segment][field],
+                        rows[booked_segment][field],
+                    )
+                with self.assertRaisesRegex(
+                    GrowthInputError,
+                    (
+                        rf"{table}\.{booked_segment}\.booked_pilots "
+                        r"does not match deals"
+                    ),
+                ):
+                    build_growth_report(self._distribution(), forged)
+
     def test_schema_seven_growth_derives_qualification_from_deals(
         self,
     ) -> None:
