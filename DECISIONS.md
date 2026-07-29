@@ -4431,3 +4431,30 @@ deal-level contract merely because they are absent from the live queue. This
 protects target-customer and willingness-to-pay learning. It does not
 authenticate a wholly rewritten report, approve a buyer, send terms, apply a
 lifecycle label, collect payment, or record revenue.
+
+## 2026-07-29: Derive Resolved Outcomes From Detailed Deals
+
+Schema-7 joined growth reconciled annual conversions and lost pilots across the
+summary, source, and purchase-criterion aggregates, but those tables were all
+copied from one saved report. It did not derive either resolved outcome from
+the detailed deals. Coordinating the aggregate tables could therefore turn an
+unchanged paid-active pilot into an annual conversion and move the bottleneck
+from retention to validated, or erase a detailed loss.
+
+Growth now derives annual conversions only from detailed deals whose stage is
+`converted` and whose explicit `booked` value is true. It derives resolved
+losses only from the `lost` stage. Converted deals without payment remain
+visible but unconverted for revenue evidence, and terminal conflicts remain
+excluded from both outcomes, matching the funnel producer's existing
+payment-backed semantics. Both derived totals must match the summary before
+joined growth trusts the aggregate segments or selects a bottleneck.
+
+Regression coverage starts with a valid paid-active target whose bottleneck is
+retention and rejects coordinated aggregate edits that manufacture an annual
+conversion. It also preserves producer-generated paid conversion, loss, and
+conflict records, then rejects coordinated aggregate edits that erase the
+resolved loss. Existing funnel and growth coverage continues to preserve
+converted-without-payment records. This protects global retention and loss
+evidence inside saved reports; per-segment attribution remains aggregate
+evidence. It does not authenticate a wholly rewritten report, apply lifecycle
+labels, collect payment, observe a customer outcome, or record revenue.

@@ -732,6 +732,8 @@ def _expected_sales_queue_members(
     expected_members: dict[int, dict[str, Any]] = {}
     observed_stage_counts = {stage: 0 for stage in DISPLAY_STAGES}
     observed_booked_pilots = 0
+    observed_annual_conversions = 0
+    observed_lost_pilots = 0
     observed_qualification_counts = {
         "complete_qualification_issues": 0,
         "target_profile_issues": 0,
@@ -793,6 +795,10 @@ def _expected_sales_queue_members(
                 f"{location}.booked must be true for the paid stage"
             )
         observed_booked_pilots += int(booked)
+        observed_annual_conversions += int(
+            booked and stage == "converted"
+        )
+        observed_lost_pilots += int(stage == "lost")
         if state != "OPEN":
             continue
         if stage in FOLLOW_UP_STAGES:
@@ -810,6 +816,14 @@ def _expected_sales_queue_members(
         raise GrowthInputError(
             "pilot report booked_pilots does not match deals"
         )
+    for field, observed_count in (
+        ("annual_conversions", observed_annual_conversions),
+        ("lost_pilots", observed_lost_pilots),
+    ):
+        if summary[field] != observed_count:
+            raise GrowthInputError(
+                f"pilot report {field} does not match deals"
+            )
     for field, observed_count in observed_qualification_counts.items():
         if summary[field] != observed_count:
             raise GrowthInputError(

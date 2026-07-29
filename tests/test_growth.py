@@ -1261,6 +1261,140 @@ class GrowthReportTests(unittest.TestCase):
         ):
             build_growth_report(self._distribution(), erased)
 
+    def test_schema_seven_growth_derives_terminal_outcomes_from_deals(
+        self,
+    ) -> None:
+        raw_issue = {
+            "number": 1,
+            "title": "Paid active pilot",
+            "state": "OPEN",
+            "updatedAt": "2026-07-10T00:00:00Z",
+            "body": "\n\n".join(
+                (
+                    "### Team size\n\n12",
+                    "### Repository count\n\n6",
+                    "### CI provider\n\nGitHub Actions",
+                    "### Repository standard to enforce\n\n"
+                    "Use one reviewed repository policy.",
+                    "### How did you hear about Repo Scout?\n\n"
+                    "Repo Scout website",
+                    "### Purchase readiness\n\n"
+                    "Ready to purchase the $299 pilot",
+                    "### Primary purchase criterion\n\n"
+                    "Works across our repositories and CI",
+                )
+            ),
+            "labels": [
+                "pilot-lead",
+                "pilot-qualified",
+                "pilot-offered",
+                "pilot-paid",
+                "pilot-active",
+            ],
+        }
+
+        def set_terminal_outcome(
+            report: dict[str, object],
+            field: str,
+            count: int,
+        ) -> None:
+            report["summary"][field] = count
+            for segment_name in ("by_source", "by_decision_criterion"):
+                segment = next(
+                    totals
+                    for totals in report[segment_name].values()
+                    if totals["deals"]
+                )
+                segment[field] = count
+
+        active = build_funnel(
+            [raw_issue],
+            target_pilots=1,
+            as_of=date(2026, 7, 10),
+        )
+        self.assertEqual(
+            build_growth_report(self._distribution(), active)["bottleneck"][
+                "stage"
+            ],
+            "retention",
+        )
+        forged_conversion = json.loads(json.dumps(active))
+        set_terminal_outcome(
+            forged_conversion,
+            "annual_conversions",
+            1,
+        )
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            "annual_conversions does not match deals",
+        ):
+            build_growth_report(self._distribution(), forged_conversion)
+
+        converted = build_funnel(
+            [
+                {
+                    **raw_issue,
+                    "title": "Converted pilot",
+                    "state": "CLOSED",
+                    "labels": [
+                        *raw_issue["labels"],
+                        "pilot-converted",
+                    ],
+                }
+            ],
+            target_pilots=1,
+            as_of=date(2026, 7, 10),
+        )
+        self.assertEqual(converted["summary"]["annual_conversions"], 1)
+        self.assertEqual(
+            build_growth_report(self._distribution(), converted)[
+                "bottleneck"
+            ]["stage"],
+            "validated",
+        )
+
+        lost = build_funnel(
+            [
+                {
+                    **raw_issue,
+                    "title": "Lost pilot",
+                    "state": "CLOSED",
+                    "labels": ["pilot-lead", "pilot-lost"],
+                }
+            ],
+            target_pilots=1,
+            as_of=date(2026, 7, 10),
+        )
+        self.assertEqual(lost["summary"]["lost_pilots"], 1)
+        build_growth_report(self._distribution(), lost)
+        erased_loss = json.loads(json.dumps(lost))
+        set_terminal_outcome(erased_loss, "lost_pilots", 0)
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            "lost_pilots does not match deals",
+        ):
+            build_growth_report(self._distribution(), erased_loss)
+
+        conflict = build_funnel(
+            [
+                {
+                    **raw_issue,
+                    "title": "Conflicting terminal pilot",
+                    "labels": [
+                        *raw_issue["labels"],
+                        "pilot-converted",
+                        "pilot-lost",
+                    ],
+                }
+            ],
+            target_pilots=1,
+            as_of=date(2026, 7, 10),
+        )
+        self.assertEqual(conflict["deals"][0]["stage"], "conflict")
+        self.assertEqual(conflict["summary"]["annual_conversions"], 0)
+        self.assertEqual(conflict["summary"]["lost_pilots"], 0)
+        build_growth_report(self._distribution(), conflict)
+
     def test_schema_seven_growth_derives_qualification_from_deals(
         self,
     ) -> None:

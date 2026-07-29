@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Derived schema-7 annual conversions from booked converted deals and resolved
+  losses from lost-stage deals before joined growth selects a bottleneck.
+- Rejected coordinated summary, source, and purchase-criterion edits that
+  manufacture global retention evidence or erase a detailed resolved loss.
 - Derived schema-7 complete, target-profile, review-required, and first-10
   subset counts from validated qualification evidence on every detailed deal.
 - Rejected aggregate-only profile edits and malformed qualification evidence on

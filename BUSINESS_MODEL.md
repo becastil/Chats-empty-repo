@@ -1306,13 +1306,21 @@ Resolved annual conversions require the same explicit payment milestone. A
 retains its skipped-stage warning, but contributes zero annual conversions to
 the summary, source, readiness, purchase-criterion, and joined growth totals.
 This prevents one unsupported conversion from being hidden by another issue's
-legitimate payment inside an aggregate segment.
+legitimate payment inside an aggregate segment. Schema-7 joined growth derives
+that total again from detailed deals, counting only records whose stage is
+converted and whose explicit booking evidence is true. It also derives resolved
+losses only from the detailed lost stage. Coordinated summary, source, and
+purchase-criterion edits therefore cannot manufacture retention evidence or
+erase a detailed loss from the global outcome totals.
 
 An issue carrying both `pilot-converted` and `pilot-lost` remains a visible
 terminal conflict. It retains booked revenue when the cumulative paid milestone
 is present, but contributes to neither resolved conversion nor resolved loss
 totals until the labels are corrected. This prevents one ambiguous customer
-record from overstating both outcomes.
+record from overstating both outcomes. Joined growth preserves that exclusion
+when it reconciles detailed terminal outcomes. These checks establish internal
+saved-report consistency; they do not authenticate a wholly rewritten report
+or prove an external payment or loss event.
 
 Future tagged releases exercise that accounting contract through the installed
 wheel before provenance attestation. A temporary synthetic export proves an
