@@ -770,6 +770,66 @@ def verify_pilot_funnel(
         )
         checked.append("invalid-growth-rejected")
 
+        duplicate_growth_pilot_report = (
+            Path(tmp) / "duplicate-growth-pilot-report.json"
+        )
+        duplicate_growth_pilot_report.write_text(
+            (
+                '{"schema_version": 10, "summary": {'
+                '"booked_pilots": 1, "booked_pilots": 999}}'
+            ),
+            encoding="utf-8",
+        )
+        duplicate_growth = _run_growth(
+            growth_command,
+            distribution_report,
+            duplicate_growth_pilot_report,
+            output_format="json",
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(
+            not duplicate_growth.stdout,
+            "duplicate joined-report key emitted a growth report",
+        )
+        _require(
+            duplicate_growth.stderr
+            == (
+                "repo-scout-growth: pilot report contains duplicate JSON key: "
+                '"booked_pilots"\n'
+            ),
+            "duplicate joined-report key did not produce its controlled error",
+        )
+
+        duplicate_growth_distribution_report = (
+            Path(tmp) / "duplicate-growth-distribution-report.json"
+        )
+        duplicate_growth_distribution_report.write_text(
+            '{"schema_version": 2, "schema_version": 2}',
+            encoding="utf-8",
+        )
+        duplicate_distribution_growth = _run_growth(
+            growth_command,
+            duplicate_growth_distribution_report,
+            pilot_report,
+            output_format="json",
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(
+            not duplicate_distribution_growth.stdout,
+            "duplicate distribution key emitted a growth report",
+        )
+        _require(
+            duplicate_distribution_growth.stderr
+            == (
+                "repo-scout-growth: distribution report contains duplicate "
+                'JSON key: "schema_version"\n'
+            ),
+            "duplicate distribution key did not produce its controlled error",
+        )
+        checked.append("duplicate-growth-keys-rejected")
+
         current_release_export.write_text(
             json.dumps(
                 _release_export(portable=5, wheel=9, duplicate_manifest=True),

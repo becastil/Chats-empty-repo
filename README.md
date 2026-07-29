@@ -363,6 +363,11 @@ boundary fails growth ingestion.
 Pilot issue JSON with duplicate keys is rejected before issue parsing, so
 conflicting `labels` fields cannot silently change booked-pilot or revenue
 totals.
+The joined growth command applies the same fail-closed rule at every depth of
+both saved distribution and pilot reports. A repeated field exits with code 2,
+emits no growth report, and identifies only the report type and escaped key,
+so duplicate booking or activation evidence cannot be resolved silently by the
+JSON decoder.
 Issue titles are trimmed, then must be non-empty printable text of at most
 1,024 characters. Any remaining line break, terminal control, bidirectional
 control, Unicode separator, or oversized text fails with exit code 2 before a

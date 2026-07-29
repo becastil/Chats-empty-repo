@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 292 of
-1,000, with 708 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 293 of
+1,000, with 707 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -55,6 +55,9 @@ alignment take priority over commit volume.
 - Duplicate-key-safe pilot issue ingestion that rejects ambiguous payment
   labels before revenue reporting, with source and installed-command proof that
   no report or label value is emitted.
+- Duplicate-key-safe joined growth ingestion for both saved distribution and
+  pilot reports at every object depth, with controlled report-and-key-only
+  errors before revenue, activation, queue, or bottleneck validation.
 - Bounded printable pilot issue titles that reject forged lines, terminal
   controls, bidirectional controls, Unicode separators, and oversized text
   before any commercial report can be emitted.
@@ -456,7 +459,9 @@ alignment take priority over commit volume.
   that a paid-only pilot remains unactivated, that explicit paid activation
   reopens the founding-pilot target, and that tampered progression, deal
   activation, or balanced source activation attribution fails without a growth
-  report or private evidence disclosure.
+  report or private evidence disclosure. The same installed join rejects
+  duplicate saved distribution and payment keys without exposing either
+  competing value.
 - Controlled rejection of duplicate release assets and inconsistent growth
   deltas without emitting reports or inventing conversion rates.
 - Release-blocking behavioral proof through the installed `repo-scout-pilot`,

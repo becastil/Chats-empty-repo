@@ -4691,3 +4691,27 @@ closeout, and refund records remain outside the joined report. The queue makes
 paid fulfillment operationally specific; it does not authenticate a rewritten
 report, verify private delivery, apply a lifecycle label, contact a customer,
 collect payment, or record a real activation.
+
+## 2026-07-29: Reject Duplicate Keys Before Joining Commercial Evidence
+
+The pilot issue loader already rejected duplicate object keys before payment
+labels could affect revenue. The joined growth command still decoded saved
+distribution and pilot reports with standard JSON semantics, which silently
+retain the last value for a repeated key. A hand-edited or malformed report
+could therefore present two booking, activation, or attribution values while
+the commercial join validated only the decoder's choice.
+
+Both growth inputs now use duplicate-aware object decoding at every nesting
+depth. A repeated key raises a controlled error before schema validation,
+commercial arithmetic, activation queue construction, or bottleneck selection.
+The command emits no report and identifies only the distribution-or-pilot
+report type and JSON-escaped repeated key, never either competing value. The
+implementation stays local to the growth loader so its public error contract
+does not depend on issue-export internals.
+
+Source tests cover an identical top-level distribution duplicate and
+conflicting nested pilot duplicate. The installed commercial smoke passes both
+forms through the packaged `repo-scout-growth` command and requires exit code
+2, empty standard output, and the exact controlled key-only error. This closes
+parser ambiguity; it does not authenticate a saved report, establish
+provenance, verify a public lifecycle label, or prove payment or activation.

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Rejected duplicate JSON keys at every depth of both distribution and pilot
+  reports before joined growth can calculate revenue, activation work, or a
+  commercial bottleneck.
+- Kept duplicate-key failures report-and-field specific while emitting no
+  growth JSON and withholding both competing values.
+- Extended the installed commercial smoke to prove duplicate saved
+  distribution and pilot fields, including ambiguous payment evidence, fail
+  through the packaged growth command.
 - Added an ordered schema-9+ activation queue that names every exact
   booked-but-unactivated issue and its canonical paid-delivery or terminal
   reconciliation action using only validated public lifecycle fields.

@@ -1882,12 +1882,33 @@ def _read_report(path: Path, label: str) -> Any:
     except OSError as exc:
         raise GrowthInputError(f"could not read {label} report {path}: {exc}") from exc
     try:
-        return json.loads(content)
+        return json.loads(
+            content,
+            object_pairs_hook=lambda pairs: _reject_duplicate_report_keys(
+                pairs,
+                label,
+            ),
+        )
     except json.JSONDecodeError as exc:
         raise GrowthInputError(
             f"invalid {label} JSON at line {exc.lineno}, column {exc.colno}: "
             f"{exc.msg}"
         ) from exc
+
+
+def _reject_duplicate_report_keys(
+    pairs: list[tuple[str, Any]],
+    label: str,
+) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise GrowthInputError(
+                f"{label} report contains duplicate JSON key: "
+                f"{json.dumps(key)}"
+            )
+        result[key] = value
+    return result
 
 
 def _require_object(value: Any, location: str) -> dict[str, Any]:

@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after adding the paid-delivery activation queue:
-  292 / 1,000 (29.2%).
-- Remaining after adding the paid-delivery activation queue:
-  708 commits.
+- Progress after protecting joined commercial JSON from duplicate keys:
+  293 / 1,000 (29.3%).
+- Remaining after protecting joined commercial JSON from duplicate keys:
+  707 commits.
 
 ## Commit Standard
 

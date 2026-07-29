@@ -632,6 +632,7 @@ class ReleaseManifestTests(unittest.TestCase):
                 "growth-boundaries",
                 "growth-ci-integration-gate",
                 "invalid-growth-rejected",
+                "duplicate-growth-keys-rejected",
                 "invalid-distribution-rejected",
                 "duplicate-payment-key-rejected",
                 "unknown-answer-text-safe",

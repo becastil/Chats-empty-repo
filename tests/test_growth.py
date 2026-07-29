@@ -2721,6 +2721,61 @@ class GrowthReportTests(unittest.TestCase):
             self.assertEqual(exit_code, 2)
             self.assertIn("repo-scout-growth: invalid pilot JSON", stderr.getvalue())
 
+    def test_cli_rejects_duplicate_report_keys_before_commercial_join(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            distribution_path = Path(tmp) / "distribution.json"
+            pilot_path = Path(tmp) / "pilot.json"
+            valid_distribution = json.dumps(self._distribution())
+            valid_pilot = json.dumps(self._pilot())
+            cases = (
+                (
+                    "distribution",
+                    '{"schema_version": 2, "schema_version": 2}',
+                    valid_pilot,
+                    (
+                        "repo-scout-growth: distribution report contains "
+                        'duplicate JSON key: "schema_version"\n'
+                    ),
+                ),
+                (
+                    "pilot",
+                    valid_distribution,
+                    (
+                        '{"schema_version": 10, "summary": {'
+                        '"booked_pilots": 1, "booked_pilots": 999}}'
+                    ),
+                    (
+                        "repo-scout-growth: pilot report contains duplicate "
+                        'JSON key: "booked_pilots"\n'
+                    ),
+                ),
+            )
+            for label, distribution, pilot, expected_error in cases:
+                with self.subTest(label=label):
+                    distribution_path.write_text(
+                        distribution,
+                        encoding="utf-8",
+                    )
+                    pilot_path.write_text(pilot, encoding="utf-8")
+                    stdout = io.StringIO()
+                    stderr = io.StringIO()
+
+                    with redirect_stdout(stdout), redirect_stderr(stderr):
+                        exit_code = main(
+                            [
+                                str(distribution_path),
+                                str(pilot_path),
+                                "--format",
+                                "json",
+                            ]
+                        )
+
+                    self.assertEqual(exit_code, 2)
+                    self.assertEqual(stdout.getvalue(), "")
+                    self.assertEqual(stderr.getvalue(), expected_error)
+
     @staticmethod
     def _distribution(
         *,

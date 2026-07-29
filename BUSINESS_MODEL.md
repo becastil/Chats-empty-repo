@@ -1269,6 +1269,13 @@ Pilot issue JSON with duplicate keys is rejected before issue parsing, so
 conflicting `labels` fields cannot silently change booked-pilot or revenue
 totals. The controlled error identifies only the repeated field and emits no
 report.
+Saved distribution and pilot reports receive the same duplicate-key boundary
+when joined by `repo-scout-growth`. Repeated fields at any nesting depth fail
+before commercial arithmetic or bottleneck selection, emit no growth report,
+and expose only the report type and escaped field name rather than either
+competing value. This prevents the standard JSON last-value behavior from
+silently choosing between ambiguous booking or activation evidence; it does
+not authenticate a report or prove the underlying public lifecycle labels.
 Public pilot issue titles are normalized around surrounding whitespace and
 limited to non-empty printable text of at most 1,024 characters. Any remaining
 line break, terminal control, bidirectional control, Unicode separator, or

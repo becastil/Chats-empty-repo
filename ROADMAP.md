@@ -73,10 +73,11 @@
   attribution for requests, qualification, offers, bookings, revenue,
   payment-backed activation, and resolved outcomes, plus membership, priority,
   canonical activity-derived age, and readiness-stage-age-number order pass
-  joined-growth validation. After payment, verify the private delivery contract
-  and work the ordered schema-9+ activation queue through payment-backed
-  first-repository activation or terminal reconciliation before pursuing
-  another sale. Compare readiness and purchase criteria by source.
+  duplicate-key-safe joined-growth validation. After payment, verify the
+  private delivery contract and work the ordered schema-9+ activation queue
+  through payment-backed first-repository activation or terminal
+  reconciliation before pursuing another sale. Compare readiness and purchase
+  criteria by source.
 - Add a private pilot contact path after public intake validates demand.
 
 ## Revenue Validation

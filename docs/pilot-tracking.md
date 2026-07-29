@@ -258,6 +258,11 @@ manufacturing activation.
 Pilot issue JSON with duplicate keys is rejected before issue parsing, so
 conflicting `labels` fields cannot silently change booked-pilot or revenue
 totals.
+`repo-scout-growth` also rejects duplicate keys at every depth of either saved
+distribution or pilot report before schema, revenue, activation, queue, or
+bottleneck validation. The controlled error names only the report type and
+escaped repeated key, emits no report, and does not echo either competing
+value.
 Public issue titles are normalized around surrounding whitespace, then must be
 non-empty printable text of at most 1,024 characters. Any remaining line break,
 terminal control, bidirectional control, Unicode separator, or oversized text
