@@ -1301,6 +1301,19 @@ consistency, not authentication of a wholly rewritten report, causal
 attribution, or proof that payment occurred outside the human-applied
 `pilot-paid` label.
 
+Joined growth now also consumes the complete schema-7 purchase-readiness table
+instead of leaving that willingness-to-pay signal outside the review. It
+requires the exact public readiness taxonomy, reconciles every readiness funnel
+total and all five readiness summary counters to source totals, and derives
+request, booking, conversion, and loss attribution from each detailed deal's
+recognized readiness value. The validated rows appear in both JSON and text
+growth output, so a coordinated aggregate edit cannot turn approval-dependent
+or exploratory demand into ready-buyer evidence. Qualification and offer
+progression within each readiness segment remain aggregate evidence until
+detailed historical records expose those cumulative milestones. Readiness
+remains self-reported intent, not payment, authenticated evidence, or proof of
+willingness to pay.
+
 Direct callers may change the pilot target and inactivity threshold only with
 genuine positive integers. Booleans, floats, and numeric strings fail before
 issue parsing. Schema-7 pilot pricing is additionally bound to the $299 price

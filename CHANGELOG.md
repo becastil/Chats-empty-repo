@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added validated schema-7 purchase-readiness rows to joined JSON and text
+  growth reviews, reconciling every readiness segment and summary counter to
+  source totals.
+- Derived readiness request, booking, conversion, and loss attribution from
+  detailed deals and rejected globally balanced intent-segment rewrites.
 - Derived schema-7 request counts from every detailed deal's recognized source
   and purchase criterion before joined growth trusts segment totals.
 - Rejected globally balanced request-count redistribution that preserves the

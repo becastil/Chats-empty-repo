@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 286 of
-1,000, with 714 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 287 of
+1,000, with 713 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -93,9 +93,14 @@ alignment take priority over commit volume.
   derive from booked converted deals, resolved losses must derive from
   lost-stage deals, and terminal conflicts count as neither outcome.
   Request, booked-pilot, annual-conversion, and resolved-loss attribution by
-  source and purchase criterion must also reproduce the recognized values on
-  every detailed deal instead of relying on globally reconciled segment
-  tables.
+  source, purchase readiness, and purchase criterion must also reproduce the
+  recognized values on every detailed deal instead of relying on globally
+  reconciled segment tables. Schema-7 purchase-readiness rows use the exact
+  public taxonomy, reconcile every funnel total to `by_source`, and appear in
+  joined text and JSON growth reviews. The five readiness summary counters
+  must also reproduce those segment request counts. Qualification and offer
+  progression within each readiness segment remain aggregate evidence until
+  detailed deals expose those cumulative milestones.
   Because schema 7 fixes one $299 pilot price and each segment's revenue must
   equal price times booked pilots, detailed booking attribution also binds
   segment revenue. Complete, target-profile, review-required, and first-10

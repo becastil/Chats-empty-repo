@@ -66,6 +66,13 @@ DETAILED_ATTRIBUTION_FIELDS = (
     "annual_conversions",
     "lost_pilots",
 )
+READINESS_SUMMARY_FIELDS = (
+    ("ready_issues", "ready"),
+    ("needs_approval_issues", "needs_approval"),
+    ("exploring_issues", "exploring"),
+    ("missing_readiness_issues", "unattributed"),
+    ("unknown_readiness_issues", "unknown"),
+)
 
 
 class GrowthInputError(ValueError):
@@ -81,6 +88,7 @@ def build_growth_report(
     pilot_summary = pilot["summary"]
     pricing = pilot["pricing"]
     source_rows = pilot["sources"]
+    readiness_rows = pilot["purchase_readiness"]
     criterion_rows = pilot["decision_criteria"]
     qualified_pilots = sum(row["qualified_pilots"] for row in source_rows)
     offered_pilots = sum(row["offered_pilots"] for row in source_rows)
@@ -236,6 +244,7 @@ def build_growth_report(
         },
         "distribution_change": distribution["change"],
         "sources": source_rows,
+        "purchase_readiness": readiness_rows,
         "decision_criteria": criterion_rows,
         "bottleneck": bottleneck,
         "evidence_quality": {
@@ -267,9 +276,10 @@ def build_growth_report(
             "Artifact request deltas can include CI, maintainer checks, and retries. "
             "They are not unique-user or conversion-rate denominators and cannot "
             "be assigned to self-reported lead sources or purchase criteria. "
-            "Purchase criteria are self-reported evaluation priorities, not causal "
-            "attribution, willingness to pay, or proof of a moat. Only paid pilot "
-            "stages count as revenue."
+            "Purchase readiness is self-reported intent, not payment or proof of "
+            "willingness to pay. Purchase criteria are self-reported evaluation "
+            "priorities, not causal attribution or proof of a moat. Only paid "
+            "pilot stages count as revenue."
         ),
     }
 
@@ -325,6 +335,22 @@ def format_growth_report(report: dict[str, Any]) -> str:
                 f"{source['offered_pilots']} offered, "
                 f"{source['booked_pilots']} booked "
                 f"(${source['booked_revenue_usd']})"
+            )
+    else:
+        lines.append("  none")
+
+    lines.append("Purchase readiness:")
+    if report["purchase_readiness"] is None:
+        lines.append("  schema-7 pilot report required")
+    elif report["purchase_readiness"]:
+        for readiness in report["purchase_readiness"]:
+            lines.append(
+                f"  {readiness['readiness']}: "
+                f"{readiness['deals']} requests, "
+                f"{readiness['qualified_pilots']} qualified, "
+                f"{readiness['offered_pilots']} offered, "
+                f"{readiness['booked_pilots']} booked "
+                f"(${readiness['booked_revenue_usd']})"
             )
     else:
         lines.append("  none")
@@ -520,6 +546,10 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
             summary[field] = _require_non_negative_int(
                 summary_object.get(field), f"pilot report.summary.{field}"
             )
+        for field, _ in READINESS_SUMMARY_FIELDS:
+            summary[field] = _require_non_negative_int(
+                summary_object.get(field), f"pilot report.summary.{field}"
+            )
         if summary["complete_qualification_issues"] > summary["tracked_issues"]:
             raise GrowthInputError(
                 "pilot report complete qualification exceeds tracked issues"
@@ -590,6 +620,42 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
     _validate_pilot_totals(summary, pricing, sources)
     if schema == 7:
         _validate_visible_stage_progression(root, sources)
+    readiness_rows: list[dict[str, Any]] | None = None
+    if schema == 7:
+        raw_readiness = _require_object(
+            root.get("by_readiness"),
+            "pilot report.by_readiness",
+        )
+        if set(raw_readiness) != set(READINESS_KEYS):
+            raise GrowthInputError(
+                "pilot report.by_readiness keys must match schema 7"
+            )
+        readiness_rows = []
+        for readiness in READINESS_KEYS:
+            raw_totals = raw_readiness[readiness]
+            location = f"pilot report.by_readiness.{readiness}"
+            totals_object = _require_object(raw_totals, location)
+            totals = {
+                field: _require_non_negative_int(
+                    totals_object.get(field), f"{location}.{field}"
+                )
+                for field in SOURCE_TOTAL_FIELDS
+            }
+            _validate_segment_totals(
+                location,
+                totals,
+                pricing["pilot_price_usd"],
+            )
+            if totals["deals"]:
+                readiness_rows.append(
+                    {"readiness": readiness, **totals}
+                )
+        _validate_segment_family_totals(
+            "by_readiness",
+            readiness_rows,
+            sources,
+        )
+        _validate_readiness_summary(summary, readiness_rows)
     decision_criteria: list[dict[str, Any]] | None = None
     if schema >= 6:
         raw_criteria = _require_object(
@@ -636,10 +702,15 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
             if totals["deals"]:
                 decision_criteria.append({"criterion": criterion, **totals})
         _validate_criterion_totals(summary, decision_criteria, sources)
-    if schema == 7 and decision_criteria is not None:
+    if (
+        schema == 7
+        and readiness_rows is not None
+        and decision_criteria is not None
+    ):
         _validate_detailed_segment_attribution(
             root,
             sources,
+            readiness_rows,
             decision_criteria,
         )
 
@@ -652,6 +723,7 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
         "summary": summary,
         "pricing": pricing,
         "sources": sources,
+        "purchase_readiness": readiness_rows,
         "decision_criterion_reporting_available": schema >= 6,
         "qualification_reporting_available": schema == 7,
         "sales_queue_state": sales_queue_state,
@@ -1174,14 +1246,11 @@ def _validate_criterion_totals(
     criteria: list[dict[str, Any]],
     sources: list[dict[str, Any]],
 ) -> None:
-    for field in SOURCE_TOTAL_FIELDS:
-        criterion_total = sum(row[field] for row in criteria)
-        source_total = sum(row[field] for row in sources)
-        if criterion_total != source_total:
-            raise GrowthInputError(
-                f"pilot report by_decision_criterion {field} does not match "
-                "by_source totals"
-            )
+    _validate_segment_family_totals(
+        "by_decision_criterion",
+        criteria,
+        sources,
+    )
 
     criteria_by_name = {row["criterion"]: row for row in criteria}
     declared = sum(
@@ -1206,9 +1275,39 @@ def _validate_criterion_totals(
             )
 
 
+def _validate_segment_family_totals(
+    location: str,
+    rows: list[dict[str, Any]],
+    sources: list[dict[str, Any]],
+) -> None:
+    for field in SOURCE_TOTAL_FIELDS:
+        segment_total = sum(row[field] for row in rows)
+        source_total = sum(row[field] for row in sources)
+        if segment_total != source_total:
+            raise GrowthInputError(
+                f"pilot report {location} {field} does not match by_source totals"
+            )
+
+
+def _validate_readiness_summary(
+    summary: dict[str, int],
+    readiness_rows: list[dict[str, Any]],
+) -> None:
+    readiness_by_name = {
+        row["readiness"]: row for row in readiness_rows
+    }
+    for field, readiness in READINESS_SUMMARY_FIELDS:
+        reported_count = readiness_by_name.get(readiness, {}).get("deals", 0)
+        if summary[field] != reported_count:
+            raise GrowthInputError(
+                f"pilot report {field} does not match by_readiness totals"
+            )
+
+
 def _validate_detailed_segment_attribution(
     root: dict[str, Any],
     sources: list[dict[str, Any]],
+    readiness_rows: list[dict[str, Any]],
     criteria: list[dict[str, Any]],
 ) -> None:
     observed_by_source = {
@@ -1218,6 +1317,10 @@ def _validate_detailed_segment_attribution(
     observed_by_criterion = {
         criterion: {field: 0 for field in DETAILED_ATTRIBUTION_FIELDS}
         for criterion in DECISION_CRITERION_KEYS
+    }
+    observed_by_readiness = {
+        readiness: {field: 0 for field in DETAILED_ATTRIBUTION_FIELDS}
+        for readiness in READINESS_KEYS
     }
     raw_deals = root["deals"]
     for index, raw_deal in enumerate(raw_deals):
@@ -1239,11 +1342,20 @@ def _validate_detailed_segment_attribution(
             raise GrowthInputError(
                 f"{location}.decision_criterion must be a recognized value"
             )
+        readiness = deal.get("purchase_readiness")
+        if (
+            not isinstance(readiness, str)
+            or readiness not in observed_by_readiness
+        ):
+            raise GrowthInputError(
+                f"{location}.purchase_readiness must be a recognized value"
+            )
         is_booked = deal["booked"]
         is_converted = is_booked and deal["stage"] == "converted"
         is_lost = deal["stage"] == "lost"
         for totals in (
             observed_by_source[source],
+            observed_by_readiness[readiness],
             observed_by_criterion[criterion],
         ):
             totals["deals"] += 1
@@ -1253,6 +1365,12 @@ def _validate_detailed_segment_attribution(
 
     for location, segment_field, observed, rows in (
         ("by_source", "source", observed_by_source, sources),
+        (
+            "by_readiness",
+            "readiness",
+            observed_by_readiness,
+            readiness_rows,
+        ),
         (
             "by_decision_criterion",
             "criterion",

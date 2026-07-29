@@ -22,6 +22,7 @@ from repo_scout.growth import (  # noqa: E402
 from repo_scout.pilot_funnel import (  # noqa: E402
     DECISION_CRITERION_KEYS,
     DISPLAY_STAGES,
+    READINESS_KEYS,
     build_funnel,
 )
 
@@ -1700,6 +1701,167 @@ class GrowthReportTests(unittest.TestCase):
                 ):
                     build_growth_report(self._distribution(), forged)
 
+    def test_schema_seven_growth_validates_purchase_readiness_attribution(
+        self,
+    ) -> None:
+        def issue(
+            number: int,
+            title: str,
+            readiness: str,
+            labels: list[str],
+        ) -> dict[str, object]:
+            return {
+                "number": number,
+                "title": title,
+                "state": "CLOSED",
+                "updatedAt": "2026-07-10T00:00:00Z",
+                "body": "\n\n".join(
+                    (
+                        "### Team size\n\n12",
+                        "### Repository count\n\n6",
+                        "### CI provider\n\nGitHub Actions",
+                        "### Repository standard to enforce\n\n"
+                        "Use one reviewed repository policy.",
+                        "### How did you hear about Repo Scout?\n\n"
+                        "Repo Scout website",
+                        f"### Purchase readiness\n\n{readiness}",
+                        "### Primary purchase criterion\n\n"
+                        "Supports our required repository standards",
+                    )
+                ),
+                "labels": labels,
+            }
+
+        offered = [
+            "pilot-lead",
+            "pilot-qualified",
+            "pilot-offered",
+        ]
+        paid_active = [*offered, "pilot-paid", "pilot-active"]
+        pilot = build_funnel(
+            [
+                issue(
+                    1,
+                    "Ready converted pilot",
+                    "Ready to purchase the $299 pilot",
+                    [*paid_active, "pilot-converted"],
+                ),
+                issue(
+                    2,
+                    "Ready active pilot",
+                    "Ready to purchase the $299 pilot",
+                    paid_active,
+                ),
+                issue(
+                    3,
+                    "Ready offered pilot",
+                    "Ready to purchase the $299 pilot",
+                    offered,
+                ),
+                issue(
+                    4,
+                    "Approval active pilot",
+                    "Need internal approval for $299",
+                    paid_active,
+                ),
+                issue(
+                    5,
+                    "Approval lost pilot",
+                    "Need internal approval for $299",
+                    [*offered, "pilot-lost"],
+                ),
+            ],
+            target_pilots=3,
+            as_of=date(2026, 7, 10),
+        )
+
+        cases = (
+            (
+                "requests",
+                ("deals", "qualified_pilots", "offered_pilots"),
+                "deals",
+            ),
+            (
+                "bookings",
+                ("booked_pilots", "booked_revenue_usd"),
+                "booked_pilots",
+            ),
+            ("conversions", ("annual_conversions",), "annual_conversions"),
+            ("losses", ("lost_pilots",), "lost_pilots"),
+        )
+        for name, fields, rejected_field in cases:
+            with self.subTest(name=name):
+                forged = json.loads(json.dumps(pilot))
+                rows = forged["by_readiness"]
+                for field in fields:
+                    rows["ready"][field], rows["needs_approval"][field] = (
+                        rows["needs_approval"][field],
+                        rows["ready"][field],
+                    )
+                if name == "requests":
+                    summary = forged["summary"]
+                    (
+                        summary["ready_issues"],
+                        summary["needs_approval_issues"],
+                    ) = (
+                        summary["needs_approval_issues"],
+                        summary["ready_issues"],
+                    )
+                with self.assertRaisesRegex(
+                    GrowthInputError,
+                    (
+                        rf"by_readiness\.ready\.{rejected_field} "
+                        r"does not match deals"
+                    ),
+                ):
+                    build_growth_report(self._distribution(), forged)
+
+        malformed = json.loads(json.dumps(pilot))
+        malformed["deals"][0]["purchase_readiness"] = "edited"
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            r"deals\[0\]\.purchase_readiness must be a recognized value",
+        ):
+            build_growth_report(self._distribution(), malformed)
+
+        mismatched_progression = json.loads(json.dumps(pilot))
+        mismatched_progression["by_readiness"]["ready"][
+            "offered_pilots"
+        ] -= 1
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            (
+                r"by_readiness offered_pilots does not match "
+                r"by_source totals"
+            ),
+        ):
+            build_growth_report(
+                self._distribution(),
+                mismatched_progression,
+            )
+
+        mismatched_summary = json.loads(json.dumps(pilot))
+        mismatched_summary["summary"]["ready_issues"] -= 1
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            r"ready_issues does not match by_readiness totals",
+        ):
+            build_growth_report(self._distribution(), mismatched_summary)
+
+        report = build_growth_report(self._distribution(), pilot)
+        self.assertEqual(
+            [row["readiness"] for row in report["purchase_readiness"]],
+            ["ready", "needs_approval"],
+        )
+        self.assertEqual(
+            report["purchase_readiness"][0]["booked_revenue_usd"],
+            598,
+        )
+        self.assertIn(
+            "ready: 3 requests, 3 qualified, 3 offered, 2 booked ($598)",
+            format_growth_report(report),
+        )
+
     def test_schema_seven_growth_derives_qualification_from_deals(
         self,
     ) -> None:
@@ -2031,6 +2193,11 @@ class GrowthReportTests(unittest.TestCase):
                     "target_profile_issues": tracked,
                     "qualification_review_issues": 0,
                     "subset_scope_issues": 0,
+                    "ready_issues": tracked,
+                    "needs_approval_issues": 0,
+                    "exploring_issues": 0,
+                    "missing_readiness_issues": 0,
+                    "unknown_readiness_issues": 0,
                 }
             )
             qualified = sum(
@@ -2084,6 +2251,22 @@ class GrowthReportTests(unittest.TestCase):
                 "deals": [],
             }
             report["sales_queue"] = {"deals": []}
+            readiness_totals = {
+                field: sum(
+                    source[field] for source in source_totals.values()
+                )
+                for field in empty
+            }
+            report["by_readiness"] = {
+                readiness: (
+                    readiness_totals
+                    if readiness == "ready"
+                    else dict(empty)
+                )
+                for readiness in READINESS_KEYS
+            }
+            for deal in report["deals"]:
+                deal["purchase_readiness"] = "ready"
         return report
 
     @staticmethod

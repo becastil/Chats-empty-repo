@@ -4536,3 +4536,30 @@ Per-segment qualification and offer progression remain aggregate evidence
 until detailed historical records expose those cumulative milestones. The
 change does not authenticate a wholly rewritten report, infer causality,
 contact a buyer, collect payment, or record revenue.
+
+## 2026-07-29: Join Purchase Readiness Into Growth Evidence
+
+The schema-7 pilot funnel already recorded ready, approval-dependent,
+exploratory, missing, and edited readiness segments. Joined growth validated
+readiness only when an open pre-payment deal entered the sales queue and
+otherwise ignored the aggregate table. A saved report could therefore move
+requests or paid outcomes between intent segments without changing source,
+criterion, or global totals, and the growth review did not show the readiness
+mix at all.
+
+Growth now requires the exact schema-7 readiness taxonomy, validates each
+segment's cumulative and revenue arithmetic, reconciles all seven funnel totals
+to `by_source`, and binds the five readiness summary counters to segment
+request counts. It derives request, booked-pilot, annual-conversion, and
+resolved-loss counts from every detailed deal's readiness value, including
+closed historical records, and exposes the validated nonempty rows in JSON and
+text output. Schema-5 and schema-6 reports retain their legacy behavior.
+
+Regression coverage preserves three ready requests and two
+approval-dependent requests spanning offered, paid-active, converted, and lost
+outcomes. It independently swaps requests, bookings, conversions, and losses
+between readiness segments and rejects an edited closed-deal readiness value.
+This protects directional intent and paid-outcome learning. Qualification and
+offer progression within readiness segments remain aggregate evidence until
+detailed records expose those cumulative milestones. Self-reported readiness
+is not payment, authenticated evidence, or proof of willingness to pay.
