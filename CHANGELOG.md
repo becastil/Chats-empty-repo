@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Derived schema-7 complete, target-profile, review-required, and first-10
+  subset counts from validated qualification evidence on every detailed deal.
+- Rejected aggregate-only profile edits and malformed qualification evidence on
+  closed historical deals before joined growth reports customer fit.
 - Reconciled schema-7 booked-pilot totals to explicit boolean booking evidence
   on every detailed deal before joined growth computes revenue or a bottleneck.
 - Rejected aggregate-only false bookings, non-boolean payment evidence, booked

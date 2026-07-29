@@ -4403,3 +4403,31 @@ preserving valid payment and non-payment reports. This prevents saved aggregate
 edits from changing booked revenue or the commercial bottleneck. It does not
 authenticate a wholly rewritten report, apply `pilot-paid`, collect payment, or
 record revenue.
+
+## 2026-07-29: Derive Qualification Totals From Detailed Deals
+
+Schema-7 growth checked the four qualification summary counters against simple
+arithmetic boundaries, and it validated qualification evidence for open deals
+that entered the sales queue. It did not derive those counters from detailed
+deals or validate qualification on closed historical records. A saved report
+could therefore reclassify one target-profile request as review-required in the
+summary, or hide an incomplete or first-10 subset request, while the unchanged
+deal evidence said otherwise.
+
+Growth now applies one qualification validator to every detailed schema-7 deal.
+Status must be target, outside-target, or incomplete; complete qualification
+requires a recognized repository scope and CI provider, while incomplete
+qualification requires null scope. Growth derives complete, target-profile,
+review-required, and subset counts from those normalized values and requires
+each summary counter to match before it reports customer fit or warnings. The
+sales-action contract reuses the same validator, preserving its provider and
+scope gates.
+
+Regression coverage preserves valid target, incomplete, and first-10 subset
+producer reports, then rejects aggregate-only edits to each independent
+qualification dimension. A closed offered deal with missing CI evidence also
+fails before joined output, proving historical records no longer bypass the
+deal-level contract merely because they are absent from the live queue. This
+protects target-customer and willingness-to-pay learning. It does not
+authenticate a wholly rewritten report, approve a buyer, send terms, apply a
+lifecycle label, collect payment, or record revenue.

@@ -732,6 +732,12 @@ def _expected_sales_queue_members(
     expected_members: dict[int, dict[str, Any]] = {}
     observed_stage_counts = {stage: 0 for stage in DISPLAY_STAGES}
     observed_booked_pilots = 0
+    observed_qualification_counts = {
+        "complete_qualification_issues": 0,
+        "target_profile_issues": 0,
+        "qualification_review_issues": 0,
+        "subset_scope_issues": 0,
+    }
     seen_numbers: set[int] = set()
     needs_lifecycle_repair = False
     for index, raw_deal in enumerate(raw_deals):
@@ -758,6 +764,21 @@ def _expected_sales_queue_members(
             raise GrowthInputError(
                 f"{location}.state must be OPEN or CLOSED"
             )
+        qualification = _validated_qualification(deal, location)
+        qualification_status = qualification["status"]
+        repository_scope = qualification["pilot_repository_scope"]
+        observed_qualification_counts[
+            "complete_qualification_issues"
+        ] += int(qualification_status != "incomplete")
+        observed_qualification_counts["target_profile_issues"] += int(
+            qualification_status == "target"
+        )
+        observed_qualification_counts[
+            "qualification_review_issues"
+        ] += int(qualification_status != "target")
+        observed_qualification_counts["subset_scope_issues"] += int(
+            repository_scope == "subset_required"
+        )
         booked = deal.get("booked")
         if not isinstance(booked, bool):
             raise GrowthInputError(f"{location}.booked must be a boolean")
@@ -789,6 +810,11 @@ def _expected_sales_queue_members(
         raise GrowthInputError(
             "pilot report booked_pilots does not match deals"
         )
+    for field, observed_count in observed_qualification_counts.items():
+        if summary[field] != observed_count:
+            raise GrowthInputError(
+                f"pilot report {field} does not match deals"
+            )
 
     raw_by_stage = _require_object(
         root.get("by_stage"),
@@ -836,6 +862,63 @@ def _validate_sales_action_contract(
         raise GrowthInputError(
             f"{location}.next_action must be a non-empty string"
         )
+    normalized_qualification = _validated_qualification(deal, location)
+    qualification_status = normalized_qualification["status"]
+    repository_scope = normalized_qualification["pilot_repository_scope"]
+    ci_provider = normalized_qualification["ci_provider"]
+    expected_action = expected_sales_action(
+        stage,
+        readiness,
+        pilot_price_usd,
+        normalized_qualification,
+    )
+    if next_action != expected_action:
+        if readiness == "ready" and (
+            qualification_status != "target"
+            or repository_scope == "subset_required"
+        ):
+            raise GrowthInputError(
+                f"{location}.next_action does not preserve the ready "
+                "qualification scope gate"
+            )
+        if readiness == "ready" and ci_provider != COPY_READY_CI_PROVIDER:
+            raise GrowthInputError(
+                f"{location}.next_action does not preserve the ready CI "
+                "provider gate"
+            )
+        raise GrowthInputError(
+            f"{location}.next_action does not match the stage-specific sales "
+            "action contract"
+        )
+
+    priority = _require_positive_int(
+        deal.get(priority_field),
+        f"{location}.{priority_field}",
+    )
+    if priority != SALES_PRIORITY_BY_READINESS[readiness]:
+        raise GrowthInputError(
+            f"{location}.{priority_field} does not match purchase readiness"
+        )
+    updated_at, age_days = _validated_activity_age(
+        deal,
+        location,
+        report_date,
+    )
+
+    return {
+        "stage": stage,
+        "purchase_readiness": readiness,
+        "qualification": normalized_qualification,
+        "priority": priority,
+        "age_days": age_days,
+        "updated_at": updated_at,
+    }
+
+
+def _validated_qualification(
+    deal: dict[str, Any],
+    location: str,
+) -> dict[str, Any]:
     qualification = _require_object(
         deal.get("qualification"),
         f"{location}.qualification",
@@ -886,57 +969,10 @@ def _validate_sales_action_contract(
             "complete qualification"
         )
 
-    normalized_qualification = {
+    return {
         "status": qualification_status,
         "pilot_repository_scope": repository_scope,
         "ci_provider": ci_provider,
-    }
-    expected_action = expected_sales_action(
-        stage,
-        readiness,
-        pilot_price_usd,
-        normalized_qualification,
-    )
-    if next_action != expected_action:
-        if readiness == "ready" and (
-            qualification_status != "target"
-            or repository_scope == "subset_required"
-        ):
-            raise GrowthInputError(
-                f"{location}.next_action does not preserve the ready "
-                "qualification scope gate"
-            )
-        if readiness == "ready" and ci_provider != COPY_READY_CI_PROVIDER:
-            raise GrowthInputError(
-                f"{location}.next_action does not preserve the ready CI "
-                "provider gate"
-            )
-        raise GrowthInputError(
-            f"{location}.next_action does not match the stage-specific sales "
-            "action contract"
-        )
-
-    priority = _require_positive_int(
-        deal.get(priority_field),
-        f"{location}.{priority_field}",
-    )
-    if priority != SALES_PRIORITY_BY_READINESS[readiness]:
-        raise GrowthInputError(
-            f"{location}.{priority_field} does not match purchase readiness"
-        )
-    updated_at, age_days = _validated_activity_age(
-        deal,
-        location,
-        report_date,
-    )
-
-    return {
-        "stage": stage,
-        "purchase_readiness": readiness,
-        "qualification": normalized_qualification,
-        "priority": priority,
-        "age_days": age_days,
-        "updated_at": updated_at,
     }
 
 

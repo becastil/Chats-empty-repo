@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after reconciling pilot bookings to detailed evidence:
-  281 / 1,000 (28.1%).
-- Remaining after reconciling pilot bookings to detailed evidence:
-  719 commits.
+- Progress after deriving pilot qualification totals from deals:
+  282 / 1,000 (28.2%).
+- Remaining after deriving pilot qualification totals from deals:
+  718 commits.
 
 ## Commit Standard
 

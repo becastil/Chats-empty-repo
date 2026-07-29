@@ -1261,6 +1261,102 @@ class GrowthReportTests(unittest.TestCase):
         ):
             build_growth_report(self._distribution(), erased)
 
+    def test_schema_seven_growth_derives_qualification_from_deals(
+        self,
+    ) -> None:
+        raw_issue = {
+            "number": 1,
+            "title": "Target-profile pilot",
+            "state": "OPEN",
+            "updatedAt": "2026-07-10T00:00:00Z",
+            "body": "\n\n".join(
+                (
+                    "### Team size\n\n12",
+                    "### Repository count\n\n6",
+                    "### CI provider\n\nGitHub Actions",
+                    "### Repository standard to enforce\n\n"
+                    "Use one reviewed repository policy.",
+                    "### How did you hear about Repo Scout?\n\n"
+                    "Repo Scout website",
+                    "### Purchase readiness\n\n"
+                    "Ready to purchase the $299 pilot",
+                    "### Primary purchase criterion\n\n"
+                    "Works across our repositories and CI",
+                )
+            ),
+            "labels": [
+                "pilot-lead",
+                "pilot-qualified",
+                "pilot-offered",
+            ],
+        }
+        pilot = build_funnel([raw_issue], as_of=date(2026, 7, 10))
+        self.assertEqual(pilot["summary"]["target_profile_issues"], 1)
+        self.assertEqual(pilot["summary"]["qualification_review_issues"], 0)
+        build_growth_report(self._distribution(), pilot)
+
+        forged = json.loads(json.dumps(pilot))
+        forged["summary"]["target_profile_issues"] = 0
+        forged["summary"]["qualification_review_issues"] = 1
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            "target_profile_issues does not match deals",
+        ):
+            build_growth_report(self._distribution(), forged)
+
+        incomplete_issue = {
+            **raw_issue,
+            "number": 2,
+            "body": raw_issue["body"].replace(
+                "### Team size\n\n12\n\n",
+                "",
+            ),
+        }
+        incomplete = build_funnel(
+            [incomplete_issue],
+            as_of=date(2026, 7, 10),
+        )
+        self.assertEqual(incomplete["summary"]["complete_qualification_issues"], 0)
+        build_growth_report(self._distribution(), incomplete)
+        forged_complete = json.loads(json.dumps(incomplete))
+        forged_complete["summary"]["complete_qualification_issues"] = 1
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            "complete_qualification_issues does not match deals",
+        ):
+            build_growth_report(self._distribution(), forged_complete)
+
+        subset_issue = {
+            **raw_issue,
+            "number": 3,
+            "body": raw_issue["body"].replace(
+                "### Repository count\n\n6",
+                "### Repository count\n\n11",
+            ),
+        }
+        subset = build_funnel([subset_issue], as_of=date(2026, 7, 10))
+        self.assertEqual(subset["summary"]["subset_scope_issues"], 1)
+        build_growth_report(self._distribution(), subset)
+        forged_subset = json.loads(json.dumps(subset))
+        forged_subset["summary"]["subset_scope_issues"] = 0
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            "subset_scope_issues does not match deals",
+        ):
+            build_growth_report(self._distribution(), forged_subset)
+
+        closed = build_funnel(
+            [{**raw_issue, "state": "CLOSED"}],
+            as_of=date(2026, 7, 10),
+        )
+        malformed_closed = json.loads(json.dumps(closed))
+        del malformed_closed["deals"][0]["qualification"]["ci_provider"]
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            r"qualification\.ci_provider must be present",
+        ):
+            build_growth_report(self._distribution(), malformed_closed)
+
     def test_requires_a_baseline_before_prioritizing_commercial_movement(self) -> None:
         distribution = self._distribution()
         distribution["change"] = None
@@ -1519,6 +1615,11 @@ class GrowthReportTests(unittest.TestCase):
                     "stage": stage,
                     "state": "CLOSED",
                     "booked": stage in {"paid", "active", "converted"},
+                    "qualification": {
+                        "status": "target",
+                        "pilot_repository_scope": "within_offer",
+                        "ci_provider": "github_actions",
+                    },
                 }
                 for index, stage in enumerate(stage_plan)
             ]

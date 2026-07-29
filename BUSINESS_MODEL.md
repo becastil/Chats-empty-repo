@@ -1419,7 +1419,11 @@ on a qualification label. It normalizes team size, repository count, and CI
 provider, records only whether the requested standard is present, and marks the
 request as target, outside-target, or incomplete with explicit review reasons.
 Teams above the 10-repository pilot limit are scoped to a first-10 subset rather
-than discarded. This is qualification evidence, not an automated buying
+than discarded. Joined growth validates status, repository scope, and CI
+provider on every detailed deal, including closed records, then derives its
+complete, target-profile, review-required, and subset counts from those deals.
+Coordinated edits to summary counters alone cannot hide out-of-profile or
+incomplete demand. This is qualification evidence, not an automated buying
 decision, and repository-standard free text is not repeated in reports.
 
 ## Product Filter
