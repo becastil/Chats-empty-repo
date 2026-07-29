@@ -4295,3 +4295,36 @@ coordinated-stage, aggregate-divergent, and forged-empty records. This protects
 sales-operating truth without rewriting history or guessing an outcome. It
 does not create a lead, approve or send outreach, reopen an issue, apply a
 lifecycle label, collect payment, or record revenue.
+
+## 2026-07-29: Keep Sites Approval Bound To The Exact SSH Authority
+
+The pending source-export request prints a credential-free canonical
+repository identity such as `sites.example/repo-scout`, but the later pre-save
+check accepted only a URL-shaped approved value. Following the documented
+instruction to reuse the approved canonical identity therefore failed before
+the exported-source check. Canonicalization also discarded every SSH and SCP
+username. `ssh://alice@sites.example/repo-scout.git`,
+`bob@sites.example:repo-scout.git`, and the approved HTTPS repository all
+collapsed to the same identity even when a host uses the SSH username to select
+a repository namespace.
+
+Pre-save verification now accepts either a credential-free remote repository
+URL or the exact normalized identity emitted by the pending request.
+Conventional `git@` remains protocol-neutral so HTTPS and normal Git hosting
+aliases still reconcile, and default ports remain normalized. Every other SSH
+URL or SCP username is retained in canonical authority. For those users, SCP
+home-relative paths carry the out-of-band `scp-relative://` canonical prefix and
+remain distinct from absolute SSH URL or SCP paths, including a literal
+absolute `/~/` path. An operational repository under a different username,
+non-default port, or path mode therefore cannot inherit approval from a
+matching host, visible path, and commit.
+
+Integration regressions replay the emitted canonical identity, preserve an
+explicitly approved SSH username across canonical and URL forms, reject
+unapproved usernames in both SSH URL and SCP syntax, and retain the existing
+default-port and `git@` alias behavior. They also reject an SCP home-relative
+path as an alias of an approved absolute path while accepting the explicit
+absolute SCP form. This makes the owner-approved source-export tuple executable
+without weakening repository identity. It does not grant approval, export
+source, save or deploy a Sites version, or create customer, demand, payment, or
+revenue evidence.

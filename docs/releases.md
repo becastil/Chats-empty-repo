@@ -256,15 +256,18 @@ site release:
    configured as `origin`, and prints its canonical identity without querying a
    remote ref. Canonical identity normalizes the standard Git, HTTP, HTTPS, and
    SSH ports across protocol aliases but retains any non-default port as part of
-   the repository authority.
+   the repository authority. Conventional `git@` remains protocol-neutral, but
+   any other SSH URL or SCP username remains part of the canonical identity.
+   For those users, home-relative SCP paths remain distinct from absolute SSH
+   URL or SCP paths and are printed with the `scp-relative://` identity prefix.
    The second output line starts `source-export request pending`, carries the
    public release version, Sites project ID, receipt digest, canonical source
    repository, `refs/heads/main`, and receipt commit, and states
    `deployment_approved=false`. It is a copy-ready request for a human decision,
    not approval. Confirm that the canonical repository belongs to the printed
    existing Sites project, then retain that identity as
-   `APPROVED_SITES_SOURCE_REPOSITORY` only if the owner approves the exact
-   request.
+   `APPROVED_SITES_SOURCE_REPOSITORY` exactly as printed only if the owner
+   approves the exact request.
    The stable `source-export request pending:` prefix is followed by one compact
    JSON object. Parse that object rather than splitting its contents on spaces;
    `deployment_approved` is the boolean `false`, and opaque values cannot add a
@@ -301,17 +304,18 @@ site release:
    reporting a digest-only success that omitted exported-source verification.
    This check fails if the receipt was even semantically reserialized after
    approval. It resolves the operational repository argument, requires its
-   canonical remote identity to equal the repository recorded in approval, and
-   rejects the local checkout, `origin`, equivalent aliases, or an unrelated
-   fork even when they contain the same commit. A matching host and path on an
-   unapproved non-default port is a different repository and also fails. The
-   resolved identity must remain stable while read-only `git ls-remote` calls
-   resolve `refs/heads/main` twice; the check fails if that exported ref differs
-   from the approved candidate commit or moves during verification. This
-   pre-save form therefore uses the network but performs no source export,
-   version save, or deployment. Save the verified preflight archive against
-   the receipt's exact source commit. Saving a version does not make that
-   version live.
+   canonical remote identity to equal the exact canonical repository string
+   recorded in approval, and rejects the local checkout, `origin`, equivalent
+   aliases, or an unrelated fork even when they contain the same commit. A
+   matching host and path on an unapproved non-default port or nonstandard SSH
+   username is a different repository and also fails, as does switching an
+   approved absolute path to home-relative SCP syntax. The resolved identity
+   must remain stable while read-only `git ls-remote` calls resolve
+   `refs/heads/main` twice; the check fails if that exported ref differs from
+   the approved candidate commit or moves during verification. This pre-save
+   form therefore uses the network but performs no source export, version save,
+   or deployment. Save the verified preflight archive against the receipt's
+   exact source commit. Saving a version does not make that version live.
 6. Obtain separate explicit owner approval before deploying the saved version
    to the existing public production site.
 7. Only after the approved deployment succeeds, immediately run the production

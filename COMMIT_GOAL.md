@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after preventing phantom empty-queue actions:
-  277 / 1,000 (27.7%).
-- Remaining after preventing phantom empty-queue actions:
-  723 commits.
+- Progress after binding Sites approval to exact repository identity:
+  278 / 1,000 (27.8%).
+- Remaining after binding Sites approval to exact repository identity:
+  722 commits.
 
 ## Commit Standard
 

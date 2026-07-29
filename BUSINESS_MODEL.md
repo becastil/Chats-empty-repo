@@ -564,9 +564,14 @@ from weakening the paid-distribution gate without exporting source, saving or
 deploying a version, or creating customer or revenue evidence.
 Canonical repository identity now retains any non-default network port while
 normalizing the standard Git, HTTP, HTTPS, and SSH ports across legitimate
-protocol aliases. A server on an unapproved port can no longer inherit approval
-from the same host and path merely by exposing the receipt commit. This closes
-an authority ambiguity in the paid-distribution handoff without exporting
+protocol aliases. The pending request's exact canonical identity can be passed
+back to pre-save verification without reconstructing a URL. Conventional
+`git@` remains protocol-neutral, while every other SSH URL or SCP username is
+retained as approval-significant authority. For those users, home-relative SCP
+paths remain distinct from absolute SSH URL or SCP paths. A server on an
+unapproved port, username, or path mode can no longer inherit approval from the
+same visible host and path merely by exposing the receipt commit. This closes
+authority ambiguities in the paid-distribution handoff without exporting
 source, saving or deploying a version, or creating customer or revenue
 evidence.
 Candidate preparation also refuses any pre-existing requested archive or

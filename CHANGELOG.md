@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Made Sites pre-save verification accept the exact canonical source-repository
+  identity emitted by the pending approval request, so the documented approval
+  tuple can be replayed without translating it back into a URL.
+- Preserved nonstandard SSH and SCP usernames in canonical repository identity
+  while retaining conventional `git@` and default-port protocol equivalence,
+  and used a collision-free `scp-relative://` prefix to distinguish
+  home-relative SCP paths from absolute SSH/SCP paths for those usernames.
+- Added pre-save regressions for canonical-identity replay, approved username
+  matching, unapproved SSH URL and SCP username aliases, and relative-versus-
+  absolute SCP paths.
 - Distinguished legacy, active, empty, and repair-required states in joined
   growth reviews, preventing historical records or open
   malformed evidence from producing phantom commercial actions.

@@ -38,17 +38,21 @@
   `deployment_approved=false` as a boolean. Candidate status must use the same
   single-line JSON boundary so opaque IDs and filenames cannot inject approval
   fields or lines. Reject raw whitespace in source repository identities and
-  require percent-encoded URL paths where needed.
+  require percent-encoded URL paths where needed. Preserve nonstandard SSH and
+  SCP usernames and their relative-versus-absolute path semantics in that
+  canonical identity while treating conventional `git@` as protocol-neutral.
   After approval, push its receipt-bound source to the separate Sites source
   repository, verify the unchanged archive and receipt again while requiring
-  the approved digest and canonical Sites repository identity, and resolve
-  that repository's exported `refs/heads/main` twice to prove it still equals
-  the receipt commit before saving only that matched candidate. The digest and
-  both repository arguments must remain one atomic pre-save mode. Local source,
-  `origin`, unrelated forks, aliases that resolve to them, and repository
-  identity or non-default-port drift must fail closed. Versions 46 and 47 are
-  superseded and must not be deployed. Keep the replacement behind separate
-  deployment approval and the immediate post-deployment production audit.
+  the approved digest and the exact canonical Sites repository identity from
+  the pending request, and resolve that repository's exported
+  `refs/heads/main` twice to prove it still equals the receipt commit before
+  saving only that matched candidate. The digest and both repository arguments
+  must remain one atomic pre-save mode. Local source, `origin`, unrelated
+  forks, aliases that resolve to them, and repository identity, username, or
+  non-default-port or SCP path-mode drift must fail closed. Versions 46 and 47
+  are superseded and must not be deployed. Keep the replacement behind
+  separate deployment approval and the immediate post-deployment production
+  audit.
 - Human-review the five prepared, publicly qualified drafts. The fresh
   owner-only schema-5 bundle is ready at
   `outreach-private/next-review-v5.md`; keep the July 21 schema-4 bundle

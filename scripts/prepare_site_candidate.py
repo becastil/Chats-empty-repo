@@ -67,9 +67,11 @@ SITE_RELEASE_VERSION_PATTERN = re.compile(
     re.MULTILINE,
 )
 SCP_REPOSITORY_PATTERN = re.compile(
-    r"(?:[^/@:\s]+@)?(?P<host>[^/:\s]+):(?P<path>[^\\].+)\Z"
+    r"(?:(?P<user>[^/@:\s]+)@)?"
+    r"(?P<host>[^/:\s]+):(?P<path>[^\\].+)\Z"
 )
 REMOTE_REPOSITORY_SCHEMES = frozenset(("git", "http", "https", "ssh"))
+SCP_RELATIVE_IDENTITY_PREFIX = "scp-relative://"
 DEFAULT_REPOSITORY_PORTS = {
     "git": 9418,
     "http": 80,
@@ -440,16 +442,9 @@ def verify_site_candidate(
     )
     approved_source_repository_identity: str | None = None
     if expected_exported_source_repository is not None:
-        approved_source_repository = _validated_source_repository(
-            expected_exported_source_repository
-        )
-        _require_remote_repository_identity(
-            approved_source_repository,
-            "approved Sites source repository",
-        )
         approved_source_repository_identity = (
-            _canonical_repository_identity(
-                approved_source_repository,
+            _approved_repository_identity(
+                expected_exported_source_repository,
                 "approved Sites source repository",
             )
         )
@@ -808,6 +803,50 @@ def _approval_source_repository_identity(
     return source_identity
 
 
+def _approved_repository_identity(value: str, label: str) -> str:
+    repository = _validated_source_repository(value)
+    if repository.startswith(SCP_RELATIVE_IDENTITY_PREFIX):
+        canonical = repository.removeprefix(
+            SCP_RELATIVE_IDENTITY_PREFIX
+        )
+        try:
+            normalized = _canonical_repository_identity(
+                f"ssh://{canonical}",
+                label,
+            )
+        except SiteCandidateError:
+            normalized = None
+        if normalized == canonical:
+            return repository
+        raise SiteCandidateError(
+            f"{label} must be a valid remote Git repository identity"
+        )
+
+    parsed = urlsplit(repository)
+    if (
+        parsed.scheme.lower() in REMOTE_REPOSITORY_SCHEMES
+        and parsed.hostname
+    ):
+        return _canonical_repository_identity(repository, label)
+
+    if "/" in repository and "://" not in repository:
+        try:
+            canonical = _canonical_repository_identity(
+                f"ssh://{repository}",
+                label,
+            )
+        except SiteCandidateError:
+            canonical = None
+        if canonical == repository:
+            return repository
+
+    if SCP_REPOSITORY_PATTERN.fullmatch(repository) is not None:
+        return _canonical_repository_identity(repository, label)
+    raise SiteCandidateError(
+        f"{label} must be a valid remote Git repository identity"
+    )
+
+
 def _require_remote_repository_identity(value: str, label: str) -> None:
     parsed = urlsplit(value)
     if (
@@ -842,6 +881,8 @@ def _canonical_repository_identity(value: str, label: str) -> str:
             and port != DEFAULT_REPOSITORY_PORTS[scheme]
         ):
             authority = f"{authority}:{port}"
+        if parsed.username not in {None, "git"}:
+            authority = f"{parsed.username}@{authority}"
         path = parsed.path.rstrip("/")
         if path.endswith(".git"):
             path = path[:-4]
@@ -851,10 +892,20 @@ def _canonical_repository_identity(value: str, label: str) -> str:
         raise SiteCandidateError(
             f"{label} must be a valid remote Git repository identity"
         )
-    path = scp_match.group("path").rstrip("/")
+    raw_path = scp_match.group("path")
+    is_relative_path = not raw_path.startswith("/")
+    path = raw_path.rstrip("/")
     if path.endswith(".git"):
         path = path[:-4]
-    return f"{scp_match.group('host').lower()}/{path.lstrip('/')}"
+    authority = scp_match.group("host").lower()
+    user = scp_match.group("user")
+    if user not in {None, "git"}:
+        authority = f"{user}@{authority}"
+    normalized_path = path.lstrip("/")
+    identity = f"{authority}/{normalized_path}"
+    if user != "git" and is_relative_path:
+        return f"{SCP_RELATIVE_IDENTITY_PREFIX}{identity}"
+    return identity
 
 
 def _require_separate_repository(

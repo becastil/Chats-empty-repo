@@ -1228,6 +1228,288 @@ class SiteCandidateTests(unittest.TestCase):
                     ),
                 )
 
+    def test_pre_save_verification_rejects_unapproved_ssh_usernames(
+        self,
+    ) -> None:
+        repositories = (
+            "ssh://alice@sites.example:22/repo-scout.git",
+            "bob@sites.example:repo-scout.git",
+        )
+        for repository in repositories:
+            with self.subTest(repository=repository), TemporaryDirectory() as tmp:
+                root, archive, receipt, package_script = self._fixture(
+                    Path(tmp)
+                )
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+                approved_digest = hashlib.sha256(
+                    receipt.read_bytes()
+                ).hexdigest()
+
+                with self.assertRaisesRegex(
+                    prepare_site_candidate.SiteCandidateError,
+                    "repository does not match approved Sites repository",
+                ):
+                    prepare_site_candidate.verify_site_candidate(
+                        root,
+                        archive,
+                        receipt,
+                        expected_receipt_sha256=approved_digest,
+                        exported_source_repository=SITES_SOURCE_REMOTE,
+                        expected_exported_source_repository=(
+                            SITES_SOURCE_REPOSITORY
+                        ),
+                        run_command=FakeCommandRunner(
+                            root,
+                            archive,
+                            exported_source_repositories=(repository,),
+                        ),
+                    )
+
+    def test_pre_save_verification_accepts_recorded_canonical_identity(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+            approved_digest = hashlib.sha256(receipt.read_bytes()).hexdigest()
+
+            result = prepare_site_candidate.verify_site_candidate(
+                root,
+                archive,
+                receipt,
+                expected_receipt_sha256=approved_digest,
+                exported_source_repository=SITES_SOURCE_REMOTE,
+                expected_exported_source_repository=(
+                    "sites.example/repo-scout"
+                ),
+                run_command=FakeCommandRunner(root, archive),
+            )
+
+            self.assertEqual(result.commit_sha, COMMIT_SHA)
+
+    def test_pre_save_verification_matches_approved_ssh_username(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+            approved_digest = hashlib.sha256(receipt.read_bytes()).hexdigest()
+
+            result = prepare_site_candidate.verify_site_candidate(
+                root,
+                archive,
+                receipt,
+                expected_receipt_sha256=approved_digest,
+                exported_source_repository=SITES_SOURCE_REMOTE,
+                expected_exported_source_repository=(
+                    "alice@sites.example/repo-scout"
+                ),
+                run_command=FakeCommandRunner(
+                    root,
+                    archive,
+                    exported_source_repositories=(
+                        "ssh://alice@sites.example:22/repo-scout.git",
+                    ),
+                    exported_source_shas=(COMMIT_SHA, COMMIT_SHA),
+                ),
+            )
+
+            self.assertEqual(result.commit_sha, COMMIT_SHA)
+
+    def test_pre_save_verification_rejects_scp_relative_path_alias(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+            approved_digest = hashlib.sha256(receipt.read_bytes()).hexdigest()
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "repository does not match approved Sites repository",
+            ):
+                prepare_site_candidate.verify_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    expected_receipt_sha256=approved_digest,
+                    exported_source_repository=SITES_SOURCE_REMOTE,
+                    expected_exported_source_repository=(
+                        "alice@sites.example/repo-scout"
+                    ),
+                    run_command=FakeCommandRunner(
+                        root,
+                        archive,
+                        exported_source_repositories=(
+                            "alice@sites.example:repo-scout.git",
+                        ),
+                    ),
+                )
+
+    def test_pre_save_verification_rejects_scp_relative_marker_collision(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+            approved_digest = hashlib.sha256(receipt.read_bytes()).hexdigest()
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "repository does not match approved Sites repository",
+            ):
+                prepare_site_candidate.verify_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    expected_receipt_sha256=approved_digest,
+                    exported_source_repository=SITES_SOURCE_REMOTE,
+                    expected_exported_source_repository=(
+                        "alice@sites.example/~/repo-scout"
+                    ),
+                    run_command=FakeCommandRunner(
+                        root,
+                        archive,
+                        exported_source_repositories=(
+                            "alice@sites.example:repo-scout.git",
+                        ),
+                    ),
+                )
+
+    def test_pre_save_verification_matches_recorded_scp_relative_identity(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+            approved_digest = hashlib.sha256(receipt.read_bytes()).hexdigest()
+
+            result = prepare_site_candidate.verify_site_candidate(
+                root,
+                archive,
+                receipt,
+                expected_receipt_sha256=approved_digest,
+                exported_source_repository=SITES_SOURCE_REMOTE,
+                expected_exported_source_repository=(
+                    "scp-relative://alice@sites.example/repo-scout"
+                ),
+                run_command=FakeCommandRunner(
+                    root,
+                    archive,
+                    exported_source_repositories=(
+                        "alice@sites.example:repo-scout.git",
+                    ),
+                    exported_source_shas=(COMMIT_SHA, COMMIT_SHA),
+                ),
+            )
+
+            self.assertEqual(result.commit_sha, COMMIT_SHA)
+
+    def test_pre_save_verification_rejects_scp_prefix_host_port_collision(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+            approved_digest = hashlib.sha256(receipt.read_bytes()).hexdigest()
+
+            with self.assertRaisesRegex(
+                prepare_site_candidate.SiteCandidateError,
+                "repository does not match approved Sites repository",
+            ):
+                prepare_site_candidate.verify_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    expected_receipt_sha256=approved_digest,
+                    exported_source_repository=SITES_SOURCE_REMOTE,
+                    expected_exported_source_repository=(
+                        "https://scp-relative:8443/repo.git"
+                    ),
+                    run_command=FakeCommandRunner(
+                        root,
+                        archive,
+                        exported_source_repositories=("8443:repo.git",),
+                    ),
+                )
+
+    def test_pre_save_verification_matches_scp_absolute_path(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+            approved_digest = hashlib.sha256(receipt.read_bytes()).hexdigest()
+
+            result = prepare_site_candidate.verify_site_candidate(
+                root,
+                archive,
+                receipt,
+                expected_receipt_sha256=approved_digest,
+                exported_source_repository=SITES_SOURCE_REMOTE,
+                expected_exported_source_repository=(
+                    "alice@sites.example/repo-scout"
+                ),
+                run_command=FakeCommandRunner(
+                    root,
+                    archive,
+                    exported_source_repositories=(
+                        "alice@sites.example:/repo-scout.git",
+                    ),
+                    exported_source_shas=(COMMIT_SHA, COMMIT_SHA),
+                ),
+            )
+
+            self.assertEqual(result.commit_sha, COMMIT_SHA)
+
     def test_pre_save_verification_accepts_default_port_protocol_alias(
         self,
     ) -> None:
@@ -2348,6 +2630,51 @@ class SiteCandidateTests(unittest.TestCase):
                 ),
                 ("git", "ls-remote", "--get-url", "origin"),
             ],
+        )
+
+    def test_pending_approval_identity_preserves_ssh_username(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, _, _ = self._fixture(Path(tmp))
+            runner = FakeCommandRunner(
+                root,
+                archive,
+                exported_source_repositories=(
+                    "ssh://alice@sites.example:22/repo-scout.git",
+                ),
+            )
+
+            identity = (
+                prepare_site_candidate._approval_source_repository_identity(
+                    root,
+                    SITES_SOURCE_REMOTE,
+                    run_command=runner,
+                )
+            )
+
+        self.assertEqual(identity, "alice@sites.example/repo-scout")
+
+    def test_pending_approval_identity_marks_scp_relative_path(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, archive, _, _ = self._fixture(Path(tmp))
+            runner = FakeCommandRunner(
+                root,
+                archive,
+                exported_source_repositories=(
+                    "alice@sites.example:repo-scout.git",
+                ),
+            )
+
+            identity = (
+                prepare_site_candidate._approval_source_repository_identity(
+                    root,
+                    SITES_SOURCE_REMOTE,
+                    run_command=runner,
+                )
+            )
+
+        self.assertEqual(
+            identity,
+            "scp-relative://alice@sites.example/repo-scout",
         )
 
     def test_rejects_whitespace_ambiguous_approval_repository_identity(
