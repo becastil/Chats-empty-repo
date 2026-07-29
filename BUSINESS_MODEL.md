@@ -1374,9 +1374,23 @@ reported action count with the embedded queue and verifies every queued stage,
 readiness, qualification status, repository scope, provider, price-derived
 action, and exact next action. A saved schema-7 report with a provider-blind,
 scope-blind, or stage-skipping action fails closed instead of acquiring new
-meaning from its version number. Older pilot schemas retain their existing
-aggregate recommendations. The queue is an operating aid, not an automated
-decision, and it neither sends outreach nor records payment.
+meaning from its version number. Queue identity and stage must also reconcile
+exactly to every open pre-payment deal. Readiness and the action-driving
+qualification fields must match that canonical deal, and detailed deal stages
+must reproduce `by_stage`. Visible qualification and offer progression must
+also agree with cumulative `by_source` totals. Deleting an entry and changing
+the saved count, self-authorizing a copy-ready provider, or escalating both
+detail and queue stage without changing aggregate evidence therefore fails.
+During qualification through an open pilot target, a valid but empty schema-7
+queue is not treated as a legacy report: cumulative qualification, offer,
+payment, and loss history remains visible, but growth states that no open
+pre-payment deal exists and recommends replenishing the queue instead of
+inventing commercial work. Open untracked or conflicting lifecycle evidence
+takes repair precedence over another active deal at those stages. Acquisition
+and post-target retention keep their existing evidence priorities. Older pilot
+schemas retain their existing aggregate recommendations. The queue is an
+operating aid, not an automated decision, and it neither sends outreach nor
+records payment.
 
 Schema 7 also verifies the required application scope before an operator relies
 on a qualification label. It normalizes team size, repository count, and CI

@@ -102,12 +102,24 @@ count revenue.
 Schema-7 growth reviews likewise defer offer, payment, and open pilot-target
 actions to this queue rather than reconstructing a provider-blind commercial
 recommendation. Older pilot-report schemas retain their existing aggregate
-actions because they predate qualification evidence. Before deferring, growth
-reconciles `summary.sales_actions` with the embedded queue and validates each
-deal's stage, readiness, qualification status, repository scope, CI provider,
-public-intake-bound pilot price, and exact next action. Missing queues and saved
-schema-7 reports carrying a provider-blind, scope-blind, or stage-skipping
-action fail closed.
+actions because they predate qualification evidence. During qualification
+through an open pilot target, a validated empty schema-7 queue remains distinct
+from those legacy reports: growth preserves cumulative milestone history,
+states that no open pre-payment deal is available, and recommends replenishing
+the queue rather than sending terms, confirming payment, closing, or naming a
+nonexistent deal. An open request with an untracked or conflicting lifecycle
+stage instead requires label repair before another sales action, even when a
+different deal remains active. Acquisition, retention, and validated stages
+retain their existing evidence priorities.
+Before deferring, growth reconciles `summary.sales_actions` with the embedded
+queue, requires every open pre-payment deal identity, stage, readiness, and
+action-driving qualification field to appear exactly once, and requires
+detailed deal stages to reproduce `by_stage` and visible qualification and
+offer progression to agree with cumulative `by_source` totals. It then
+validates each queued deal's public-intake-bound pilot price and exact next
+action. Missing, incomplete, self-authorized, stage-divergent, or
+aggregate-divergent queues and saved schema-7 reports carrying a provider-blind,
+scope-blind, or stage-skipping action fail closed.
 
 Every deal, stale-deal, and sales-queue record also contains a `qualification`
 object derived from the four required scope fields. It includes normalized

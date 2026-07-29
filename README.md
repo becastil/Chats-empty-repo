@@ -338,8 +338,16 @@ first-10 scope. Queue membership, ranking, classification, and revenue
 accounting remain unchanged. Schema-7 growth bottlenecks that would send terms,
 confirm payment, or close the next pilot point back to this
 qualification-aware queue after validating each exact action against its stage,
-readiness, qualification, provider, and public-intake-bound price. Saved schema-7
-evidence that bypasses any of those boundaries fails growth ingestion.
+readiness, qualification, provider, and public-intake-bound price. When that
+validated queue is empty during a pre-target milestone, growth retains
+historical milestones but says no open pre-payment deal exists and recommends
+replenishing the queue instead of inventing a deal action. At those pre-target
+stages, an open request with untracked or conflicting lifecycle evidence
+requires label repair before another sales action, even when another deal is
+already queued. Saved schema-7 evidence that omits or adds an open queue member,
+changes its stage, readiness, or action-driving qualification fields, disagrees
+with stage totals or cumulative source progression, or bypasses another queue
+boundary fails growth ingestion.
 Pilot issue JSON with duplicate keys is rejected before issue parsing, so
 conflicting `labels` fields cannot silently change booked-pilot or revenue
 totals.

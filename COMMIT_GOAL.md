@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after binding schema-7 pricing to public intake:
-  276 / 1,000 (27.6%).
-- Remaining after binding schema-7 pricing to public intake:
-  724 commits.
+- Progress after preventing phantom empty-queue actions:
+  277 / 1,000 (27.7%).
+- Remaining after preventing phantom empty-queue actions:
+  723 commits.
 
 ## Commit Standard
 

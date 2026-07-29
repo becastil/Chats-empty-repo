@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- Distinguished legacy, active, empty, and repair-required states in joined
+  growth reviews, preventing historical records or open
+  malformed evidence from producing phantom commercial actions.
+- Reconciled every schema-7 queue member's issue identity, stage, readiness,
+  and action-driving qualification evidence to the complete open pre-payment
+  deal set, reconciled detailed deal stages to `by_stage`, and required visible
+  qualification and offer progression to agree with `by_source`.
+- Rejected forged empty queues even when their saved action count was changed
+  to match, as well as self-authorized CI gates and coordinated detail/queue
+  stage escalation that disagrees with stage or source totals.
+- Preserved cumulative funnel milestones and legacy schema-5/6 recommendations
+  while adding integration coverage across qualification, offer, payment,
+  pilot-target, mislabeled-closed, correctly lost, paid, open-untracked,
+  mixed active-plus-repair, and forged queue states.
 - Bound schema-7 pilot reporting to the $299 price named in public intake,
   rejecting any configured mismatch before issue parsing, sales actions,
   booked-revenue arithmetic, or output.

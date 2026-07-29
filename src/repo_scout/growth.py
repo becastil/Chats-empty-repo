@@ -12,6 +12,7 @@ from .pilot_funnel import (
     CI_PROVIDER_KEYS,
     COPY_READY_CI_PROVIDER,
     DECISION_CRITERION_KEYS,
+    DISPLAY_STAGES,
     FOLLOW_UP_STAGES,
     PILOT_REPOSITORY_SCOPES,
     PUBLIC_INTAKE_PILOT_PRICE_USD,
@@ -24,6 +25,20 @@ from .pilot_funnel import (
 SCHEMA_VERSION = 2
 SUPPORTED_DISTRIBUTION_SCHEMAS = {2}
 SUPPORTED_PILOT_SCHEMAS = {5, 6, 7}
+LEGACY_SALES_QUEUE_STATE = "legacy"
+EMPTY_SALES_QUEUE_STATE = "empty"
+ACTIVE_SALES_QUEUE_STATE = "active"
+REPAIR_SALES_QUEUE_STATE = "repair"
+EMPTY_SALES_QUEUE_ACTION = (
+    "No open pre-payment deal is available; replenish the pilot sales queue."
+)
+REPAIR_SALES_QUEUE_REASON = (
+    "An open pilot request cannot enter the sales queue until its lifecycle "
+    "evidence is reconciled."
+)
+REPAIR_SALES_QUEUE_ACTION = (
+    "Reconcile open pilot lifecycle labels before selecting another sales action."
+)
 DELTA_FIELDS = (
     "primary_artifact_downloads_delta",
     "portable_downloads_delta",
@@ -69,9 +84,7 @@ def build_growth_report(
         pilot_price_usd=pricing["pilot_price_usd"],
         target_pilots=pricing["target_pilots"],
         annual_conversions=pilot_summary["annual_conversions"],
-        qualification_aware_sales_queue=pilot[
-            "qualification_aware_sales_queue"
-        ],
+        sales_queue_state=pilot["sales_queue_state"],
     )
 
     warnings: list[dict[str, str]] = []
@@ -485,7 +498,7 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
             "pilot report.pricing.pilot_price_usd must match public intake "
             f"price of ${PUBLIC_INTAKE_PILOT_PRICE_USD}"
         )
-    qualification_aware_sales_queue = False
+    sales_queue_state = LEGACY_SALES_QUEUE_STATE
     if schema == 7:
         for field in (
             "complete_qualification_issues",
@@ -521,11 +534,21 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
             raise GrowthInputError(
                 "pilot report subset scope exceeds complete qualification"
             )
-        qualification_aware_sales_queue = (
-            _validate_qualification_aware_sales_queue(
-                root,
-                summary,
-                pricing["pilot_price_usd"],
+        (
+            has_sales_actions,
+            needs_lifecycle_repair,
+        ) = _validate_qualification_aware_sales_queue(
+            root,
+            summary,
+            pricing["pilot_price_usd"],
+        )
+        sales_queue_state = (
+            REPAIR_SALES_QUEUE_STATE
+            if needs_lifecycle_repair
+            else (
+                ACTIVE_SALES_QUEUE_STATE
+                if has_sales_actions
+                else EMPTY_SALES_QUEUE_STATE
             )
         )
 
@@ -553,6 +576,8 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
             sources.append({"source": source, **totals})
 
     _validate_pilot_totals(summary, pricing, sources)
+    if schema == 7:
+        _validate_visible_stage_progression(root, sources)
     decision_criteria: list[dict[str, Any]] | None = None
     if schema >= 6:
         raw_criteria = _require_object(
@@ -611,7 +636,7 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
         "sources": sources,
         "decision_criterion_reporting_available": schema >= 6,
         "qualification_reporting_available": schema == 7,
-        "qualification_aware_sales_queue": qualification_aware_sales_queue,
+        "sales_queue_state": sales_queue_state,
         "decision_criteria": decision_criteria,
         "warning_count": len(raw_warnings),
     }
@@ -621,7 +646,12 @@ def _validate_qualification_aware_sales_queue(
     root: dict[str, Any],
     summary: dict[str, int],
     pilot_price_usd: int,
-) -> bool:
+) -> tuple[bool, bool]:
+    expected_members, needs_lifecycle_repair = _expected_sales_queue_members(
+        root,
+        summary,
+        pilot_price_usd,
+    )
     queue = _require_object(
         root.get("sales_queue"),
         "pilot report.sales_queue",
@@ -636,83 +666,188 @@ def _validate_qualification_aware_sales_queue(
             "pilot report sales_actions does not match sales_queue.deals"
         )
 
+    actual_members: dict[int, dict[str, Any]] = {}
     for index, raw_deal in enumerate(raw_deals):
         location = f"pilot report.sales_queue.deals[{index}]"
         deal = _require_object(raw_deal, location)
-        readiness = deal.get("purchase_readiness")
-        if readiness not in READINESS_KEYS:
-            raise GrowthInputError(
-                f"{location}.purchase_readiness must be a recognized value"
-            )
-        stage = deal.get("stage")
-        if not isinstance(stage, str) or stage not in FOLLOW_UP_STAGES:
-            raise GrowthInputError(
-                f"{location}.stage must be an open pre-payment stage"
-            )
-        next_action = deal.get("next_action")
-        if not isinstance(next_action, str) or not next_action:
-            raise GrowthInputError(
-                f"{location}.next_action must be a non-empty string"
-            )
-        qualification = _require_object(
-            deal.get("qualification"),
-            f"{location}.qualification",
+        number = _require_positive_int(
+            deal.get("number"),
+            f"{location}.number",
         )
-        qualification_status = qualification.get("status")
-        if (
-            not isinstance(qualification_status, str)
-            or qualification_status not in QUALIFICATION_STATUSES
-        ):
+        if number in actual_members:
             raise GrowthInputError(
-                f"{location}.qualification.status must be a recognized value"
+                "pilot report.sales_queue.deals contains duplicate issue number"
             )
-        if "pilot_repository_scope" not in qualification:
-            raise GrowthInputError(
-                f"{location}.qualification.pilot_repository_scope must be "
-                "present"
-            )
-        repository_scope = qualification["pilot_repository_scope"]
-        if qualification_status == "incomplete":
-            if repository_scope is not None:
-                raise GrowthInputError(
-                    f"{location}.qualification.pilot_repository_scope must be "
-                    "null for incomplete qualification"
-                )
-        elif (
-            not isinstance(repository_scope, str)
-            or repository_scope not in PILOT_REPOSITORY_SCOPES
-        ):
-            raise GrowthInputError(
-                f"{location}.qualification.pilot_repository_scope must be a "
-                "recognized value for complete qualification"
-            )
-        if "ci_provider" not in qualification:
-            raise GrowthInputError(
-                f"{location}.qualification.ci_provider must be present"
-            )
-        ci_provider = qualification["ci_provider"]
-        if ci_provider is not None and (
-            not isinstance(ci_provider, str)
-            or ci_provider not in CI_PROVIDER_KEYS
-        ):
-            raise GrowthInputError(
-                f"{location}.qualification.ci_provider must be null or a "
-                "recognized value"
-            )
-        if qualification_status != "incomplete" and ci_provider is None:
-            raise GrowthInputError(
-                f"{location}.qualification.ci_provider must be recognized for "
-                "complete qualification"
-            )
-
-        expected_action = expected_sales_action(
-            stage,
-            readiness,
+        actual_members[number] = _validate_sales_action_contract(
+            deal,
+            location,
             pilot_price_usd,
-            qualification,
         )
-        if next_action == expected_action:
+
+    if actual_members != expected_members:
+        raise GrowthInputError(
+            "pilot report sales_queue.deals does not match open pre-payment deals"
+        )
+    return bool(raw_deals), needs_lifecycle_repair
+
+
+def _expected_sales_queue_members(
+    root: dict[str, Any],
+    summary: dict[str, int],
+    pilot_price_usd: int,
+) -> tuple[dict[int, dict[str, Any]], bool]:
+    raw_deals = root.get("deals")
+    if not isinstance(raw_deals, list):
+        raise GrowthInputError("pilot report.deals must be an array")
+    if len(raw_deals) != summary["tracked_issues"]:
+        raise GrowthInputError(
+            "pilot report deals does not match tracked issues"
+        )
+
+    expected_members: dict[int, dict[str, Any]] = {}
+    observed_stage_counts = {stage: 0 for stage in DISPLAY_STAGES}
+    seen_numbers: set[int] = set()
+    needs_lifecycle_repair = False
+    for index, raw_deal in enumerate(raw_deals):
+        location = f"pilot report.deals[{index}]"
+        deal = _require_object(raw_deal, location)
+        number = _require_positive_int(
+            deal.get("number"),
+            f"{location}.number",
+        )
+        if number in seen_numbers:
+            raise GrowthInputError(
+                "pilot report.deals contains duplicate issue number"
+            )
+        seen_numbers.add(number)
+
+        stage = deal.get("stage")
+        if not isinstance(stage, str) or stage not in DISPLAY_STAGES:
+            raise GrowthInputError(
+                f"{location}.stage must be a recognized value"
+            )
+        observed_stage_counts[stage] += 1
+        state = deal.get("state")
+        if state not in {"OPEN", "CLOSED"}:
+            raise GrowthInputError(
+                f"{location}.state must be OPEN or CLOSED"
+            )
+        if state != "OPEN":
             continue
+        if stage in FOLLOW_UP_STAGES:
+            expected_members[number] = _validate_sales_action_contract(
+                deal,
+                location,
+                pilot_price_usd,
+            )
+        elif stage in {"conflict", "untracked"}:
+            needs_lifecycle_repair = True
+
+    raw_by_stage = _require_object(
+        root.get("by_stage"),
+        "pilot report.by_stage",
+    )
+    if set(raw_by_stage) != set(DISPLAY_STAGES):
+        raise GrowthInputError(
+            "pilot report.by_stage keys must match recognized stages"
+        )
+    reported_stage_counts = {
+        stage: _require_non_negative_int(
+            raw_by_stage.get(stage),
+            f"pilot report.by_stage.{stage}",
+        )
+        for stage in DISPLAY_STAGES
+    }
+    if reported_stage_counts != observed_stage_counts:
+        raise GrowthInputError(
+            "pilot report.by_stage does not match deals"
+        )
+
+    return expected_members, needs_lifecycle_repair
+
+
+def _validate_sales_action_contract(
+    deal: dict[str, Any],
+    location: str,
+    pilot_price_usd: int,
+) -> dict[str, Any]:
+    readiness = deal.get("purchase_readiness")
+    if readiness not in READINESS_KEYS:
+        raise GrowthInputError(
+            f"{location}.purchase_readiness must be a recognized value"
+        )
+    stage = deal.get("stage")
+    if not isinstance(stage, str) or stage not in FOLLOW_UP_STAGES:
+        raise GrowthInputError(
+            f"{location}.stage must be an open pre-payment stage"
+        )
+    next_action = deal.get("next_action")
+    if not isinstance(next_action, str) or not next_action:
+        raise GrowthInputError(
+            f"{location}.next_action must be a non-empty string"
+        )
+    qualification = _require_object(
+        deal.get("qualification"),
+        f"{location}.qualification",
+    )
+    qualification_status = qualification.get("status")
+    if (
+        not isinstance(qualification_status, str)
+        or qualification_status not in QUALIFICATION_STATUSES
+    ):
+        raise GrowthInputError(
+            f"{location}.qualification.status must be a recognized value"
+        )
+    if "pilot_repository_scope" not in qualification:
+        raise GrowthInputError(
+            f"{location}.qualification.pilot_repository_scope must be present"
+        )
+    repository_scope = qualification["pilot_repository_scope"]
+    if qualification_status == "incomplete":
+        if repository_scope is not None:
+            raise GrowthInputError(
+                f"{location}.qualification.pilot_repository_scope must be null "
+                "for incomplete qualification"
+            )
+    elif (
+        not isinstance(repository_scope, str)
+        or repository_scope not in PILOT_REPOSITORY_SCOPES
+    ):
+        raise GrowthInputError(
+            f"{location}.qualification.pilot_repository_scope must be a "
+            "recognized value for complete qualification"
+        )
+    if "ci_provider" not in qualification:
+        raise GrowthInputError(
+            f"{location}.qualification.ci_provider must be present"
+        )
+    ci_provider = qualification["ci_provider"]
+    if ci_provider is not None and (
+        not isinstance(ci_provider, str)
+        or ci_provider not in CI_PROVIDER_KEYS
+    ):
+        raise GrowthInputError(
+            f"{location}.qualification.ci_provider must be null or a recognized "
+            "value"
+        )
+    if qualification_status != "incomplete" and ci_provider is None:
+        raise GrowthInputError(
+            f"{location}.qualification.ci_provider must be recognized for "
+            "complete qualification"
+        )
+
+    normalized_qualification = {
+        "status": qualification_status,
+        "pilot_repository_scope": repository_scope,
+        "ci_provider": ci_provider,
+    }
+    expected_action = expected_sales_action(
+        stage,
+        readiness,
+        pilot_price_usd,
+        normalized_qualification,
+    )
+    if next_action != expected_action:
         if readiness == "ready" and (
             qualification_status != "target"
             or repository_scope == "subset_required"
@@ -731,7 +866,51 @@ def _validate_qualification_aware_sales_queue(
             "action contract"
         )
 
-    return bool(raw_deals)
+    return {
+        "stage": stage,
+        "purchase_readiness": readiness,
+        "qualification": normalized_qualification,
+    }
+
+
+def _validate_visible_stage_progression(
+    root: dict[str, Any],
+    sources: list[dict[str, Any]],
+) -> None:
+    raw_by_stage = _require_object(
+        root.get("by_stage"),
+        "pilot report.by_stage",
+    )
+    stage_counts = {
+        stage: _require_non_negative_int(
+            raw_by_stage.get(stage),
+            f"pilot report.by_stage.{stage}",
+        )
+        for stage in DISPLAY_STAGES
+    }
+    lost_count = stage_counts["lost"]
+    reported_offered = sum(row["offered_pilots"] for row in sources)
+    visible_offered = sum(
+        stage_counts[stage]
+        for stage in ("offered", "paid", "active", "converted", "conflict")
+    )
+    if not visible_offered <= reported_offered <= visible_offered + lost_count:
+        raise GrowthInputError(
+            "pilot report by_source offered_pilots does not match visible deal "
+            "stages"
+        )
+
+    reported_qualified = sum(row["qualified_pilots"] for row in sources)
+    visible_qualified = stage_counts["qualified"] + visible_offered
+    if not (
+        visible_qualified
+        <= reported_qualified
+        <= visible_qualified + lost_count
+    ):
+        raise GrowthInputError(
+            "pilot report by_source qualified_pilots does not match visible deal "
+            "stages"
+        )
 
 
 def _validate_pilot_totals(
@@ -862,7 +1041,7 @@ def _choose_bottleneck(
     pilot_price_usd: int,
     target_pilots: int,
     annual_conversions: int,
-    qualification_aware_sales_queue: bool,
+    sales_queue_state: str,
 ) -> dict[str, str]:
     if change is None:
         return {
@@ -891,54 +1070,106 @@ def _choose_bottleneck(
             ),
         }
     if qualified_pilots == 0:
+        if sales_queue_state == REPAIR_SALES_QUEUE_STATE:
+            return {
+                "stage": "qualification",
+                "reason": REPAIR_SALES_QUEUE_REASON,
+                "next_action": REPAIR_SALES_QUEUE_ACTION,
+            }
+        if sales_queue_state == EMPTY_SALES_QUEUE_STATE:
+            return {
+                "stage": "qualification",
+                "reason": (
+                    "Pilot request history exists, but no open pre-payment deal "
+                    "is available for qualification."
+                ),
+                "next_action": EMPTY_SALES_QUEUE_ACTION,
+            }
         return {
             "stage": "qualification",
             "reason": "Pilot requests exist, but none has reached qualification.",
             "next_action": "Work the sales queue and qualify the team policy need.",
         }
     if offered_pilots == 0:
-        if qualification_aware_sales_queue:
+        if sales_queue_state == REPAIR_SALES_QUEUE_STATE:
+            next_action = REPAIR_SALES_QUEUE_ACTION
+            reason = REPAIR_SALES_QUEUE_REASON
+        elif sales_queue_state == ACTIVE_SALES_QUEUE_STATE:
             next_action = (
                 "Work the qualification-aware pilot sales queue before sending "
                 "the "
                 f"explicit ${pilot_price_usd} pilot terms."
+            )
+            reason = "Qualified pilot demand exists, but no offer is recorded."
+        elif sales_queue_state == EMPTY_SALES_QUEUE_STATE:
+            next_action = EMPTY_SALES_QUEUE_ACTION
+            reason = (
+                "Qualified pilot history exists, but no open pre-payment deal "
+                "is available for an offer."
             )
         else:
             next_action = (
                 f"Send the explicit ${pilot_price_usd} pilot terms to a qualified "
                 "team."
             )
+            reason = "Qualified pilot demand exists, but no offer is recorded."
         return {
             "stage": "offer",
-            "reason": "Qualified pilot demand exists, but no offer is recorded.",
+            "reason": reason,
             "next_action": next_action,
         }
     if booked_pilots == 0:
-        if qualification_aware_sales_queue:
+        if sales_queue_state == REPAIR_SALES_QUEUE_STATE:
+            next_action = REPAIR_SALES_QUEUE_ACTION
+            reason = REPAIR_SALES_QUEUE_REASON
+        elif sales_queue_state == ACTIVE_SALES_QUEUE_STATE:
             next_action = (
                 "Work the qualification-aware pilot sales queue before "
                 "confirming purchase or payment."
             )
+            reason = "A pilot offer exists, but no paid pilot is recorded."
+        elif sales_queue_state == EMPTY_SALES_QUEUE_STATE:
+            next_action = EMPTY_SALES_QUEUE_ACTION
+            reason = (
+                "Pilot offer history exists, but no open pre-payment deal is "
+                "available for payment follow-up."
+            )
         else:
             next_action = "Resolve the top offered deal's purchase blocker."
+            reason = "A pilot offer exists, but no paid pilot is recorded."
         return {
             "stage": "payment",
-            "reason": "A pilot offer exists, but no paid pilot is recorded.",
+            "reason": reason,
             "next_action": next_action,
         }
     if booked_pilots < target_pilots:
-        if qualification_aware_sales_queue:
+        if sales_queue_state == REPAIR_SALES_QUEUE_STATE:
+            next_action = REPAIR_SALES_QUEUE_ACTION
+            reason = REPAIR_SALES_QUEUE_REASON
+        elif sales_queue_state == ACTIVE_SALES_QUEUE_STATE:
             next_action = (
                 "Work the qualification-aware pilot sales queue before closing "
                 "the next pilot."
+            )
+            reason = (
+                "Booked revenue is real, but the founding-pilot target is open."
+            )
+        elif sales_queue_state == EMPTY_SALES_QUEUE_STATE:
+            next_action = EMPTY_SALES_QUEUE_ACTION
+            reason = (
+                "Booked revenue is real, but no open pre-payment deal is "
+                "available to close the next pilot."
             )
         else:
             next_action = (
                 "Repeat the best attributed source and close the next pilot."
             )
+            reason = (
+                "Booked revenue is real, but the founding-pilot target is open."
+            )
         return {
             "stage": "pilot_target",
-            "reason": "Booked revenue is real, but the founding-pilot target is open.",
+            "reason": reason,
             "next_action": next_action,
         }
     if annual_conversions == 0:

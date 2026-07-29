@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 276 of
-1,000, with 724 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 277 of
+1,000, with 723 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -75,6 +75,14 @@ alignment take priority over commit volume.
   sales actions. Joined growth ingestion applies the same boundary to saved
   schema-7 reports, while target and inactivity controls remain configurable
   positive integers.
+- Four-state joined-growth handling that distinguishes legacy, active, empty,
+  and repair-required evidence. Queue membership is reconciled to open
+  pre-payment deal identity, stage, readiness, and action-driving qualification
+  evidence, while detailed stage counts must match `by_stage` and visible
+  qualification and offer progression must agree with `by_source`. Historical
+  milestones remain intact. Pre-target empty queues replenish live
+  opportunities, and open untracked evidence takes repair precedence over
+  another sales action.
 - Release-blocking installed-wheel proof that offers remain outside revenue,
   paid pilots book $299 toward the $897 target, and qualification, attribution,
   sales queues, and non-sensitive reporting retain their commercial semantics.

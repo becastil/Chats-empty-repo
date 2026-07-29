@@ -21,6 +21,7 @@ from repo_scout.growth import (  # noqa: E402
 )
 from repo_scout.pilot_funnel import (  # noqa: E402
     DECISION_CRITERION_KEYS,
+    DISPLAY_STAGES,
     build_funnel,
 )
 
@@ -481,38 +482,230 @@ class GrowthReportTests(unittest.TestCase):
                     pilot["sales_queue"]["deals"][0]["next_action"],
                 )
 
+    def test_schema_seven_empty_queue_never_creates_a_phantom_deal_action(
+        self,
+    ) -> None:
+        def closed_issue(labels: list[str]) -> dict[str, object]:
+            return {
+                "number": 1,
+                "title": "Closed pilot request",
+                "state": "CLOSED",
+                "updatedAt": "2026-07-10T00:00:00Z",
+                "body": "\n\n".join(
+                    (
+                        "### Team size\n\n12",
+                        "### Repository count\n\n6",
+                        "### CI provider\n\nGitHub Actions",
+                        "### Repository standard to enforce\n\n"
+                        "Use one reviewed repository policy.",
+                        "### How did you hear about Repo Scout?\n\n"
+                        "Repo Scout website",
+                        "### Purchase readiness\n\n"
+                        "Ready to purchase the $299 pilot",
+                        "### Primary purchase criterion\n\n"
+                        "Works across our repositories and CI",
+                    )
+                ),
+                "labels": labels,
+            }
+
+        cases = (
+            (
+                ["pilot-lead"],
+                "qualification",
+                (
+                    "Pilot request history exists, but no open pre-payment deal "
+                    "is available for qualification."
+                ),
+                True,
+            ),
+            (
+                ["pilot-lead", "pilot-qualified"],
+                "offer",
+                (
+                    "Qualified pilot history exists, but no open pre-payment "
+                    "deal is available for an offer."
+                ),
+                True,
+            ),
+            (
+                ["pilot-lead", "pilot-qualified", "pilot-offered"],
+                "payment",
+                (
+                    "Pilot offer history exists, but no open pre-payment deal "
+                    "is available for payment follow-up."
+                ),
+                True,
+            ),
+            (
+                [
+                    "pilot-lead",
+                    "pilot-qualified",
+                    "pilot-offered",
+                    "pilot-lost",
+                ],
+                "payment",
+                (
+                    "Pilot offer history exists, but no open pre-payment deal "
+                    "is available for payment follow-up."
+                ),
+                False,
+            ),
+            (
+                [
+                    "pilot-lead",
+                    "pilot-qualified",
+                    "pilot-offered",
+                    "pilot-paid",
+                ],
+                "pilot_target",
+                (
+                    "Booked revenue is real, but no open pre-payment deal is "
+                    "available to close the next pilot."
+                ),
+                False,
+            ),
+        )
+
+        for labels, stage, reason, expects_closed_warning in cases:
+            with self.subTest(labels=labels):
+                pilot = build_funnel(
+                    [closed_issue(labels)],
+                    as_of=date(2026, 7, 10),
+                )
+
+                self.assertEqual(pilot["summary"]["sales_actions"], 0)
+                self.assertEqual(pilot["sales_queue"]["deals"], [])
+                self.assertEqual(
+                    any(
+                        warning["kind"] == "closed_without_lost"
+                        for warning in pilot["warnings"]
+                    ),
+                    expects_closed_warning,
+                )
+
+                report = build_growth_report(self._distribution(), pilot)
+
+                self.assertEqual(report["bottleneck"]["stage"], stage)
+                self.assertEqual(report["bottleneck"]["reason"], reason)
+                self.assertEqual(
+                    report["bottleneck"]["next_action"],
+                    (
+                        "No open pre-payment deal is available; replenish the "
+                        "pilot sales queue."
+                    ),
+                )
+
+    def test_schema_seven_empty_queue_prioritizes_open_lifecycle_repair(
+        self,
+    ) -> None:
+        raw_issue = {
+            "number": 1,
+            "title": "Open request with unknown lifecycle",
+            "state": "OPEN",
+            "updatedAt": "2026-07-10T00:00:00Z",
+            "body": "\n\n".join(
+                (
+                    "### Team size\n\n12",
+                    "### Repository count\n\n6",
+                    "### CI provider\n\nGitHub Actions",
+                    "### Repository standard to enforce\n\n"
+                    "Use one reviewed repository policy.",
+                    "### How did you hear about Repo Scout?\n\n"
+                    "Repo Scout website",
+                    "### Purchase readiness\n\n"
+                    "Ready to purchase the $299 pilot",
+                    "### Primary purchase criterion\n\n"
+                    "Works across our repositories and CI",
+                )
+            ),
+            "labels": ["pilot-needs-review"],
+        }
+        pilot = build_funnel(
+            [raw_issue],
+            as_of=date(2026, 7, 10),
+        )
+
+        self.assertEqual(pilot["deals"][0]["stage"], "untracked")
+        self.assertEqual(pilot["sales_queue"]["deals"], [])
+        self.assertIn(
+            "missing_known_stage",
+            [warning["kind"] for warning in pilot["warnings"]],
+        )
+
+        report = build_growth_report(self._distribution(), pilot)
+
+        self.assertEqual(report["bottleneck"]["stage"], "qualification")
+        self.assertEqual(
+            report["bottleneck"]["reason"],
+            (
+                "An open pilot request cannot enter the sales queue until its "
+                "lifecycle evidence is reconciled."
+            ),
+        )
+        self.assertEqual(
+            report["bottleneck"]["next_action"],
+            (
+                "Reconcile open pilot lifecycle labels before selecting another "
+                "sales action."
+            ),
+        )
+
+        open_lead = json.loads(json.dumps(raw_issue))
+        open_lead.update(
+            {
+                "number": 2,
+                "title": "Open lead",
+                "labels": ["pilot-lead"],
+            }
+        )
+        mixed_pilot = build_funnel(
+            [raw_issue, open_lead],
+            as_of=date(2026, 7, 10),
+        )
+        self.assertEqual(len(mixed_pilot["sales_queue"]["deals"]), 1)
+
+        mixed_report = build_growth_report(self._distribution(), mixed_pilot)
+
+        self.assertEqual(
+            mixed_report["bottleneck"]["next_action"],
+            (
+                "Reconcile open pilot lifecycle labels before selecting another "
+                "sales action."
+            ),
+        )
+
     def test_schema_seven_growth_rejects_an_untrusted_sales_queue_gate(
         self,
     ) -> None:
-        pilot = build_funnel(
-            [
-                {
-                    "number": 1,
-                    "title": "GitLab pilot",
-                    "state": "OPEN",
-                    "updatedAt": "2026-07-10T00:00:00Z",
-                    "body": "\n\n".join(
-                        (
-                            "### Team size\n\n12",
-                            "### Repository count\n\n6",
-                            "### CI provider\n\nGitLab CI",
-                            "### Repository standard to enforce\n\n"
-                            "Use one reviewed repository policy.",
-                            "### How did you hear about Repo Scout?\n\n"
-                            "Repo Scout website",
-                            "### Purchase readiness\n\n"
-                            "Ready to purchase the $299 pilot",
-                            "### Primary purchase criterion\n\n"
-                            "Works across our repositories and CI",
-                        )
-                    ),
-                    "labels": [
-                        "pilot-lead",
-                        "pilot-qualified",
-                        "pilot-offered",
-                    ],
-                }
+        raw_issue = {
+            "number": 1,
+            "title": "GitLab pilot",
+            "state": "OPEN",
+            "updatedAt": "2026-07-10T00:00:00Z",
+            "body": "\n\n".join(
+                (
+                    "### Team size\n\n12",
+                    "### Repository count\n\n6",
+                    "### CI provider\n\nGitLab CI",
+                    "### Repository standard to enforce\n\n"
+                    "Use one reviewed repository policy.",
+                    "### How did you hear about Repo Scout?\n\n"
+                    "Repo Scout website",
+                    "### Purchase readiness\n\n"
+                    "Ready to purchase the $299 pilot",
+                    "### Primary purchase criterion\n\n"
+                    "Works across our repositories and CI",
+                )
+            ),
+            "labels": [
+                "pilot-lead",
+                "pilot-qualified",
+                "pilot-offered",
             ],
+        }
+        pilot = build_funnel(
+            [raw_issue],
             as_of=date(2026, 7, 10),
         )
 
@@ -525,6 +718,55 @@ class GrowthReportTests(unittest.TestCase):
             "next_action does not preserve the ready CI provider gate",
         ):
             build_growth_report(self._distribution(), unsafe_action)
+
+        self_authorized_action = json.loads(json.dumps(pilot))
+        self_authorized_action["sales_queue"]["deals"][0]["qualification"][
+            "ci_provider"
+        ] = "github_actions"
+        self_authorized_action["sales_queue"]["deals"][0]["next_action"] = (
+            "Confirm the purchase and payment path."
+        )
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            "sales_queue.deals does not match open pre-payment deals",
+        ):
+            build_growth_report(
+                self._distribution(),
+                self_authorized_action,
+            )
+
+        coordinated_stage_edit = json.loads(json.dumps(pilot))
+        coordinated_stage_edit["deals"][0]["stage"] = "qualified"
+        coordinated_stage_edit["sales_queue"]["deals"][0]["stage"] = "qualified"
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            "by_stage does not match deals",
+        ):
+            build_growth_report(
+                self._distribution(),
+                coordinated_stage_edit,
+            )
+
+        lead_issue = json.loads(json.dumps(raw_issue))
+        lead_issue["labels"] = ["pilot-lead"]
+        coordinated_progression_edit = build_funnel(
+            [lead_issue],
+            as_of=date(2026, 7, 10),
+        )
+        coordinated_progression_edit["deals"][0]["stage"] = "offered"
+        coordinated_progression_edit["sales_queue"]["deals"][0][
+            "stage"
+        ] = "offered"
+        coordinated_progression_edit["by_stage"]["lead"] = 0
+        coordinated_progression_edit["by_stage"]["offered"] = 1
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            "by_source offered_pilots does not match visible deal stages",
+        ):
+            build_growth_report(
+                self._distribution(),
+                coordinated_progression_edit,
+            )
 
         missing_queue = json.loads(json.dumps(pilot))
         del missing_queue["sales_queue"]
@@ -541,6 +783,15 @@ class GrowthReportTests(unittest.TestCase):
             "sales_actions does not match sales_queue.deals",
         ):
             build_growth_report(self._distribution(), inconsistent_count)
+
+        forged_empty_queue = json.loads(json.dumps(pilot))
+        forged_empty_queue["summary"]["sales_actions"] = 0
+        forged_empty_queue["sales_queue"]["deals"] = []
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            "sales_queue.deals does not match open pre-payment deals",
+        ):
+            build_growth_report(self._distribution(), forged_empty_queue)
 
         unsafe_scope = build_funnel(
             [
@@ -935,6 +1186,33 @@ class GrowthReportTests(unittest.TestCase):
                     "subset_scope_issues": 0,
                 }
             )
+            qualified = sum(
+                source["qualified_pilots"]
+                for source in source_totals.values()
+            )
+            offered = sum(
+                source["offered_pilots"]
+                for source in source_totals.values()
+            )
+            stage_plan = (
+                ["lead"] * (tracked - qualified)
+                + ["qualified"] * (qualified - offered)
+                + ["offered"] * (offered - booked)
+                + ["paid"] * (booked - converted)
+                + ["converted"] * converted
+            )
+            report["deals"] = [
+                {
+                    "number": index + 1,
+                    "stage": stage,
+                    "state": "CLOSED",
+                }
+                for index, stage in enumerate(stage_plan)
+            ]
+            report["by_stage"] = {
+                stage: stage_plan.count(stage)
+                for stage in DISPLAY_STAGES
+            }
             report["sales_queue"] = {"deals": []}
         return report
 

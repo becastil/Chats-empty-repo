@@ -4254,3 +4254,44 @@ public offer, issue-form answers, reporter constant, and commercial contracts
 together. This correction protects willingness-to-pay and booked-revenue truth;
 it does not change the $299 offer, create demand, approve outreach or
 deployment, collect payment, or record revenue.
+
+## 2026-07-29: Do Not Turn Empty Schema-7 Queues Into Phantom Deals
+
+Pilot milestones are cumulative, while the schema-7 sales queue intentionally
+contains only open pre-payment issues. A closed qualified or offered issue
+therefore remained in historical qualification and offer totals but left no
+queue entry. Joined growth collapsed that valid empty queue into the same false
+value used for legacy reports without deal-level evidence, then emitted a
+legacy instruction to send terms or resolve a top offered deal that did not
+exist. Correctly lost records reproduced the same problem without a
+`closed_without_lost` warning.
+
+Growth now distinguishes four states: a legacy aggregate report, a validated
+active schema-7 queue, a validated empty schema-7 queue, and a repair-required
+schema-7 state with open lifecycle evidence. Active queues retain their exact
+qualification-aware handoff when repair is not required. Legacy schema-5 and
+schema-6 reports retain their historical aggregate recommendations. During
+qualification through an open pilot target, a historical empty queue keeps
+cumulative milestone evidence but explicitly says no open pre-payment deal is
+available and recommends replenishing live opportunities. Open untracked or
+conflicting records instead require lifecycle-label repair before another
+sales action, even when a different deal remains active. Acquisition and
+post-target retention keep their prior evidence priorities.
+
+Schema-7 ingestion now validates the complete `deals` array and requires every
+open lead, qualified, or offered issue number, stage, readiness, and
+action-driving qualification fields to appear exactly once in the sales queue.
+Detailed deal stages must also reproduce `by_stage`, while their visible
+qualification and offer progression must agree with cumulative `by_source`
+totals. Deleting a real open deal and changing `summary.sales_actions` to the
+forged queue length, self-authorizing GitHub Actions in only the queue, or
+escalating both detail and queue stage while leaving stage or source totals
+unchanged therefore fails instead of acquiring new commercial meaning.
+
+Integration regressions cover empty queues at qualification, offer, payment,
+and open pilot-target stages, including mislabeled closed, correctly lost,
+paid, open-untracked, mixed active-plus-repair, self-authorized,
+coordinated-stage, aggregate-divergent, and forged-empty records. This protects
+sales-operating truth without rewriting history or guessing an outcome. It
+does not create a lead, approve or send outreach, reopen an issue, apply a
+lifecycle label, collect payment, or record revenue.
