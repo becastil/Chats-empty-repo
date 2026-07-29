@@ -219,6 +219,12 @@ bidirectional controls cannot become extra operator lines. Installed release
 smoke requires that one-line rejection, empty report output, and unchanged
 evidence. This protects paid-delivery error integrity; it does not authenticate
 a bundle, prove customer activation, payment, or revenue.
+Closed rollout metadata rejects unknown top-level, policy, and Git fields.
+Ordinary printable field names keep their existing diagnostic, while a decoded
+control-bearing key is JSON-escaped before parser or direct-summary errors
+reach an operator. Installed release smoke requires a one-line error, no
+summary, and unchanged evidence. This protects paid-delivery diagnostics; it
+does not authenticate a bundle, prove activation, payment, or revenue.
 Rollout branch metadata is also limited to null or a non-empty printable value
 of at most 1,024 characters without surrounding whitespace. Line breaks,
 terminal controls, bidirectional controls, and oversized values fail before
@@ -1257,12 +1263,12 @@ fingerprint and Git commit coverage, and verified shared policy identity. It
 also proves the default summary omits repository IDs, fingerprints, commits,
 and evidence paths while explicit details remain available, and rejects a
 duplicate repository, a presentation-unsafe repository identity, or a
-control-bearing duplicate JSON key before emitting a report. Malformed
-evidence under a control-bearing filename must also retain one-line escaped
-path context. The check additionally generates one repository ID containing
-Markdown backticks through the packaged primary command and requires exact
-metadata plus one contained visible code span. Synthetic bundles validate the
-distribution contract; they are not pilot usage or customer evidence.
+control-bearing duplicate or unknown JSON key before emitting a report.
+Malformed evidence under a control-bearing filename must also retain one-line
+escaped path context. The check additionally generates one repository ID
+containing Markdown backticks through the packaged primary command and requires
+exact metadata plus one contained visible code span. Synthetic bundles validate
+the distribution contract; they are not pilot usage or customer evidence.
 
 The hosted offer now leads with this cross-repository outcome: complete policy
 and commit identity coverage, shared-policy verification, and visible

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- JSON-escaped control-bearing unknown rollout metadata keys before including
+  them in top-level, policy, or Git validation errors.
+- Preserved ordinary printable unknown-field diagnostics while preventing
+  rejected keys from forging terminal lines through parser or direct-summary
+  validation.
+- Extended the installed rollout smoke to require one-line unknown-key
+  rejection with no report or evidence mutation.
 - JSON-escaped control-bearing rollout evidence paths and source labels before
   including them in parser, validation, or file-loading errors.
 - Preserved ordinary printable path errors and exact successful detailed JSON

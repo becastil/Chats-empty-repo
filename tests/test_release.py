@@ -670,6 +670,7 @@ class ReleaseManifestTests(unittest.TestCase):
                 "explicit-details",
                 "duplicate-rejected",
                 "duplicate-key-safe-error",
+                "unknown-key-safe-error",
                 "unsafe-evidence-path-contained",
                 "symlink-evidence-rejected",
                 "oversized-evidence-rejected",

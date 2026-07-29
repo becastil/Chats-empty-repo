@@ -4842,3 +4842,28 @@ stderr line, then proves a valid composite filename round-trips through detailed
 JSON. This protects paid-rollout operator presentation; it does not authenticate
 the file, verify freshness, prove activation, approve outreach, collect payment,
 or create revenue.
+
+## 2026-07-29: Escape Unknown Rollout Keys At The Shared Text Boundary
+
+Rollout metadata uses a closed schema at the top level and inside policy and
+Git evidence. Unknown keys already failed validation, but the diagnostic
+interpolated the decoded key verbatim. JSON permits escaped newlines, terminal
+controls, Unicode separators, and bidirectional controls in object names, so a
+rejected customer bundle could still forge extra operator lines. Direct
+summary callers reached the same validator and inherited the same unsafe
+message.
+
+The shared operator-text formatter now preserves printable field names exactly
+and otherwise emits a JSON string literal. Exact-key validation applies it only
+to the selected unknown key; missing-key messages and ordinary diagnostics stay
+unchanged. The same rule therefore covers top-level, policy, Git, parser, and
+direct-summary validation without changing accepted metadata or report data.
+
+Source coverage combines newline, carriage return, ESC, C1 CSI, Unicode line
+separator, and bidirectional controls at all three schema locations and through
+the direct summary API. Installed release smoke passes one composite unknown
+key through `repo-scout-rollout` and requires exit code 2, empty standard
+output, exactly one escaped error line, and unchanged evidence bytes. This
+protects paid-rollout error integrity; it does not authenticate a bundle,
+verify freshness, prove activation, approve outreach, collect payment, or
+create revenue.

@@ -231,6 +231,53 @@ required_files = ["README.md"]
         )
         checked.append("duplicate-key-safe-error")
 
+        injected_unknown_key = (
+            f"\n{INJECTED_BRANCH_MARKER}\r\x1b\u009b\u2028\u202e"
+        )
+        encoded_unknown_key = json.dumps(injected_unknown_key)
+        unknown_key = root / "unknown-key.md"
+        unknown_metadata = _metadata("company/unknown", commit=API_COMMIT)
+        unknown_metadata[injected_unknown_key] = True
+        unknown_key.write_text(
+            (
+                "# Report\n\n## Rollout Metadata\n\n```json\n"
+                f"{json.dumps(unknown_metadata, sort_keys=True)}\n```\n"
+            ),
+            encoding="utf-8",
+        )
+        original_unknown_key = unknown_key.read_bytes()
+        rejected = _run(
+            rollout_command,
+            (unknown_key,),
+            output_format="text",
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(not rejected.stdout, "unknown key evidence emitted a report")
+        _require(
+            f"metadata has unknown key: {encoded_unknown_key}"
+            in rejected.stderr,
+            "unknown key did not produce its escaped controlled error",
+        )
+        _require(
+            len(rejected.stderr.splitlines()) == 1,
+            "unknown key produced more than one error line",
+        )
+        _require(
+            f"\n{INJECTED_BRANCH_MARKER}" not in rejected.stderr
+            and "\r" not in rejected.stderr
+            and "\x1b" not in rejected.stderr
+            and "\u009b" not in rejected.stderr
+            and "\u2028" not in rejected.stderr
+            and "\u202e" not in rejected.stderr,
+            "unknown key injected terminal presentation controls",
+        )
+        _require(
+            unknown_key.read_bytes() == original_unknown_key,
+            "unknown key evidence changed during rejection",
+        )
+        checked.append("unknown-key-safe-error")
+
         unsafe_path = root / (
             "unsafe-path\n"
             f"{INJECTED_BRANCH_MARKER}\r\x1b\u009b\u2028\u202e.md"

@@ -72,9 +72,12 @@ def format_rollout_metadata(metadata: dict[str, Any]) -> str:
     return json.dumps(validated, indent=2, sort_keys=True)
 
 
-def format_evidence_source(source: str | Path) -> str:
-    text = str(source)
+def _format_operator_text(text: str) -> str:
     return text if text.isprintable() else json.dumps(text)
+
+
+def format_evidence_source(source: str | Path) -> str:
+    return _format_operator_text(str(source))
 
 
 def load_rollout_metadata(path: str | Path) -> dict[str, Any]:
@@ -347,7 +350,10 @@ def _require_exact_keys(
     unknown = sorted(actual - expected)
     if missing:
         raise RolloutEvidenceError(f"{location} is missing key: {missing[0]}")
-    raise RolloutEvidenceError(f"{location} has unknown key: {unknown[0]}")
+    unknown_display = _format_operator_text(unknown[0])
+    raise RolloutEvidenceError(
+        f"{location} has unknown key: {unknown_display}"
+    )
 
 
 def _is_non_negative_integer(value: Any) -> bool:

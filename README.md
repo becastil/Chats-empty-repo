@@ -222,6 +222,8 @@ prove freshness. The aggregator accepts legacy schema-1 bundles, rejects
 duplicate IDs, duplicate JSON keys, and malformed or contradictory metadata,
 performs no uploads, and requires no API key. Duplicate-key errors JSON-escape
 the decoded key so presentation controls cannot create extra terminal lines.
+Unknown-field errors preserve ordinary printable key names but JSON-escape a
+control-bearing decoded key before it enters operator output.
 Parser and file-loading errors similarly preserve ordinary printable evidence
 paths but JSON-escape a control-bearing path and exception context onto one
 line. Successful detailed JSON retains the exact path as structured data.

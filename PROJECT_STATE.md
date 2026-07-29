@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 298 of
-1,000, with 702 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 299 of
+1,000, with 701 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -419,6 +419,9 @@ alignment take priority over commit volume.
 - JSON-escaped rollout duplicate-key errors that keep decoded line, terminal,
   and bidirectional controls on one operator-safe line before any summary is
   emitted.
+- Single-line-safe unknown rollout key errors that preserve ordinary printable
+  field names while JSON-escaping decoded presentation controls before any
+  summary is emitted.
 - Single-line-safe rollout evidence source and path errors that preserve
   ordinary printable names while JSON-escaping presentation controls and
   retaining exact paths as structured detailed JSON.

@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after containing rollout evidence path errors:
-  298 / 1,000 (29.8%).
-- Remaining after containing rollout evidence path errors:
-  702 commits.
+- Progress after containing rollout unknown-key errors:
+  299 / 1,000 (29.9%).
+- Remaining after containing rollout unknown-key errors:
+  701 commits.
 
 ## Commit Standard
 

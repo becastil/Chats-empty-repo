@@ -93,6 +93,9 @@ Duplicate-key failures JSON-escape the decoded key before it enters the
 operator error. Legal JSON escapes for newlines, C1 terminal controls, or
 bidirectional controls therefore remain visible as escaped text on one line
 and cannot forge rollout metrics.
+Unknown top-level, policy, and Git fields preserve ordinary printable key names
+in validation errors. A control-bearing decoded key is JSON-escaped before it
+enters operator output, so rejection remains one line.
 Evidence filenames and direct source labels use the same display boundary in
 parser, validation, inspection, and loading errors. Ordinary printable paths
 remain unchanged; control-bearing paths are JSON-escaped on one line.

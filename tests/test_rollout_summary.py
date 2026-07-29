@@ -289,6 +289,71 @@ class RolloutSummaryTests(unittest.TestCase):
         self.assertNotIn("\u009b", message)
         self.assertNotIn("\u202e", message)
 
+    def test_unknown_key_errors_escape_presentation_controls(self) -> None:
+        ordinary = self._metadata("api")
+        ordinary["extra"] = True
+        with self.assertRaises(RolloutEvidenceError) as raised:
+            validate_rollout_metadata(ordinary)
+        self.assertEqual(
+            str(raised.exception),
+            "metadata has unknown key: extra",
+        )
+
+        injected_key = (
+            "\nRepositories: 999\r\x1b\u009b\u2028\u202e"
+        )
+        encoded_key = json.dumps(injected_key)
+        cases = []
+
+        top_level = self._metadata("api")
+        top_level[injected_key] = True
+        cases.append(("metadata", top_level))
+
+        policy = self._metadata("api")
+        policy["policy"][injected_key] = True
+        cases.append(("policy", policy))
+
+        git = self._metadata("api")
+        git["git"][injected_key] = True
+        cases.append(("git", git))
+
+        for location, metadata in cases:
+            with self.subTest(location=location):
+                with self.assertRaises(RolloutEvidenceError) as raised:
+                    parse_rollout_metadata(
+                        self._bundle_unvalidated(metadata),
+                        source=f"{location}.md",
+                    )
+
+                message = str(raised.exception)
+                self.assertIn(
+                    f"{location} has unknown key: {encoded_key}",
+                    message,
+                )
+                self.assertEqual(len(message.splitlines()), 1)
+                self.assertNotIn("\nRepositories: 999", message)
+                self.assertNotIn("\r", message)
+                self.assertNotIn("\x1b", message)
+                self.assertNotIn("\u009b", message)
+                self.assertNotIn("\u2028", message)
+                self.assertNotIn("\u202e", message)
+
+        with self.assertRaises(RolloutEvidenceError) as raised:
+            build_rollout_summary([("direct.md", top_level)])
+
+        message = str(raised.exception)
+        self.assertIn(
+            f"metadata has unknown key: {encoded_key}",
+            message,
+        )
+        self.assertEqual(len(message.splitlines()), 1)
+        self.assertNotIn("\nRepositories: 999", message)
+        self.assertNotIn("\r", message)
+        self.assertNotIn("\x1b", message)
+        self.assertNotIn("\u009b", message)
+        self.assertNotIn("\u2028", message)
+        self.assertNotIn("\u202e", message)
+
     def test_unsafe_source_labels_are_escaped_in_validation_errors(self) -> None:
         ordinary_source = "reports/café.md"
         with self.assertRaises(RolloutEvidenceError) as raised:
