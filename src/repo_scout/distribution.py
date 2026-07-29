@@ -232,7 +232,13 @@ def _read_payload(source: str, stdin: TextIO) -> Any:
     except OSError as exc:
         raise DistributionInputError(f"could not read {source}: {exc}") from exc
     try:
-        return json.loads(content)
+        return json.loads(
+            content,
+            object_pairs_hook=lambda pairs: _reject_duplicate_json_keys(
+                pairs,
+                "release export",
+            ),
+        )
     except json.JSONDecodeError as exc:
         raise DistributionInputError(
             f"invalid JSON at line {exc.lineno}, column {exc.colno}: {exc.msg}"
@@ -247,12 +253,32 @@ def _read_baseline(path: Path) -> Any:
             f"could not read baseline {path}: {exc}"
         ) from exc
     try:
-        return json.loads(content)
+        return json.loads(
+            content,
+            object_pairs_hook=lambda pairs: _reject_duplicate_json_keys(
+                pairs,
+                "baseline report",
+            ),
+        )
     except json.JSONDecodeError as exc:
         raise DistributionInputError(
             f"invalid baseline JSON at line {exc.lineno}, column {exc.colno}: "
             f"{exc.msg}"
         ) from exc
+
+
+def _reject_duplicate_json_keys(
+    pairs: list[tuple[str, Any]],
+    location: str,
+) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise DistributionInputError(
+                f"{location} contains duplicate JSON key: {json.dumps(key)}"
+            )
+        result[key] = value
+    return result
 
 
 def _parse_release(raw_release: Any, index: int) -> dict[str, Any]:

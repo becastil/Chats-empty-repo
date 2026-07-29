@@ -4715,3 +4715,27 @@ forms through the packaged `repo-scout-growth` command and requires exit code
 2, empty standard output, and the exact controlled key-only error. This closes
 parser ambiguity; it does not authenticate a saved report, establish
 provenance, verify a public lifecycle label, or prove payment or activation.
+
+## 2026-07-29: Reject Duplicate Keys Before Producing Distribution Movement
+
+Joined growth now rejects ambiguous saved commercial reports, but its upstream
+distribution producer still used standard JSON decoding for raw GitHub release
+exports and prior baselines. A repeated asset count or baseline field could
+therefore be reduced silently to the last value before artifact totals and
+signed movement were produced. The downstream join would receive structurally
+unambiguous JSON while the original ambiguity had already disappeared.
+
+`repo-scout-distribution` now uses duplicate-aware object decoding at every
+nesting depth for both inputs. Raw export failures identify `release export`;
+baseline failures identify `baseline report`. Both errors include only the
+JSON-escaped repeated key, exit with code 2, and emit no report. Existing
+malformed-JSON messages and file-reading behavior remain unchanged. Current
+release evidence is decoded before the optional baseline, so its controlled
+error wins deterministically when both inputs are invalid.
+
+Source and installed-command regressions cover a conflicting nested
+`download_count` and an identical top-level baseline schema value, proving the
+rule rejects ambiguous structure even when the repeated values agree. This
+protects the evidence producer before totals and movement exist; it does not
+authenticate GitHub data, make artifact requests unique, identify a buyer, or
+create demand, payment, activation, or revenue.

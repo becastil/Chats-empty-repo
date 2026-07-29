@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Rejected duplicate JSON keys at every depth of raw GitHub release exports and
+  saved distribution baselines before calculating artifact totals or signed
+  request movement.
+- Kept distribution duplicate-key failures input-and-field specific while
+  emitting no report and withholding both competing values.
+- Extended the installed commercial smoke to prove both producer input paths
+  fail closed through the packaged distribution command.
 - Rejected duplicate JSON keys at every depth of both distribution and pilot
   reports before joined growth can calculate revenue, activation work, or a
   commercial bottleneck.

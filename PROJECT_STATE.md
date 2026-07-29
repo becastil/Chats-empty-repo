@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 293 of
-1,000, with 707 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 294 of
+1,000, with 706 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -58,6 +58,9 @@ alignment take priority over commit volume.
 - Duplicate-key-safe joined growth ingestion for both saved distribution and
   pilot reports at every object depth, with controlled report-and-key-only
   errors before revenue, activation, queue, or bottleneck validation.
+- Duplicate-key-safe distribution ingestion for both raw release exports and
+  saved baselines at every object depth, before artifact totals, signed
+  movement, warnings, or reports can be produced.
 - Bounded printable pilot issue titles that reject forged lines, terminal
   controls, bidirectional controls, Unicode separators, and oversized text
   before any commercial report can be emitted.
@@ -453,7 +456,9 @@ alignment take priority over commit volume.
 - Release-blocking installed-wheel proof that raw GitHub release exports become
   a complete schema-2 baseline comparison before signed reach movement joins to
   schema-10 qualification, attribution, $299 revenue, and payment-backed
-  activation evidence.
+  activation evidence. The same packaged distribution command rejects
+  duplicate raw counts and baseline fields with exact key-only errors and no
+  report.
 - Asymmetric installed-command proof that schema-10 lead and paid milestones
   remain distinct across source, purchase readiness, and purchase criterion,
   that a paid-only pilot remains unactivated, that explicit paid activation

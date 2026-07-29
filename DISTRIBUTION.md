@@ -171,6 +171,12 @@ reports validate the version-aware artifact contract, separate portable and
 wheel primary requests from source, manifest, and unknown requests, and flag
 missing or unexpected assets. The portable artifact became required in
 `v0.3.4`; earlier releases remain valid without it.
+Raw release exports and saved baselines use duplicate-aware JSON decoding at
+every object depth. A repeated field fails before artifact or movement
+calculation, emits no distribution report, and exposes only the input type and
+escaped key rather than either competing value. This prevents standard
+last-value JSON behavior from silently choosing a download count or baseline
+field.
 
 For weekly movement, save the current JSON report and compare the next public
 release export to it:

@@ -367,6 +367,71 @@ def verify_pilot_funnel(
         )
         checked.append("distribution-evidence")
 
+        duplicate_release_export = Path(tmp) / "duplicate-release-export.json"
+        duplicate_release_export.write_text(
+            """[
+              {
+                "assets": [
+                  {
+                    "name": "repo-scout-0.3.51.pyz",
+                    "download_count": 1,
+                    "download_count": 999
+                  }
+                ]
+              }
+            ]""",
+            encoding="utf-8",
+        )
+        duplicate_release = _run_distribution(
+            distribution_command,
+            duplicate_release_export,
+            baseline=None,
+            output_format="json",
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(
+            not duplicate_release.stdout,
+            "duplicate release key emitted a distribution report",
+        )
+        _require(
+            duplicate_release.stderr
+            == (
+                "repo-scout-distribution: release export contains duplicate "
+                'JSON key: "download_count"\n'
+            ),
+            "duplicate release key did not produce its controlled error",
+        )
+
+        duplicate_baseline_report = (
+            Path(tmp) / "duplicate-distribution-baseline.json"
+        )
+        duplicate_baseline_report.write_text(
+            '{"schema_version": 2, "schema_version": 2}',
+            encoding="utf-8",
+        )
+        duplicate_baseline = _run_distribution(
+            distribution_command,
+            current_release_export,
+            baseline=duplicate_baseline_report,
+            output_format="json",
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(
+            not duplicate_baseline.stdout,
+            "duplicate baseline key emitted a distribution report",
+        )
+        _require(
+            duplicate_baseline.stderr
+            == (
+                "repo-scout-distribution: baseline report contains duplicate "
+                'JSON key: "schema_version"\n'
+            ),
+            "duplicate baseline key did not produce its controlled error",
+        )
+        checked.append("duplicate-distribution-keys-rejected")
+
         growth = _growth_report(
             growth_command,
             distribution_report,

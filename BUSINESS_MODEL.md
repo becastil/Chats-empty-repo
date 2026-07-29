@@ -1537,6 +1537,12 @@ movement and flag evidence resets or removals. These deltas make distribution
 experiments comparable over time, but they retain the same CI and maintainer
 confounders and therefore remain directional until a buyer self-reports a source
 or enters the paid funnel.
+The distribution producer rejects duplicate keys at every depth of both raw
+release exports and saved baselines before calculating artifact totals or
+signed movement. Controlled failures emit no report and expose only the input
+type and escaped repeated key, not either competing count. This closes standard
+JSON last-value ambiguity; it does not authenticate GitHub evidence, make
+request counts unique, or turn them into demand or revenue.
 
 The latest 2026-07-22 UTC public checkpoint records 268 cumulative primary
 artifact requests across 53 contract-complete releases: 36 portable and 232

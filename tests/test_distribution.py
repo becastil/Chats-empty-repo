@@ -407,6 +407,100 @@ class DistributionReportTests(unittest.TestCase):
         self.assertEqual(stdout.getvalue(), "")
         self.assertIn("invalid JSON", stderr.getvalue())
 
+    def test_cli_rejects_duplicate_release_and_baseline_keys(self) -> None:
+        duplicate_release = """[
+          {
+            "assets": [
+              {
+                "name": "repo-scout-0.3.51.pyz",
+                "download_count": 1,
+                "download_count": 999
+              }
+            ]
+          }
+        ]"""
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with redirect_stdout(stdout), redirect_stderr(stderr):
+            exit_code = main(
+                ["--format", "json"],
+                stdin=io.StringIO(duplicate_release),
+            )
+
+        self.assertEqual(exit_code, 2)
+        self.assertEqual(stdout.getvalue(), "")
+        self.assertEqual(
+            stderr.getvalue(),
+            (
+                "repo-scout-distribution: release export contains duplicate "
+                'JSON key: "download_count"\n'
+            ),
+        )
+
+        current = [
+            self._release(
+                "v0.3.51",
+                {
+                    "repo-scout-0.3.51.pyz": 1,
+                    "repo_scout-0.3.51-py3-none-any.whl": 1,
+                    "repo_scout-0.3.51.tar.gz": 1,
+                    "SHA256SUMS": 1,
+                },
+            )
+        ]
+        with TemporaryDirectory() as tmp:
+            baseline_path = Path(tmp) / "baseline.json"
+            baseline_path.write_text(
+                '{"schema_version": 2, "schema_version": 2}',
+                encoding="utf-8",
+            )
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with redirect_stdout(stdout), redirect_stderr(stderr):
+                exit_code = main(
+                    [
+                        "--baseline",
+                        str(baseline_path),
+                        "--format",
+                        "json",
+                    ],
+                    stdin=io.StringIO(json.dumps(current)),
+                )
+
+        self.assertEqual(exit_code, 2)
+        self.assertEqual(stdout.getvalue(), "")
+        self.assertEqual(
+            stderr.getvalue(),
+            (
+                "repo-scout-distribution: baseline report contains duplicate "
+                'JSON key: "schema_version"\n'
+            ),
+        )
+
+        with TemporaryDirectory() as tmp:
+            baseline_path = Path(tmp) / "baseline.json"
+            baseline_path.write_text(
+                '{"schema_version": 2, "schema_version": 2}',
+                encoding="utf-8",
+            )
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with redirect_stdout(stdout), redirect_stderr(stderr):
+                exit_code = main(
+                    ["--baseline", str(baseline_path), "--format", "json"],
+                    stdin=io.StringIO(duplicate_release),
+                )
+
+        self.assertEqual(exit_code, 2)
+        self.assertEqual(stdout.getvalue(), "")
+        self.assertEqual(
+            stderr.getvalue(),
+            (
+                "repo-scout-distribution: release export contains duplicate "
+                'JSON key: "download_count"\n'
+            ),
+        )
+
     @staticmethod
     def _release(
         tag: str,

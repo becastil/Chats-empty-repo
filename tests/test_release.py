@@ -623,6 +623,7 @@ class ReleaseManifestTests(unittest.TestCase):
                 "ci-integration-payment-gate",
                 "qualification-scope-payment-gate",
                 "distribution-evidence",
+                "duplicate-distribution-keys-rejected",
                 "joined-growth-review",
                 "paid-delivery-activation-queue",
                 "payment-backed-activation-transition",

@@ -558,6 +558,10 @@ The report validates each release artifact contract and separates portable,
 wheel, source, manifest, and unknown requests. Counts can include CI downloads,
 maintainer checks, and retries, so they are not unique installs or revenue. See
 [DISTRIBUTION.md](DISTRIBUTION.md) for the channel contract.
+Raw release exports and saved distribution baselines reject duplicate JSON
+keys at every depth before request totals or signed movement are calculated.
+Failures emit no report and identify only the input type and escaped repeated
+key, never either competing count.
 
 Save a JSON report as the weekly baseline, then pass it back on the next run for
 signed request deltas and release-set changes:
