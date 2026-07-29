@@ -1283,6 +1283,15 @@ available in escaped JSON deal fields. Unknown pilot labels remain in escaped
 JSON warning fields. Operator-facing warning messages are generic and never
 interpolate those values into terminal output.
 
+Schema-7 joined growth now requires every detailed deal to carry an explicit
+boolean `booked` value and reconciles their total to `summary.booked_pilots`
+before it computes revenue or selects a bottleneck. Pre-payment and untracked
+stages cannot claim booking evidence, and the paid stage cannot omit it.
+Coordinating only the summary, source, and purchase-criterion aggregates can no
+longer turn an offered deal into $299 of booked revenue. This is internal saved
+report consistency, not authentication of a wholly rewritten report or proof
+that payment occurred outside the human-applied `pilot-paid` label.
+
 Direct callers may change the pilot target and inactivity threshold only with
 genuine positive integers. Booleans, floats, and numeric strings fail before
 issue parsing. Schema-7 pilot pricing is additionally bound to the $299 price

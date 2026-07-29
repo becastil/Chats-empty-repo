@@ -4376,3 +4376,30 @@ also preserve producer-generated null, future, and UTC-offset activity cases.
 This makes paid-pilot prioritization internally consistent with its own public
 activity evidence. It does not authenticate a wholly rewritten report, contact
 a buyer, apply a lifecycle label, collect payment, or record revenue.
+
+## 2026-07-29: Reconcile Pilot Bookings To Detailed Deal Evidence
+
+Schema-7 joined growth reconciled booked pilots and revenue across the summary,
+source, and purchase-criterion aggregates, but those tables were all copied
+from one saved report. It did not inspect the explicit `booked` value retained
+on each detailed deal. Coordinating the aggregate tables could therefore turn
+an unchanged offered deal into one booked $299 pilot and move the reported
+bottleneck from payment to pilot delivery.
+
+Growth now requires every detailed schema-7 deal to carry a genuine boolean
+booking value and requires their sum to equal `summary.booked_pilots` before
+aggregate revenue is trusted. A booked lead, qualified, offered, or untracked
+deal is rejected because the producer cannot emit payment evidence at those
+stages. A paid-stage deal must remain booked. Later active or converted stages
+may still lack booking when their public lifecycle labels skipped payment, and
+lost or conflicting outcomes may retain a prior booking, preserving the
+producer's existing payment-backed accounting semantics.
+
+Regression coverage starts with a valid offered deal and proves coordinated
+summary, source, and criterion edits cannot manufacture a booking. It also
+rejects non-boolean evidence, a coordinated detailed booking on the offered
+deal, and coordinated removal of booking evidence from a paid-stage deal while
+preserving valid payment and non-payment reports. This prevents saved aggregate
+edits from changing booked revenue or the commercial bottleneck. It does not
+authenticate a wholly rewritten report, apply `pilot-paid`, collect payment, or
+record revenue.

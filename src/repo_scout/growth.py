@@ -731,6 +731,7 @@ def _expected_sales_queue_members(
 
     expected_members: dict[int, dict[str, Any]] = {}
     observed_stage_counts = {stage: 0 for stage in DISPLAY_STAGES}
+    observed_booked_pilots = 0
     seen_numbers: set[int] = set()
     needs_lifecycle_repair = False
     for index, raw_deal in enumerate(raw_deals):
@@ -757,6 +758,20 @@ def _expected_sales_queue_members(
             raise GrowthInputError(
                 f"{location}.state must be OPEN or CLOSED"
             )
+        booked = deal.get("booked")
+        if not isinstance(booked, bool):
+            raise GrowthInputError(f"{location}.booked must be a boolean")
+        if booked and (
+            stage in FOLLOW_UP_STAGES or stage == "untracked"
+        ):
+            raise GrowthInputError(
+                f"{location}.booked contradicts its pre-payment stage"
+            )
+        if stage == "paid" and not booked:
+            raise GrowthInputError(
+                f"{location}.booked must be true for the paid stage"
+            )
+        observed_booked_pilots += int(booked)
         if state != "OPEN":
             continue
         if stage in FOLLOW_UP_STAGES:
@@ -769,6 +784,11 @@ def _expected_sales_queue_members(
             )
         elif stage in {"conflict", "untracked"}:
             needs_lifecycle_repair = True
+
+    if observed_booked_pilots != summary["booked_pilots"]:
+        raise GrowthInputError(
+            "pilot report booked_pilots does not match deals"
+        )
 
     raw_by_stage = _require_object(
         root.get("by_stage"),

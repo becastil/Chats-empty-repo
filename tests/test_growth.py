@@ -1158,6 +1158,109 @@ class GrowthReportTests(unittest.TestCase):
             ],
         )
 
+    def test_schema_seven_growth_derives_bookings_from_deals(
+        self,
+    ) -> None:
+        raw_issue = {
+            "number": 1,
+            "title": "Offered pilot",
+            "state": "OPEN",
+            "updatedAt": "2026-07-10T00:00:00Z",
+            "body": "\n\n".join(
+                (
+                    "### Team size\n\n12",
+                    "### Repository count\n\n6",
+                    "### CI provider\n\nGitHub Actions",
+                    "### Repository standard to enforce\n\n"
+                    "Use one reviewed repository policy.",
+                    "### How did you hear about Repo Scout?\n\n"
+                    "Repo Scout website",
+                    "### Purchase readiness\n\n"
+                    "Ready to purchase the $299 pilot",
+                    "### Primary purchase criterion\n\n"
+                    "Works across our repositories and CI",
+                )
+            ),
+            "labels": [
+                "pilot-lead",
+                "pilot-qualified",
+                "pilot-offered",
+            ],
+        }
+
+        def set_bookings(report: dict[str, object], count: int) -> None:
+            report["summary"]["booked_pilots"] = count
+            report["summary"]["booked_revenue_usd"] = count * 299
+            for segment_name in ("by_source", "by_decision_criterion"):
+                segment = next(
+                    totals
+                    for totals in report[segment_name].values()
+                    if totals["deals"]
+                )
+                segment["booked_pilots"] = count
+                segment["booked_revenue_usd"] = count * 299
+
+        pilot = build_funnel([raw_issue], as_of=date(2026, 7, 10))
+        self.assertFalse(pilot["deals"][0]["booked"])
+        self.assertEqual(
+            build_growth_report(self._distribution(), pilot)["bottleneck"][
+                "stage"
+            ],
+            "payment",
+        )
+
+        forged = json.loads(json.dumps(pilot))
+        set_bookings(forged, 1)
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            "booked_pilots does not match deals",
+        ):
+            build_growth_report(self._distribution(), forged)
+
+        coordinated = json.loads(json.dumps(forged))
+        coordinated["deals"][0]["booked"] = True
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            "booked contradicts its pre-payment stage",
+        ):
+            build_growth_report(self._distribution(), coordinated)
+
+        malformed = json.loads(json.dumps(pilot))
+        malformed["deals"][0]["booked"] = 1
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            "booked must be a boolean",
+        ):
+            build_growth_report(self._distribution(), malformed)
+
+        paid = build_funnel(
+            [
+                {
+                    **raw_issue,
+                    "labels": [
+                        *raw_issue["labels"],
+                        "pilot-paid",
+                    ],
+                }
+            ],
+            as_of=date(2026, 7, 10),
+        )
+        self.assertTrue(paid["deals"][0]["booked"])
+        self.assertEqual(
+            build_growth_report(self._distribution(), paid)["bottleneck"][
+                "stage"
+            ],
+            "pilot_target",
+        )
+        erased = json.loads(json.dumps(paid))
+        erased["deals"][0]["booked"] = False
+        set_bookings(erased, 0)
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            "booked must be true for the paid stage",
+        ):
+            build_growth_report(self._distribution(), erased)
+
     def test_requires_a_baseline_before_prioritizing_commercial_movement(self) -> None:
         distribution = self._distribution()
         distribution["change"] = None
@@ -1415,6 +1518,7 @@ class GrowthReportTests(unittest.TestCase):
                     "number": index + 1,
                     "stage": stage,
                     "state": "CLOSED",
+                    "booked": stage in {"paid", "active", "converted"},
                 }
                 for index, stage in enumerate(stage_plan)
             ]

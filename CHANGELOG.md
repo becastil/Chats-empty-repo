@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Reconciled schema-7 booked-pilot totals to explicit boolean booking evidence
+  on every detailed deal before joined growth computes revenue or a bottleneck.
+- Rejected aggregate-only false bookings, non-boolean payment evidence, booked
+  pre-payment stages, and attempts to erase payment from a paid-stage deal.
 - Derived every actionable schema-7 deal age from the report's canonical date
   and UTC activity timestamp before joined growth trusts queue ordering.
 - Rejected coordinated detail/queue age edits, malformed report dates, and
