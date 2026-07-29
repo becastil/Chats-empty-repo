@@ -271,6 +271,24 @@ class RolloutSummaryTests(unittest.TestCase):
         with self.assertRaisesRegex(RolloutEvidenceError, "duplicate key"):
             parse_rollout_metadata(bundle, source="duplicate-key.md")
 
+    def test_duplicate_json_key_error_escapes_presentation_controls(self) -> None:
+        injected_key = "\nRepositories: 999\u009b\u202e"
+        encoded_key = json.dumps(injected_key)
+        duplicate_key = f"{{{encoded_key}: 1, {encoded_key}: 2}}"
+        bundle = (
+            f"# Report\n\n{ROLLOUT_METADATA_START}{duplicate_key}"
+            f"{ROLLOUT_METADATA_END}\n"
+        )
+
+        with self.assertRaises(RolloutEvidenceError) as raised:
+            parse_rollout_metadata(bundle, source="duplicate-key.md")
+
+        message = str(raised.exception)
+        self.assertIn(f"duplicate key: {encoded_key}", message)
+        self.assertNotIn("\nRepositories: 999", message)
+        self.assertNotIn("\u009b", message)
+        self.assertNotIn("\u202e", message)
+
     def test_schema_one_bundles_remain_compatible_without_identity_claims(self) -> None:
         legacy = self._metadata("api", schema_version=1)
 

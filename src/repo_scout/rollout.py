@@ -336,6 +336,6 @@ def _reject_duplicate_json_keys(
     values: dict[str, Any] = {}
     for key, value in pairs:
         if key in values:
-            raise RolloutEvidenceError(f"duplicate key: {key}")
+            raise RolloutEvidenceError(f"duplicate key: {json.dumps(key)}")
         values[key] = value
     return values

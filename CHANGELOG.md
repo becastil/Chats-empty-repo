@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- JSON-escaped duplicated rollout metadata keys before including them in
+  operator errors.
+- Prevented decoded line, C1 terminal, and bidirectional controls in ambiguous
+  bundle keys from injecting extra error lines.
+- Extended the installed rollout smoke to require one-line duplicate-key
+  rejection with no report or evidence mutation.
 - Replaced backslash-escaped Markdown backticks with a delimiter longer than the
   longest backtick run in each inline code value.
 - Preserved the exact printable rollout repository ID in schema-2 metadata while

@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after containing rollout IDs in Markdown code spans:
-  296 / 1,000 (29.6%).
-- Remaining after containing rollout IDs in Markdown code spans:
-  704 commits.
+- Progress after containing rollout duplicate-key errors:
+  297 / 1,000 (29.7%).
+- Remaining after containing rollout duplicate-key errors:
+  703 commits.
 
 ## Commit Standard
 

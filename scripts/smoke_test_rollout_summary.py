@@ -196,6 +196,41 @@ required_files = ["README.md"]
         )
         checked.append("duplicate-rejected")
 
+        injected_key = f"\n{INJECTED_BRANCH_MARKER}\u009b\u202e"
+        encoded_key = json.dumps(injected_key)
+        duplicate_key = root / "duplicate-key.md"
+        duplicate_key.write_text(
+            (
+                "# Report\n\n## Rollout Metadata\n\n```json\n"
+                f"{{{encoded_key}: 1, {encoded_key}: 2}}\n```\n"
+            ),
+            encoding="utf-8",
+        )
+        original_duplicate_key = duplicate_key.read_bytes()
+        rejected = _run(
+            rollout_command,
+            (duplicate_key,),
+            output_format="text",
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(not rejected.stdout, "duplicate key evidence emitted a report")
+        _require(
+            f"duplicate key: {encoded_key}" in rejected.stderr,
+            "duplicate key did not produce its escaped controlled error",
+        )
+        _require(
+            f"\n{INJECTED_BRANCH_MARKER}" not in rejected.stderr
+            and "\u009b" not in rejected.stderr
+            and "\u202e" not in rejected.stderr,
+            "duplicate key injected terminal presentation controls",
+        )
+        _require(
+            duplicate_key.read_bytes() == original_duplicate_key,
+            "duplicate key evidence changed during rejection",
+        )
+        checked.append("duplicate-key-safe-error")
+
         symlink = root / "symlink.md"
         symlink.symlink_to(api)
         rejected = _run(

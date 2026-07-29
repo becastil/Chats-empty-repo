@@ -89,6 +89,10 @@ repository rows are sorted by logical ID, so input order does not change the
 result. Duplicate IDs, duplicate JSON keys, missing metadata, unknown fields,
 unsupported schemas, invalid types, and internally contradictory evidence
 fail with exit code 2 instead of being counted.
+Duplicate-key failures JSON-escape the decoded key before it enters the
+operator error. Legal JSON escapes for newlines, C1 terminal controls, or
+bidirectional controls therefore remain visible as escaped text on one line
+and cannot forge rollout metrics.
 
 Repository IDs must be non-empty printable strings of at most 128 characters
 without surrounding whitespace. Newlines, terminal controls, bidirectional

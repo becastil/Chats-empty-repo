@@ -4792,3 +4792,26 @@ its exact metadata value. Installed release smoke now requires both packaged
 continues through aggregate paid-delivery evidence. This protects Markdown
 acceptance rendering; it does not authenticate a repository, prove freshness
 or customer activation, approve outreach, collect payment, or create revenue.
+
+## 2026-07-29: Escape Duplicate Rollout Keys Before Operator Errors
+
+Rollout metadata parsing already rejects duplicate JSON keys before schema
+validation, but its error interpolated the decoded key directly. JSON permits
+escaped newlines, C1 terminal controls, and bidirectional controls inside a key.
+After decoding, a duplicated key containing those characters could therefore
+forge additional terminal lines even though the ambiguous bundle was rejected.
+The distribution and joined-growth parsers already use a JSON-escaped key-only
+error for the same boundary.
+
+The rollout duplicate-key hook now serializes the key with `json.dumps` before
+including it in the controlled error. Ordinary keys gain explicit JSON quotes,
+while presentation controls remain ASCII escape sequences on one line. The
+error still identifies the ambiguous field without exposing either competing
+value, and parsing still stops before schema validation or summary output.
+
+Source coverage uses one legal duplicated key combining a newline, a C1 control,
+and a bidirectional control. Installed release smoke passes the same bundle
+through `repo-scout-rollout` and requires exit code 2, empty standard output,
+the exact escaped key, and unchanged evidence bytes. This protects paid rollout
+error presentation; it does not authenticate a bundle, verify freshness, prove
+customer activation, approve outreach, collect payment, or create revenue.
