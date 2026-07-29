@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Required rollout repository IDs to remain non-empty printable strings of at
+  most 128 characters without surrounding whitespace.
+- Rejected line, terminal-control, bidirectional-control, Unicode-separator,
+  and oversized repository IDs before bundle generation or summary output,
+  without echoing the untrusted value.
+- Extended the installed rollout smoke to prove control-bearing repository
+  identities cannot forge detailed operator metrics or alter their evidence.
 - Rejected duplicate JSON keys at every depth of raw GitHub release exports and
   saved distribution baselines before calculating artifact totals or signed
   request movement.

@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after protecting distribution evidence from duplicate keys:
-  294 / 1,000 (29.4%).
-- Remaining after protecting distribution evidence from duplicate keys:
-  706 commits.
+- Progress after bounding paid-rollout repository identities:
+  295 / 1,000 (29.5%).
+- Remaining after bounding paid-rollout repository identities:
+  705 commits.
 
 ## Commit Standard
 

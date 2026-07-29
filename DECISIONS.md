@@ -4739,3 +4739,30 @@ rule rejects ambiguous structure even when the repeated values agree. This
 protects the evidence producer before totals and movement exist; it does not
 authenticate GitHub data, make artifact requests unique, identify a buyer, or
 create demand, payment, activation, or revenue.
+
+## 2026-07-29: Bound Rollout Repository Identity Before Operator Output
+
+Rollout branch metadata already rejected presentation controls, but the
+required logical `repository_id` still accepted any non-empty string without
+ASCII controls. Unicode line separators and bidirectional controls could pass
+that boundary. The primary CLI embedded the value in a customer bundle, while
+`repo-scout-rollout --details` and duplicate-identity failures later
+interpolated it into operator output. A crafted bundle could therefore forge a
+metric line or alter terminal presentation without violating the existing
+repository-ID checks.
+
+Repository IDs must now be non-empty printable strings of at most 128
+characters without surrounding whitespace. One generic error rejects blank,
+oversized, whitespace-padded, line, terminal-control, bidirectional-control,
+and Unicode-separator values without echoing them. Validation occurs both
+before the primary CLI generates rollout metadata and before the aggregator
+sorts, compares, or reports bundle identities.
+
+Source tests cover every rejected class, exact-limit and printable-Unicode
+acceptance, primary-CLI no-output behavior, unchanged evidence, and validation
+precedence over duplicate-ID reporting for mixed legacy/current bundles. The
+installed rollout smoke reproduces Unicode and C1 presentation controls through
+the packaged command and requires exit code 2 with no report.
+This protects the paid pilot's bundle-reported acceptance record; it does not
+authenticate a repository, verify freshness, prove customer activation,
+approve outreach, collect payment, or create revenue.

@@ -90,6 +90,12 @@ result. Duplicate IDs, duplicate JSON keys, missing metadata, unknown fields,
 unsupported schemas, invalid types, and internally contradictory evidence
 fail with exit code 2 instead of being counted.
 
+Repository IDs must be non-empty printable strings of at most 128 characters
+without surrounding whitespace. Newlines, terminal controls, bidirectional
+controls, Unicode separators, and oversized values fail before either the
+primary CLI generates a bundle or the aggregator emits text or JSON. The error
+does not echo the untrusted value.
+
 Branch metadata must be null or a non-empty printable string of at most 1,024
 characters without surrounding whitespace. Newlines, terminal controls,
 bidirectional controls, and oversized values fail with exit code 2 before any

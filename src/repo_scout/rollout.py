@@ -20,6 +20,7 @@ ROLLOUT_METADATA_START = "## Rollout Metadata\n\n```json\n"
 ROLLOUT_METADATA_END = "\n```"
 MAX_ROLLOUT_EVIDENCE_BYTES = 1024 * 1024
 MAX_GIT_BRANCH_CHARACTERS = 1024
+MAX_REPOSITORY_ID_CHARACTERS = 128
 _POLICY_FINGERPRINT_PATTERN = re.compile(r"sha256:[0-9a-f]{64}")
 _GIT_COMMIT_PATTERN = re.compile(r"(?:[0-9a-f]{40}|[0-9a-f]{64})")
 
@@ -297,14 +298,18 @@ def _validate_git_branch(value: Any) -> str | None:
 
 
 def validate_repository_id(value: Any) -> str:
-    if not isinstance(value, str) or not value:
-        raise RolloutEvidenceError("repository_id must be a non-empty string")
-    if value != value.strip():
-        raise RolloutEvidenceError("repository_id cannot have surrounding whitespace")
-    if len(value) > 128:
-        raise RolloutEvidenceError("repository_id cannot exceed 128 characters")
-    if any(ord(character) < 32 or ord(character) == 127 for character in value):
-        raise RolloutEvidenceError("repository_id cannot contain control characters")
+    if (
+        not isinstance(value, str)
+        or not value
+        or len(value) > MAX_REPOSITORY_ID_CHARACTERS
+        or value != value.strip()
+        or not value.isprintable()
+    ):
+        raise RolloutEvidenceError(
+            "repository_id must be a non-empty printable string of at most "
+            f"{MAX_REPOSITORY_ID_CHARACTERS} characters without surrounding "
+            "whitespace"
+        )
     return value
 
 

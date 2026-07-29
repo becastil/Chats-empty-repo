@@ -465,6 +465,37 @@ required_files = ["README.md", "SECURITY.md"]
             self.assertEqual(invalid_repository_id, 2)
             self.assertIn("surrounding whitespace", stderr.getvalue())
 
+            unsafe_repository_id = (
+                "platform/api\u009b31m\u2028Repositories: 999\u202e"
+            )
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with redirect_stdout(stdout), redirect_stderr(stderr):
+                invalid_repository_id = main(
+                    [
+                        "--format",
+                        "markdown",
+                        "--policy",
+                        str(policy_path),
+                        "--rollout-checklist",
+                        "--repository-id",
+                        unsafe_repository_id,
+                        str(root),
+                    ]
+                )
+            self.assertEqual(invalid_repository_id, 2)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertIn(
+                (
+                    "repository_id must be a non-empty printable string of at "
+                    "most 128 characters without surrounding whitespace"
+                ),
+                stderr.getvalue(),
+            )
+            self.assertNotIn("Repositories: 999", stderr.getvalue())
+            self.assertNotIn("\u009b", stderr.getvalue())
+            self.assertNotIn("\u202e", stderr.getvalue())
+
     def test_cli_rejects_invalid_team_policy(self) -> None:
         with TemporaryDirectory() as tmp:
             root = Path(tmp)

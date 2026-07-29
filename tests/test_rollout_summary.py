@@ -21,6 +21,7 @@ from repo_scout.rollout import (
     format_rollout_metadata,
     load_rollout_metadata,
     parse_rollout_metadata,
+    validate_repository_id,
     validate_rollout_metadata,
 )
 from repo_scout.rollout_summary import (
@@ -165,6 +166,44 @@ class RolloutSummaryTests(unittest.TestCase):
         with self.assertRaisesRegex(RolloutEvidenceError, "duplicate repository_id"):
             build_rollout_summary([("one.md", metadata), ("two.md", metadata)])
 
+    def test_rejects_unsafe_repository_ids_without_echoing_them(self) -> None:
+        unsafe_repository_ids = (
+            "",
+            " platform/api",
+            "platform/api ",
+            "platform/api\nRepositories: 999",
+            "platform/api\x1b[31m",
+            "platform/api\u009b31m",
+            "platform/api\u202eattack",
+            "platform/api\u2028Repositories: 999",
+            "x" * 129,
+        )
+        expected_error = (
+            "repository_id must be a non-empty printable string of at most "
+            "128 characters without surrounding whitespace"
+        )
+
+        for repository_id in unsafe_repository_ids:
+            with self.subTest(repository_id=repr(repository_id)):
+                with self.assertRaises(RolloutEvidenceError) as raised:
+                    validate_repository_id(repository_id)
+
+                self.assertEqual(str(raised.exception), expected_error)
+                if repository_id:
+                    self.assertNotIn(repository_id, str(raised.exception))
+
+    def test_accepts_bounded_printable_repository_ids(self) -> None:
+        for repository_id in (
+            "platform/api",
+            "équipe/café",
+            "x" * 128,
+        ):
+            with self.subTest(repository_id=repository_id):
+                self.assertEqual(
+                    validate_repository_id(repository_id),
+                    repository_id,
+                )
+
     def test_direct_summary_call_validates_each_bundle(self) -> None:
         legacy_with_new_field = self._metadata("legacy", schema_version=1)
         legacy_with_new_field["policy"]["fingerprint"] = POLICY_FINGERPRINT
@@ -304,6 +343,49 @@ class RolloutSummaryTests(unittest.TestCase):
                 self.assertEqual(str(raised.exception), expected_error)
                 if branch:
                     self.assertNotIn(branch, str(raised.exception))
+
+    def test_main_rejects_repository_id_presentation_controls_without_output(
+        self,
+    ) -> None:
+        injected_marker = "Repositories: 999"
+        repository_id = f"company/api\u2028{injected_marker}\u202e"
+        with TemporaryDirectory() as tmp:
+            legacy_path = Path(tmp) / "legacy.md"
+            current_path = Path(tmp) / "current.md"
+            legacy_path.write_text(
+                self._bundle_unvalidated(
+                    self._metadata(repository_id, schema_version=1)
+                ),
+                encoding="utf-8",
+            )
+            current_path.write_text(
+                self._bundle_unvalidated(self._metadata(repository_id)),
+                encoding="utf-8",
+            )
+            original_legacy = legacy_path.read_bytes()
+            original_current = current_path.read_bytes()
+
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with redirect_stdout(stdout), redirect_stderr(stderr):
+                exit_code = main(
+                    ["--details", str(legacy_path), str(current_path)]
+                )
+
+            self.assertEqual(exit_code, 2)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertIn(
+                (
+                    "repository_id must be a non-empty printable string of at "
+                    "most 128 characters without surrounding whitespace"
+                ),
+                stderr.getvalue(),
+            )
+            self.assertNotIn(injected_marker, stderr.getvalue())
+            self.assertNotIn("\u202e", stderr.getvalue())
+            self.assertNotIn("duplicate repository_id", stderr.getvalue())
+            self.assertEqual(legacy_path.read_bytes(), original_legacy)
+            self.assertEqual(current_path.read_bytes(), original_current)
 
     def test_accepts_bounded_printable_git_branch_text(self) -> None:
         branches = (

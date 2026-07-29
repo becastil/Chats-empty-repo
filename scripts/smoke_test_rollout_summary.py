@@ -226,6 +226,47 @@ def verify_rollout_summary(
         )
         checked.append("unsafe-branch-rejected")
 
+        unsafe_repository_id = root / "unsafe-repository-id.md"
+        _write_bundle(
+            unsafe_repository_id,
+            _metadata(
+                f"company/unsafe\u009b31m\u2028{INJECTED_BRANCH_MARKER}\u202e",
+                commit=API_COMMIT,
+            ),
+        )
+        original_unsafe_repository_id = unsafe_repository_id.read_bytes()
+        rejected = _run(
+            rollout_command,
+            (unsafe_repository_id,),
+            output_format="text",
+            details=True,
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(
+            not rejected.stdout,
+            "unsafe repository ID emitted a rollout summary",
+        )
+        _require(
+            (
+                "repository_id must be a non-empty printable string of at most "
+                "128 characters without surrounding whitespace"
+            )
+            in rejected.stderr,
+            "unsafe repository ID did not produce its controlled error",
+        )
+        _require(
+            INJECTED_BRANCH_MARKER not in rejected.stderr
+            and "\u009b" not in rejected.stderr
+            and "\u202e" not in rejected.stderr,
+            "unsafe repository ID leaked into its rejection",
+        )
+        _require(
+            unsafe_repository_id.read_bytes() == original_unsafe_repository_id,
+            "unsafe repository ID evidence changed during rejection",
+        )
+        checked.append("unsafe-repository-id-rejected")
+
     return tuple(checked)
 
 

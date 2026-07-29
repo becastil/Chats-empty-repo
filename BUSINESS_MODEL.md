@@ -187,6 +187,15 @@ Symlinks, special files, replacement, mutation, and oversized sparse evidence
 therefore fail before a cross-repository summary is emitted. This protects the
 paid delivery acceptance record without treating a bundle as customer
 activation, payment, demand, or revenue.
+Rollout repository IDs are limited to non-empty printable values of at most
+128 characters without surrounding whitespace. The same validation runs before
+the primary CLI generates a bundle and before the aggregator constructs a
+summary. Line breaks, terminal controls, bidirectional controls, Unicode
+separators, and oversized values fail without being echoed, so a
+customer-controlled identity cannot use those controls to forge detailed text
+metrics or alter terminal presentation. This protects the paid delivery record;
+it does not authenticate a repository, establish customer activation, or
+create payment or revenue.
 Rollout branch metadata is also limited to null or a non-empty printable value
 of at most 1,024 characters without surrounding whitespace. Line breaks,
 terminal controls, bidirectional controls, and oversized values fail before
@@ -1224,8 +1233,9 @@ ready-for-CI repository, one remediation-required repository, complete policy
 fingerprint and Git commit coverage, and verified shared policy identity. It
 also proves the default summary omits repository IDs, fingerprints, commits,
 and evidence paths while explicit details remain available, and rejects a
-duplicate repository before emitting a report. Synthetic bundles validate the
-distribution contract; they are not pilot usage or customer evidence.
+duplicate repository or presentation-unsafe repository identity before
+emitting a report. Synthetic bundles validate the distribution contract; they
+are not pilot usage or customer evidence.
 
 The hosted offer now leads with this cross-repository outcome: complete policy
 and commit identity coverage, shared-policy verification, and visible

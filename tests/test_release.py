@@ -671,6 +671,7 @@ class ReleaseManifestTests(unittest.TestCase):
                 "symlink-evidence-rejected",
                 "oversized-evidence-rejected",
                 "unsafe-branch-rejected",
+                "unsafe-repository-id-rejected",
             ),
         )
 
