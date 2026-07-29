@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 288 of
-1,000, with 712 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 289 of
+1,000, with 711 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -428,6 +428,10 @@ alignment take priority over commit volume.
 - Release-blocking installed-wheel proof that raw GitHub release exports become
   a complete schema-2 baseline comparison before signed reach movement joins to
   schema-8 qualification, attribution, $299 revenue, and the open pilot target.
+- Asymmetric installed-command proof that schema-8 lead and paid milestones
+  remain distinct across source, purchase readiness, and purchase criterion,
+  and that tampered detailed progression fails without a growth report or
+  private evidence disclosure.
 - Controlled rejection of duplicate release assets and inconsistent growth
   deltas without emitting reports or inventing conversion rates.
 - Release-blocking behavioral proof through the installed `repo-scout-pilot`,

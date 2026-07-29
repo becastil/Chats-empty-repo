@@ -1526,14 +1526,18 @@ GitHub release exports through the built wheel's public
 `repo-scout-distribution` command before feeding the resulting signed
 six-request delta and its synthetic schema-8 pilot report through the public
 `repo-scout-growth` command. The pilot report also comes from the installed
-`repo-scout-pilot` command. Release attestation requires all three entry points
-to exist and execute the complete artifact contract, two attributed
-target-profile requests, one $299 booking, the open $897 pilot target, and the
-`pilot_target` bottleneck while retaining both commands' request-not-customer
-boundaries. Duplicate release assets and a primary delta that does not equal
-portable plus wheel movement must fail without a report. These fixtures prove
-packaged entry-point, parsing, joining, and validation behavior, not adoption,
-attribution, demand, or revenue.
+`repo-scout-pilot` command. Its two requests deliberately separate a
+lead-stage false/false qualification-and-offer history from a paid-stage
+true/true history across source, purchase readiness, and purchase criterion.
+The installed growth command must reject a tampered lead milestone with exit
+code 2, no JSON report, and no private qualification disclosure. Release
+attestation requires all three entry points to exist and execute the complete
+artifact contract, two attributed target-profile requests, one $299 booking,
+the open $897 pilot target, and the `pilot_target` bottleneck while retaining
+both commands' request-not-customer boundaries. Duplicate release assets and a
+primary delta that does not equal portable plus wheel movement must fail
+without a report. These fixtures prove packaged entry-point, parsing, joining,
+and validation behavior, not adoption, attribution, demand, or revenue.
 
 The release boundary applies the same installed-command rule to the rest of
 the paid workflow. Policy recommendation, bootstrap, receipt verification, and

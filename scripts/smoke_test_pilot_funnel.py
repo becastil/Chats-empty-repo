@@ -43,15 +43,11 @@ def verify_pilot_funnel(
                 [
                     _issue(
                         number=101,
-                        title="Website team awaiting purchase",
+                        title="Website team awaiting qualification",
                         source="Repo Scout website",
-                        readiness="Ready to purchase the $299 pilot",
+                        readiness="Need internal approval for $299",
                         criterion="Works across our repositories and CI",
-                        labels=(
-                            "pilot-lead",
-                            "pilot-qualified",
-                            "pilot-offered",
-                        ),
+                        labels=("pilot-lead",),
                     ),
                     _issue(
                         number=102,
@@ -105,8 +101,8 @@ def verify_pilot_funnel(
         checked.append("commercial-totals")
 
         _require(
-            report.get("by_stage", {}).get("offered") == 1,
-            "offer was not kept distinct from payment",
+            report.get("by_stage", {}).get("lead") == 1,
+            "lead stage was not kept distinct from payment",
         )
         _require(
             report.get("by_stage", {}).get("paid") == 1,
@@ -115,12 +111,15 @@ def verify_pilot_funnel(
         website = report.get("by_source", {}).get("website", {})
         outreach = report.get("by_source", {}).get("outreach", {})
         _require(
-            website.get("offered_pilots") == 1
+            website.get("qualified_pilots") == 0
+            and website.get("offered_pilots") == 0
             and website.get("booked_pilots") == 0,
-            "website offer was counted as revenue",
+            "website lead progression changed",
         )
         _require(
-            outreach.get("booked_pilots") == 1
+            outreach.get("qualified_pilots") == 1
+            and outreach.get("offered_pilots") == 1
+            and outreach.get("booked_pilots") == 1
             and outreach.get("booked_revenue_usd") == PILOT_PRICE_USD,
             "outreach payment attribution changed",
         )
@@ -142,8 +141,12 @@ def verify_pilot_funnel(
             "detailed progression evidence changed",
         )
         _require(
-            all(deal["qualified"] and deal["offered"] for deal in deals),
-            "detailed progression does not match offered and paid stages",
+            [
+                (deal.get("number"), deal["qualified"], deal["offered"])
+                for deal in deals
+            ]
+            == [(101, False, False), (102, True, True)],
+            "detailed progression does not match lead and paid stages",
         )
         checked.append("qualified-segmentation")
 
@@ -354,8 +357,8 @@ def verify_pilot_funnel(
         for field, expected in (
             ("tracked_pilot_requests", 2),
             ("attributed_pilot_requests", 2),
-            ("qualified_pilots", 2),
-            ("offered_pilots", 2),
+            ("qualified_pilots", 1),
+            ("offered_pilots", 1),
             ("booked_pilots", 1),
             ("booked_revenue_usd", PILOT_PRICE_USD),
             ("target_revenue_usd", TARGET_REVENUE_USD),
@@ -365,6 +368,69 @@ def verify_pilot_funnel(
                 growth_summary.get(field) == expected,
                 f"growth summary {field} changed",
             )
+        growth_sources = {
+            row.get("source"): row
+            for row in growth.get("sources", [])
+            if isinstance(row, dict)
+        }
+        _require(
+            (
+                growth_sources.get("website", {}).get("qualified_pilots"),
+                growth_sources.get("website", {}).get("offered_pilots"),
+                growth_sources.get("website", {}).get("booked_pilots"),
+            )
+            == (0, 0, 0),
+            "growth website progression changed",
+        )
+        _require(
+            (
+                growth_sources.get("outreach", {}).get("qualified_pilots"),
+                growth_sources.get("outreach", {}).get("offered_pilots"),
+                growth_sources.get("outreach", {}).get("booked_pilots"),
+            )
+            == (1, 1, 1),
+            "growth outreach progression changed",
+        )
+        growth_readiness = {
+            row.get("readiness"): row
+            for row in growth.get("purchase_readiness", [])
+            if isinstance(row, dict)
+        }
+        _require(
+            (
+                growth_readiness.get("needs_approval", {}).get(
+                    "qualified_pilots"
+                ),
+                growth_readiness.get("needs_approval", {}).get(
+                    "offered_pilots"
+                ),
+                growth_readiness.get("ready", {}).get("qualified_pilots"),
+                growth_readiness.get("ready", {}).get("offered_pilots"),
+            )
+            == (0, 0, 1, 1),
+            "growth readiness progression changed",
+        )
+        growth_criteria = {
+            row.get("criterion"): row
+            for row in growth.get("decision_criteria", [])
+            if isinstance(row, dict)
+        }
+        _require(
+            (
+                growth_criteria.get("rollout_fit", {}).get(
+                    "qualified_pilots"
+                ),
+                growth_criteria.get("rollout_fit", {}).get("offered_pilots"),
+                growth_criteria.get("commercial_fit", {}).get(
+                    "qualified_pilots"
+                ),
+                growth_criteria.get("commercial_fit", {}).get(
+                    "offered_pilots"
+                ),
+            )
+            == (0, 0, 1, 1),
+            "growth criterion progression changed",
+        )
         change = growth.get("distribution_change", {})
         _require(
             (
@@ -403,6 +469,38 @@ def verify_pilot_funnel(
         )
         checked.append("joined-growth-review")
 
+        invalid_progression = json.loads(json.dumps(report))
+        invalid_progression["deals"][0]["qualified"] = True
+        invalid_progression_report = (
+            Path(tmp) / "invalid-progression-pilot-report.json"
+        )
+        invalid_progression_report.write_text(
+            json.dumps(invalid_progression, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+        rejected_progression = _run_growth(
+            growth_command,
+            distribution_report,
+            invalid_progression_report,
+            output_format="json",
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(
+            not rejected_progression.stdout,
+            "invalid progression evidence emitted a growth report",
+        )
+        _require(
+            "progression does not match its stage"
+            in rejected_progression.stderr,
+            "invalid progression evidence was not rejected",
+        )
+        _require(
+            PRIVATE_STANDARD not in rejected_progression.stderr,
+            "invalid progression rejection leaked private evidence",
+        )
+        checked.append("schema-eight-progression-gate")
+
         growth_text = _run_growth(
             growth_command,
             distribution_report,
@@ -413,8 +511,8 @@ def verify_pilot_funnel(
         ).stdout
         for expected_line in (
             "Reach movement: +6 primary / +2 portable / +4 wheel",
-            "Pilot funnel: 2 requests / 2 attributed / 2 qualified / "
-            "2 offered / 1 booked",
+            "Pilot funnel: 2 requests / 2 attributed / 1 qualified / "
+            "1 offered / 1 booked",
             "Revenue: $299 booked / $897 target",
             "Qualification scope: 2 complete / 2 target / 0 review / "
             "0 subset required",

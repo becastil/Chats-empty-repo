@@ -4586,3 +4586,24 @@ progression, and preserves valid cumulative history for active and terminal
 deals. This protects directional acquisition, qualification, and offer
 conversion decisions. It does not authenticate a wholly rewritten report,
 infer willingness to pay, contact a buyer, collect payment, or record revenue.
+
+## 2026-07-29: Release-Prove Schema-8 Progression Integrity
+
+The installed commercial smoke journey required schema 8 and checked that
+every detailed deal carried boolean qualification and offer milestones. Both
+synthetic deals had already reached an offer, however, so the release boundary
+proved only the true/true path. It did not prove that a packaged producer kept
+a lead at false/false or that the packaged growth command rejected a tampered
+milestone.
+
+The journey now pairs one approval-dependent website lead with one ready,
+outreach-attributed paid pilot. It verifies their asymmetric progression in
+the pilot report and in growth rows for source, purchase readiness, and
+purchase criterion. A copied report that changes the lead's qualification
+milestone must make the public installed growth command exit with code 2,
+emit no JSON, and omit private qualification text.
+
+This makes schema-8 progression enforcement part of the installed-wheel
+release boundary rather than only a source-level unit contract. It does not
+authenticate an independently rewritten report, authorize deployment, approve
+or send outreach, create a pilot request, collect payment, or record revenue.

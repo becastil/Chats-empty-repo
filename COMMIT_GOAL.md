@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after preserving qualification and offer attribution:
-  288 / 1,000 (28.8%).
-- Remaining after preserving qualification and offer attribution:
-  712 commits.
+- Progress after release-proving schema-8 progression:
+  289 / 1,000 (28.9%).
+- Remaining after release-proving schema-8 progression:
+  711 commits.
 
 ## Commit Standard
 

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Made the installed commercial smoke journey preserve asymmetric schema-8
+  lead and paid progression across source, purchase readiness, and purchase
+  criterion.
+- Required the packaged growth command to reject a tampered lead milestone
+  without emitting JSON or disclosing private qualification evidence.
 - Upgraded pilot reporting to schema 8 with explicit boolean qualification and
   offer milestones on every detailed deal while preserving schema-7 growth
   compatibility.

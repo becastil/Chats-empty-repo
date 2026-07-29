@@ -623,6 +623,7 @@ class ReleaseManifestTests(unittest.TestCase):
                 "qualification-scope-payment-gate",
                 "distribution-evidence",
                 "joined-growth-review",
+                "schema-eight-progression-gate",
                 "growth-boundaries",
                 "growth-ci-integration-gate",
                 "invalid-growth-rejected",
