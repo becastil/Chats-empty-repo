@@ -12,7 +12,7 @@ from typing import Any, Sequence, TextIO
 from .version import add_version_argument
 
 
-SCHEMA_VERSION = 9
+SCHEMA_VERSION = 10
 PUBLIC_INTAKE_PILOT_PRICE_USD = 299
 DEFAULT_PILOT_PRICE_USD = PUBLIC_INTAKE_PILOT_PRICE_USD
 DEFAULT_TARGET_PILOTS = 3
@@ -463,6 +463,7 @@ def build_funnel(
                 is_qualified=is_qualified,
                 is_offered=is_offered,
                 is_booked=is_booked,
+                is_activated=is_activated,
                 is_converted=is_converted,
                 is_lost=is_lost,
                 pilot_price_usd=pilot_price_usd,
@@ -638,6 +639,7 @@ def format_funnel(report: dict[str, Any]) -> str:
                 f"{totals['offered_pilots']} offered, "
                 f"{totals['booked_pilots']} booked "
                 f"(${totals['booked_revenue_usd']}), "
+                f"{totals['activated_pilots']} activated, "
                 f"{totals['annual_conversions']} converted, "
                 f"{totals['lost_pilots']} lost"
             )
@@ -660,6 +662,7 @@ def format_funnel(report: dict[str, Any]) -> str:
                 f"{totals['offered_pilots']} offered, "
                 f"{totals['booked_pilots']} booked "
                 f"(${totals['booked_revenue_usd']}), "
+                f"{totals['activated_pilots']} activated, "
                 f"{totals['annual_conversions']} converted, "
                 f"{totals['lost_pilots']} lost"
             )
@@ -682,6 +685,7 @@ def format_funnel(report: dict[str, Any]) -> str:
                 f"{totals['offered_pilots']} offered, "
                 f"{totals['booked_pilots']} booked "
                 f"(${totals['booked_revenue_usd']}), "
+                f"{totals['activated_pilots']} activated, "
                 f"{totals['annual_conversions']} converted, "
                 f"{totals['lost_pilots']} lost"
             )
@@ -942,6 +946,7 @@ def _empty_segment_totals() -> dict[str, int]:
         "offered_pilots": 0,
         "booked_pilots": 0,
         "booked_revenue_usd": 0,
+        "activated_pilots": 0,
         "annual_conversions": 0,
         "lost_pilots": 0,
     }
@@ -953,6 +958,7 @@ def _record_segment_totals(
     is_qualified: bool,
     is_offered: bool,
     is_booked: bool,
+    is_activated: bool,
     is_converted: bool,
     is_lost: bool,
     pilot_price_usd: int,
@@ -962,6 +968,7 @@ def _record_segment_totals(
     totals["offered_pilots"] += int(is_offered)
     totals["booked_pilots"] += int(is_booked)
     totals["booked_revenue_usd"] += int(is_booked) * pilot_price_usd
+    totals["activated_pilots"] += int(is_activated)
     totals["annual_conversions"] += int(is_converted)
     totals["lost_pilots"] += int(is_lost)
 

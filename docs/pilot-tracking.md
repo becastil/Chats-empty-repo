@@ -73,12 +73,12 @@ For direct API calls, only `as_of=None` selects the current UTC date. Any
 supplied `as_of` value must be a real `date`; falsey booleans, numbers, and
 strings fail instead of silently changing the report window to today.
 
-Funnel JSON declares `schema_version: 9`. Its `follow_up` object records the
+Funnel JSON declares `schema_version: 10`. Its `follow_up` object records the
 UTC `as_of` date, the inactivity threshold, and a deterministic deal list.
 Omit `--as-of` to use the current UTC date. `--stale-days` changes the default
 seven-day threshold.
 
-Every schema-9 detailed deal carries boolean `qualified`, `offered`, and
+Every schema-10 detailed deal carries boolean `qualified`, `offered`, and
 `activated` milestones in addition to its current stage and booking evidence.
 These values preserve cumulative lifecycle history after a deal advances or
 closes. `activated` is true only when the cumulative public labels contain both
@@ -163,7 +163,8 @@ maps that issue-body answer to a stable source key:
 | `other` | Other |
 
 The `by_source` object reports deals, qualified pilots, offered pilots, booked
-pilots, booked revenue, annual conversions, and losses for every source key.
+pilots, booked revenue, activated pilots, annual conversions, and losses for
+every source key.
 Deal records and stale follow-up records include their normalized source.
 Legacy issues without the form answer use `unattributed`; edited answers that
 do not match the taxonomy, or duplicate source headings, use `unknown`. Each
@@ -196,7 +197,7 @@ match the taxonomy, or duplicate criterion headings, use `unknown`. Both remain
 visible in summary totals and warnings. Sales priority remains based on purchase
 readiness, not on the criterion selected.
 
-`repo-scout-growth` consumes these schema-6 through schema-9 criterion
+`repo-scout-growth` consumes these schema-6 through schema-10 criterion
 totals in its weekly commercial review. It requires the exact taxonomy,
 validates each cumulative stage and revenue value, and reconciles aggregate
 criterion outcomes to source outcomes. For schema 8, qualification and offer
@@ -210,6 +211,13 @@ requires activation to be payment-backed, and reconciles the detailed total to
 commercial bottleneck before another sale or retention action. Schema-5 through
 schema-8 reports remain readable with activation reporting marked unavailable
 rather than zero, so historical evidence never invents an activation result.
+Schema 10 additionally requires `activated_pilots` in every source, readiness,
+and purchase-criterion row. Joined growth reconciles all three segment families
+to the global activation total and independently derives each segment count
+from detailed deals. A coordinated segment swap that preserves the global
+activation total therefore fails before it can redirect channel or buyer-profile
+learning. Schema 9 remains readable with global activation available and
+segment activation attribution explicitly unavailable.
 
 Source attribution is self-reported discovery data. It does not prove which
 touchpoint caused a purchase, and it should be used directionally when deciding

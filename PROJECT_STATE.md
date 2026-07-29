@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 290 of
-1,000, with 710 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 291 of
+1,000, with 709 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -97,6 +97,10 @@ alignment take priority over commit volume.
   `pilot-active` event; detailed activation must reconcile to the summary,
   active-stage evidence must match payment-backed activation, and terminal
   stages may preserve a true or false activation history without inference.
+  Schema 10 additionally attributes that milestone across source, purchase
+  readiness, and purchase criterion. All three activation segment families
+  must reconcile to the global total and independently reproduce detailed
+  deal evidence before joined growth can use them.
   Request, qualification, offer, booked-pilot, annual-conversion, and
   resolved-loss attribution by source, purchase readiness, and purchase
   criterion must also reproduce the recognized values on every schema-8+
@@ -430,19 +434,20 @@ alignment take priority over commit volume.
   into the commercial bottleneck action instead of silently quoting $299.
 - Deterministic commercial bottlenecks from missing measurement through
   acquisition, qualification, offer, payment, activation, pilot target,
-  retention, and validation. Schema-9 booked-but-unactivated delivery takes
+  retention, and validation. Schema-9+ booked-but-unactivated delivery takes
   precedence over another sale; older pilot schemas retain their prior behavior
   with activation evidence unavailable rather than zero.
 - Explicit refusal to calculate download-to-lead conversion rates from non-unique artifact requests.
 - Release-blocking installed-wheel proof that raw GitHub release exports become
   a complete schema-2 baseline comparison before signed reach movement joins to
-  schema-9 qualification, attribution, $299 revenue, and payment-backed
+  schema-10 qualification, attribution, $299 revenue, and payment-backed
   activation evidence.
-- Asymmetric installed-command proof that schema-9 lead and paid milestones
+- Asymmetric installed-command proof that schema-10 lead and paid milestones
   remain distinct across source, purchase readiness, and purchase criterion,
   that a paid-only pilot remains unactivated, that explicit paid activation
-  reopens the founding-pilot target, and that tampered progression or activation
-  fails without a growth report or private evidence disclosure.
+  reopens the founding-pilot target, and that tampered progression, deal
+  activation, or balanced source activation attribution fails without a growth
+  report or private evidence disclosure.
 - Controlled rejection of duplicate release assets and inconsistent growth
   deltas without emitting reports or inventing conversion rates.
 - Release-blocking behavioral proof through the installed `repo-scout-pilot`,
@@ -469,8 +474,9 @@ alignment take priority over commit volume.
 - Schema-7+ scope qualification from required team size, repository count, CI provider, and repository-standard answers.
 - Target, outside-target, incomplete, and first-10-repository subset classifications without repeating free-text standards.
 - Normalized criterion evidence across deals, stale follow-up, and sales queues with explicit missing, edited, and duplicate-answer warnings.
-- Backward-compatible schema-5 through schema-9 pilot support in weekly growth
-  reviews, with activation available only from schema 9.
+- Backward-compatible schema-5 through schema-10 pilot support in weekly growth
+  reviews, with global activation available from schema 9 and segment
+  activation attribution available from schema 10.
 - Schema-2 growth reviews with ordered purchase-criterion qualification, offer, payment, conversion, and loss outcomes.
 - Exact criterion-taxonomy and cross-segment reconciliation against source totals.
 - Explicit schema-5 criterion unavailability and schema-6 missing or ambiguous criterion evidence warnings.

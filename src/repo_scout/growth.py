@@ -28,7 +28,7 @@ from .pilot_funnel import (
 
 SCHEMA_VERSION = 2
 SUPPORTED_DISTRIBUTION_SCHEMAS = {2}
-SUPPORTED_PILOT_SCHEMAS = {5, 6, 7, 8, 9}
+SUPPORTED_PILOT_SCHEMAS = {5, 6, 7, 8, 9, 10}
 LEGACY_SALES_QUEUE_STATE = "legacy"
 EMPTY_SALES_QUEUE_STATE = "empty"
 ACTIVE_SALES_QUEUE_STATE = "active"
@@ -60,6 +60,7 @@ SOURCE_TOTAL_FIELDS = (
     "annual_conversions",
     "lost_pilots",
 )
+ACTIVATION_ATTRIBUTION_FIELDS = ("activated_pilots",)
 DETAILED_ATTRIBUTION_FIELDS = (
     "deals",
     "booked_pilots",
@@ -219,6 +220,9 @@ def build_growth_report(
             "activation_reporting_available": pilot[
                 "activation_reporting_available"
             ],
+            "activation_attribution_reporting_available": pilot[
+                "activation_attribution_reporting_available"
+            ],
             "booked_revenue_usd": pilot_summary["booked_revenue_usd"],
             "target_pilots": pricing["target_pilots"],
             "target_revenue_usd": pricing["target_revenue_usd"],
@@ -263,6 +267,9 @@ def build_growth_report(
             "activation_reporting_available": pilot[
                 "activation_reporting_available"
             ],
+            "activation_attribution_reporting_available": pilot[
+                "activation_attribution_reporting_available"
+            ],
             "decision_criterion_reporting_available": pilot[
                 "decision_criterion_reporting_available"
             ],
@@ -293,7 +300,9 @@ def build_growth_report(
             "priorities, not causal attribution or proof of a moat. Only paid "
             "pilot stages count as revenue. Activation requires explicit, "
             "payment-backed pilot-active evidence and is not inferred from "
-            "rollout or conversion labels."
+            "rollout or conversion labels. Segment activation counts are "
+            "descriptive attribution, not proof that a source, readiness answer, "
+            "or purchase criterion caused activation."
         ),
     }
 
@@ -349,12 +358,18 @@ def format_growth_report(report: dict[str, Any]) -> str:
     ]
     if report["sources"]:
         for source in report["sources"]:
+            activation = (
+                f", {source['activated_pilots']} activated"
+                if "activated_pilots" in source
+                else ""
+            )
             lines.append(
                 f"  {source['source']}: {source['deals']} requests, "
                 f"{source['qualified_pilots']} qualified, "
                 f"{source['offered_pilots']} offered, "
                 f"{source['booked_pilots']} booked "
                 f"(${source['booked_revenue_usd']})"
+                f"{activation}"
             )
     else:
         lines.append("  none")
@@ -364,6 +379,11 @@ def format_growth_report(report: dict[str, Any]) -> str:
         lines.append("  schema-7+ pilot report required")
     elif report["purchase_readiness"]:
         for readiness in report["purchase_readiness"]:
+            activation = (
+                f", {readiness['activated_pilots']} activated"
+                if "activated_pilots" in readiness
+                else ""
+            )
             lines.append(
                 f"  {readiness['readiness']}: "
                 f"{readiness['deals']} requests, "
@@ -371,6 +391,7 @@ def format_growth_report(report: dict[str, Any]) -> str:
                 f"{readiness['offered_pilots']} offered, "
                 f"{readiness['booked_pilots']} booked "
                 f"(${readiness['booked_revenue_usd']})"
+                f"{activation}"
             )
     else:
         lines.append("  none")
@@ -380,12 +401,18 @@ def format_growth_report(report: dict[str, Any]) -> str:
         lines.append("  schema-6+ pilot report required")
     elif report["decision_criteria"]:
         for criterion in report["decision_criteria"]:
+            activation = (
+                f", {criterion['activated_pilots']} activated"
+                if "activated_pilots" in criterion
+                else ""
+            )
             lines.append(
                 f"  {criterion['criterion']}: {criterion['deals']} requests, "
                 f"{criterion['qualified_pilots']} qualified, "
                 f"{criterion['offered_pilots']} offered, "
                 f"{criterion['booked_pilots']} booked "
                 f"(${criterion['booked_revenue_usd']})"
+                f"{activation}"
             )
     else:
         lines.append("  none")
@@ -431,7 +458,7 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         metavar="PILOT_REPORT",
         help=(
-            "Schema-5, schema-6, schema-7, schema-8, or schema-9 "
+            "Schema-5 through schema-10 "
             "repo-scout-pilot JSON report."
         ),
     )
@@ -554,6 +581,9 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
             "target_revenue_usd",
         )
     }
+    segment_total_fields = SOURCE_TOTAL_FIELDS
+    if schema >= 10:
+        segment_total_fields += ACTIVATION_ATTRIBUTION_FIELDS
     if (
         schema >= 7
         and pricing["pilot_price_usd"] != PUBLIC_INTAKE_PILOT_PRICE_USD
@@ -636,7 +666,7 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
                 totals_object.get(field),
                 f"pilot report.by_source.{source}.{field}",
             )
-            for field in SOURCE_TOTAL_FIELDS
+            for field in segment_total_fields
         }
         _validate_segment_totals(
             f"pilot report.by_source.{source}",
@@ -646,7 +676,12 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
         if totals["deals"]:
             sources.append({"source": source, **totals})
 
-    _validate_pilot_totals(summary, pricing, sources)
+    _validate_pilot_totals(
+        summary,
+        pricing,
+        sources,
+        include_activation_attribution=schema >= 10,
+    )
     if schema >= 7:
         _validate_visible_stage_progression(root, sources)
     readiness_rows: list[dict[str, Any]] | None = None
@@ -668,7 +703,7 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
                 field: _require_non_negative_int(
                     totals_object.get(field), f"{location}.{field}"
                 )
-                for field in SOURCE_TOTAL_FIELDS
+                for field in segment_total_fields
             }
             _validate_segment_totals(
                 location,
@@ -683,6 +718,7 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
             "by_readiness",
             readiness_rows,
             sources,
+            total_fields=segment_total_fields,
         )
         _validate_readiness_summary(summary, readiness_rows)
     decision_criteria: list[dict[str, Any]] | None = None
@@ -721,7 +757,7 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
                 field: _require_non_negative_int(
                     totals_object.get(field), f"{location}.{field}"
                 )
-                for field in SOURCE_TOTAL_FIELDS
+                for field in segment_total_fields
             }
             _validate_segment_totals(
                 location,
@@ -730,7 +766,12 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
             )
             if totals["deals"]:
                 decision_criteria.append({"criterion": criterion, **totals})
-        _validate_criterion_totals(summary, decision_criteria, sources)
+        _validate_criterion_totals(
+            summary,
+            decision_criteria,
+            sources,
+            total_fields=segment_total_fields,
+        )
     if (
         schema >= 7
         and readiness_rows is not None
@@ -742,6 +783,7 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
             readiness_rows,
             decision_criteria,
             include_progression=schema >= 8,
+            include_activation=schema >= 10,
         )
 
     raw_warnings = root.get("warnings")
@@ -757,6 +799,7 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
         "decision_criterion_reporting_available": schema >= 6,
         "qualification_reporting_available": schema >= 7,
         "activation_reporting_available": schema >= 9,
+        "activation_attribution_reporting_available": schema >= 10,
         "sales_queue_state": sales_queue_state,
         "decision_criteria": decision_criteria,
         "warning_count": len(raw_warnings),
@@ -1265,6 +1308,8 @@ def _validate_pilot_totals(
     summary: dict[str, int],
     pricing: dict[str, int],
     sources: list[dict[str, Any]],
+    *,
+    include_activation_attribution: bool,
 ) -> None:
     checks = {
         "tracked_issues": sum(row["deals"] for row in sources),
@@ -1277,6 +1322,10 @@ def _validate_pilot_totals(
         ),
         "lost_pilots": sum(row["lost_pilots"] for row in sources),
     }
+    if include_activation_attribution:
+        checks["activated_pilots"] = sum(
+            row["activated_pilots"] for row in sources
+        )
     for field, source_total in checks.items():
         if summary[field] != source_total:
             raise GrowthInputError(
@@ -1314,11 +1363,14 @@ def _validate_criterion_totals(
     summary: dict[str, int],
     criteria: list[dict[str, Any]],
     sources: list[dict[str, Any]],
+    *,
+    total_fields: tuple[str, ...],
 ) -> None:
     _validate_segment_family_totals(
         "by_decision_criterion",
         criteria,
         sources,
+        total_fields=total_fields,
     )
 
     criteria_by_name = {row["criterion"]: row for row in criteria}
@@ -1348,8 +1400,10 @@ def _validate_segment_family_totals(
     location: str,
     rows: list[dict[str, Any]],
     sources: list[dict[str, Any]],
+    *,
+    total_fields: tuple[str, ...],
 ) -> None:
-    for field in SOURCE_TOTAL_FIELDS:
+    for field in total_fields:
         segment_total = sum(row[field] for row in rows)
         source_total = sum(row[field] for row in sources)
         if segment_total != source_total:
@@ -1380,10 +1434,13 @@ def _validate_detailed_segment_attribution(
     criteria: list[dict[str, Any]],
     *,
     include_progression: bool,
+    include_activation: bool,
 ) -> None:
     detailed_fields = DETAILED_ATTRIBUTION_FIELDS
     if include_progression:
         detailed_fields += DETAILED_PROGRESSION_FIELDS
+    if include_activation:
+        detailed_fields += ACTIVATION_ATTRIBUTION_FIELDS
     observed_by_source = {
         source: {field: 0 for field in detailed_fields}
         for source in SOURCE_KEYS
@@ -1425,6 +1482,7 @@ def _validate_detailed_segment_attribution(
                 f"{location}.purchase_readiness must be a recognized value"
             )
         is_booked = deal["booked"]
+        is_activated = include_activation and deal["activated"]
         is_converted = is_booked and deal["stage"] == "converted"
         is_lost = deal["stage"] == "lost"
         is_qualified = False
@@ -1444,6 +1502,8 @@ def _validate_detailed_segment_attribution(
                 totals["qualified_pilots"] += int(is_qualified)
                 totals["offered_pilots"] += int(is_offered)
             totals["booked_pilots"] += int(is_booked)
+            if include_activation:
+                totals["activated_pilots"] += int(is_activated)
             totals["annual_conversions"] += int(is_converted)
             totals["lost_pilots"] += int(is_lost)
 
@@ -1531,6 +1591,13 @@ def _validate_segment_totals(
     if totals["annual_conversions"] > totals["booked_pilots"]:
         raise GrowthInputError(
             f"{location} conversions exceed booked pilots"
+        )
+    if (
+        "activated_pilots" in totals
+        and totals["activated_pilots"] > totals["booked_pilots"]
+    ):
+        raise GrowthInputError(
+            f"{location} activations exceed booked pilots"
         )
     if totals["lost_pilots"] > deals:
         raise GrowthInputError(

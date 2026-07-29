@@ -1283,7 +1283,7 @@ available in escaped JSON deal fields. Unknown pilot labels remain in escaped
 JSON warning fields. Operator-facing warning messages are generic and never
 interpolate those values into terminal output.
 
-Schema-7 through schema-9 joined growth require every detailed deal to carry an
+Schema-7 through schema-10 joined growth require every detailed deal to carry an
 explicit boolean `booked` value and reconcile their total to
 `summary.booked_pilots` before computing revenue or selecting a bottleneck.
 Pre-payment and untracked stages cannot claim booking evidence, and the paid
@@ -1318,6 +1318,17 @@ The existing annual-conversion rule remains payment-backed: a paid converted
 record that skipped `pilot-active` retains its explicit conversion and
 missing-stage warning, but activation remains false and the activation
 bottleneck prevents expansion until the lifecycle evidence is reconciled.
+
+Schema 10 adds `activated_pilots` to source, purchase-readiness, and
+purchase-criterion totals. Joined growth requires each segment count to remain
+within its booked pilots, reconciles every activation segment family to the
+global summary, and derives each count independently from the detailed deal
+milestone. A globally balanced edit therefore cannot move activation to a more
+attractive channel or buyer profile. These rows support directional learning
+about which paid teams reach delivery; they do not establish causal
+attribution, authenticate a rewritten report, or replace private acceptance
+evidence. Schema 9 remains readable with global activation available and
+segment activation attribution unavailable.
 
 Joined growth also consumes the complete schema-7+ purchase-readiness table
 instead of leaving that willingness-to-pay signal outside the review. It
@@ -1528,14 +1539,17 @@ with zero pilot requests, it confirms that acquisition remains the honest
 bottleneck.
 
 The dependency-free `repo-scout-growth` review places those signed deltas beside
-schema-5 through schema-9 pilot source, qualification, offer, payment,
+schema-5 through schema-10 pilot source, qualification, offer, payment,
 activation, and revenue totals. It names one current commercial bottleneck and
 next action so weekly roadmap work responds to the paid funnel instead of
-optimizing raw download counts. For schema 9, booked-but-unactivated delivery
+optimizing raw download counts. For schema 9+, booked-but-unactivated delivery
 takes precedence over another pilot sale, retention, or expansion. Missing
 distribution measurement still takes precedence, and older schemas retain their
 prior bottlenecks without invented activation counts. Input warnings and missing
 or ambiguous source answers remain visible.
+Schema 10 also shows which source, readiness state, and purchase criterion
+reached payment-backed activation while rejecting attribution that does not
+match detailed deals.
 Because release requests are neither unique people nor attributable sessions,
 the review never computes a download-to-lead conversion rate or assigns request
 movement to a discovery source.
@@ -1543,14 +1557,15 @@ movement to a discovery source.
 The installed commercial smoke test now processes baseline and current raw
 GitHub release exports through the built wheel's public
 `repo-scout-distribution` command before feeding the resulting signed
-six-request delta and its synthetic schema-9 pilot report through the public
+six-request delta and its synthetic schema-10 pilot report through the public
 `repo-scout-growth` command. The pilot report also comes from the installed
 `repo-scout-pilot` command. Its two requests deliberately separate a
 lead-stage false/false qualification-and-offer history from a paid-stage
 true/true history across source, purchase readiness, and purchase criterion.
 That paid-only record must remain explicitly unactivated. The installed growth
-command must select the activation bottleneck and reject either a tampered lead
-milestone or activation without payment with exit code 2 and no JSON report.
+command must select the activation bottleneck and reject a tampered lead
+milestone, activation without payment, or a globally balanced source-activation
+rewrite with exit code 2 and no JSON report.
 Release attestation requires all three entry points to exist and execute the
 complete artifact contract, two attributed target-profile requests, one $299
 booking, zero synthetic activations, and the delivery-first activation action

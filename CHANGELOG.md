@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Upgraded pilot reporting to schema 10 with payment-backed activation totals
+  by source, purchase readiness, and purchase criterion.
+- Derived every schema-10 activation segment from detailed deal evidence and
+  rejected globally balanced attribution swaps while preserving schema-9
+  global activation compatibility.
+- Extended the installed commercial smoke to prove activation attribution
+  survives packaging and forged source attribution fails without a report.
 - Upgraded pilot reporting to schema 9 with explicit payment-backed activation
   evidence on every detailed deal and a reconciled activation summary.
 - Prioritized booked-but-unactivated paid delivery before another pilot sale,

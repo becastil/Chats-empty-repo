@@ -101,7 +101,7 @@ class PilotFunnelTests(unittest.TestCase):
 
         report = build_funnel(payload, as_of=date(2026, 7, 10))
 
-        self.assertEqual(report["schema_version"], 9)
+        self.assertEqual(report["schema_version"], 10)
         self.assertEqual(report["summary"]["tracked_issues"], 8)
         self.assertEqual(report["summary"]["ignored_issues"], 1)
         self.assertEqual(report["summary"]["booked_pilots"], 3)
@@ -200,6 +200,7 @@ class PilotFunnelTests(unittest.TestCase):
                 "offered_pilots": 2,
                 "booked_pilots": 2,
                 "booked_revenue_usd": 598,
+                "activated_pilots": 1,
                 "annual_conversions": 1,
                 "lost_pilots": 0,
             },
@@ -225,6 +226,7 @@ class PilotFunnelTests(unittest.TestCase):
                 "offered_pilots": 2,
                 "booked_pilots": 2,
                 "booked_revenue_usd": 598,
+                "activated_pilots": 1,
                 "annual_conversions": 1,
                 "lost_pilots": 0,
             },
@@ -237,6 +239,7 @@ class PilotFunnelTests(unittest.TestCase):
                 "offered_pilots": 2,
                 "booked_pilots": 1,
                 "booked_revenue_usd": 299,
+                "activated_pilots": 1,
                 "annual_conversions": 0,
                 "lost_pilots": 0,
             },
@@ -295,6 +298,24 @@ class PilotFunnelTests(unittest.TestCase):
         self.assertEqual(
             sum(deal["activated"] for deal in report["deals"]),
             report["summary"]["activated_pilots"],
+        )
+        for segment_name in (
+            "by_source",
+            "by_readiness",
+            "by_decision_criterion",
+        ):
+            self.assertEqual(
+                sum(
+                    totals["activated_pilots"]
+                    for totals in report[segment_name].values()
+                ),
+                report["summary"]["activated_pilots"],
+            )
+        self.assertEqual(
+            report["by_decision_criterion"]["privacy_security"][
+                "activated_pilots"
+            ],
+            1,
         )
         activation_by_number = {
             deal["number"]: deal["activated"] for deal in report["deals"]

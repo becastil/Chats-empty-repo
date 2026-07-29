@@ -319,14 +319,15 @@ gh issue list --repo becastil/Chats-empty-repo --state all --label pilot-lead --
 The dependency-free reporter counts booked pilots, payment-backed activations,
 booked revenue, remaining distance to the three-pilot goal, annual conversions,
 losses, label drift, and open pre-payment issues inactive for at least seven UTC
-calendar days. Schema 9 preserves qualification, offer, and explicit activation
+calendar days. Schema 10 preserves qualification, offer, and explicit activation
 milestones on every detailed deal. Activation requires both `pilot-paid` and
 `pilot-active`; later stages do not substitute for either human-applied event.
 Growth reviews derive qualification and offer progression alongside booked
 revenue for each self-reported discovery channel, readiness state, and purchase
-criterion without treating intent as cash. They validate the global activation
-count from detailed deals and prioritize any booked-but-unactivated pilot before
-another sale, retention work, or expansion. The report also groups the primary purchase criterion
+criterion without treating intent as cash. They validate global and per-segment
+activation counts from detailed deals and prioritize any
+booked-but-unactivated pilot before another sale, retention work, or expansion.
+The report also groups the primary purchase criterion
 behind each request, including policy fit, rollout fit, evidence, privacy,
 implementation capacity, and commercial fit, so repeated paid outcomes can
 shape stronger policy packs and rollout playbooks. A deterministic sales queue ranks every open
@@ -571,11 +572,13 @@ repo-scout-growth distribution-current.json pilot-current.json
 The growth review reports signed reach movement, attributed pilot progress,
 booked revenue, purchase-criterion outcomes, evidence warnings, and one current
 bottleneck from acquisition through retention. Schema-5 pilot reports remain
-readable with criterion evidence marked unavailable; schema-6 through schema-9
+readable with criterion evidence marked unavailable; schema-6 through schema-10
 reports reconcile every criterion total to the same deals and revenue as source
 reporting. Schema 8 adds detailed qualification and offer progression across
 every segment. Schema 9 adds payment-backed activation evidence and inserts an
-activation bottleneck after payment but before another pilot sale. Schemas 5
+activation bottleneck after payment but before another pilot sale. Schema 10
+attributes activation across source, readiness, and purchase criterion and
+rejects segment totals that do not reproduce the detailed deals. Schemas 5
 through 8 remain readable with activation marked unavailable rather than zero. The
 review never calculates a download-to-lead conversion rate: GitHub artifact
 requests are not unique people and cannot be assigned to a discovery source or

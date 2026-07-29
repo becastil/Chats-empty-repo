@@ -71,7 +71,7 @@ def verify_pilot_funnel(
             issue_export,
             environment=environment,
         )
-        _require(report.get("schema_version") == 9, "pilot schema changed")
+        _require(report.get("schema_version") == 10, "pilot schema changed")
         _require(
             report.get("pricing")
             == {
@@ -126,6 +126,11 @@ def verify_pilot_funnel(
             "outreach payment attribution changed",
         )
         _require(
+            website.get("activated_pilots") == 0
+            and outreach.get("activated_pilots") == 0,
+            "pre-activation source attribution changed",
+        )
+        _require(
             summary.get("target_profile_issues") == 2,
             "target-profile qualification changed",
         )
@@ -177,6 +182,8 @@ def verify_pilot_funnel(
             "Qualification scope: 2 complete / 2 target / 0 review / "
             "0 subset required",
             "Sales actions: 1 open pre-payment deal",
+            "outreach: 1 deal, 1 qualified, 1 offered, 1 booked ($299), "
+            "0 activated",
         ):
             _require(expected_line in text_report, "text pilot totals changed")
         _require(
@@ -382,6 +389,13 @@ def verify_pilot_funnel(
                 growth_summary.get(field) == expected,
                 f"growth summary {field} changed",
             )
+        _require(
+            growth_summary.get(
+                "activation_attribution_reporting_available"
+            )
+            is True,
+            "growth activation attribution became unavailable",
+        )
         growth_sources = {
             row.get("source"): row
             for row in growth.get("sources", [])
@@ -392,8 +406,9 @@ def verify_pilot_funnel(
                 growth_sources.get("website", {}).get("qualified_pilots"),
                 growth_sources.get("website", {}).get("offered_pilots"),
                 growth_sources.get("website", {}).get("booked_pilots"),
+                growth_sources.get("website", {}).get("activated_pilots"),
             )
-            == (0, 0, 0),
+            == (0, 0, 0, 0),
             "growth website progression changed",
         )
         _require(
@@ -401,8 +416,9 @@ def verify_pilot_funnel(
                 growth_sources.get("outreach", {}).get("qualified_pilots"),
                 growth_sources.get("outreach", {}).get("offered_pilots"),
                 growth_sources.get("outreach", {}).get("booked_pilots"),
+                growth_sources.get("outreach", {}).get("activated_pilots"),
             )
-            == (1, 1, 1),
+            == (1, 1, 1, 0),
             "growth outreach progression changed",
         )
         growth_readiness = {
@@ -509,6 +525,21 @@ def verify_pilot_funnel(
             and active_deals[1].get("activated") is True,
             "explicit paid activation was not preserved",
         )
+        _require(
+            active_report.get("by_source", {})
+            .get("outreach", {})
+            .get("activated_pilots")
+            == 1
+            and active_report.get("by_readiness", {})
+            .get("ready", {})
+            .get("activated_pilots")
+            == 1
+            and active_report.get("by_decision_criterion", {})
+            .get("commercial_fit", {})
+            .get("activated_pilots")
+            == 1,
+            "explicit activation attribution was not preserved",
+        )
         active_pilot_report = Path(tmp) / "active-pilot-report.json"
         active_pilot_report.write_text(
             json.dumps(active_report, indent=2, sort_keys=True),
@@ -523,6 +554,15 @@ def verify_pilot_funnel(
         _require(
             active_growth.get("bottleneck", {}).get("stage") == "pilot_target",
             "activation evidence did not reopen the founding-pilot target",
+        )
+        _require(
+            next(
+                row
+                for row in active_growth.get("sources", [])
+                if row.get("source") == "outreach"
+            ).get("activated_pilots")
+            == 1,
+            "growth output lost source activation attribution",
         )
         checked.append("payment-backed-activation-transition")
 
@@ -583,7 +623,53 @@ def verify_pilot_funnel(
             "activated requires booked payment" in rejected_activation.stderr,
             "invalid activation evidence was not rejected",
         )
-        checked.append("schema-nine-activation-gate")
+        checked.append("schema-ten-activation-gate")
+
+        balanced_issues = json.loads(json.dumps(active_issues))
+        for label in ("pilot-qualified", "pilot-offered", "pilot-paid"):
+            balanced_issues[0]["labels"].append({"name": label})
+        balanced_export = Path(tmp) / "balanced-activation-issues.json"
+        balanced_export.write_text(
+            json.dumps(balanced_issues, indent=2),
+            encoding="utf-8",
+        )
+        forged_attribution = _json_report(
+            pilot_command,
+            balanced_export,
+            environment=environment,
+        )
+        (
+            forged_attribution["by_source"]["website"]["activated_pilots"],
+            forged_attribution["by_source"]["outreach"]["activated_pilots"],
+        ) = (
+            forged_attribution["by_source"]["outreach"]["activated_pilots"],
+            forged_attribution["by_source"]["website"]["activated_pilots"],
+        )
+        forged_attribution_report = (
+            Path(tmp) / "forged-activation-attribution-report.json"
+        )
+        forged_attribution_report.write_text(
+            json.dumps(forged_attribution, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+        rejected_attribution = _run_growth(
+            growth_command,
+            distribution_report,
+            forged_attribution_report,
+            output_format="json",
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(
+            not rejected_attribution.stdout,
+            "forged activation attribution emitted a growth report",
+        )
+        _require(
+            "by_source.website.activated_pilots does not match deals"
+            in rejected_attribution.stderr,
+            "forged activation attribution was not rejected",
+        )
+        checked.append("schema-ten-activation-attribution-gate")
 
         growth_text = _run_growth(
             growth_command,
@@ -598,6 +684,8 @@ def verify_pilot_funnel(
             "Pilot funnel: 2 requests / 2 attributed / 1 qualified / "
             "1 offered / 1 booked / 0 activated",
             "Revenue: $299 booked / $897 target",
+            "outreach: 1 requests, 1 qualified, 1 offered, 1 booked "
+            "($299), 0 activated",
             "Qualification scope: 2 complete / 2 target / 0 review / "
             "0 subset required",
             "Bottleneck: activation",

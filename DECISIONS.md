@@ -4642,3 +4642,27 @@ measurement still takes precedence. This protects delivery of the paid promise;
 it does not authenticate a wholly rewritten report, expose private acceptance
 evidence, infer activation from rollout or conversion, contact a customer,
 collect payment, or record a real activation.
+
+## 2026-07-29: Attribute Payment-Backed Activation Across Buyer Segments
+
+Global activation evidence answers whether paid delivery started, but it does
+not answer which acquisition source or buyer profile reached that milestone.
+After schema 9 made booked-but-unactivated delivery the commercial bottleneck,
+the existing source, readiness, and purchase-criterion tables still stopped at
+payment and resolved outcomes. An operator could not compare delivered paid
+pilots across the same segments used for acquisition and willingness-to-pay
+learning.
+
+Schema 10 adds `activated_pilots` to all three segment families. The producer
+increments it only from the same payment-backed detailed `activated` boolean.
+Joined growth requires activation not to exceed bookings, reconciles every
+segment family to `summary.activated_pilots`, and independently derives each
+segment count from detailed deals. Swapping activation between two equally
+booked segments therefore fails even when global activation remains unchanged.
+
+Schema 9 stays readable with global activation available and segment activation
+attribution unavailable. Schemas 5 through 8 retain activation as unavailable.
+The new rows are directional buyer and channel evidence, not causal
+attribution, authentication of a saved report, proof of private acceptance,
+permission to contact a customer, payment evidence, or a real activation
+event.

@@ -1269,7 +1269,7 @@ class GrowthReportTests(unittest.TestCase):
         ):
             build_growth_report(self._distribution(), erased)
 
-    def test_schema_nine_growth_derives_payment_backed_activation(
+    def test_schema_ten_growth_derives_payment_backed_activation(
         self,
     ) -> None:
         raw_issue = {
@@ -1301,7 +1301,7 @@ class GrowthReportTests(unittest.TestCase):
         }
         paid = build_funnel([raw_issue], as_of=date(2026, 7, 10))
 
-        self.assertEqual(paid["schema_version"], 9)
+        self.assertEqual(paid["schema_version"], 10)
         self.assertFalse(paid["deals"][0]["activated"])
         self.assertEqual(paid["summary"]["activated_pilots"], 0)
         self.assertEqual(
@@ -1323,8 +1323,28 @@ class GrowthReportTests(unittest.TestCase):
         active_growth = build_growth_report(self._distribution(), active)
         self.assertTrue(active["deals"][0]["activated"])
         self.assertEqual(active["summary"]["activated_pilots"], 1)
+        self.assertEqual(
+            active["by_source"]["website"]["activated_pilots"],
+            1,
+        )
+        self.assertEqual(
+            active["by_readiness"]["ready"]["activated_pilots"],
+            1,
+        )
+        self.assertEqual(
+            active["by_decision_criterion"]["rollout_fit"][
+                "activated_pilots"
+            ],
+            1,
+        )
         self.assertEqual(active_growth["bottleneck"]["stage"], "pilot_target")
         self.assertEqual(active_growth["summary"]["activated_pilots"], 1)
+        self.assertTrue(
+            active_growth["summary"][
+                "activation_attribution_reporting_available"
+            ]
+        )
+        self.assertEqual(active_growth["sources"][0]["activated_pilots"], 1)
 
         converted_without_activation = build_funnel(
             [
@@ -1412,6 +1432,34 @@ class GrowthReportTests(unittest.TestCase):
         ):
             build_growth_report(self._distribution(), forged_summary)
 
+        legacy_schema_nine = json.loads(json.dumps(paid))
+        legacy_schema_nine["schema_version"] = 9
+        for segment_name in (
+            "by_source",
+            "by_readiness",
+            "by_decision_criterion",
+        ):
+            for totals in legacy_schema_nine[segment_name].values():
+                del totals["activated_pilots"]
+        legacy_schema_nine_growth = build_growth_report(
+            self._distribution(),
+            legacy_schema_nine,
+        )
+        self.assertTrue(
+            legacy_schema_nine_growth["summary"][
+                "activation_reporting_available"
+            ]
+        )
+        self.assertFalse(
+            legacy_schema_nine_growth["summary"][
+                "activation_attribution_reporting_available"
+            ]
+        )
+        self.assertNotIn(
+            "activated_pilots",
+            legacy_schema_nine_growth["sources"][0],
+        )
+
         activated_without_booking = build_funnel(
             [
                 {
@@ -1449,6 +1497,111 @@ class GrowthReportTests(unittest.TestCase):
             build_growth_report(no_baseline, paid)["bottleneck"]["stage"],
             "measurement",
         )
+
+    def test_schema_ten_growth_rejects_forged_activation_attribution(
+        self,
+    ) -> None:
+        def issue(
+            number: int,
+            *,
+            source: str,
+            readiness: str,
+            criterion: str,
+            active: bool,
+        ) -> dict[str, object]:
+            labels = [
+                "pilot-lead",
+                "pilot-qualified",
+                "pilot-offered",
+                "pilot-paid",
+            ]
+            if active:
+                labels.append("pilot-active")
+            return {
+                "number": number,
+                "title": f"Paid pilot {number}",
+                "state": "OPEN",
+                "updatedAt": "2026-07-10T00:00:00Z",
+                "body": "\n\n".join(
+                    (
+                        "### Team size\n\n12",
+                        "### Repository count\n\n6",
+                        "### CI provider\n\nGitHub Actions",
+                        "### Repository standard to enforce\n\n"
+                        "Use one reviewed repository policy.",
+                        f"### How did you hear about Repo Scout?\n\n{source}",
+                        f"### Purchase readiness\n\n{readiness}",
+                        f"### Primary purchase criterion\n\n{criterion}",
+                    )
+                ),
+                "labels": labels,
+            }
+
+        pilot = build_funnel(
+            [
+                issue(
+                    1,
+                    source="Repo Scout website",
+                    readiness="Ready to purchase the $299 pilot",
+                    criterion="Works across our repositories and CI",
+                    active=True,
+                ),
+                issue(
+                    2,
+                    source="Direct outreach",
+                    readiness="Need internal approval for $299",
+                    criterion="Supports our required repository standards",
+                    active=False,
+                ),
+            ],
+            target_pilots=2,
+            as_of=date(2026, 7, 10),
+        )
+        growth = build_growth_report(self._distribution(), pilot)
+        self.assertEqual(growth["bottleneck"]["stage"], "activation")
+        self.assertTrue(
+            growth["evidence_quality"][
+                "activation_attribution_reporting_available"
+            ]
+        )
+
+        cases = (
+            ("by_source", "website", "outreach", "website"),
+            ("by_readiness", "ready", "needs_approval", "ready"),
+            (
+                "by_decision_criterion",
+                "rollout_fit",
+                "policy_fit",
+                "policy_fit",
+            ),
+        )
+        for table, activated_segment, paid_segment, rejected_segment in cases:
+            with self.subTest(table=table):
+                forged = json.loads(json.dumps(pilot))
+                rows = forged[table]
+                (
+                    rows[activated_segment]["activated_pilots"],
+                    rows[paid_segment]["activated_pilots"],
+                ) = (
+                    rows[paid_segment]["activated_pilots"],
+                    rows[activated_segment]["activated_pilots"],
+                )
+                with self.assertRaisesRegex(
+                    GrowthInputError,
+                    (
+                        rf"{table}\.{rejected_segment}\.activated_pilots "
+                        r"does not match deals"
+                    ),
+                ):
+                    build_growth_report(self._distribution(), forged)
+
+        impossible = json.loads(json.dumps(pilot))
+        impossible["by_source"]["website"]["activated_pilots"] = 2
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            r"by_source\.website activations exceed booked pilots",
+        ):
+            build_growth_report(self._distribution(), impossible)
 
     def test_schema_seven_growth_derives_terminal_outcomes_from_deals(
         self,
@@ -1790,7 +1943,11 @@ class GrowthReportTests(unittest.TestCase):
             with self.subTest(table=table):
                 forged = json.loads(json.dumps(pilot))
                 rows = forged[table]
-                for field in ("booked_pilots", "booked_revenue_usd"):
+                for field in (
+                    "booked_pilots",
+                    "booked_revenue_usd",
+                    "activated_pilots",
+                ):
                     rows[booked_segment][field], rows[offered_segment][
                         field
                     ] = (
@@ -1973,7 +2130,11 @@ class GrowthReportTests(unittest.TestCase):
             ),
             (
                 "bookings",
-                ("booked_pilots", "booked_revenue_usd"),
+                (
+                    "booked_pilots",
+                    "booked_revenue_usd",
+                    "activated_pilots",
+                ),
                 "booked_pilots",
             ),
             ("conversions", ("annual_conversions",), "annual_conversions"),
@@ -2132,7 +2293,7 @@ class GrowthReportTests(unittest.TestCase):
             target_pilots=1,
             as_of=date(2026, 7, 10),
         )
-        self.assertEqual(pilot["schema_version"], 9)
+        self.assertEqual(pilot["schema_version"], 10)
         build_growth_report(self._distribution(), pilot)
 
         cases = (
@@ -2411,7 +2572,7 @@ class GrowthReportTests(unittest.TestCase):
         )
         cases = [
             ({**valid_distribution, "schema_version": 3}, valid_pilot, "schema_version"),
-            (valid_distribution, {**valid_pilot, "schema_version": 10}, "schema_version"),
+            (valid_distribution, {**valid_pilot, "schema_version": 11}, "schema_version"),
             (
                 {**valid_distribution, "change": {"portable_downloads_delta": 1}},
                 valid_pilot,

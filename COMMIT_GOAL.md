@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after adding payment-backed pilot activation evidence:
-  290 / 1,000 (29.0%).
-- Remaining after adding payment-backed pilot activation evidence:
-  710 commits.
+- Progress after adding paid activation attribution:
+  291 / 1,000 (29.1%).
+- Remaining after adding paid activation attribution:
+  709 commits.
 
 ## Commit Standard
 
