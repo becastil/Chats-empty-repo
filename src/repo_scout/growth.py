@@ -20,6 +20,7 @@ from .pilot_funnel import (
     QUALIFICATION_STATUSES,
     READINESS_KEYS,
     SALES_PRIORITY_BY_READINESS,
+    SOURCE_KEYS,
     expected_sales_action,
     sales_queue_sort_key,
 )
@@ -56,6 +57,10 @@ SOURCE_TOTAL_FIELDS = (
     "offered_pilots",
     "booked_pilots",
     "booked_revenue_usd",
+    "annual_conversions",
+    "lost_pilots",
+)
+RESOLVED_OUTCOME_FIELDS = (
     "annual_conversions",
     "lost_pilots",
 )
@@ -629,6 +634,12 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
             if totals["deals"]:
                 decision_criteria.append({"criterion": criterion, **totals})
         _validate_criterion_totals(summary, decision_criteria, sources)
+    if schema == 7 and decision_criteria is not None:
+        _validate_detailed_outcome_attribution(
+            root,
+            sources,
+            decision_criteria,
+        )
 
     raw_warnings = root.get("warnings")
     if not isinstance(raw_warnings, list):
@@ -1191,6 +1202,70 @@ def _validate_criterion_totals(
                 f"pilot report {field} does not match "
                 "by_decision_criterion totals"
             )
+
+
+def _validate_detailed_outcome_attribution(
+    root: dict[str, Any],
+    sources: list[dict[str, Any]],
+    criteria: list[dict[str, Any]],
+) -> None:
+    observed_by_source = {
+        source: {field: 0 for field in RESOLVED_OUTCOME_FIELDS}
+        for source in SOURCE_KEYS
+    }
+    observed_by_criterion = {
+        criterion: {field: 0 for field in RESOLVED_OUTCOME_FIELDS}
+        for criterion in DECISION_CRITERION_KEYS
+    }
+    raw_deals = root["deals"]
+    for index, raw_deal in enumerate(raw_deals):
+        location = f"pilot report.deals[{index}]"
+        deal = _require_object(raw_deal, location)
+        source = deal.get("source")
+        if (
+            not isinstance(source, str)
+            or source not in observed_by_source
+        ):
+            raise GrowthInputError(
+                f"{location}.source must be a recognized value"
+            )
+        criterion = deal.get("decision_criterion")
+        if (
+            not isinstance(criterion, str)
+            or criterion not in observed_by_criterion
+        ):
+            raise GrowthInputError(
+                f"{location}.decision_criterion must be a recognized value"
+            )
+        is_converted = (
+            deal["booked"] and deal["stage"] == "converted"
+        )
+        is_lost = deal["stage"] == "lost"
+        for totals in (
+            observed_by_source[source],
+            observed_by_criterion[criterion],
+        ):
+            totals["annual_conversions"] += int(is_converted)
+            totals["lost_pilots"] += int(is_lost)
+
+    for location, segment_field, observed, rows in (
+        ("by_source", "source", observed_by_source, sources),
+        (
+            "by_decision_criterion",
+            "criterion",
+            observed_by_criterion,
+            criteria,
+        ),
+    ):
+        reported_by_segment = {row[segment_field]: row for row in rows}
+        for segment, expected_totals in observed.items():
+            reported_totals = reported_by_segment.get(segment, {})
+            for field, expected_count in expected_totals.items():
+                if reported_totals.get(field, 0) != expected_count:
+                    raise GrowthInputError(
+                        f"pilot report {location}.{segment}.{field} "
+                        "does not match deals"
+                    )
 
 
 def _validate_segment_totals(

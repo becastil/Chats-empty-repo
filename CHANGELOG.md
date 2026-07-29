@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Derived schema-7 conversion and resolved-loss attribution from each detailed
+  deal's recognized source and purchase criterion.
+- Rejected globally balanced source or criterion outcome swaps and malformed
+  detailed attribution before joined growth reports channel or buyer learning.
 - Derived schema-7 annual conversions from booked converted deals and resolved
   losses from lost-stage deals before joined growth selects a bottleneck.
 - Rejected coordinated summary, source, and purchase-criterion edits that

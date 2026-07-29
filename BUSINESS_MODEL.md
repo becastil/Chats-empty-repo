@@ -1311,7 +1311,13 @@ that total again from detailed deals, counting only records whose stage is
 converted and whose explicit booking evidence is true. It also derives resolved
 losses only from the detailed lost stage. Coordinated summary, source, and
 purchase-criterion edits therefore cannot manufacture retention evidence or
-erase a detailed loss from the global outcome totals.
+erase a detailed loss from the global outcome totals. Growth also requires each
+detailed source and purchase criterion to use the public intake taxonomy, then
+derives conversion and resolved-loss counts for both segment tables. A saved
+report cannot move a converted website request to outreach, or move a loss
+between purchase criteria, merely by swapping globally balanced aggregate
+outcomes. This protects directional channel and buyer-learning evidence; it
+does not prove that a source caused the outcome.
 
 An issue carrying both `pilot-converted` and `pilot-lost` remains a visible
 terminal conflict. It retains booked revenue when the cumulative paid milestone

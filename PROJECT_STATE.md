@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 283 of
-1,000, with 717 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 284 of
+1,000, with 716 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -91,10 +91,13 @@ alignment take priority over commit volume.
   detailed deal; pre-payment and untracked stages cannot be booked, while the
   paid stage cannot discard its payment evidence. Annual conversions must
   derive from booked converted deals, resolved losses must derive from
-  lost-stage deals, and terminal conflicts count as neither outcome. Complete,
-  target-profile, review-required, and first-10 subset counts must likewise
-  derive from validated qualification status, repository scope, and CI evidence
-  on every detailed deal, including closed historical records.
+  lost-stage deals, and terminal conflicts count as neither outcome. Their
+  source and purchase-criterion attribution must also reproduce the recognized
+  values on every detailed deal instead of relying on globally reconciled
+  segment tables. Complete, target-profile, review-required, and first-10
+  subset counts must likewise derive from validated qualification status,
+  repository scope, and CI evidence on every detailed deal, including closed
+  historical records.
 - Release-blocking installed-wheel proof that offers remain outside revenue,
   paid pilots book $299 toward the $897 target, and qualification, attribution,
   sales queues, and non-sensitive reporting retain their commercial semantics.

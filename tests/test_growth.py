@@ -1395,6 +1395,142 @@ class GrowthReportTests(unittest.TestCase):
         self.assertEqual(conflict["summary"]["lost_pilots"], 0)
         build_growth_report(self._distribution(), conflict)
 
+    def test_schema_seven_growth_derives_terminal_outcome_attribution(
+        self,
+    ) -> None:
+        body = "\n\n".join(
+            (
+                "### Team size\n\n12",
+                "### Repository count\n\n6",
+                "### CI provider\n\nGitHub Actions",
+                "### Repository standard to enforce\n\n"
+                "Use one reviewed repository policy.",
+                "### How did you hear about Repo Scout?\n\n"
+                "Repo Scout website",
+                "### Purchase readiness\n\n"
+                "Ready to purchase the $299 pilot",
+                "### Primary purchase criterion\n\n"
+                "Supports our required repository standards",
+            )
+        )
+        converted_issue = {
+            "number": 1,
+            "title": "Converted website pilot",
+            "state": "CLOSED",
+            "updatedAt": "2026-07-10T00:00:00Z",
+            "body": body,
+            "labels": [
+                "pilot-lead",
+                "pilot-qualified",
+                "pilot-offered",
+                "pilot-paid",
+                "pilot-active",
+                "pilot-converted",
+            ],
+        }
+        lost_issue = {
+            **converted_issue,
+            "number": 2,
+            "title": "Lost outreach pilot",
+            "body": body.replace(
+                "Repo Scout website",
+                "Direct outreach",
+            ).replace(
+                "Supports our required repository standards",
+                "Works across our repositories and CI",
+            ),
+            "labels": [
+                "pilot-lead",
+                "pilot-qualified",
+                "pilot-offered",
+                "pilot-paid",
+                "pilot-active",
+                "pilot-lost",
+            ],
+        }
+        pilot = build_funnel(
+            [converted_issue, lost_issue],
+            target_pilots=2,
+            as_of=date(2026, 7, 10),
+        )
+        build_growth_report(self._distribution(), pilot)
+
+        unknown = build_funnel(
+            [
+                {
+                    **converted_issue,
+                    "number": 3,
+                    "title": "Converted pilot with edited answers",
+                    "body": body.replace(
+                        "Repo Scout website",
+                        "Email newsletter",
+                    ).replace(
+                        "Supports our required repository standards",
+                        "Lowest price",
+                    ),
+                }
+            ],
+            target_pilots=1,
+            as_of=date(2026, 7, 10),
+        )
+        self.assertEqual(unknown["deals"][0]["source"], "unknown")
+        self.assertEqual(
+            unknown["deals"][0]["decision_criterion"],
+            "unknown",
+        )
+        build_growth_report(self._distribution(), unknown)
+
+        swap_cases = (
+            (
+                "by_source",
+                "website",
+                "outreach",
+                "annual_conversions",
+            ),
+            ("by_source", "website", "outreach", "lost_pilots"),
+            (
+                "by_decision_criterion",
+                "policy_fit",
+                "rollout_fit",
+                "annual_conversions",
+            ),
+            (
+                "by_decision_criterion",
+                "policy_fit",
+                "rollout_fit",
+                "lost_pilots",
+            ),
+        )
+        for table, first, second, field in swap_cases:
+            with self.subTest(table=table, field=field):
+                forged = json.loads(json.dumps(pilot))
+                rows = forged[table]
+                rows[first][field], rows[second][field] = (
+                    rows[second][field],
+                    rows[first][field],
+                )
+                with self.assertRaisesRegex(
+                    GrowthInputError,
+                    rf"{table}\.{first}\.{field} does not match deals",
+                ):
+                    build_growth_report(self._distribution(), forged)
+
+        malformed_cases = (
+            ("source", ["email"]),
+            ("source", "email"),
+            ("decision_criterion", {"name": "price"}),
+            ("decision_criterion", "price"),
+        )
+        for field, value in malformed_cases:
+            with self.subTest(field=field, value_type=type(value).__name__):
+                malformed = json.loads(json.dumps(pilot))
+                malformed["deals"][0][field] = value
+                with self.assertRaisesRegex(
+                    GrowthInputError,
+                    rf"deals\[0\]\.{field} must be a recognized value",
+                ):
+                    build_growth_report(self._distribution(), malformed)
+
     def test_schema_seven_growth_derives_qualification_from_deals(
         self,
     ) -> None:
@@ -1743,12 +1879,24 @@ class GrowthReportTests(unittest.TestCase):
                 + ["paid"] * (booked - converted)
                 + ["converted"] * converted
             )
+            source_plan = [
+                source
+                for source, totals in source_totals.items()
+                for _ in range(totals["deals"])
+            ]
+            criterion_plan = [
+                criterion
+                for criterion, totals in criterion_totals.items()
+                for _ in range(totals["deals"])
+            ]
             report["deals"] = [
                 {
                     "number": index + 1,
                     "stage": stage,
                     "state": "CLOSED",
                     "booked": stage in {"paid", "active", "converted"},
+                    "source": source_plan[index],
+                    "decision_criterion": criterion_plan[index],
                     "qualification": {
                         "status": "target",
                         "pilot_repository_scope": "within_offer",

@@ -4458,3 +4458,30 @@ converted-without-payment records. This protects global retention and loss
 evidence inside saved reports; per-segment attribution remains aggregate
 evidence. It does not authenticate a wholly rewritten report, apply lifecycle
 labels, collect payment, observe a customer outcome, or record revenue.
+
+## 2026-07-29: Derive Resolved Outcome Attribution From Detailed Deals
+
+The prior outcome reconciliation proved that schema-7 global conversion and
+loss totals matched the detailed deals. Source and purchase-criterion rows
+still needed only to reconcile back to those same global totals. A saved report
+could therefore exchange one conversion and one loss between website and
+outreach, or between policy fit and rollout fit, without changing any global
+total or detailed deal. Joined growth would then report false channel and buyer
+learning even though its overall retention state remained correct.
+
+Growth now requires every detailed schema-7 deal to carry a source and purchase
+criterion from the public intake taxonomies. It derives payment-backed annual
+conversions and resolved losses independently for each source and criterion,
+then requires the corresponding aggregate row to match. Converted records
+without payment and terminal conflicts remain excluded under the existing
+producer rules. Schema-5 and schema-6 aggregate reports remain compatible.
+
+Regression coverage uses one paid converted website request selected for policy
+fit and one paid lost outreach request selected for rollout fit. It preserves
+the producer report and an edited-answer fallback bucket, then independently
+rejects conversion and loss swaps across both segment tables. Unrecognized and
+non-string detailed values on closed records also fail through controlled input
+errors. This protects directional acquisition and purchase-criterion learning
+inside a saved report. It does not derive causal attribution, authenticate a
+wholly rewritten report, contact a buyer, collect payment, observe an external
+outcome, or record revenue.
