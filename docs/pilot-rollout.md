@@ -93,6 +93,11 @@ Duplicate-key failures JSON-escape the decoded key before it enters the
 operator error. Legal JSON escapes for newlines, C1 terminal controls, or
 bidirectional controls therefore remain visible as escaped text on one line
 and cannot forge rollout metrics.
+Evidence filenames and direct source labels use the same display boundary in
+parser, validation, inspection, and loading errors. Ordinary printable paths
+remain unchanged; control-bearing paths are JSON-escaped on one line.
+Successful `--format json --details` output preserves the exact path as a
+structurally escaped JSON value.
 
 Repository IDs must be non-empty printable strings of at most 128 characters
 without surrounding whitespace. Newlines, terminal controls, bidirectional

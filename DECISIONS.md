@@ -4815,3 +4815,30 @@ through `repo-scout-rollout` and requires exit code 2, empty standard output,
 the exact escaped key, and unchanged evidence bytes. This protects paid rollout
 error presentation; it does not authenticate a bundle, verify freshness, prove
 customer activation, approve outreach, collect payment, or create revenue.
+
+## 2026-07-29: Escape Rollout Evidence Paths Only At Text Boundaries
+
+Rollout repository IDs, branches, Markdown code spans, and duplicate keys now
+have presentation-safe error contracts. Evidence filenames and direct library
+source labels still entered parser, validation, inspection, and loading errors
+verbatim. Filesystems permit newlines, terminal controls, Unicode separators,
+and bidirectional controls in a filename, so a malformed paid-rollout bundle
+could forge additional stderr lines even though no summary was emitted.
+Operating-system exceptions could repeat the same unsafe path.
+
+One shared formatter now preserves a printable path byte for byte and otherwise
+uses `json.dumps` to produce a one-line JSON string literal. The loader formats
+both the requested path and repeated exception text. The parser formats its
+source label once, and direct summary validation applies the same boundary.
+Original values remain untouched: successful detailed JSON still carries the
+exact path and relies on structural JSON escaping, while counts-only output
+continues to omit paths.
+
+Source coverage combines newline, carriage return, ESC, C1 CSI, Unicode line
+separator, and bidirectional controls across parser labels, direct validation,
+missing paths, and successful structured details. Installed release smoke
+rejects an unchanged malformed file with the composite name on exactly one
+stderr line, then proves a valid composite filename round-trips through detailed
+JSON. This protects paid-rollout operator presentation; it does not authenticate
+the file, verify freshness, prove activation, approve outreach, collect payment,
+or create revenue.

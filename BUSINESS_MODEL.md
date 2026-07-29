@@ -187,6 +187,14 @@ Symlinks, special files, replacement, mutation, and oversized sparse evidence
 therefore fail before a cross-repository summary is emitted. This protects the
 paid delivery acceptance record without treating a bundle as customer
 activation, payment, demand, or revenue.
+Controlled parser, validation, inspection, and loading failures preserve
+ordinary printable evidence names but JSON-escape any control-bearing source
+path and repeated operating-system context onto one line. Valid detailed JSON
+still carries the exact path as structured data, while the privacy-default
+summary still omits paths. Installed release smoke proves a malformed filename
+cannot forge metrics or mutate evidence. This protects paid-delivery error
+presentation without authenticating the file or creating activation, payment,
+or revenue evidence.
 Rollout repository IDs are limited to non-empty printable values of at most
 128 characters without surrounding whitespace. The same validation runs before
 the primary CLI generates a bundle and before the aggregator constructs a
@@ -1249,11 +1257,12 @@ fingerprint and Git commit coverage, and verified shared policy identity. It
 also proves the default summary omits repository IDs, fingerprints, commits,
 and evidence paths while explicit details remain available, and rejects a
 duplicate repository, a presentation-unsafe repository identity, or a
-control-bearing duplicate JSON key before emitting a report. It also generates
-one repository ID containing Markdown backticks through the packaged primary
-command and requires exact metadata plus one contained visible code span.
-Synthetic bundles validate the distribution contract; they are not pilot usage
-or customer evidence.
+control-bearing duplicate JSON key before emitting a report. Malformed
+evidence under a control-bearing filename must also retain one-line escaped
+path context. The check additionally generates one repository ID containing
+Markdown backticks through the packaged primary command and requires exact
+metadata plus one contained visible code span. Synthetic bundles validate the
+distribution contract; they are not pilot usage or customer evidence.
 
 The hosted offer now leads with this cross-repository outcome: complete policy
 and commit identity coverage, shared-policy verification, and visible

@@ -78,10 +78,10 @@
   repository identities and branch metadata pass their bounded printable
   operator-output contracts and whose visible Markdown identities remain
   contained when printable backticks are present. Ambiguous duplicate-key
-  failures must also remain one-line JSON-escaped errors. Work the ordered
-  schema-9+ activation queue through payment-backed first-repository activation
-  or terminal reconciliation before pursuing another sale. Compare readiness
-  and purchase criteria by source.
+  failures and control-bearing evidence path failures must remain one-line
+  JSON-escaped errors. Work the ordered schema-9+ activation queue through
+  payment-backed first-repository activation or terminal reconciliation before
+  pursuing another sale. Compare readiness and purchase criteria by source.
 - Add a private pilot contact path after public intake validates demand.
 
 ## Revenue Validation

@@ -222,6 +222,9 @@ prove freshness. The aggregator accepts legacy schema-1 bundles, rejects
 duplicate IDs, duplicate JSON keys, and malformed or contradictory metadata,
 performs no uploads, and requires no API key. Duplicate-key errors JSON-escape
 the decoded key so presentation controls cannot create extra terminal lines.
+Parser and file-loading errors similarly preserve ordinary printable evidence
+paths but JSON-escape a control-bearing path and exception context onto one
+line. Successful detailed JSON retains the exact path as structured data.
 Every input must be a direct
 regular-file leaf no larger than 1 MiB (1,048,576 bytes). The command parses
 one descriptor-bound UTF-8 buffer, then accepts it only if the exact bytes and

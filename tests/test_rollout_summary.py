@@ -289,6 +289,51 @@ class RolloutSummaryTests(unittest.TestCase):
         self.assertNotIn("\u009b", message)
         self.assertNotIn("\u202e", message)
 
+    def test_unsafe_source_labels_are_escaped_in_validation_errors(self) -> None:
+        ordinary_source = "reports/café.md"
+        with self.assertRaises(RolloutEvidenceError) as raised:
+            parse_rollout_metadata("# Plain report\n", source=ordinary_source)
+        self.assertEqual(
+            str(raised.exception),
+            (
+                f"{ordinary_source} must contain exactly one rollout "
+                "metadata section"
+            ),
+        )
+
+        source = (
+            "bundle\nRepositories: 999\r\x1b\u009b\u2028\u202e.md"
+        )
+        encoded_source = json.dumps(source)
+
+        with self.assertRaises(RolloutEvidenceError) as raised:
+            parse_rollout_metadata("# Plain report\n", source=source)
+
+        message = str(raised.exception)
+        self.assertIn(encoded_source, message)
+        self.assertEqual(len(message.splitlines()), 1)
+        self.assertNotIn("\nRepositories: 999", message)
+        self.assertNotIn("\r", message)
+        self.assertNotIn("\x1b", message)
+        self.assertNotIn("\u009b", message)
+        self.assertNotIn("\u2028", message)
+        self.assertNotIn("\u202e", message)
+
+        invalid = self._metadata("api")
+        invalid["policy"]["fingerprint"] = "sha256:invalid"
+        with self.assertRaises(RolloutEvidenceError) as raised:
+            build_rollout_summary([(source, invalid)])
+
+        message = str(raised.exception)
+        self.assertIn(encoded_source, message)
+        self.assertEqual(len(message.splitlines()), 1)
+        self.assertNotIn("\nRepositories: 999", message)
+        self.assertNotIn("\r", message)
+        self.assertNotIn("\x1b", message)
+        self.assertNotIn("\u009b", message)
+        self.assertNotIn("\u2028", message)
+        self.assertNotIn("\u202e", message)
+
     def test_schema_one_bundles_remain_compatible_without_identity_claims(self) -> None:
         legacy = self._metadata("api", schema_version=1)
 
@@ -459,6 +504,61 @@ class RolloutSummaryTests(unittest.TestCase):
         self.assertEqual(exit_code, 2)
         self.assertEqual(stdout.getvalue(), "")
         self.assertIn("could not read missing.md", stderr.getvalue())
+
+    def test_main_escapes_unsafe_missing_evidence_path(self) -> None:
+        with TemporaryDirectory() as tmp:
+            missing = Path(tmp) / (
+                "missing\nRepositories: 999\r\x1b\u009b\u2028\u202e.md"
+            )
+            encoded_path = json.dumps(str(missing))
+            stderr = io.StringIO()
+            stdout = io.StringIO()
+
+            with redirect_stderr(stderr), redirect_stdout(stdout):
+                exit_code = main([str(missing)])
+
+            message = stderr.getvalue()
+            self.assertEqual(exit_code, 2)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertIn(encoded_path, message)
+            self.assertEqual(len(message.splitlines()), 1)
+            self.assertNotIn("\nRepositories: 999", message)
+            self.assertNotIn("\r", message)
+            self.assertNotIn("\x1b", message)
+            self.assertNotIn("\u009b", message)
+            self.assertNotIn("\u2028", message)
+            self.assertNotIn("\u202e", message)
+
+    def test_json_details_preserve_unsafe_path_as_structured_data(self) -> None:
+        with TemporaryDirectory() as tmp:
+            evidence = Path(tmp) / (
+                "bundle\nRepositories: 999\r\x1b\u009b\u2028\u202e.md"
+            )
+            evidence.write_text(
+                self._bundle(self._metadata("api")),
+                encoding="utf-8",
+            )
+            stdout = io.StringIO()
+
+            with redirect_stdout(stdout):
+                exit_code = main(
+                    ["--format", "json", "--details", str(evidence)]
+                )
+
+            encoded = stdout.getvalue()
+            report = json.loads(encoded)
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(
+                report["repositories"][0]["evidence_file"],
+                str(evidence),
+            )
+            self.assertIn(json.dumps(str(evidence)), encoded)
+            self.assertNotIn("\nRepositories: 999", encoded)
+            self.assertNotIn("\r", encoded)
+            self.assertNotIn("\x1b", encoded)
+            self.assertNotIn("\u009b", encoded)
+            self.assertNotIn("\u2028", encoded)
+            self.assertNotIn("\u202e", encoded)
 
     def test_main_rejects_non_regular_evidence_before_read(self) -> None:
         kinds = ["directory"]

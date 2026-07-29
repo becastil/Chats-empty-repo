@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- JSON-escaped control-bearing rollout evidence paths and source labels before
+  including them in parser, validation, or file-loading errors.
+- Preserved ordinary printable path errors and exact successful detailed JSON
+  path values while preventing filenames from forging terminal lines.
+- Extended the installed rollout smoke to require escaped path context, empty
+  report output, and unchanged evidence for an unsafe malformed filename.
 - JSON-escaped duplicated rollout metadata keys before including them in
   operator errors.
 - Prevented decoded line, C1 terminal, and bidirectional controls in ambiguous

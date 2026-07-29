@@ -231,6 +231,71 @@ required_files = ["README.md"]
         )
         checked.append("duplicate-key-safe-error")
 
+        unsafe_path = root / (
+            "unsafe-path\n"
+            f"{INJECTED_BRANCH_MARKER}\r\x1b\u009b\u2028\u202e.md"
+        )
+        unsafe_path.write_text("# Plain report\n", encoding="utf-8")
+        original_unsafe_path = unsafe_path.read_bytes()
+        encoded_unsafe_path = json.dumps(str(unsafe_path))
+        rejected = _run(
+            rollout_command,
+            (unsafe_path,),
+            output_format="text",
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(not rejected.stdout, "unsafe evidence path emitted a report")
+        _require(
+            encoded_unsafe_path in rejected.stderr,
+            "unsafe evidence path did not produce its escaped context",
+        )
+        _require(
+            len(rejected.stderr.splitlines()) == 1,
+            "unsafe evidence path produced more than one error line",
+        )
+        _require(
+            f"\n{INJECTED_BRANCH_MARKER}" not in rejected.stderr
+            and "\r" not in rejected.stderr
+            and "\x1b" not in rejected.stderr
+            and "\u009b" not in rejected.stderr
+            and "\u2028" not in rejected.stderr
+            and "\u202e" not in rejected.stderr,
+            "unsafe evidence path injected terminal presentation controls",
+        )
+        _require(
+            unsafe_path.read_bytes() == original_unsafe_path,
+            "unsafe evidence path changed during rejection",
+        )
+        checked.append("unsafe-evidence-path-contained")
+
+        unsafe_details_path = root / (
+            "unsafe-details\n"
+            f"{INJECTED_BRANCH_MARKER}\r\x1b\u009b\u2028\u202e.md"
+        )
+        _write_bundle(
+            unsafe_details_path,
+            _metadata("company/unsafe-details", commit=API_COMMIT),
+        )
+        detailed_output = _run(
+            rollout_command,
+            (unsafe_details_path,),
+            output_format="json",
+            details=True,
+            environment=environment,
+            expected_exit_code=0,
+        ).stdout
+        _require(
+            json.dumps(str(unsafe_details_path)) in detailed_output,
+            "unsafe evidence path was not structurally escaped in JSON",
+        )
+        detailed_report = json.loads(detailed_output)
+        _require(
+            detailed_report["repositories"][0]["evidence_file"]
+            == str(unsafe_details_path),
+            "structured JSON changed the exact unsafe evidence path",
+        )
+
         symlink = root / "symlink.md"
         symlink.symlink_to(api)
         rejected = _run(

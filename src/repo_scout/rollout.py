@@ -72,26 +72,39 @@ def format_rollout_metadata(metadata: dict[str, Any]) -> str:
     return json.dumps(validated, indent=2, sort_keys=True)
 
 
+def format_evidence_source(source: str | Path) -> str:
+    text = str(source)
+    return text if text.isprintable() else json.dumps(text)
+
+
 def load_rollout_metadata(path: str | Path) -> dict[str, Any]:
     requested = Path(path)
+    requested_display = format_evidence_source(requested)
     try:
         if "\0" in str(requested):
             raise ValueError("NUL is not allowed")
         source = requested.parent.resolve() / requested.name
         source_details = source.lstat()
     except FileNotFoundError as exc:
-        raise RolloutEvidenceError(f"could not read {requested}: {exc}") from exc
-    except (OSError, RuntimeError, ValueError) as exc:
+        detail = format_evidence_source(str(exc))
         raise RolloutEvidenceError(
-            f"could not inspect rollout evidence path {requested}: {exc}"
+            f"could not read {requested_display}: {detail}"
+        ) from exc
+    except (OSError, RuntimeError, ValueError) as exc:
+        detail = format_evidence_source(str(exc))
+        raise RolloutEvidenceError(
+            "could not inspect rollout evidence path "
+            f"{requested_display}: {detail}"
         ) from exc
     if stat.S_ISLNK(source_details.st_mode):
         raise RolloutEvidenceError(
-            f"rollout evidence path must not be a symlink: {requested}"
+            "rollout evidence path must not be a symlink: "
+            f"{requested_display}"
         )
     if not stat.S_ISREG(source_details.st_mode):
         raise RolloutEvidenceError(
-            f"rollout evidence path must be a regular file: {requested}"
+            "rollout evidence path must be a regular file: "
+            f"{requested_display}"
         )
 
     try:
@@ -103,36 +116,45 @@ def load_rollout_metadata(path: str | Path) -> dict[str, Any]:
             return parse_rollout_metadata(content, source=str(requested))
     except StablePathError as exc:
         raise RolloutEvidenceError(
-            f"rollout evidence path changed during loading: {requested}"
+            "rollout evidence path changed during loading: "
+            f"{requested_display}"
         ) from exc
     except StableContentError as exc:
         raise RolloutEvidenceError(
-            f"rollout evidence changed during loading: {requested}"
+            f"rollout evidence changed during loading: {requested_display}"
         ) from exc
     except FileSizeLimitError as exc:
         raise RolloutEvidenceError(
             "rollout evidence exceeds "
-            f"{MAX_ROLLOUT_EVIDENCE_BYTES} bytes: {requested}"
+            f"{MAX_ROLLOUT_EVIDENCE_BYTES} bytes: {requested_display}"
         ) from exc
     except (OSError, UnicodeDecodeError) as exc:
-        raise RolloutEvidenceError(f"could not read {requested}: {exc}") from exc
+        detail = format_evidence_source(str(exc))
+        raise RolloutEvidenceError(
+            f"could not read {requested_display}: {detail}"
+        ) from exc
 
 
 def parse_rollout_metadata(
     content: str, *, source: str = "<rollout evidence>"
 ) -> dict[str, Any]:
+    source_display = format_evidence_source(source)
     marker_count = content.count(ROLLOUT_METADATA_START)
     if marker_count != 1:
         raise RolloutEvidenceError(
-            f"{source} must contain exactly one rollout metadata section"
+            f"{source_display} must contain exactly one rollout metadata section"
         )
 
     encoded = content.split(ROLLOUT_METADATA_START, 1)[1]
     end = encoded.find(ROLLOUT_METADATA_END)
     if end < 0:
-        raise RolloutEvidenceError(f"{source} has an unterminated metadata block")
+        raise RolloutEvidenceError(
+            f"{source_display} has an unterminated metadata block"
+        )
     if encoded[end + len(ROLLOUT_METADATA_END) :].strip():
-        raise RolloutEvidenceError(f"{source} has content after rollout metadata")
+        raise RolloutEvidenceError(
+            f"{source_display} has content after rollout metadata"
+        )
 
     try:
         metadata = json.loads(
@@ -141,16 +163,18 @@ def parse_rollout_metadata(
         )
     except json.JSONDecodeError as exc:
         raise RolloutEvidenceError(
-            f"invalid rollout metadata JSON in {source}: {exc.msg}"
+            f"invalid rollout metadata JSON in {source_display}: {exc.msg}"
         ) from exc
     except RolloutEvidenceError as exc:
         raise RolloutEvidenceError(
-            f"invalid rollout metadata JSON in {source}: {exc}"
+            f"invalid rollout metadata JSON in {source_display}: {exc}"
         ) from exc
     try:
         return validate_rollout_metadata(metadata)
     except RolloutEvidenceError as exc:
-        raise RolloutEvidenceError(f"invalid rollout metadata in {source}: {exc}") from exc
+        raise RolloutEvidenceError(
+            f"invalid rollout metadata in {source_display}: {exc}"
+        ) from exc
 
 
 def validate_rollout_metadata(metadata: Any) -> dict[str, Any]:

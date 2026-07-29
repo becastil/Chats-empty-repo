@@ -9,6 +9,7 @@ from .version import add_version_argument
 
 from .rollout import (
     RolloutEvidenceError,
+    format_evidence_source,
     load_rollout_metadata,
     validate_rollout_metadata,
 )
@@ -33,7 +34,8 @@ def build_rollout_summary(
             )
         except RolloutEvidenceError as exc:
             raise RolloutEvidenceError(
-                f"invalid rollout metadata in {evidence_file}: {exc}"
+                "invalid rollout metadata in "
+                f"{format_evidence_source(evidence_file)}: {exc}"
             ) from exc
 
     repositories: list[dict[str, Any]] = []

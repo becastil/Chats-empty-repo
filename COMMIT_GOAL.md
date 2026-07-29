@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after containing rollout duplicate-key errors:
-  297 / 1,000 (29.7%).
-- Remaining after containing rollout duplicate-key errors:
-  703 commits.
+- Progress after containing rollout evidence path errors:
+  298 / 1,000 (29.8%).
+- Remaining after containing rollout evidence path errors:
+  702 commits.
 
 ## Commit Standard
 
