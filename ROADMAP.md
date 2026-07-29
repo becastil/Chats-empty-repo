@@ -69,7 +69,7 @@
   `--record-outcome`. Do not add another acquisition asset before executing
   this bounded review queue.
 - Collect the first three public pilot requests, work only the schema-7 sales
-  queue whose detailed booking and revenue attribution, qualification,
+  queue whose detailed request, booking, revenue, qualification, and
   resolved-outcome attribution, membership, priority, canonical
   activity-derived age, and readiness-stage-age-number order pass joined-growth
   validation, and compare readiness and purchase criteria by source.

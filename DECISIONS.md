@@ -4513,3 +4513,26 @@ channel and purchase-criterion evidence under the fixed-price schema. It does
 not support future per-deal discounts, refunds, or currencies, derive causal
 attribution, authenticate a wholly rewritten report, collect payment, or record
 revenue.
+
+## 2026-07-29: Derive Request Attribution From Detailed Deals
+
+Schema-7 growth already reconciled total requests across its summary, source,
+and purchase-criterion tables. Those segment tables could still exchange
+request counts while preserving every global total and all detailed deals.
+That allowed an unchanged 2:1 website-to-outreach mix, or policy-fit-to-rollout
+mix, to be reported as 1:2 and misdirect acquisition or qualification work.
+
+The detailed segment-attribution pass now counts every deal once for its
+recognized source and purchase criterion alongside booking, conversion, and
+loss outcomes. Every corresponding aggregate request count must match.
+Schema-5 and schema-6 reports retain their aggregate compatibility.
+
+Regression coverage preserves three qualified, offered, unpaid requests split
+2:1 across website and outreach and across policy fit and rollout fit. It then
+redistributes request, qualification, and offer counts to keep every aggregate
+row cumulative while requiring joined growth to reject the forged request
+attribution. This protects directional channel and buyer-learning evidence.
+Per-segment qualification and offer progression remain aggregate evidence
+until detailed historical records expose those cumulative milestones. The
+change does not authenticate a wholly rewritten report, infer causality,
+contact a buyer, collect payment, or record revenue.

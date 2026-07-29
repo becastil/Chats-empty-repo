@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Derived schema-7 request counts from every detailed deal's recognized source
+  and purchase criterion before joined growth trusts segment totals.
+- Rejected globally balanced request-count redistribution that preserves the
+  funnel total while redirecting acquisition or buyer-learning evidence.
 - Derived schema-7 booked-pilot attribution from detailed deals by source and
   purchase criterion, binding each segment's revenue through the fixed $299
   price formula.

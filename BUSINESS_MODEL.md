@@ -1289,13 +1289,17 @@ before it computes revenue or selects a bottleneck. Pre-payment and untracked
 stages cannot claim booking evidence, and the paid stage cannot omit it.
 Coordinating only the summary, source, and purchase-criterion aggregates can no
 longer turn an offered deal into $299 of booked revenue. Growth also derives
-booked-pilot counts independently for each detailed source and purchase
-criterion. Because schema 7 uses one validated $299 price and requires every
-segment's revenue to equal price times booked pilots, a coordinated count-and-
-revenue swap cannot move payment evidence to another channel or buyer
-criterion. This is internal saved-report consistency, not authentication of a
-wholly rewritten report, causal attribution, or proof that payment occurred
-outside the human-applied `pilot-paid` label.
+request and booked-pilot counts independently for each detailed source and
+purchase criterion. A coordinated aggregate rewrite therefore cannot move
+request volume to another channel or buyer criterion. Because schema 7 uses
+one validated $299 price and requires every segment's revenue to equal price
+times booked pilots, a coordinated booked-count-and-revenue swap cannot move
+payment evidence either. Per-segment qualification and offer progression
+remain aggregate evidence until detailed historical records expose those
+cumulative milestones. These checks establish internal saved-report
+consistency, not authentication of a wholly rewritten report, causal
+attribution, or proof that payment occurred outside the human-applied
+`pilot-paid` label.
 
 Direct callers may change the pilot target and inactivity threshold only with
 genuine positive integers. Booleans, floats, and numeric strings fail before

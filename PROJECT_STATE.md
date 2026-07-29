@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 285 of
-1,000, with 715 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 286 of
+1,000, with 714 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -92,9 +92,10 @@ alignment take priority over commit volume.
   paid stage cannot discard its payment evidence. Annual conversions must
   derive from booked converted deals, resolved losses must derive from
   lost-stage deals, and terminal conflicts count as neither outcome.
-  Booked-pilot, annual-conversion, and resolved-loss attribution by source and
-  purchase criterion must also reproduce the recognized values on every
-  detailed deal instead of relying on globally reconciled segment tables.
+  Request, booked-pilot, annual-conversion, and resolved-loss attribution by
+  source and purchase criterion must also reproduce the recognized values on
+  every detailed deal instead of relying on globally reconciled segment
+  tables.
   Because schema 7 fixes one $299 pilot price and each segment's revenue must
   equal price times booked pilots, detailed booking attribution also binds
   segment revenue. Complete, target-profile, review-required, and first-10

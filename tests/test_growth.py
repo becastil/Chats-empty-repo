@@ -1615,6 +1615,91 @@ class GrowthReportTests(unittest.TestCase):
                 ):
                     build_growth_report(self._distribution(), forged)
 
+    def test_schema_seven_growth_derives_request_attribution(
+        self,
+    ) -> None:
+        body = "\n\n".join(
+            (
+                "### Team size\n\n12",
+                "### Repository count\n\n6",
+                "### CI provider\n\nGitHub Actions",
+                "### Repository standard to enforce\n\n"
+                "Use one reviewed repository policy.",
+                "### How did you hear about Repo Scout?\n\n"
+                "Repo Scout website",
+                "### Purchase readiness\n\n"
+                "Ready to purchase the $299 pilot",
+                "### Primary purchase criterion\n\n"
+                "Supports our required repository standards",
+            )
+        )
+        website_issue = {
+            "number": 1,
+            "title": "Website pilot",
+            "state": "CLOSED",
+            "updatedAt": "2026-07-10T00:00:00Z",
+            "body": body,
+            "labels": [
+                "pilot-lead",
+                "pilot-qualified",
+                "pilot-offered",
+            ],
+        }
+        outreach_issue = {
+            **website_issue,
+            "number": 3,
+            "title": "Outreach pilot",
+            "body": body.replace(
+                "Repo Scout website",
+                "Direct outreach",
+            ).replace(
+                "Supports our required repository standards",
+                "Works across our repositories and CI",
+            ),
+        }
+        pilot = build_funnel(
+            [
+                website_issue,
+                {
+                    **website_issue,
+                    "number": 2,
+                    "title": "Second website pilot",
+                },
+                outreach_issue,
+            ],
+            target_pilots=1,
+            as_of=date(2026, 7, 10),
+        )
+        build_growth_report(self._distribution(), pilot)
+
+        cases = (
+            ("by_source", "website", "outreach"),
+            (
+                "by_decision_criterion",
+                "policy_fit",
+                "rollout_fit",
+            ),
+        )
+        for table, larger_segment, smaller_segment in cases:
+            with self.subTest(table=table):
+                forged = json.loads(json.dumps(pilot))
+                rows = forged[table]
+                for field in (
+                    "deals",
+                    "qualified_pilots",
+                    "offered_pilots",
+                ):
+                    rows[larger_segment][field] -= 1
+                    rows[smaller_segment][field] += 1
+                with self.assertRaisesRegex(
+                    GrowthInputError,
+                    (
+                        rf"{table}\.{larger_segment}\.deals "
+                        r"does not match deals"
+                    ),
+                ):
+                    build_growth_report(self._distribution(), forged)
+
     def test_schema_seven_growth_derives_qualification_from_deals(
         self,
     ) -> None:

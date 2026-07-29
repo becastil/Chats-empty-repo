@@ -61,6 +61,7 @@ SOURCE_TOTAL_FIELDS = (
     "lost_pilots",
 )
 DETAILED_ATTRIBUTION_FIELDS = (
+    "deals",
     "booked_pilots",
     "annual_conversions",
     "lost_pilots",
@@ -636,7 +637,7 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
                 decision_criteria.append({"criterion": criterion, **totals})
         _validate_criterion_totals(summary, decision_criteria, sources)
     if schema == 7 and decision_criteria is not None:
-        _validate_detailed_commercial_attribution(
+        _validate_detailed_segment_attribution(
             root,
             sources,
             decision_criteria,
@@ -1205,7 +1206,7 @@ def _validate_criterion_totals(
             )
 
 
-def _validate_detailed_commercial_attribution(
+def _validate_detailed_segment_attribution(
     root: dict[str, Any],
     sources: list[dict[str, Any]],
     criteria: list[dict[str, Any]],
@@ -1245,6 +1246,7 @@ def _validate_detailed_commercial_attribution(
             observed_by_source[source],
             observed_by_criterion[criterion],
         ):
+            totals["deals"] += 1
             totals["booked_pilots"] += int(is_booked)
             totals["annual_conversions"] += int(is_converted)
             totals["lost_pilots"] += int(is_lost)
