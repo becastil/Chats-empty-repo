@@ -28,7 +28,7 @@ from .pilot_funnel import (
 
 SCHEMA_VERSION = 2
 SUPPORTED_DISTRIBUTION_SCHEMAS = {2}
-SUPPORTED_PILOT_SCHEMAS = {5, 6, 7, 8}
+SUPPORTED_PILOT_SCHEMAS = {5, 6, 7, 8, 9}
 LEGACY_SALES_QUEUE_STATE = "legacy"
 EMPTY_SALES_QUEUE_STATE = "empty"
 ACTIVE_SALES_QUEUE_STATE = "active"
@@ -103,6 +103,7 @@ def build_growth_report(
         qualified_pilots=qualified_pilots,
         offered_pilots=offered_pilots,
         booked_pilots=pilot_summary["booked_pilots"],
+        activated_pilots=pilot_summary.get("activated_pilots"),
         pilot_price_usd=pricing["pilot_price_usd"],
         target_pilots=pricing["target_pilots"],
         annual_conversions=pilot_summary["annual_conversions"],
@@ -214,6 +215,10 @@ def build_growth_report(
             "qualified_pilots": qualified_pilots,
             "offered_pilots": offered_pilots,
             "booked_pilots": pilot_summary["booked_pilots"],
+            "activated_pilots": pilot_summary.get("activated_pilots"),
+            "activation_reporting_available": pilot[
+                "activation_reporting_available"
+            ],
             "booked_revenue_usd": pilot_summary["booked_revenue_usd"],
             "target_pilots": pricing["target_pilots"],
             "target_revenue_usd": pricing["target_revenue_usd"],
@@ -255,6 +260,9 @@ def build_growth_report(
             "distribution_warnings": distribution["warning_count"],
             "pilot_warnings": pilot["warning_count"],
             "pilot_schema_version": pilot["schema_version"],
+            "activation_reporting_available": pilot[
+                "activation_reporting_available"
+            ],
             "decision_criterion_reporting_available": pilot[
                 "decision_criterion_reporting_available"
             ],
@@ -283,7 +291,9 @@ def build_growth_report(
             "Purchase readiness is self-reported intent, not payment or proof of "
             "willingness to pay. Purchase criteria are self-reported evaluation "
             "priorities, not causal attribution or proof of a moat. Only paid "
-            "pilot stages count as revenue."
+            "pilot stages count as revenue. Activation requires explicit, "
+            "payment-backed pilot-active evidence and is not inferred from "
+            "rollout or conversion labels."
         ),
     }
 
@@ -300,6 +310,11 @@ def format_growth_report(report: dict[str, Any]) -> str:
             f"{_signed(change['portable_downloads_delta'])} portable / "
             f"{_signed(change['wheel_downloads_delta'])} wheel"
         )
+    activation_suffix = (
+        f" / {summary['activated_pilots']} activated"
+        if summary["activation_reporting_available"]
+        else ""
+    )
 
     lines = [
         "Repo Scout Growth Review",
@@ -310,6 +325,7 @@ def format_growth_report(report: dict[str, Any]) -> str:
             f"{summary['qualified_pilots']} qualified / "
             f"{summary['offered_pilots']} offered / "
             f"{summary['booked_pilots']} booked"
+            f"{activation_suffix}"
         ),
         (
             f"Revenue: ${summary['booked_revenue_usd']} booked / "
@@ -415,7 +431,7 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         metavar="PILOT_REPORT",
         help=(
-            "Schema-5, schema-6, schema-7, or schema-8 "
+            "Schema-5, schema-6, schema-7, schema-8, or schema-9 "
             "repo-scout-pilot JSON report."
         ),
     )
@@ -523,6 +539,11 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
             summary[field] = _require_non_negative_int(
                 summary_object.get(field), f"pilot report.summary.{field}"
             )
+    if schema >= 9:
+        summary["activated_pilots"] = _require_non_negative_int(
+            summary_object.get("activated_pilots"),
+            "pilot report.summary.activated_pilots",
+        )
     pricing = {
         field: _require_positive_int(
             pricing_object.get(field), f"pilot report.pricing.{field}"
@@ -590,6 +611,7 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
             summary,
             pricing["pilot_price_usd"],
             report_date,
+            include_activation=schema >= 9,
         )
         sales_queue_state = (
             REPAIR_SALES_QUEUE_STATE
@@ -734,6 +756,7 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
         "purchase_readiness": readiness_rows,
         "decision_criterion_reporting_available": schema >= 6,
         "qualification_reporting_available": schema >= 7,
+        "activation_reporting_available": schema >= 9,
         "sales_queue_state": sales_queue_state,
         "decision_criteria": decision_criteria,
         "warning_count": len(raw_warnings),
@@ -745,12 +768,15 @@ def _validate_qualification_aware_sales_queue(
     summary: dict[str, int],
     pilot_price_usd: int,
     report_date: date,
+    *,
+    include_activation: bool,
 ) -> tuple[bool, bool]:
     expected_members, needs_lifecycle_repair = _expected_sales_queue_members(
         root,
         summary,
         pilot_price_usd,
         report_date,
+        include_activation=include_activation,
     )
     queue = _require_object(
         root.get("sales_queue"),
@@ -813,6 +839,8 @@ def _expected_sales_queue_members(
     summary: dict[str, int],
     pilot_price_usd: int,
     report_date: date,
+    *,
+    include_activation: bool,
 ) -> tuple[dict[int, dict[str, Any]], bool]:
     raw_deals = root.get("deals")
     if not isinstance(raw_deals, list):
@@ -825,6 +853,7 @@ def _expected_sales_queue_members(
     expected_members: dict[int, dict[str, Any]] = {}
     observed_stage_counts = {stage: 0 for stage in DISPLAY_STAGES}
     observed_booked_pilots = 0
+    observed_activated_pilots = 0
     observed_annual_conversions = 0
     observed_lost_pilots = 0
     observed_qualification_counts = {
@@ -888,6 +917,31 @@ def _expected_sales_queue_members(
                 f"{location}.booked must be true for the paid stage"
             )
         observed_booked_pilots += int(booked)
+        if include_activation:
+            activated = deal.get("activated")
+            if not isinstance(activated, bool):
+                raise GrowthInputError(
+                    f"{location}.activated must be a boolean"
+                )
+            if activated and not booked:
+                raise GrowthInputError(
+                    f"{location}.activated requires booked payment"
+                )
+            if activated and stage in {
+                "untracked",
+                "lead",
+                "qualified",
+                "offered",
+                "paid",
+            }:
+                raise GrowthInputError(
+                    f"{location}.activated contradicts its stage"
+                )
+            if stage == "active" and activated != booked:
+                raise GrowthInputError(
+                    f"{location}.activated must match payment-backed active stage"
+                )
+            observed_activated_pilots += int(activated)
         observed_annual_conversions += int(
             booked and stage == "converted"
         )
@@ -908,6 +962,13 @@ def _expected_sales_queue_members(
     if observed_booked_pilots != summary["booked_pilots"]:
         raise GrowthInputError(
             "pilot report booked_pilots does not match deals"
+        )
+    if (
+        include_activation
+        and observed_activated_pilots != summary["activated_pilots"]
+    ):
+        raise GrowthInputError(
+            "pilot report activated_pilots does not match deals"
         )
     for field, observed_count in (
         ("annual_conversions", observed_annual_conversions),
@@ -1489,6 +1550,7 @@ def _choose_bottleneck(
     qualified_pilots: int,
     offered_pilots: int,
     booked_pilots: int,
+    activated_pilots: int | None,
     pilot_price_usd: int,
     target_pilots: int,
     annual_conversions: int,
@@ -1592,6 +1654,19 @@ def _choose_bottleneck(
             "stage": "payment",
             "reason": reason,
             "next_action": next_action,
+        }
+    if activated_pilots is not None and activated_pilots < booked_pilots:
+        return {
+            "stage": "activation",
+            "reason": (
+                "Booked revenue exists, but a paid pilot is not yet backed by "
+                "first-repository activation evidence."
+            ),
+            "next_action": (
+                "Verify the private paid-delivery contract, then complete "
+                "first-repository activation or reconcile the lifecycle record "
+                "before applying pilot-active."
+            ),
         }
     if booked_pilots < target_pilots:
         if sales_queue_state == REPAIR_SALES_QUEUE_STATE:

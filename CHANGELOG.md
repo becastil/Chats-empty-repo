@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Upgraded pilot reporting to schema 9 with explicit payment-backed activation
+  evidence on every detailed deal and a reconciled activation summary.
+- Prioritized booked-but-unactivated paid delivery before another pilot sale,
+  retention, or expansion while preserving schema-5 through schema-8 growth
+  compatibility without invented activation counts.
+- Extended the installed commercial smoke to prove paid-only activation remains
+  false, explicit paid activation reopens the founding-pilot target, and
+  malformed activation evidence is rejected without a report.
 - Made the installed commercial smoke journey preserve asymmetric schema-8
   lead and paid progression across source, purchase readiness, and purchase
   criterion.

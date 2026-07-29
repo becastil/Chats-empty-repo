@@ -73,14 +73,18 @@ For direct API calls, only `as_of=None` selects the current UTC date. Any
 supplied `as_of` value must be a real `date`; falsey booleans, numbers, and
 strings fail instead of silently changing the report window to today.
 
-Funnel JSON declares `schema_version: 8`. Its `follow_up` object records the
+Funnel JSON declares `schema_version: 9`. Its `follow_up` object records the
 UTC `as_of` date, the inactivity threshold, and a deterministic deal list.
 Omit `--as-of` to use the current UTC date. `--stale-days` changes the default
 seven-day threshold.
 
-Every schema-8 detailed deal carries boolean `qualified` and `offered`
-milestones in addition to its current stage and booking evidence. These values
-preserve cumulative lifecycle history after a deal advances or closes.
+Every schema-9 detailed deal carries boolean `qualified`, `offered`, and
+`activated` milestones in addition to its current stage and booking evidence.
+These values preserve cumulative lifecycle history after a deal advances or
+closes. `activated` is true only when the cumulative public labels contain both
+`pilot-paid` and `pilot-active`. An active label without payment and a paid
+record without the active label both remain false. The detailed booleans must
+sum exactly to `summary.activated_pilots`.
 
 The `sales_queue.deals` array contains every open lead, qualified, or offered
 pilot, including fresh deals. Priorities come only from the declared readiness
@@ -192,13 +196,20 @@ match the taxonomy, or duplicate criterion headings, use `unknown`. Both remain
 visible in summary totals and warnings. Sales priority remains based on purchase
 readiness, not on the criterion selected.
 
-`repo-scout-growth` consumes these schema-6, schema-7, and schema-8 criterion
+`repo-scout-growth` consumes these schema-6 through schema-9 criterion
 totals in its weekly commercial review. It requires the exact taxonomy,
 validates each cumulative stage and revenue value, and reconciles aggregate
 criterion outcomes to source outcomes. For schema 8, qualification and offer
 totals must also derive from each detailed deal's explicit milestones. Schema-5
 pilot reports remain readable with criterion reporting marked unavailable
 rather than zero.
+
+For schema 9, joined growth also validates each detailed activation boolean,
+requires activation to be payment-backed, and reconciles the detailed total to
+`summary.activated_pilots`. A booked pilot without that evidence becomes the
+commercial bottleneck before another sale or retention action. Schema-5 through
+schema-8 reports remain readable with activation reporting marked unavailable
+rather than zero, so historical evidence never invents an activation result.
 
 Source attribution is self-reported discovery data. It does not prove which
 touchpoint caused a purchase, and it should be used directionally when deciding
@@ -217,6 +228,12 @@ substitute for missing payment evidence. A later `pilot-lost` label does not
 erase cash already received. If a payment is refunded, remove `pilot-paid` and
 later paid-stage labels before the next report, and retain the refund evidence
 outside the public issue.
+Activation likewise requires the `pilot-active` label itself and existing
+payment evidence. Growth does not infer activation from `pilot-converted`,
+rollout bundles, or a terminal stage. Before applying `pilot-active`, verify the
+private paid-delivery contract and customer acknowledgement; if a terminal
+record skipped the label, reconcile that lifecycle evidence instead of
+manufacturing activation.
 Pilot issue JSON with duplicate keys is rejected before issue parsing, so
 conflicting `labels` fields cannot silently change booked-pilot or revenue
 totals.

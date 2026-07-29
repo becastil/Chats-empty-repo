@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after release-proving schema-8 progression:
-  289 / 1,000 (28.9%).
-- Remaining after release-proving schema-8 progression:
-  711 commits.
+- Progress after adding payment-backed pilot activation evidence:
+  290 / 1,000 (29.0%).
+- Remaining after adding payment-backed pilot activation evidence:
+  710 commits.
 
 ## Commit Standard
 

@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 289 of
-1,000, with 711 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 290 of
+1,000, with 710 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -92,9 +92,14 @@ alignment take priority over commit volume.
   paid stage cannot discard its payment evidence. Annual conversions must
   derive from booked converted deals, resolved losses must derive from
   lost-stage deals, and terminal conflicts count as neither outcome.
+  Schema 9 also records an explicit boolean activation milestone on every
+  detailed deal. Activation requires both payment and the human-applied
+  `pilot-active` event; detailed activation must reconcile to the summary,
+  active-stage evidence must match payment-backed activation, and terminal
+  stages may preserve a true or false activation history without inference.
   Request, qualification, offer, booked-pilot, annual-conversion, and
   resolved-loss attribution by source, purchase readiness, and purchase
-  criterion must also reproduce the recognized values on every schema-8
+  criterion must also reproduce the recognized values on every schema-8+
   detailed deal instead of relying on globally reconciled segment tables.
   Schema 8 records explicit boolean qualification and offer milestones on
   every detailed deal; schema 7 remains readable with aggregate progression
@@ -423,15 +428,21 @@ alignment take priority over commit volume.
 - Dependency-free weekly growth reviews that join signed distribution movement to attributed pilot, offer, and booked-revenue evidence.
 - Price-consistent offer recommendations that carry the validated pilot price
   into the commercial bottleneck action instead of silently quoting $299.
-- Deterministic commercial bottlenecks from missing measurement through acquisition, qualification, offer, payment, pilot target, retention, and validation.
+- Deterministic commercial bottlenecks from missing measurement through
+  acquisition, qualification, offer, payment, activation, pilot target,
+  retention, and validation. Schema-9 booked-but-unactivated delivery takes
+  precedence over another sale; older pilot schemas retain their prior behavior
+  with activation evidence unavailable rather than zero.
 - Explicit refusal to calculate download-to-lead conversion rates from non-unique artifact requests.
 - Release-blocking installed-wheel proof that raw GitHub release exports become
   a complete schema-2 baseline comparison before signed reach movement joins to
-  schema-8 qualification, attribution, $299 revenue, and the open pilot target.
-- Asymmetric installed-command proof that schema-8 lead and paid milestones
+  schema-9 qualification, attribution, $299 revenue, and payment-backed
+  activation evidence.
+- Asymmetric installed-command proof that schema-9 lead and paid milestones
   remain distinct across source, purchase readiness, and purchase criterion,
-  and that tampered detailed progression fails without a growth report or
-  private evidence disclosure.
+  that a paid-only pilot remains unactivated, that explicit paid activation
+  reopens the founding-pilot target, and that tampered progression or activation
+  fails without a growth report or private evidence disclosure.
 - Controlled rejection of duplicate release assets and inconsistent growth
   deltas without emitting reports or inventing conversion rates.
 - Release-blocking behavioral proof through the installed `repo-scout-pilot`,
@@ -458,7 +469,8 @@ alignment take priority over commit volume.
 - Schema-7+ scope qualification from required team size, repository count, CI provider, and repository-standard answers.
 - Target, outside-target, incomplete, and first-10-repository subset classifications without repeating free-text standards.
 - Normalized criterion evidence across deals, stale follow-up, and sales queues with explicit missing, edited, and duplicate-answer warnings.
-- Backward-compatible schema-5, schema-6, schema-7, and schema-8 pilot support in weekly growth reviews.
+- Backward-compatible schema-5 through schema-9 pilot support in weekly growth
+  reviews, with activation available only from schema 9.
 - Schema-2 growth reviews with ordered purchase-criterion qualification, offer, payment, conversion, and loss outcomes.
 - Exact criterion-taxonomy and cross-segment reconciliation against source totals.
 - Explicit schema-5 criterion unavailability and schema-6 missing or ambiguous criterion evidence warnings.

@@ -457,10 +457,11 @@ class GrowthReportTests(unittest.TestCase):
                         ],
                     ),
                 ],
-                "pilot_target",
+                "activation",
                 (
-                    "Work the qualification-aware pilot sales queue before "
-                    "closing the next pilot."
+                    "Verify the private paid-delivery contract, then complete "
+                    "first-repository activation or reconcile the lifecycle "
+                    "record before applying pilot-active."
                 ),
             ),
         )
@@ -559,10 +560,10 @@ class GrowthReportTests(unittest.TestCase):
                     "pilot-offered",
                     "pilot-paid",
                 ],
-                "pilot_target",
+                "activation",
                 (
-                    "Booked revenue is real, but no open pre-payment deal is "
-                    "available to close the next pilot."
+                    "Booked revenue exists, but a paid pilot is not yet backed by "
+                    "first-repository activation evidence."
                 ),
                 False,
             ),
@@ -592,8 +593,14 @@ class GrowthReportTests(unittest.TestCase):
                 self.assertEqual(
                     report["bottleneck"]["next_action"],
                     (
-                        "No open pre-payment deal is available; replenish the "
-                        "pilot sales queue."
+                        "Verify the private paid-delivery contract, then complete "
+                        "first-repository activation or reconcile the lifecycle "
+                        "record before applying pilot-active."
+                        if stage == "activation"
+                        else (
+                            "No open pre-payment deal is available; replenish "
+                            "the pilot sales queue."
+                        )
                     ),
                 )
 
@@ -1247,12 +1254,12 @@ class GrowthReportTests(unittest.TestCase):
             as_of=date(2026, 7, 10),
         )
         self.assertTrue(paid["deals"][0]["booked"])
-        self.assertEqual(
-            build_growth_report(self._distribution(), paid)["bottleneck"][
-                "stage"
-            ],
-            "pilot_target",
+        paid_growth = build_growth_report(self._distribution(), paid)
+        self.assertEqual(paid_growth["bottleneck"]["stage"], "activation")
+        self.assertTrue(
+            paid_growth["summary"]["activation_reporting_available"]
         )
+        self.assertEqual(paid_growth["summary"]["activated_pilots"], 0)
         erased = json.loads(json.dumps(paid))
         erased["deals"][0]["booked"] = False
         set_bookings(erased, 0)
@@ -1261,6 +1268,187 @@ class GrowthReportTests(unittest.TestCase):
             "booked must be true for the paid stage",
         ):
             build_growth_report(self._distribution(), erased)
+
+    def test_schema_nine_growth_derives_payment_backed_activation(
+        self,
+    ) -> None:
+        raw_issue = {
+            "number": 1,
+            "title": "Paid pilot",
+            "state": "OPEN",
+            "updatedAt": "2026-07-10T00:00:00Z",
+            "body": "\n\n".join(
+                (
+                    "### Team size\n\n12",
+                    "### Repository count\n\n6",
+                    "### CI provider\n\nGitHub Actions",
+                    "### Repository standard to enforce\n\n"
+                    "Use one reviewed repository policy.",
+                    "### How did you hear about Repo Scout?\n\n"
+                    "Repo Scout website",
+                    "### Purchase readiness\n\n"
+                    "Ready to purchase the $299 pilot",
+                    "### Primary purchase criterion\n\n"
+                    "Works across our repositories and CI",
+                )
+            ),
+            "labels": [
+                "pilot-lead",
+                "pilot-qualified",
+                "pilot-offered",
+                "pilot-paid",
+            ],
+        }
+        paid = build_funnel([raw_issue], as_of=date(2026, 7, 10))
+
+        self.assertEqual(paid["schema_version"], 9)
+        self.assertFalse(paid["deals"][0]["activated"])
+        self.assertEqual(paid["summary"]["activated_pilots"], 0)
+        self.assertEqual(
+            build_growth_report(self._distribution(), paid)["bottleneck"][
+                "stage"
+            ],
+            "activation",
+        )
+
+        active = build_funnel(
+            [
+                {
+                    **raw_issue,
+                    "labels": [*raw_issue["labels"], "pilot-active"],
+                }
+            ],
+            as_of=date(2026, 7, 10),
+        )
+        active_growth = build_growth_report(self._distribution(), active)
+        self.assertTrue(active["deals"][0]["activated"])
+        self.assertEqual(active["summary"]["activated_pilots"], 1)
+        self.assertEqual(active_growth["bottleneck"]["stage"], "pilot_target")
+        self.assertEqual(active_growth["summary"]["activated_pilots"], 1)
+
+        converted_without_activation = build_funnel(
+            [
+                {
+                    **raw_issue,
+                    "state": "CLOSED",
+                    "labels": [*raw_issue["labels"], "pilot-converted"],
+                }
+            ],
+            as_of=date(2026, 7, 10),
+        )
+        self.assertEqual(
+            converted_without_activation["deals"][0]["stage"],
+            "converted",
+        )
+        self.assertFalse(
+            converted_without_activation["deals"][0]["activated"]
+        )
+        self.assertEqual(
+            build_growth_report(
+                self._distribution(),
+                converted_without_activation,
+            )["bottleneck"]["stage"],
+            "activation",
+        )
+
+        lost_after_activation = build_funnel(
+            [
+                {
+                    **raw_issue,
+                    "state": "CLOSED",
+                    "labels": [
+                        *raw_issue["labels"],
+                        "pilot-active",
+                        "pilot-lost",
+                    ],
+                }
+            ],
+            as_of=date(2026, 7, 10),
+        )
+        self.assertEqual(lost_after_activation["deals"][0]["stage"], "lost")
+        self.assertTrue(lost_after_activation["deals"][0]["activated"])
+        self.assertEqual(
+            build_growth_report(
+                self._distribution(),
+                lost_after_activation,
+            )["bottleneck"]["stage"],
+            "pilot_target",
+        )
+
+        malformed = json.loads(json.dumps(paid))
+        malformed["deals"][0]["activated"] = 1
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            r"deals\[0\]\.activated must be a boolean",
+        ):
+            build_growth_report(self._distribution(), malformed)
+
+        impossible_paid_activation = json.loads(json.dumps(paid))
+        impossible_paid_activation["deals"][0]["activated"] = True
+        impossible_paid_activation["summary"]["activated_pilots"] = 1
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            r"deals\[0\]\.activated contradicts its stage",
+        ):
+            build_growth_report(
+                self._distribution(),
+                impossible_paid_activation,
+            )
+
+        erased_active = json.loads(json.dumps(active))
+        erased_active["deals"][0]["activated"] = False
+        erased_active["summary"]["activated_pilots"] = 0
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            r"deals\[0\]\.activated must match payment-backed active stage",
+        ):
+            build_growth_report(self._distribution(), erased_active)
+
+        forged_summary = json.loads(json.dumps(paid))
+        forged_summary["summary"]["activated_pilots"] = 1
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            "activated_pilots does not match deals",
+        ):
+            build_growth_report(self._distribution(), forged_summary)
+
+        activated_without_booking = build_funnel(
+            [
+                {
+                    **raw_issue,
+                    "state": "CLOSED",
+                    "labels": ["pilot-lead", "pilot-lost"],
+                }
+            ],
+            as_of=date(2026, 7, 10),
+        )
+        activated_without_booking["deals"][0]["activated"] = True
+        with self.assertRaisesRegex(
+            GrowthInputError,
+            r"deals\[0\]\.activated requires booked payment",
+        ):
+            build_growth_report(
+                self._distribution(),
+                activated_without_booking,
+            )
+
+        legacy = json.loads(json.dumps(paid))
+        legacy["schema_version"] = 8
+        del legacy["summary"]["activated_pilots"]
+        del legacy["deals"][0]["activated"]
+        legacy_growth = build_growth_report(self._distribution(), legacy)
+        self.assertFalse(
+            legacy_growth["summary"]["activation_reporting_available"]
+        )
+        self.assertIsNone(legacy_growth["summary"]["activated_pilots"])
+        self.assertEqual(legacy_growth["bottleneck"]["stage"], "pilot_target")
+
+        no_baseline = self._distribution()
+        no_baseline["change"] = None
+        self.assertEqual(
+            build_growth_report(no_baseline, paid)["bottleneck"]["stage"],
+            "measurement",
+        )
 
     def test_schema_seven_growth_derives_terminal_outcomes_from_deals(
         self,
@@ -1944,7 +2132,7 @@ class GrowthReportTests(unittest.TestCase):
             target_pilots=1,
             as_of=date(2026, 7, 10),
         )
-        self.assertEqual(pilot["schema_version"], 8)
+        self.assertEqual(pilot["schema_version"], 9)
         build_growth_report(self._distribution(), pilot)
 
         cases = (
@@ -2223,7 +2411,7 @@ class GrowthReportTests(unittest.TestCase):
         )
         cases = [
             ({**valid_distribution, "schema_version": 3}, valid_pilot, "schema_version"),
-            (valid_distribution, {**valid_pilot, "schema_version": 9}, "schema_version"),
+            (valid_distribution, {**valid_pilot, "schema_version": 10}, "schema_version"),
             (
                 {**valid_distribution, "change": {"portable_downloads_delta": 1}},
                 valid_pilot,

@@ -12,7 +12,7 @@ from typing import Any, Sequence, TextIO
 from .version import add_version_argument
 
 
-SCHEMA_VERSION = 8
+SCHEMA_VERSION = 9
 PUBLIC_INTAKE_PILOT_PRICE_USD = 299
 DEFAULT_PILOT_PRICE_USD = PUBLIC_INTAKE_PILOT_PRICE_USD
 DEFAULT_TARGET_PILOTS = 3
@@ -235,6 +235,7 @@ def build_funnel(
     sales_actions: list[dict[str, Any]] = []
     ignored_issues = 0
     booked_pilots = 0
+    activated_pilots = 0
     annual_conversions = 0
     lost_pilots = 0
     attributed_issues = 0
@@ -318,6 +319,7 @@ def build_funnel(
         ]
         furthest_stage = max(present_stages, default=-1)
         has_lost = LOST_LABEL in known_labels
+        has_active = "pilot-active" in known_labels
         has_converted = STAGE_LABELS[-1] in known_labels
 
         if has_lost and has_converted:
@@ -442,9 +444,11 @@ def build_funnel(
 
         by_stage[stage] += 1
         is_booked = "pilot-paid" in known_labels
+        is_activated = is_booked and has_active
         is_converted = is_booked and has_converted and not has_lost
         is_lost = has_lost and not has_converted
         booked_pilots += int(is_booked)
+        activated_pilots += int(is_activated)
         annual_conversions += int(is_converted)
         lost_pilots += int(is_lost)
         is_qualified = furthest_stage >= STAGE_LABELS.index("pilot-qualified")
@@ -479,6 +483,7 @@ def build_funnel(
                 "qualified": is_qualified,
                 "offered": is_offered,
                 "booked": is_booked,
+                "activated": is_activated,
                 "state": issue.state,
                 "updated_at": _format_timestamp(issue.updated_at),
                 "age_days": age_days,
@@ -503,6 +508,7 @@ def build_funnel(
             "tracked_issues": len(deals),
             "ignored_issues": ignored_issues,
             "booked_pilots": booked_pilots,
+            "activated_pilots": activated_pilots,
             "booked_revenue_usd": booked_revenue,
             "remaining_pilots": remaining_pilots,
             "remaining_revenue_usd": remaining_pilots * pilot_price_usd,
@@ -567,6 +573,7 @@ def format_funnel(report: dict[str, Any]) -> str:
             f"Pilots: {summary['booked_pilots']} booked / "
             f"{pricing['target_pilots']} target"
         ),
+        f"Activated pilots: {summary['activated_pilots']}",
         (
             f"Revenue: ${summary['booked_revenue_usd']} booked / "
             f"${pricing['target_revenue_usd']} target"

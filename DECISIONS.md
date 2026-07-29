@@ -4607,3 +4607,38 @@ This makes schema-8 progression enforcement part of the installed-wheel
 release boundary rather than only a source-level unit contract. It does not
 authenticate an independently rewritten report, authorize deployment, approve
 or send outreach, create a pilot request, collect payment, or record revenue.
+
+## 2026-07-29: Require Payment-Backed Pilot Activation Evidence
+
+Booked revenue previously moved growth guidance directly toward the next pilot
+or retention. The public ledger already reserved `pilot-active` for a
+human-applied milestone after every private delivery acceptance condition, but
+the funnel report did not expose that event separately. A paid-only pilot could
+therefore look commercially ready for another sale while its purchased delivery
+remained incomplete.
+
+Schema 9 adds a boolean `activated` milestone to every detailed deal and
+`summary.activated_pilots`. The producer sets activation only when both
+`pilot-paid` and `pilot-active` are present. Joined growth requires a genuine
+boolean, rejects activation without payment or on an impossible stage, binds an
+active stage to payment-backed activation, and reconciles the detailed total to
+the summary. Converted, lost, and conflicting records may preserve either true
+or false activation history because their terminal stage does not prove whether
+the cumulative active label was present. Schema-5 through schema-8 reports
+remain readable with activation unavailable rather than zero.
+
+The existing resolved-conversion rule remains payment-backed rather than
+activation-backed: an explicit paid conversion with a skipped active label
+retains its annual-conversion evidence and warning, but activation remains
+false and therefore blocks expansion until the lifecycle record is reconciled.
+This preserves explicit terminal evidence without inventing the missing
+milestone.
+
+After payment, a schema-9 booked-but-unactivated pilot becomes the bottleneck
+before another sale, retention, or expansion. The action requires verification
+of the private paid-delivery contract, then real first-repository activation or
+lifecycle reconciliation before `pilot-active` is applied. Missing distribution
+measurement still takes precedence. This protects delivery of the paid promise;
+it does not authenticate a wholly rewritten report, expose private acceptance
+evidence, infer activation from rollout or conversion, contact a customer,
+collect payment, or record a real activation.

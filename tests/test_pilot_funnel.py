@@ -101,10 +101,11 @@ class PilotFunnelTests(unittest.TestCase):
 
         report = build_funnel(payload, as_of=date(2026, 7, 10))
 
-        self.assertEqual(report["schema_version"], 8)
+        self.assertEqual(report["schema_version"], 9)
         self.assertEqual(report["summary"]["tracked_issues"], 8)
         self.assertEqual(report["summary"]["ignored_issues"], 1)
         self.assertEqual(report["summary"]["booked_pilots"], 3)
+        self.assertEqual(report["summary"]["activated_pilots"], 2)
         self.assertEqual(report["summary"]["booked_revenue_usd"], 897)
         self.assertEqual(report["summary"]["remaining_pilots"], 0)
         self.assertEqual(report["summary"]["target_attainment_percent"], 100.0)
@@ -274,6 +275,9 @@ class PilotFunnelTests(unittest.TestCase):
         self.assertTrue(
             all(type(deal["offered"]) is bool for deal in report["deals"])
         )
+        self.assertTrue(
+            all(type(deal["activated"]) is bool for deal in report["deals"])
+        )
         self.assertEqual(
             sum(deal["qualified"] for deal in report["deals"]),
             sum(
@@ -288,6 +292,17 @@ class PilotFunnelTests(unittest.TestCase):
                 for totals in report["by_source"].values()
             ),
         )
+        self.assertEqual(
+            sum(deal["activated"] for deal in report["deals"]),
+            report["summary"]["activated_pilots"],
+        )
+        activation_by_number = {
+            deal["number"]: deal["activated"] for deal in report["deals"]
+        }
+        self.assertFalse(activation_by_number[3])
+        self.assertFalse(activation_by_number[4])
+        self.assertTrue(activation_by_number[6])
+        self.assertTrue(activation_by_number[7])
         active_drift = next(
             deal for deal in report["deals"] if deal["number"] == 4
         )
@@ -295,6 +310,7 @@ class PilotFunnelTests(unittest.TestCase):
         self.assertTrue(active_drift["qualified"])
         self.assertTrue(active_drift["offered"])
         self.assertFalse(active_drift["booked"])
+        self.assertFalse(active_drift["activated"])
         self.assertEqual(
             report,
             build_funnel(list(reversed(payload)), as_of=date(2026, 7, 10)),

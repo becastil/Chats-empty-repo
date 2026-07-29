@@ -316,13 +316,17 @@ Maintainers can turn the labeled requests into an auditable revenue funnel:
 gh issue list --repo becastil/Chats-empty-repo --state all --label pilot-lead --limit 100 --json number,title,body,state,labels,createdAt,updatedAt,closedAt,url | repo-scout-pilot --as-of "$(date -u +%F)"
 ```
 
-The dependency-free reporter counts booked pilots, booked revenue, remaining
-distance to the three-pilot goal, annual conversions, losses, label drift, and
-open pre-payment issues inactive for at least seven UTC calendar days. Schema 8
-preserves qualification and offer milestones on every detailed deal, allowing
-growth reviews to derive that progression alongside booked revenue for each
-self-reported discovery channel, readiness state, and purchase criterion
-without treating intent as cash. It also groups the primary purchase criterion
+The dependency-free reporter counts booked pilots, payment-backed activations,
+booked revenue, remaining distance to the three-pilot goal, annual conversions,
+losses, label drift, and open pre-payment issues inactive for at least seven UTC
+calendar days. Schema 9 preserves qualification, offer, and explicit activation
+milestones on every detailed deal. Activation requires both `pilot-paid` and
+`pilot-active`; later stages do not substitute for either human-applied event.
+Growth reviews derive qualification and offer progression alongside booked
+revenue for each self-reported discovery channel, readiness state, and purchase
+criterion without treating intent as cash. They validate the global activation
+count from detailed deals and prioritize any booked-but-unactivated pilot before
+another sale, retention work, or expansion. The report also groups the primary purchase criterion
 behind each request, including policy fit, rollout fit, evidence, privacy,
 implementation capacity, and commercial fit, so repeated paid outcomes can
 shape stronger policy packs and rollout playbooks. A deterministic sales queue ranks every open
@@ -360,7 +364,7 @@ must be empty or printable text of at most 2,048 characters without surrounding
 whitespace. Unrecognized edited form answers and pilot labels remain available
 in escaped JSON review fields, but terminal-facing warnings use generic
 messages and never interpolate those values.
-Schema-7 reports also normalize the required team size, repository count, and
+Schema-7+ reports also normalize the required team size, repository count, and
 CI provider, confirm that a repository-standard answer exists without copying
 its text into reports, and mark each request as target, outside-target, or
 incomplete. Teams with more than 10 repositories are flagged for a first-10
@@ -567,10 +571,12 @@ repo-scout-growth distribution-current.json pilot-current.json
 The growth review reports signed reach movement, attributed pilot progress,
 booked revenue, purchase-criterion outcomes, evidence warnings, and one current
 bottleneck from acquisition through retention. Schema-5 pilot reports remain
-readable with criterion evidence marked unavailable; schema-6, schema-7, and
-schema-8 reports reconcile every criterion total to the same deals and revenue
-as source reporting. Schema 8 additionally derives qualification and offer
-progression from detailed deals across every segment. The
+readable with criterion evidence marked unavailable; schema-6 through schema-9
+reports reconcile every criterion total to the same deals and revenue as source
+reporting. Schema 8 adds detailed qualification and offer progression across
+every segment. Schema 9 adds payment-backed activation evidence and inserts an
+activation bottleneck after payment but before another pilot sale. Schemas 5
+through 8 remain readable with activation marked unavailable rather than zero. The
 review never calculates a download-to-lead conversion rate: GitHub artifact
 requests are not unique people and cannot be assigned to a discovery source or
 purchase criterion.

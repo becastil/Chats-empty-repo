@@ -38,33 +38,31 @@ def verify_pilot_funnel(
 
     with TemporaryDirectory() as tmp:
         issue_export = Path(tmp) / "pilot-issues.json"
-        issue_export.write_text(
-            json.dumps(
-                [
-                    _issue(
-                        number=101,
-                        title="Website team awaiting qualification",
-                        source="Repo Scout website",
-                        readiness="Need internal approval for $299",
-                        criterion="Works across our repositories and CI",
-                        labels=("pilot-lead",),
-                    ),
-                    _issue(
-                        number=102,
-                        title="Outreach team with recorded payment",
-                        source="Direct outreach",
-                        readiness="Ready to purchase the $299 pilot",
-                        criterion="The $299 scope and price fit",
-                        labels=(
-                            "pilot-lead",
-                            "pilot-qualified",
-                            "pilot-offered",
-                            "pilot-paid",
-                        ),
-                    ),
-                ],
-                indent=2,
+        journey_issues = [
+            _issue(
+                number=101,
+                title="Website team awaiting qualification",
+                source="Repo Scout website",
+                readiness="Need internal approval for $299",
+                criterion="Works across our repositories and CI",
+                labels=("pilot-lead",),
             ),
+            _issue(
+                number=102,
+                title="Outreach team with recorded payment",
+                source="Direct outreach",
+                readiness="Ready to purchase the $299 pilot",
+                criterion="The $299 scope and price fit",
+                labels=(
+                    "pilot-lead",
+                    "pilot-qualified",
+                    "pilot-offered",
+                    "pilot-paid",
+                ),
+            ),
+        ]
+        issue_export.write_text(
+            json.dumps(journey_issues, indent=2),
             encoding="utf-8",
         )
 
@@ -73,7 +71,7 @@ def verify_pilot_funnel(
             issue_export,
             environment=environment,
         )
-        _require(report.get("schema_version") == 8, "pilot schema changed")
+        _require(report.get("schema_version") == 9, "pilot schema changed")
         _require(
             report.get("pricing")
             == {
@@ -85,6 +83,10 @@ def verify_pilot_funnel(
         )
         summary = report.get("summary", {})
         _require(summary.get("booked_pilots") == 1, "payment was not booked")
+        _require(
+            summary.get("activated_pilots") == 0,
+            "payment was incorrectly treated as activation",
+        )
         _require(
             summary.get("booked_revenue_usd") == PILOT_PRICE_USD,
             "booked revenue changed",
@@ -137,18 +139,28 @@ def verify_pilot_funnel(
         _require(
             len(deals) == 2
             and all(type(deal.get("qualified")) is bool for deal in deals)
-            and all(type(deal.get("offered")) is bool for deal in deals),
+            and all(type(deal.get("offered")) is bool for deal in deals)
+            and all(type(deal.get("activated")) is bool for deal in deals),
             "detailed progression evidence changed",
         )
         _require(
             [
-                (deal.get("number"), deal["qualified"], deal["offered"])
+                (
+                    deal.get("number"),
+                    deal["qualified"],
+                    deal["offered"],
+                    deal["activated"],
+                )
                 for deal in deals
             ]
-            == [(101, False, False), (102, True, True)],
+            == [
+                (101, False, False, False),
+                (102, True, True, False),
+            ],
             "detailed progression does not match lead and paid stages",
         )
         checked.append("qualified-segmentation")
+        checked.append("payment-backed-activation")
 
         text_report = _run(
             pilot_command,
@@ -159,6 +171,7 @@ def verify_pilot_funnel(
         ).stdout
         for expected_line in (
             "Pilots: 1 booked / 3 target",
+            "Activated pilots: 0",
             "Revenue: $299 booked / $897 target",
             "Remaining: 2 pilots / $598",
             "Qualification scope: 2 complete / 2 target / 0 review / "
@@ -360,6 +373,7 @@ def verify_pilot_funnel(
             ("qualified_pilots", 1),
             ("offered_pilots", 1),
             ("booked_pilots", 1),
+            ("activated_pilots", 0),
             ("booked_revenue_usd", PILOT_PRICE_USD),
             ("target_revenue_usd", TARGET_REVENUE_USD),
             ("target_profile_requests", 2),
@@ -442,16 +456,17 @@ def verify_pilot_funnel(
             "growth reach movement changed",
         )
         _require(
-            growth.get("bottleneck", {}).get("stage") == "pilot_target",
+            growth.get("bottleneck", {}).get("stage") == "activation",
             "growth bottleneck changed",
         )
         _require(
             growth.get("bottleneck", {}).get("next_action")
             == (
-                "Work the qualification-aware pilot sales queue before closing "
-                "the next pilot."
+                "Verify the private paid-delivery contract, then complete "
+                "first-repository activation or reconcile the lifecycle record "
+                "before applying pilot-active."
             ),
-            "growth bottleneck bypassed the qualification-aware sales queue",
+            "growth bottleneck did not prioritize paid delivery",
         )
         _require(not growth.get("warnings"), "valid growth evidence emitted warnings")
         measurement_note = growth.get("measurement_note", "")
@@ -464,10 +479,52 @@ def verify_pilot_funnel(
             "growth report lost its revenue boundary",
         )
         _require(
+            "Activation requires explicit, payment-backed pilot-active evidence"
+            in measurement_note,
+            "growth report lost its activation boundary",
+        )
+        _require(
             PRIVATE_STANDARD not in json.dumps(growth, sort_keys=True),
             "repository-standard free text leaked into growth output",
         )
         checked.append("joined-growth-review")
+
+        active_issue_export = Path(tmp) / "active-pilot-issues.json"
+        active_issues = json.loads(json.dumps(journey_issues))
+        active_issues[1]["title"] = "Activated outreach pilot"
+        active_issues[1]["labels"].append({"name": "pilot-active"})
+        active_issue_export.write_text(
+            json.dumps(active_issues, indent=2),
+            encoding="utf-8",
+        )
+        active_report = _json_report(
+            pilot_command,
+            active_issue_export,
+            environment=environment,
+        )
+        active_deals = active_report.get("deals", [])
+        _require(
+            active_report.get("summary", {}).get("activated_pilots") == 1
+            and len(active_deals) == 2
+            and active_deals[1].get("activated") is True,
+            "explicit paid activation was not preserved",
+        )
+        active_pilot_report = Path(tmp) / "active-pilot-report.json"
+        active_pilot_report.write_text(
+            json.dumps(active_report, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+        active_growth = _growth_report(
+            growth_command,
+            distribution_report,
+            active_pilot_report,
+            environment=environment,
+        )
+        _require(
+            active_growth.get("bottleneck", {}).get("stage") == "pilot_target",
+            "activation evidence did not reopen the founding-pilot target",
+        )
+        checked.append("payment-backed-activation-transition")
 
         invalid_progression = json.loads(json.dumps(report))
         invalid_progression["deals"][0]["qualified"] = True
@@ -501,6 +558,33 @@ def verify_pilot_funnel(
         )
         checked.append("schema-eight-progression-gate")
 
+        invalid_activation = json.loads(json.dumps(report))
+        invalid_activation["deals"][0]["activated"] = True
+        invalid_activation_report = (
+            Path(tmp) / "invalid-activation-pilot-report.json"
+        )
+        invalid_activation_report.write_text(
+            json.dumps(invalid_activation, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+        rejected_activation = _run_growth(
+            growth_command,
+            distribution_report,
+            invalid_activation_report,
+            output_format="json",
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(
+            not rejected_activation.stdout,
+            "invalid activation evidence emitted a growth report",
+        )
+        _require(
+            "activated requires booked payment" in rejected_activation.stderr,
+            "invalid activation evidence was not rejected",
+        )
+        checked.append("schema-nine-activation-gate")
+
         growth_text = _run_growth(
             growth_command,
             distribution_report,
@@ -512,11 +596,11 @@ def verify_pilot_funnel(
         for expected_line in (
             "Reach movement: +6 primary / +2 portable / +4 wheel",
             "Pilot funnel: 2 requests / 2 attributed / 1 qualified / "
-            "1 offered / 1 booked",
+            "1 offered / 1 booked / 0 activated",
             "Revenue: $299 booked / $897 target",
             "Qualification scope: 2 complete / 2 target / 0 review / "
             "0 subset required",
-            "Bottleneck: pilot_target",
+            "Bottleneck: activation",
             "Warnings:\n  none",
         ):
             _require(expected_line in growth_text, "operator growth text changed")
