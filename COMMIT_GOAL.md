@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after making portable quick starts fail closed:
-  275 / 1,000 (27.5%).
-- Remaining after making portable quick starts fail closed:
-  725 commits.
+- Progress after binding schema-7 pricing to public intake:
+  276 / 1,000 (27.6%).
+- Remaining after binding schema-7 pricing to public intake:
+  724 commits.
 
 ## Commit Standard
 

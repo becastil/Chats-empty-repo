@@ -347,23 +347,26 @@ class GrowthReportTests(unittest.TestCase):
                 report = build_growth_report(self._distribution(), pilot)
                 self.assertEqual(report["bottleneck"]["stage"], expected)
 
-    def test_offer_bottleneck_uses_configured_pilot_price(self) -> None:
-        pilot = self._pilot(
-            sources={"website": self._source(deals=1, qualified=1)}
-        )
-        pilot["pricing"] = {
-            "pilot_price_usd": 400,
-            "target_pilots": 3,
-            "target_revenue_usd": 1200,
-        }
+    def test_legacy_offer_bottleneck_uses_configured_pilot_price(self) -> None:
+        for schema_version in (5, 6):
+            with self.subTest(schema_version=schema_version):
+                pilot = self._pilot(
+                    schema_version=schema_version,
+                    sources={"website": self._source(deals=1, qualified=1)},
+                )
+                pilot["pricing"] = {
+                    "pilot_price_usd": 400,
+                    "target_pilots": 3,
+                    "target_revenue_usd": 1200,
+                }
 
-        report = build_growth_report(self._distribution(), pilot)
+                report = build_growth_report(self._distribution(), pilot)
 
-        self.assertEqual(report["bottleneck"]["stage"], "offer")
-        self.assertEqual(
-            report["bottleneck"]["next_action"],
-            "Send the explicit $400 pilot terms to a qualified team.",
-        )
+                self.assertEqual(report["bottleneck"]["stage"], "offer")
+                self.assertEqual(
+                    report["bottleneck"]["next_action"],
+                    "Send the explicit $400 pilot terms to a qualified team.",
+                )
 
     def test_schema_seven_commercial_actions_defer_to_the_sales_queue(
         self,
@@ -409,7 +412,7 @@ class GrowthReportTests(unittest.TestCase):
                 "offer",
                 (
                     "Work the qualification-aware pilot sales queue before "
-                    "sending the explicit $400 pilot terms."
+                    "sending the explicit $299 pilot terms."
                 ),
             ),
             (
@@ -464,7 +467,6 @@ class GrowthReportTests(unittest.TestCase):
             with self.subTest(stage=stage):
                 pilot = build_funnel(
                     issues,
-                    pilot_price_usd=400,
                     as_of=date(2026, 7, 10),
                 )
                 report = build_growth_report(self._distribution(), pilot)
@@ -627,7 +629,10 @@ class GrowthReportTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(
             GrowthInputError,
-            "next_action does not match the stage-specific sales action contract",
+            (
+                "pilot report.pricing.pilot_price_usd must match public intake "
+                r"price of \$299"
+            ),
         ):
             build_growth_report(self._distribution(), price_divergent)
 

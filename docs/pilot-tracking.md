@@ -57,14 +57,17 @@ gh issue list \
   | repo-scout-pilot --as-of "$(date -u +%F)"
 ```
 
-Use `--format json` for a machine-readable report. `--pilot-price` and
-`--target-pilots` change the commercial assumptions without changing issue
-data.
+Use `--format json` for a machine-readable report. `--target-pilots` changes
+the validation target without changing issue data. The retained
+`--pilot-price` input must match the current $299 public intake price; a
+mismatch fails before input I/O or issue parsing because the saved readiness and
+commercial-fit answers do not establish willingness to pay another price.
 
 When calling `build_funnel` directly, `pilot_price_usd`, `target_pilots`, and
 `stale_days` must be genuine positive integers. Booleans, floats, and numeric
 strings fail before issue parsing so the emitted pricing and follow-up schema
-remains compatible with joined growth validation.
+remains compatible with joined growth validation. A positive
+`pilot_price_usd` must also equal the public intake price.
 
 For direct API calls, only `as_of=None` selects the current UTC date. Any
 supplied `as_of` value must be a real `date`; falsey booleans, numbers, and
@@ -102,7 +105,7 @@ recommendation. Older pilot-report schemas retain their existing aggregate
 actions because they predate qualification evidence. Before deferring, growth
 reconciles `summary.sales_actions` with the embedded queue and validates each
 deal's stage, readiness, qualification status, repository scope, CI provider,
-configured pilot price, and exact next action. Missing queues and saved
+public-intake-bound pilot price, and exact next action. Missing queues and saved
 schema-7 reports carrying a provider-blind, scope-blind, or stage-skipping
 action fail closed.
 

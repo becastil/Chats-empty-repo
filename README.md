@@ -338,7 +338,7 @@ first-10 scope. Queue membership, ranking, classification, and revenue
 accounting remain unchanged. Schema-7 growth bottlenecks that would send terms,
 confirm payment, or close the next pilot point back to this
 qualification-aware queue after validating each exact action against its stage,
-readiness, qualification, provider, and configured price. Saved schema-7
+readiness, qualification, provider, and public-intake-bound price. Saved schema-7
 evidence that bypasses any of those boundaries fails growth ingestion.
 Pilot issue JSON with duplicate keys is rejected before issue parsing, so
 conflicting `labels` fields cannot silently change booked-pilot or revenue

@@ -552,11 +552,7 @@ class PilotFunnelTests(unittest.TestCase):
             },
         ]
 
-        report = build_funnel(
-            payload,
-            pilot_price_usd=400,
-            as_of=date(2026, 7, 10),
-        )
+        report = build_funnel(payload, as_of=date(2026, 7, 10))
 
         self.assertEqual(report["summary"]["attributed_issues"], 1)
         self.assertEqual(report["summary"]["unattributed_issues"], 1)
@@ -569,7 +565,7 @@ class PilotFunnelTests(unittest.TestCase):
                 "ambiguous_lead_source",
             ],
         )
-        self.assertEqual(report["by_source"]["github"]["booked_revenue_usd"], 400)
+        self.assertEqual(report["by_source"]["github"]["booked_revenue_usd"], 299)
         self.assertEqual(report["by_source"]["unattributed"]["deals"], 1)
         self.assertEqual(report["by_source"]["unknown"]["deals"], 2)
         self.assertEqual(report["by_source"]["unknown"]["qualified_pilots"], 1)
@@ -584,7 +580,7 @@ class PilotFunnelTests(unittest.TestCase):
         text_report = format_funnel(report)
         self.assertIn("Attribution: 1 attributed / 1 missing / 2 unknown", text_report)
         self.assertIn(
-            "github: 1 deal, 1 qualified, 1 offered, 1 booked ($400)",
+            "github: 1 deal, 1 qualified, 1 offered, 1 booked ($299)",
             text_report,
         )
 
@@ -784,7 +780,38 @@ class PilotFunnelTests(unittest.TestCase):
             format_funnel(report),
         )
 
-    def test_main_emits_stable_json_with_custom_commercial_targets(self) -> None:
+    def test_main_rejects_price_that_does_not_match_public_intake(self) -> None:
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with patch(
+            "repo_scout.pilot_funnel._read_payload",
+            side_effect=AssertionError("mismatched price must fail before input I/O"),
+        ) as read_payload, redirect_stdout(stdout), redirect_stderr(stderr):
+            exit_code = main(
+                [
+                    "-",
+                    "--format",
+                    "json",
+                    "--pilot-price",
+                    "400",
+                    "--as-of",
+                    "2026-07-10",
+                ],
+                stdin=io.StringIO("not valid JSON"),
+            )
+
+        self.assertEqual(exit_code, 2)
+        read_payload.assert_not_called()
+        self.assertEqual(stdout.getvalue(), "")
+        self.assertIn(
+            "pilot price must match public intake price of $299",
+            stderr.getvalue(),
+        )
+        self.assertNotIn("pilot terms", stderr.getvalue())
+
+    def test_main_accepts_custom_target_and_stale_window_at_public_price(
+        self,
+    ) -> None:
         payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
         payload[0]["body"] += (
             "\n\n### Team size\n\n12"
@@ -801,7 +828,7 @@ class PilotFunnelTests(unittest.TestCase):
                     "--format",
                     "json",
                     "--pilot-price",
-                    "400",
+                    "299",
                     "--target-pilots",
                     "5",
                     "--as-of",
@@ -814,13 +841,13 @@ class PilotFunnelTests(unittest.TestCase):
 
         report = json.loads(stdout.getvalue())
         self.assertEqual(exit_code, 0)
-        self.assertEqual(report["pricing"]["target_revenue_usd"], 2000)
-        self.assertEqual(report["summary"]["booked_revenue_usd"], 1200)
+        self.assertEqual(report["pricing"]["target_revenue_usd"], 1495)
+        self.assertEqual(report["summary"]["booked_revenue_usd"], 897)
         self.assertEqual(report["summary"]["remaining_pilots"], 2)
-        self.assertEqual(report["summary"]["remaining_revenue_usd"], 800)
+        self.assertEqual(report["summary"]["remaining_revenue_usd"], 598)
         self.assertEqual(report["summary"]["stale_deals"], 0)
         self.assertIn(
-            "$400 pilot terms",
+            "$299 pilot terms",
             report["sales_queue"]["deals"][0]["next_action"],
         )
 
@@ -1599,6 +1626,15 @@ class PilotFunnelTests(unittest.TestCase):
                     f"{label} must be a positive integer",
                 ):
                     build_funnel([], **{argument: value})
+
+    def test_build_funnel_rejects_price_that_does_not_match_public_intake(
+        self,
+    ) -> None:
+        with self.assertRaisesRegex(
+            FunnelInputError,
+            r"pilot price must match public intake price of \$299",
+        ):
+            build_funnel([], pilot_price_usd=400)
 
     def test_build_funnel_rejects_falsey_non_date_as_of(self) -> None:
         for value in (False, 0, ""):

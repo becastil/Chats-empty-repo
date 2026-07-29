@@ -4224,3 +4224,33 @@ This is an activation reliability correction for the free adoption path. It
 does not create another acquisition asset or paid-policy capability, establish
 an install or customer use, approve outreach or deployment, validate
 willingness to pay, collect payment, or record revenue.
+
+## 2026-07-28: Bind Schema-7 Pricing To The Public Intake Price
+
+Public readiness and commercial-fit answers explicitly name the $299 pilot,
+but `repo-scout-pilot --pilot-price` previously accepted any positive integer.
+A request saying it was ready to purchase at $299 could therefore be queued
+with an instruction to send $400 terms. Paid labels and source segments could
+also be multiplied by that unrelated configured price, overstating booked
+revenue without corresponding public evidence.
+
+The schema-7 producer now requires `pilot_price_usd` to equal the price named
+in public intake. Price-bearing readiness and commercial-fit option strings are
+derived from that same constant. A mismatch fails before issue parsing, queue
+construction, revenue arithmetic, or output for both direct API and CLI calls.
+The CLI performs that check before reading stdin or a file. The `--pilot-price`
+argument remains as an explicit compatibility guard so automation using the
+current value continues to work and stale assumptions fail closed.
+
+Joined growth ingestion applies the same price boundary to saved schema-7
+reports before trusting their qualification-aware sales queue. Older aggregate
+schemas remain readable, including their historical custom-price behavior,
+because they predate deal-level qualification evidence. Pilot targets and
+staleness windows remain independently configurable positive integers.
+
+This supersedes the July 22 decision that treated a custom schema-7 price as a
+valid current commercial assumption. A future price change must update the
+public offer, issue-form answers, reporter constant, and commercial contracts
+together. This correction protects willingness-to-pay and booked-revenue truth;
+it does not change the $299 offer, create demand, approve outreach or
+deployment, collect payment, or record revenue.

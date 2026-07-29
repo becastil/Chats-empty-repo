@@ -14,6 +14,7 @@ from .pilot_funnel import (
     DECISION_CRITERION_KEYS,
     FOLLOW_UP_STAGES,
     PILOT_REPOSITORY_SCOPES,
+    PUBLIC_INTAKE_PILOT_PRICE_USD,
     QUALIFICATION_STATUSES,
     READINESS_KEYS,
     expected_sales_action,
@@ -476,6 +477,14 @@ def _parse_pilot_report(report: Any) -> dict[str, Any]:
             "target_revenue_usd",
         )
     }
+    if (
+        schema == 7
+        and pricing["pilot_price_usd"] != PUBLIC_INTAKE_PILOT_PRICE_USD
+    ):
+        raise GrowthInputError(
+            "pilot report.pricing.pilot_price_usd must match public intake "
+            f"price of ${PUBLIC_INTAKE_PILOT_PRICE_USD}"
+        )
     qualification_aware_sales_queue = False
     if schema == 7:
         for field in (

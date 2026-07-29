@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Bound schema-7 pilot reporting to the $299 price named in public intake,
+  rejecting any configured mismatch before issue parsing, sales actions,
+  booked-revenue arithmetic, or output.
+- Made joined growth ingestion reject saved schema-7 evidence with a divergent
+  pilot price, while preserving older aggregate-schema compatibility and
+  configurable positive-integer pilot targets and inactivity windows.
+- Derived price-bearing readiness and commercial-fit options from the same
+  public-intake constant and added direct API, CLI, and growth regressions.
 - Made the website, README, and release-guide portable quick starts one shell
   AND-list, preventing a failed download from executing a stale
   `/tmp/repo-scout.pyz` or returning a misleading successful scan.
@@ -16,7 +24,8 @@
   unchanged.
 - Centralized the schema-7 sales-action contract and made growth ingestion
   validate every queued stage, readiness, qualification status, repository
-  scope, CI provider, configured price, and exact next action before deferring.
+  scope, CI provider, public-intake-bound price, and exact next action before
+  deferring.
 - Added source and installed-command regressions proving out-of-profile buyers
   cannot receive payment guidance and saved qualified-stage evidence cannot
   substitute a later payment action.

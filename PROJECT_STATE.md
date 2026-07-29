@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 275 of
-1,000, with 725 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 276 of
+1,000, with 724 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -68,10 +68,13 @@ alignment take priority over commit volume.
   integration gate, incomplete or outside-target GitHub evidence requires
   scope review, and larger target requests require an explicit first-10 scope.
   Schema-7 growth ingestion validates every queue action against its stage,
-  readiness, qualification, CI provider, and configured price before its
-  commercial bottlenecks defer to that queue.
-- Strict positive-integer pilot price, target, and inactivity controls that
-  reject booleans, floats, and strings before revenue evidence is built.
+  readiness, qualification, CI provider, and public-intake-bound price before
+  its commercial bottlenecks defer to that queue.
+- Public-intake-bound schema-7 pilot pricing that rejects a configured price
+  other than the disclosed $299 before issue parsing, revenue accounting, or
+  sales actions. Joined growth ingestion applies the same boundary to saved
+  schema-7 reports, while target and inactivity controls remain configurable
+  positive integers.
 - Release-blocking installed-wheel proof that offers remain outside revenue,
   paid pilots book $299 toward the $897 target, and qualification, attribution,
   sales queues, and non-sensitive reporting retain their commercial semantics.

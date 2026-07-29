@@ -13,7 +13,8 @@ from .version import add_version_argument
 
 
 SCHEMA_VERSION = 7
-DEFAULT_PILOT_PRICE_USD = 299
+PUBLIC_INTAKE_PILOT_PRICE_USD = 299
+DEFAULT_PILOT_PRICE_USD = PUBLIC_INTAKE_PILOT_PRICE_USD
 DEFAULT_TARGET_PILOTS = 3
 DEFAULT_STALE_DAYS = 7
 MAX_ISSUE_TITLE_CHARACTERS = 1024
@@ -56,8 +57,14 @@ ATTRIBUTED_SOURCES = tuple(source for source, _ in SOURCE_OPTIONS)
 SOURCE_KEYS = (*ATTRIBUTED_SOURCES, "unattributed", "unknown")
 READINESS_FIELD_HEADING = "Purchase readiness"
 READINESS_OPTIONS = (
-    ("ready", "Ready to purchase the $299 pilot"),
-    ("needs_approval", "Need internal approval for $299"),
+    (
+        "ready",
+        f"Ready to purchase the ${PUBLIC_INTAKE_PILOT_PRICE_USD} pilot",
+    ),
+    (
+        "needs_approval",
+        f"Need internal approval for ${PUBLIC_INTAKE_PILOT_PRICE_USD}",
+    ),
     ("exploring", "Exploring before requesting budget"),
 )
 READINESS_BY_ANSWER = {
@@ -72,7 +79,10 @@ DECISION_CRITERION_OPTIONS = (
     ("evidence_fit", "Produces evidence our leaders or auditors need"),
     ("privacy_security", "Meets our privacy and security requirements"),
     ("effort_timing", "Fits our implementation capacity and timing"),
-    ("commercial_fit", "The $299 scope and price fit"),
+    (
+        "commercial_fit",
+        f"The ${PUBLIC_INTAKE_PILOT_PRICE_USD} scope and price fit",
+    ),
     ("other", "Other"),
 )
 DECISION_CRITERION_BY_ANSWER = {
@@ -155,6 +165,20 @@ class FunnelInputError(ValueError):
     """Raised when a pilot issue export cannot be analyzed safely."""
 
 
+def _validate_pilot_price(pilot_price_usd: Any) -> None:
+    if (
+        not isinstance(pilot_price_usd, int)
+        or isinstance(pilot_price_usd, bool)
+        or pilot_price_usd < 1
+    ):
+        raise FunnelInputError("pilot price must be a positive integer")
+    if pilot_price_usd != PUBLIC_INTAKE_PILOT_PRICE_USD:
+        raise FunnelInputError(
+            "pilot price must match public intake price of "
+            f"${PUBLIC_INTAKE_PILOT_PRICE_USD}"
+        )
+
+
 @dataclass(frozen=True)
 class PilotIssue:
     number: int
@@ -175,12 +199,7 @@ def build_funnel(
 ) -> dict[str, Any]:
     if not isinstance(payload, list):
         raise FunnelInputError("issue export must be a JSON array")
-    if (
-        not isinstance(pilot_price_usd, int)
-        or isinstance(pilot_price_usd, bool)
-        or pilot_price_usd < 1
-    ):
-        raise FunnelInputError("pilot price must be a positive integer")
+    _validate_pilot_price(pilot_price_usd)
     if (
         not isinstance(target_pilots, int)
         or isinstance(target_pilots, bool)
@@ -734,7 +753,10 @@ def build_parser() -> argparse.ArgumentParser:
         type=_positive_int,
         default=DEFAULT_PILOT_PRICE_USD,
         metavar="USD",
-        help=f"Pilot price in whole USD. Defaults to {DEFAULT_PILOT_PRICE_USD}.",
+        help=(
+            "Pilot price in whole USD. Must match the public intake price of "
+            f"{PUBLIC_INTAKE_PILOT_PRICE_USD}."
+        ),
     )
     parser.add_argument(
         "--target-pilots",
@@ -765,6 +787,7 @@ def main(argv: Sequence[str] | None = None, stdin: TextIO | None = None) -> int:
     input_stream = stdin or sys.stdin
 
     try:
+        _validate_pilot_price(args.pilot_price)
         payload = _read_payload(args.input, input_stream)
         report = build_funnel(
             payload,
