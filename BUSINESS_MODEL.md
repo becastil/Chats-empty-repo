@@ -1593,6 +1593,13 @@ signed movement. Controlled failures emit no report and expose only the input
 type and escaped repeated key, not either competing count. This closes standard
 JSON last-value ambiguity; it does not authenticate GitHub evidence, make
 request counts unique, or turn them into demand or revenue.
+The shared producer parser also requires every current and baseline asset name
+to be non-empty printable text. Line, terminal, Unicode-separator, and
+bidirectional controls fail with a generic location-only error before artifact
+classification, request totals, warnings, or signed movement. Ordinary
+printable Unicode names remain exact. This protects operator-facing
+distribution evidence; it does not authenticate a GitHub export, make requests
+unique, or establish demand, payment, or revenue.
 
 The latest 2026-07-22 UTC public checkpoint records 268 cumulative primary
 artifact requests across 53 contract-complete releases: 36 portable and 232

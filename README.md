@@ -576,6 +576,10 @@ Raw release exports and saved distribution baselines reject duplicate JSON
 keys at every depth before request totals or signed movement are calculated.
 Failures emit no report and identify only the input type and escaped repeated
 key, never either competing count.
+Their shared asset parser also requires every asset name to be non-empty
+printable text. Line, terminal, Unicode-separator, and bidirectional controls
+fail with a location-only error before classification, warnings, counts, or
+movement, while ordinary printable Unicode names remain exact.
 
 Save a JSON report as the weekly baseline, then pass it back on the next run for
 signed request deltas and release-set changes:

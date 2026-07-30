@@ -4891,3 +4891,26 @@ exit code 2, no verification output, one escaped error line, and unchanged
 evidence bytes. This protects free-to-paid CI activation evidence; it does not
 authenticate a receipt, prove customer use, establish pilot demand, collect
 payment, or create revenue.
+
+## 2026-07-30: Reject Presentation-Unsafe Distribution Asset Names
+
+Distribution parsing required asset names to be non-empty strings, then reused
+them in duplicate diagnostics, unexpected-artifact warnings, baseline-removal
+warnings, download-decrease warnings, and default text output. JSON-decoded
+newlines, terminal controls, Unicode separators, or bidirectional controls
+could therefore forge operator-facing metrics even though structured JSON
+would escape those characters.
+
+The shared current-export and saved-baseline asset parser now requires every
+name to be non-empty printable text. Rejection uses only the asset's structural
+location and never repeats its name. This stops before duplicate detection,
+classification, warnings, request totals, or signed movement, while ordinary
+printable Unicode names retain their exact report value.
+
+Source coverage exercises blank, line, ANSI, C1, Unicode-separator, and
+bidirectional names through both parser paths, plus printable Unicode
+acceptance. The CLI and installed commercial smoke require exit code 2, empty
+standard output, one generic error line, and unchanged current and baseline
+evidence. This protects distribution-report integrity; it does not authenticate
+GitHub evidence, deduplicate requests, prove an install, establish pilot
+demand, collect payment, or create revenue.

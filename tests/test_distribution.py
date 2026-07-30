@@ -228,6 +228,156 @@ class DistributionReportTests(unittest.TestCase):
         )
         self.assertIn("v0.3.4 [drift]", format_distribution_report(report))
 
+    def test_preserves_printable_unicode_and_rejects_unsafe_asset_names(
+        self,
+    ) -> None:
+        printable_name = "release-notes-r\u00e9sum\u00e9-\u4f60\u597d.txt"
+        printable_payload = [
+            self._release(
+                "v0.3.4",
+                {
+                    "repo-scout-0.3.4.pyz": 1,
+                    "repo_scout-0.3.4-py3-none-any.whl": 1,
+                    "repo_scout-0.3.4.tar.gz": 1,
+                    "SHA256SUMS": 1,
+                    printable_name: 2,
+                },
+            )
+        ]
+
+        printable_report = build_distribution_report(printable_payload)
+
+        self.assertEqual(
+            printable_report["latest"]["contract"]["unexpected_artifacts"],
+            [printable_name],
+        )
+        self.assertIn(printable_name, format_distribution_report(printable_report))
+
+        valid_current = [
+            self._release(
+                "v0.3.4",
+                {
+                    "repo-scout-0.3.4.pyz": 1,
+                    "repo_scout-0.3.4-py3-none-any.whl": 1,
+                    "repo_scout-0.3.4.tar.gz": 1,
+                    "SHA256SUMS": 1,
+                },
+            )
+        ]
+        valid_baseline = build_distribution_report(valid_current)
+        unsafe_names = (
+            "",
+            "notes.txt\nforged metric",
+            "notes.txt\rforged metric",
+            "notes.txt\x1b[31m",
+            "notes.txt\u009b31m",
+            "notes.txt\u2028forged metric",
+            "notes.txt\u202eforged metric",
+        )
+        for unsafe_name in unsafe_names:
+            with self.subTest(source="release export", name=repr(unsafe_name)):
+                unsafe_current = json.loads(json.dumps(valid_current))
+                unsafe_current[0]["assets"][0]["name"] = unsafe_name
+                with self.assertRaises(DistributionInputError) as raised:
+                    build_distribution_report(unsafe_current)
+                self.assertEqual(
+                    str(raised.exception),
+                    (
+                        "release export item 0.assets[0].name must be "
+                        "non-empty printable text"
+                    ),
+                )
+
+            with self.subTest(source="baseline report", name=repr(unsafe_name)):
+                unsafe_baseline = json.loads(json.dumps(valid_baseline))
+                unsafe_baseline["releases"][0]["assets"][0]["name"] = unsafe_name
+                with self.assertRaises(DistributionInputError) as raised:
+                    build_distribution_report(
+                        valid_current,
+                        baseline=unsafe_baseline,
+                    )
+                self.assertEqual(
+                    str(raised.exception),
+                    (
+                        "baseline report release 0.assets[0].name must be "
+                        "non-empty printable text"
+                    ),
+                )
+
+    def test_cli_rejects_unsafe_asset_names_without_output_or_mutation(
+        self,
+    ) -> None:
+        unsafe_name = (
+            "notes.txt\n"
+            "Primary artifact downloads: 999 total / 999 portable / 0 wheel"
+            "\x1b[31m\u202e"
+        )
+        current = [
+            self._release(
+                "v0.3.4",
+                {
+                    "repo-scout-0.3.4.pyz": 1,
+                    "repo_scout-0.3.4-py3-none-any.whl": 1,
+                    "repo_scout-0.3.4.tar.gz": 1,
+                    "SHA256SUMS": 1,
+                },
+            )
+        ]
+        with TemporaryDirectory() as tmp:
+            current_path = Path(tmp) / "current.json"
+            unsafe_current = json.loads(json.dumps(current))
+            unsafe_current[0]["assets"][0]["name"] = unsafe_name
+            current_path.write_text(
+                json.dumps(unsafe_current, ensure_ascii=False),
+                encoding="utf-8",
+            )
+            current_bytes = current_path.read_bytes()
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with redirect_stdout(stdout), redirect_stderr(stderr):
+                exit_code = main([str(current_path)])
+
+            self.assertEqual(exit_code, 2)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertEqual(
+                stderr.getvalue(),
+                (
+                    "repo-scout-distribution: release export item "
+                    "0.assets[0].name must be non-empty printable text\n"
+                ),
+            )
+            self.assertEqual(current_path.read_bytes(), current_bytes)
+
+            safe_current_path = Path(tmp) / "safe-current.json"
+            safe_current_path.write_text(json.dumps(current), encoding="utf-8")
+            baseline = build_distribution_report(current)
+            baseline["releases"][0]["assets"][0]["name"] = unsafe_name
+            baseline_path = Path(tmp) / "baseline.json"
+            baseline_path.write_text(
+                json.dumps(baseline, ensure_ascii=False),
+                encoding="utf-8",
+            )
+            safe_current_bytes = safe_current_path.read_bytes()
+            baseline_bytes = baseline_path.read_bytes()
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with redirect_stdout(stdout), redirect_stderr(stderr):
+                exit_code = main(
+                    [str(safe_current_path), "--baseline", str(baseline_path)]
+                )
+
+            self.assertEqual(exit_code, 2)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertEqual(
+                stderr.getvalue(),
+                (
+                    "repo-scout-distribution: baseline report release "
+                    "0.assets[0].name must be non-empty printable text\n"
+                ),
+            )
+            self.assertEqual(safe_current_path.read_bytes(), safe_current_bytes)
+            self.assertEqual(baseline_path.read_bytes(), baseline_bytes)
+
     def test_empty_export_has_explicit_zero_state(self) -> None:
         report = build_distribution_report([])
 

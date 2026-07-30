@@ -336,9 +336,9 @@ def _parse_assets(raw_assets: Any, location: str) -> list[dict[str, Any]]:
         if not isinstance(raw_asset, dict):
             raise DistributionInputError(f"{asset_location} must be an object")
         name = raw_asset.get("name")
-        if not isinstance(name, str) or not name:
+        if not isinstance(name, str) or not name or not name.isprintable():
             raise DistributionInputError(
-                f"{asset_location}.name must be a non-empty string"
+                f"{asset_location}.name must be non-empty printable text"
             )
         if name in seen_asset_names:
             raise DistributionInputError(

@@ -432,6 +432,80 @@ def verify_pilot_funnel(
         )
         checked.append("duplicate-distribution-keys-rejected")
 
+        unsafe_asset_name = (
+            "notes.txt\n"
+            "Primary artifact downloads: 999 total / 999 portable / 0 wheel"
+            "\x1b[31m\u202e"
+        )
+        unsafe_release_export = Path(tmp) / "unsafe-release-export.json"
+        unsafe_release_payload = _release_export(portable=5, wheel=9)
+        unsafe_release_payload[0]["assets"][0]["name"] = unsafe_asset_name
+        unsafe_release_export.write_text(
+            json.dumps(unsafe_release_payload, ensure_ascii=False),
+            encoding="utf-8",
+        )
+        unsafe_release_bytes = unsafe_release_export.read_bytes()
+        unsafe_release = _run_distribution(
+            distribution_command,
+            unsafe_release_export,
+            baseline=None,
+            output_format="text",
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(
+            not unsafe_release.stdout,
+            "unsafe release asset name emitted a distribution report",
+        )
+        _require(
+            unsafe_release.stderr
+            == (
+                "repo-scout-distribution: release export item "
+                "0.assets[0].name must be non-empty printable text\n"
+            ),
+            "unsafe release asset name did not produce its controlled error",
+        )
+        _require(
+            unsafe_release_export.read_bytes() == unsafe_release_bytes,
+            "unsafe release evidence changed during rejection",
+        )
+
+        unsafe_baseline_report = Path(tmp) / "unsafe-distribution-baseline.json"
+        unsafe_baseline = json.loads(json.dumps(baseline_distribution))
+        unsafe_baseline["releases"][0]["assets"][0]["name"] = unsafe_asset_name
+        unsafe_baseline_report.write_text(
+            json.dumps(unsafe_baseline, ensure_ascii=False),
+            encoding="utf-8",
+        )
+        unsafe_baseline_bytes = unsafe_baseline_report.read_bytes()
+        current_release_bytes = current_release_export.read_bytes()
+        unsafe_baseline_result = _run_distribution(
+            distribution_command,
+            current_release_export,
+            baseline=unsafe_baseline_report,
+            output_format="text",
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(
+            not unsafe_baseline_result.stdout,
+            "unsafe baseline asset name emitted a distribution report",
+        )
+        _require(
+            unsafe_baseline_result.stderr
+            == (
+                "repo-scout-distribution: baseline report release "
+                "0.assets[0].name must be non-empty printable text\n"
+            ),
+            "unsafe baseline asset name did not produce its controlled error",
+        )
+        _require(
+            unsafe_baseline_report.read_bytes() == unsafe_baseline_bytes
+            and current_release_export.read_bytes() == current_release_bytes,
+            "distribution evidence changed during unsafe baseline rejection",
+        )
+        checked.append("unsafe-distribution-asset-name-rejected")
+
         growth = _growth_report(
             growth_command,
             distribution_report,

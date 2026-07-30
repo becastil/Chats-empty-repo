@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Rejected empty or presentation-unsafe release asset names in both raw exports
+  and saved distribution baselines before artifact classification, request
+  totals, warnings, or signed movement.
+- Preserved ordinary printable Unicode asset names while returning a generic,
+  location-only error that never repeats rejected evidence.
+- Extended source and installed-command coverage to require no report and no
+  evidence mutation when current or baseline asset names contain line,
+  terminal, Unicode-separator, or bidirectional controls.
 - JSON-escaped control-bearing duplicate and unknown bootstrap receipt keys
   before including them in policy-verification errors.
 - Preserved ordinary printable receipt-field diagnostics while preventing

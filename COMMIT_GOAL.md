@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after containing bootstrap receipt key errors:
-  300 / 1,000 (30.0%).
-- Remaining after containing bootstrap receipt key errors:
-  700 commits.
+- Progress after rejecting unsafe distribution asset names:
+  301 / 1,000 (30.1%).
+- Remaining after rejecting unsafe distribution asset names:
+  699 commits.
 
 ## Commit Standard
 

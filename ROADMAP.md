@@ -73,7 +73,9 @@
   attribution for requests, qualification, offers, bookings, revenue,
   payment-backed activation, and resolved outcomes, plus membership, priority,
   canonical activity-derived age, and readiness-stage-age-number order pass
-  duplicate-key-safe distribution and joined-growth validation. After payment,
+  duplicate-key-safe distribution and joined-growth validation. Raw release
+  and saved baseline asset names must remain non-empty printable text before
+  any distribution count, warning, or movement is trusted. After payment,
   verify the private delivery contract and aggregate only bundles whose
   repository identities and branch metadata pass their bounded printable
   operator-output contracts and whose visible Markdown identities remain

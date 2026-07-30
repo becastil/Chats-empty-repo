@@ -177,6 +177,12 @@ calculation, emits no distribution report, and exposes only the input type and
 escaped key rather than either competing value. This prevents standard
 last-value JSON behavior from silently choosing a download count or baseline
 field.
+The same shared parser requires every current and baseline asset name to be
+non-empty printable text. Newlines, terminal controls, Unicode separators, and
+bidirectional controls fail with a location-only error before classification,
+warning construction, request totals, or signed movement. Rejected names are
+not echoed, and ordinary printable Unicode names remain unchanged in valid
+structured and operator output.
 
 For weekly movement, save the current JSON report and compare the next public
 release export to it:
