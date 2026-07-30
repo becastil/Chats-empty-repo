@@ -1649,9 +1649,11 @@ class OutreachReportTests(unittest.TestCase):
             self.assertEqual(report["summary"]["drafted"], 1)
             self.assertEqual(report["summary"]["attempted_prospects"], 0)
             receipt = json.loads(stdout.getvalue())
+            self.assertEqual(receipt["schema_version"], 2)
             self.assertTrue(receipt["private_output"])
             self.assertTrue(receipt["human_review_confirmed"])
             self.assertEqual(receipt["approval"]["status"], "approved")
+            self.assertEqual(receipt["queue"], {"drafts_remaining": 1})
             self.assertNotIn("approved_on", json.dumps(receipt))
             self.assertNotIn("2026-07-12", json.dumps(receipt))
             self.assertNotIn("evidence.example", json.dumps(receipt))
@@ -1659,6 +1661,165 @@ class OutreachReportTests(unittest.TestCase):
             self.assertEqual(
                 list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
             )
+
+    def test_content_bound_approval_preserves_post_contact_next_review(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "private ledger.csv"
+            notes = Path(tmp) / "private drafts.md"
+            _write_ledger(
+                ledger,
+                [
+                    _row(
+                        prospect_id="prospect-001",
+                        status="drafted",
+                        contacted_on="",
+                        next_action_on="",
+                        approved_on="",
+                    ),
+                    _row(
+                        prospect_id="prospect-002",
+                        status="drafted",
+                        contacted_on="",
+                        next_action_on="",
+                        approved_on="",
+                    ),
+                ],
+            )
+            notes.write_text(
+                f"## prospect-001\n\n"
+                f"{_review_message('First private message')}\n\n"
+                f"## prospect-002\n\n"
+                f"{_review_message('Second private message')}\n",
+                encoding="utf-8",
+            )
+            if os.name == "posix":
+                notes.chmod(0o600)
+
+            review_stdout = io.StringIO()
+            with redirect_stdout(review_stdout):
+                self.assertEqual(
+                    main(
+                        [
+                            str(ledger),
+                            "--as-of",
+                            "2026-07-13",
+                            "--review-next",
+                            "--include-private-evidence",
+                            "--include-private-draft",
+                            str(notes),
+                            "--format",
+                            "json",
+                        ]
+                    ),
+                    0,
+                )
+            first_review = json.loads(review_stdout.getvalue())
+
+            approval_stdout = io.StringIO()
+            with redirect_stdout(approval_stdout):
+                self.assertEqual(
+                    main(
+                        [
+                            str(ledger),
+                            "--as-of",
+                            "2026-07-13",
+                            "--approve-next",
+                            "prospect-001",
+                            "--approved-on",
+                            "2026-07-13",
+                            "--confirm-reviewed",
+                            "--review-digest",
+                            first_review["review_digest"],
+                            "--reviewed-private-draft",
+                            str(notes),
+                        ]
+                    ),
+                    0,
+                )
+
+            approval_text = approval_stdout.getvalue()
+            self.assertIn("Drafts remaining: 1", approval_text)
+            self.assertIn("After that send is recorded", approval_text)
+            command_lines = [
+                line
+                for line in approval_text.splitlines()
+                if line.startswith("repo-scout-outreach ")
+            ]
+            self.assertEqual(len(command_lines), 2)
+
+            contact_command = shlex.split(
+                next(
+                    line
+                    for line in command_lines
+                    if "--record-contact" in shlex.split(line)
+                )
+            )[1:]
+            self.assertEqual(contact_command.count(DATE_PLACEHOLDER), 2)
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(
+                    main(
+                        [
+                            (
+                                "2026-07-14"
+                                if value == DATE_PLACEHOLDER
+                                else value
+                            )
+                            for value in contact_command
+                        ]
+                    ),
+                    0,
+                )
+
+            next_review_line = next(
+                line
+                for line in command_lines
+                if "--review-next" in shlex.split(line)
+            )
+            next_review_command = shlex.split(next_review_line)[1:]
+            self.assertEqual(next_review_command.count(DATE_PLACEHOLDER), 1)
+            self.assertIn("--include-private-evidence", next_review_command)
+            self.assertEqual(
+                next_review_command[
+                    next_review_command.index("--include-private-draft") + 1
+                ],
+                str(notes),
+            )
+            self.assertEqual(
+                next_review_command[
+                    next_review_command.index("--write-review") + 1
+                ],
+                REVIEW_OUTPUT_PLACEHOLDER,
+            )
+            self.assertIn(f"'{REVIEW_OUTPUT_PLACEHOLDER}'", next_review_line)
+            next_review_path = Path(tmp) / "next review.md"
+            replaced_command = next_review_line.replace(
+                DATE_PLACEHOLDER,
+                "2026-07-15",
+            ).replace(
+                REVIEW_OUTPUT_PLACEHOLDER,
+                str(next_review_path),
+            )
+            next_review_stdout = io.StringIO()
+            with redirect_stdout(next_review_stdout):
+                self.assertEqual(
+                    main(shlex.split(replaced_command)[1:]),
+                    0,
+                )
+            self.assertEqual(
+                next_review_stdout.getvalue(),
+                "Private review written with owner-only permissions.\n",
+            )
+            next_review = next_review_path.read_text(encoding="utf-8")
+            self.assertIn("Prospect alias: prospect-002", next_review)
+            self.assertIn("Second private message", next_review)
+            self.assertNotIn("First private message", next_review)
+            if os.name == "posix":
+                self.assertEqual(
+                    next_review_path.stat().st_mode & 0o777,
+                    0o600,
+                )
 
     def test_content_bound_approve_rejects_an_edited_private_draft(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -3030,6 +3191,12 @@ class OutreachReportTests(unittest.TestCase):
             approval_output = run(
                 with_event_date(approval_command, "2026-07-02")
             )
+            self.assertIn("Drafts remaining: 0", approval_output)
+            self.assertIn(
+                "the bounded review queue is complete",
+                approval_output,
+            )
+            self.assertNotIn("--review-next", approval_output)
 
             contact_command = command_for(
                 approval_output, "--record-contact"

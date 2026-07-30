@@ -88,13 +88,15 @@ they are not users, leads, or revenue.
   `PRIVATE-REVIEW-PATH` inside its existing single quotes with a new ignored
   owner-only destination before generating the next complete review; paths
   containing spaces remain one shell argument. Send only approved messages one
-  at a time, record
-  each human send through guarded `--record-contact`, then record the one
-  human-sent, day-seven follow-up through guarded `--record-follow-up`. Record
-  any human-observed reply, pilot request, price objection, existing-solution
-  objection, rejection, or opt-out through guarded `--record-outcome`; keep
-  explicit price resistance and substitute preference separate from generic
-  fit rejection. Do not add another acquisition asset before executing this
+  at a time and record each human send through guarded `--record-contact`.
+  After that record succeeds, use the approval receipt's separate next-review
+  handoff and replace its shell-quoted `PRIVATE-REVIEW-PATH` before writing the
+  next complete private bundle. Then record the one human-sent, day-seven
+  follow-up through guarded `--record-follow-up`. Record any human-observed
+  reply, pilot request, price objection, existing-solution objection,
+  rejection, or opt-out through guarded `--record-outcome`; keep explicit
+  price resistance and substitute preference separate from generic fit
+  rejection. Do not add another acquisition asset before executing this
   bounded review queue.
 - Collect the first three public pilot requests, work only the schema-10 sales
   queue whose detailed source, purchase-readiness, and purchase-criterion

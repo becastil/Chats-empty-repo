@@ -5183,3 +5183,26 @@ state without replacing its first observation date. This records substitute
 evidence only when a human sees it; it does not retain response text, identify
 the substitute, infer intent from silence, establish demand, collect payment,
 or create revenue.
+
+## 2026-07-30: Return Successful Sends To The Remaining Review Queue
+
+A declined draft already emitted the next complete review while another draft
+remained. Approval emitted only the contact-recording command, so an operator
+who successfully sent and recorded one message had to reconstruct the private
+review command or remember to return to the remaining queue. That gap worked
+against the five-attempt acquisition experiment at the point where execution
+had actually succeeded.
+
+Schema-2 approval receipts now report `drafts_remaining`. When the count is
+nonzero, text output emits a distinct next-review command explicitly labeled
+for use only after the approved message has been sent and its contact record
+succeeds. Content-bound approvals preserve the private evidence and draft
+flags, exact notes path, and shell-quoted `PRIVATE-REVIEW-PATH`; replacing that
+literal writes the next `600` bundle without exposing its alias, sources, or
+message in terminal output. At zero, the receipt emits no review command.
+
+Approval still sends nothing and records neither contact nor follow-up.
+Installed-command coverage executes the intended approval, manual contact
+record, and next private review sequence across two synthetic prospects. This
+improves experiment completion without claiming a real review, attempt, lead,
+demand, payment, or revenue event.

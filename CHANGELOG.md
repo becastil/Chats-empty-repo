@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Advanced private approval receipts to schema 2 with a privacy-safe
+  remaining-draft count and a truthful terminal queue state.
+- Added a distinct post-contact next-review handoff for nonterminal approvals,
+  preserving complete private evidence-and-draft options and the shell-quoted
+  owner-only review destination without sending or recording outreach.
+- Extended unit and installed-command lifecycle coverage through approval,
+  manual contact recording, and generation of the next prospect's private
+  content-bound review.
 - Added a guarded terminal `existing-solution` outreach outcome and dedicated
   aggregate count so explicit substitute or DIY preference remains distinct
   from price resistance and generic fit rejection.

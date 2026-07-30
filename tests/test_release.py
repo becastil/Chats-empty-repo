@@ -607,6 +607,7 @@ class ReleaseManifestTests(unittest.TestCase):
                 "copy-ready-handoffs",
                 "draft-declined-without-contact",
                 "owner-only-decline-continuation",
+                "owner-only-approval-continuation",
                 "draft-reviewed",
                 "draft-ledger-drift-rejected",
                 "draft-route-rejected",

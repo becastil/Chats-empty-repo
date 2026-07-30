@@ -1204,9 +1204,15 @@ shell-quoted private paths, and actual-date placeholders into a complete
 decision command. The approval receipt's contact handoff instead uses explicit
 date placeholders;
 requiring the operator to replace them prevents a later manual send from
-inheriting the earlier approval date. This removes manual command reconstruction
-without completing a review, sending a message, or treating operator activity
-as demand.
+inheriting the earlier approval date. Schema-2 approval receipts also report
+the remaining drafted count. When another draft remains, the text receipt
+emits a separate command for use only after that contact record succeeds. A
+content-bound approval preserves the private evidence and draft flags, exact
+notes path, and shell-quoted owner-only review destination so the next
+prospect receives a fresh complete bundle instead of being stranded after a
+successful send. At zero, the receipt ends the bounded queue without a dead
+handoff. This removes manual command reconstruction without completing a
+review, sending a message, or treating operator activity as demand.
 
 When the human instead decides a draft must not be sent, guarded
 `--decline-next` requires the exact same next alias and an explicit no-send

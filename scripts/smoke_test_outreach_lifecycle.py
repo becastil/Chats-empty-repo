@@ -565,6 +565,152 @@ def verify_outreach_lifecycle(
         )
         checked.append("owner-only-decline-continuation")
 
+        with continuation_ledger.open(
+            "w", newline="", encoding="utf-8"
+        ) as ledger_file:
+            writer = csv.DictWriter(
+                ledger_file,
+                fieldnames=LEDGER_FIELDS,
+                lineterminator="\n",
+            )
+            writer.writeheader()
+            writer.writerows(
+                (
+                    _row(
+                        prospect_id="prospect-001",
+                        contacted_on="",
+                        status="drafted",
+                        next_action_on="",
+                        approved_on="",
+                    ),
+                    _row(
+                        prospect_id="prospect-002",
+                        contacted_on="",
+                        status="drafted",
+                        next_action_on="",
+                        approved_on="",
+                    ),
+                )
+            )
+        continuation_ledger.chmod(0o600)
+        approval_review = _json_command(
+            outreach_command,
+            continuation_ledger,
+            as_of="2026-07-05",
+            arguments=(
+                "--review-next",
+                "--include-private-evidence",
+                "--include-private-draft",
+                str(continuation_drafts),
+            ),
+            environment=environment,
+        )
+        approval_digest = approval_review.get("review_digest")
+        _require(
+            isinstance(approval_digest, str),
+            "content-bound approval review omitted its digest",
+        )
+        approval_continuation = _run_arguments(
+            outreach_command,
+            (
+                "--as-of",
+                "2026-07-06",
+                "--approve-next",
+                "prospect-001",
+                "--approved-on",
+                "2026-07-06",
+                "--confirm-reviewed",
+                "--review-digest",
+                approval_digest,
+                "--reviewed-private-draft",
+                str(continuation_drafts),
+                "--",
+                str(continuation_ledger),
+            ),
+            environment=environment,
+        )
+        _require(
+            "Drafts remaining: 1" in approval_continuation.stdout
+            and "After that send is recorded" in approval_continuation.stdout,
+            "approval did not preserve the post-contact review handoff",
+        )
+        approval_contact_arguments = _handoff_arguments(
+            approval_continuation.stdout,
+            action="--record-contact",
+            ledger=continuation_ledger,
+        )
+        approval_contact_arguments = _replace_event_date(
+            approval_contact_arguments,
+            event_date="2026-07-07",
+            action="approval continuation contact",
+        )
+        _run_arguments(
+            outreach_command,
+            approval_contact_arguments,
+            environment=environment,
+        )
+        approval_review_arguments = _handoff_arguments(
+            approval_continuation.stdout,
+            action="--review-next",
+            ledger=continuation_ledger,
+        )
+        _require(
+            "--include-private-evidence" in approval_review_arguments
+            and approval_review_arguments[
+                approval_review_arguments.index("--include-private-draft") + 1
+            ]
+            == str(continuation_drafts)
+            and approval_review_arguments[
+                approval_review_arguments.index("--write-review") + 1
+            ]
+            == REVIEW_OUTPUT_PLACEHOLDER,
+            "approval did not preserve the complete private review options",
+        )
+        approval_review_lines = [
+            line
+            for line in approval_continuation.stdout.splitlines()
+            if line.startswith("repo-scout-outreach ")
+            and " --review-next " in line
+        ]
+        _require(
+            len(approval_review_lines) == 1
+            and f"'{REVIEW_OUTPUT_PLACEHOLDER}'" in approval_review_lines[0],
+            "approval did not emit one shell-safe next-review handoff",
+        )
+        approval_next_review_path = Path(tmp) / "approval next review.md"
+        replaced_approval_review = approval_review_lines[0].replace(
+            DATE_PLACEHOLDER,
+            "2026-07-08",
+        ).replace(
+            REVIEW_OUTPUT_PLACEHOLDER,
+            str(approval_next_review_path),
+        )
+        approval_next_review = _run_arguments(
+            outreach_command,
+            tuple(shlex.split(replaced_approval_review)[1:]),
+            environment=environment,
+        )
+        _require(
+            approval_next_review.stdout
+            == "Private review written with owner-only permissions.\n",
+            "post-contact review disclosed alias-bearing terminal output",
+        )
+        approval_next_review_text = approval_next_review_path.read_text(
+            encoding="utf-8"
+        )
+        _require(
+            "Prospect alias: prospect-002" in approval_next_review_text
+            and "Second private message" in approval_next_review_text
+            and "First private message" not in approval_next_review_text,
+            "post-contact handoff did not write the next private review",
+        )
+        if os.name == "posix":
+            _require(
+                approval_next_review_path.stat().st_mode & 0o777 == 0o600,
+                "post-contact review did not use owner-only permissions",
+            )
+        checked.append("owner-only-approval-continuation")
+
         ledger = Path(tmp) / "outreach-ledger.csv"
         draft = _row(
             contacted_on="",
@@ -846,6 +992,11 @@ def verify_outreach_lifecycle(
         _require(
             approval.get("human_review_confirmed") is True,
             "approval confirmation is missing",
+        )
+        _require(
+            approval.get("schema_version") == 2
+            and approval.get("queue") == {"drafts_remaining": 0},
+            "approval receipt did not report the remaining review queue",
         )
         _require(
             approval.get("approval", {}).get("status") == "approved",

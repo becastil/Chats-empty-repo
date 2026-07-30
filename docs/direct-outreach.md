@@ -290,7 +290,14 @@ human decision; it does not send outreach or create a contact or follow-up
 date. Its text receipt ends with a complete command for recording the manual
 send, using the same alias and private ledger path with `YYYY-MM-DD`
 placeholders. Replace both placeholders with the actual UTC send date; an
-unchanged placeholder fails parsing instead of reusing the approval date.
+unchanged placeholder fails parsing instead of reusing the approval date. The
+schema-2 receipt also reports the remaining drafted count. When that count is
+nonzero, it emits a separate next-review command labeled for use only after the
+manual send has been recorded. A content-bound approval preserves both private
+review flags and the same notes path, then requires a replaced shell-quoted
+`PRIVATE-REVIEW-PATH` before writing the next complete owner-only bundle. At
+zero, the receipt reports that the bounded review queue will be complete after
+the send is recorded and emits no dead review handoff.
 
 After review, the aggregate `Approved to send` count must include the selected
 row before contact; the report still does not reveal its alias. A human must

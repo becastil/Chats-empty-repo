@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 312 of
-1,000, with 688 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 313 of
+1,000, with 687 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -646,6 +646,13 @@ alignment take priority over commit volume.
   draft review with complete note-to-ledger identity preflight.
 - Guarded `--approve-next` recording that requires the exact next alias, an
   explicit review date, and confirmation that a human completed every check.
+- Schema-2 approval receipts that report the privacy-safe remaining-draft
+  count, terminate cleanly at zero, and carry nonempty queues into a distinct
+  post-contact review handoff rather than leaving the next prospect stranded.
+- Complete-review continuity after a content-bound approval, preserving
+  private evidence, draft notes, and the exact notes path while requiring the
+  approved message to be sent and recorded before the emitted shell-quoted
+  `PRIVATE-REVIEW-PATH` command writes the next `600` bundle.
 - Schema-9 alias-only recovery of the next approved message and its guarded
   contact-recording handoff after the one-time approval receipt is lost, with
   machine-readable privacy classification for approved and due-follow-up
@@ -920,10 +927,12 @@ nonterminal decline, replace `PRIVATE-REVIEW-PATH` inside its existing single
 quotes with a new ignored owner-only destination before running the emitted
 review command.
 Immediately record each human send with guarded `--record-contact`, which
-retains approval and calculates the exact seven-day follow-up before the next
-message. When due, send that one follow-up manually and close its cadence
-through guarded `--record-follow-up`. Record any explicit `$299` resistance as
-the human-observed `price-objection` outcome instead of collapsing it into
+retains approval and calculates the exact seven-day follow-up. Only after that
+record succeeds, use the approval receipt's separate next-review handoff,
+replace its shell-quoted `PRIVATE-REVIEW-PATH`, and review the next draft. When
+due, send that one follow-up manually and close its cadence through guarded
+`--record-follow-up`. Record any explicit `$299` resistance as the
+human-observed `price-objection` outcome instead of collapsing it into
 `not-a-fit`; record an explicit existing-tool or DIY preference as
 `existing-solution` instead of collapsing it into price or fit rejection. No
 outreach has been approved or attempted yet, and drafts are not leads or

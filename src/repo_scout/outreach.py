@@ -31,7 +31,7 @@ elif os.name == "nt":
 
 SCHEMA_VERSION = 11
 REVIEW_SCHEMA_VERSION = 6
-APPROVAL_SCHEMA_VERSION = 1
+APPROVAL_SCHEMA_VERSION = 2
 DECLINE_SCHEMA_VERSION = 2
 CONTACT_SCHEMA_VERSION = 1
 FOLLOW_UP_SCHEMA_VERSION = 1
@@ -246,6 +246,11 @@ def approve_next_outreach_draft(
         "approval": {
             "prospect_id": prospect_id,
             "status": "approved",
+        },
+        "queue": {
+            "drafts_remaining": sum(
+                row["status"] == "drafted" for row in updated_rows
+            ),
         },
         "action_note": (
             "Human approval was recorded atomically. No outreach was sent, "
@@ -1712,9 +1717,13 @@ def format_next_outreach_review(
 
 
 def format_outreach_approval(
-    approval_report: dict[str, Any], *, ledger: Path
+    approval_report: dict[str, Any],
+    *,
+    ledger: Path,
+    private_drafts_path: Path | None = None,
 ) -> str:
     approval = approval_report["approval"]
+    drafts_remaining = approval_report["queue"]["drafts_remaining"]
     lines = [
         "Repo Scout outreach approval",
         f"As of: {approval_report['as_of']}",
@@ -1722,6 +1731,7 @@ def format_outreach_approval(
         f"Status: {approval['status']}",
         "Private ledger updated atomically.",
         f"Boundary: {approval_report['action_note']}",
+        f"Drafts remaining: {drafts_remaining}",
         (
             "Next: send this one message manually. Replace both YYYY-MM-DD "
             "placeholders with the actual UTC send date, then record that send:"
@@ -1737,6 +1747,45 @@ def format_outreach_approval(
             "--confirm-sent",
         ),
     ]
+    if drafts_remaining:
+        if private_drafts_path is not None:
+            next_review_note = (
+                "After that send is recorded, replace YYYY-MM-DD with the "
+                "actual UTC review date and "
+                f"{REVIEW_OUTPUT_PLACEHOLDER} with a new owner-only review "
+                "output path, then write the next complete review:"
+            )
+        else:
+            next_review_note = (
+                "After that send is recorded, replace YYYY-MM-DD with the "
+                "actual UTC review date, then review the next drafted prospect:"
+            )
+        lines.extend(
+            [
+                next_review_note,
+                _format_outreach_command(
+                    ledger,
+                    "--as-of",
+                    DATE_PLACEHOLDER,
+                    "--review-next",
+                    *(
+                        (
+                            "--include-private-evidence",
+                            "--include-private-draft",
+                            str(private_drafts_path),
+                            "--write-review",
+                            REVIEW_OUTPUT_PLACEHOLDER,
+                        )
+                        if private_drafts_path is not None
+                        else ()
+                    ),
+                ),
+            ]
+        )
+    else:
+        lines.append(
+            "After that send is recorded, the bounded review queue is complete."
+        )
     return "\n".join(lines)
 
 
@@ -2370,7 +2419,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     elif args.record_contact is not None:
         rendered_output = format_outreach_contact(report, ledger=args.ledger)
     elif args.approve_next is not None:
-        rendered_output = format_outreach_approval(report, ledger=args.ledger)
+        rendered_output = format_outreach_approval(
+            report,
+            ledger=args.ledger,
+            private_drafts_path=args.reviewed_private_draft,
+        )
     elif args.decline_next is not None:
         rendered_output = format_outreach_decline(
             report,

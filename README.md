@@ -476,7 +476,13 @@ atomically records only `status=approved` and `approved_on`, and preserves the
 ledger's file permissions. It refuses an alias other than the one shown by
 `--review-next`, and refuses when the reviewed row or private draft changed
 after the receipt was created. It does not send a message or create contact or
-follow-up dates.
+follow-up dates. Its schema-2 receipt reports the remaining drafted count. If
+another draft remains, the text output also includes a separate next-review
+command labeled for use only after the approved message has been sent and
+recorded. A content-bound approval preserves the private evidence and draft
+flags, notes path, and shell-quoted `PRIVATE-REVIEW-PATH`; replace that literal
+with a new ignored owner-only destination before writing the next complete
+bundle. A terminal approval queue emits no `--review-next` command.
 
 After a human actually sends that approved message, record the send and its
 required follow-up without hand-editing the ledger:
