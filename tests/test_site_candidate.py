@@ -486,6 +486,128 @@ class SiteCandidateTests(unittest.TestCase):
             )
             self.assertFalse(staged_archive.exists())
 
+    def test_dependency_audit_failure_blocks_candidate_with_recovery(
+        self,
+    ) -> None:
+        underlying_error = (
+            "command failed with exit 1: npm run audit:dependencies: "
+            "npm warn audit request failed\n"
+            "npm error audit endpoint returned an error"
+        )
+        expected_message = (
+            prepare_site_candidate.DEPENDENCY_AUDIT_FAILURE_GUIDANCE
+            + f": {underlying_error}"
+        )
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            base_runner = FakeCommandRunner(root, archive)
+
+            def fail_audit(
+                command: list[str] | tuple[str, ...],
+                command_root: Path,
+            ) -> str:
+                normalized = tuple(command)
+                if (
+                    normalized
+                    == prepare_site_candidate.DEPENDENCY_AUDIT_COMMAND
+                ):
+                    base_runner.commands.append(normalized)
+                    base_runner.assert_root(command_root)
+                    raise prepare_site_candidate.SiteCandidateError(
+                        underlying_error
+                    )
+                return base_runner(command, command_root)
+
+            with self.assertRaises(
+                prepare_site_candidate.SiteCandidateError
+            ) as raised:
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=fail_audit,
+                )
+
+            expected_commands = [
+                (
+                    "git",
+                    "status",
+                    "--porcelain",
+                    "--untracked-files=all",
+                ),
+                ("git", "branch", "--show-current"),
+                ("git", "rev-parse", "HEAD"),
+                ("git", "rev-parse", "origin/main"),
+                ("node", "--version"),
+                ("npm", "ci"),
+                prepare_site_candidate.DEPENDENCY_AUDIT_COMMAND,
+            ]
+            self.assertEqual(str(raised.exception), expected_message)
+            for required_guidance in (
+                "candidate approval is blocked",
+                "Resolve any reported vulnerabilities",
+                "rerun the unchanged preflight",
+                "explicitly authorized to send dependency metadata",
+                "Do not skip, omit, or weaken the audit",
+            ):
+                self.assertIn(
+                    required_guidance,
+                    str(raised.exception),
+                )
+            self.assertIsInstance(
+                raised.exception.__cause__,
+                prepare_site_candidate.SiteCandidateError,
+            )
+            self.assertEqual(
+                str(raised.exception.__cause__),
+                underlying_error,
+            )
+            self.assertEqual(base_runner.commands, expected_commands)
+            self.assertFalse(archive.exists())
+            self.assertFalse(receipt.exists())
+
+            base_runner.commands.clear()
+            stdout = StringIO()
+            stderr = StringIO()
+            with (
+                patch.object(
+                    prepare_site_candidate,
+                    "_run_command",
+                    fail_audit,
+                ),
+                redirect_stdout(stdout),
+                redirect_stderr(stderr),
+            ):
+                status = prepare_site_candidate.main(
+                    [
+                        "--root",
+                        str(root),
+                        "--package-script",
+                        str(package_script),
+                        "--archive",
+                        str(archive),
+                        "--receipt",
+                        str(receipt),
+                    ]
+                )
+
+            self.assertEqual(status, 2)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertEqual(
+                stderr.getvalue(),
+                f"site-candidate: {json.dumps(expected_message)}\n",
+            )
+            self.assertEqual(len(stderr.getvalue().splitlines()), 1)
+            self.assertNotIn("site candidate ready:", stderr.getvalue())
+            self.assertNotIn(
+                "source-export request pending:",
+                stderr.getvalue(),
+            )
+            self.assertEqual(base_runner.commands, expected_commands)
+            self.assertFalse(archive.exists())
+            self.assertFalse(receipt.exists())
+
     def test_prepares_outputs_in_distinct_prevalidated_parents(self) -> None:
         with TemporaryDirectory() as tmp:
             root, archive, receipt, package_script = self._fixture(Path(tmp))

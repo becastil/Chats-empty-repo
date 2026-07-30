@@ -23,9 +23,18 @@ from urllib.parse import urlsplit
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SOURCE_REF = "refs/heads/main"
 SCHEMA_VERSION = 5
+DEPENDENCY_AUDIT_COMMAND = ("npm", "run", "audit:dependencies")
+DEPENDENCY_AUDIT_FAILURE_GUIDANCE = (
+    "dependency audit did not complete cleanly; no candidate was produced "
+    "and candidate approval is blocked. Resolve any reported vulnerabilities. "
+    "If the audit endpoint was unavailable or network access was denied, "
+    "rerun the unchanged preflight only in an environment explicitly "
+    "authorized to send dependency metadata to that endpoint. Do not skip, "
+    "omit, or weaken the audit"
+)
 PRE_SITE_TEST_COMMANDS = (
     ("npm", "ci"),
-    ("npm", "run", "audit:dependencies"),
+    DEPENDENCY_AUDIT_COMMAND,
     ("npm", "run", "lint"),
     ("npm", "run", "build"),
 )
@@ -249,7 +258,15 @@ def _prepare_site_candidate_with_open_parents(
         )
 
     for command in PRE_SITE_TEST_COMMANDS:
-        runner(command, project_root)
+        if command != DEPENDENCY_AUDIT_COMMAND:
+            runner(command, project_root)
+            continue
+        try:
+            runner(command, project_root)
+        except SiteCandidateError as exc:
+            raise SiteCandidateError(
+                f"{DEPENDENCY_AUDIT_FAILURE_GUIDANCE}: {exc}"
+            ) from exc
 
     server_entry = project_root / "dist" / "server" / "index.js"
     _require_regular_file(server_entry, "built Sites server entry")

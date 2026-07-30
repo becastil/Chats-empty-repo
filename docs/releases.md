@@ -160,7 +160,17 @@ site release:
    The preflight runs `npm ci`, `npm run audit:dependencies`,
    `npm run lint`, and `npm run build`, binds the candidate payload, then runs
    `npm run test:site` against the exact existing `dist/` without rebuilding.
-   The complete dependency audit must report zero vulnerabilities. The command
+   The complete dependency audit must report zero vulnerabilities. It may send
+   resolved dependency metadata to the configured npm audit endpoint, so run
+   the preflight only in an environment explicitly authorized for that
+   disclosure. If the endpoint is unavailable, network access is denied, or
+   vulnerabilities make the audit fail, preparation reports that the
+   `dependency audit did not complete cleanly`; no candidate is produced,
+   candidate approval remains blocked, and lint, build, site tests, packaging,
+   receipt publication, source export, save, and deployment do not follow.
+   Resolve reported vulnerabilities or rerun the unchanged preflight in an
+   authorized environment. Do not skip, omit, or weaken the audit.
+   The command
    refuses a detached or non-`main` branch, dirty or unsynchronized source,
    malformed or mismatched package/site release versions, runtime-pin or
    active-runtime drift, and an archive whose embedded commit, public release

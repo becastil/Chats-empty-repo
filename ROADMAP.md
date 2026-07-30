@@ -11,9 +11,12 @@
   fresh private candidate directory, and retain only the existing project's
   credential-free source remote for approval evidence. Keep temporary source
   authentication out of repository URLs, Git configuration, logs, docs, and
-  approval records. Select the exact Node `22.13.0` runtime from `.nvmrc` with
-  `nvm install` and `nvm use`, run the fail-closed preflight for patched
-  `main`, then obtain
+  approval records. Run the mandatory npm audit only where sending resolved
+  dependency metadata to the configured endpoint is explicitly authorized;
+  endpoint or vulnerability failures must block approval and cannot be bypassed
+  by weakening the preflight. Select the exact Node `22.13.0` runtime from
+  `.nvmrc` with `nvm install` and `nvm use`, run the fail-closed preflight for
+  patched `main`, then obtain
   read-only independent verification of its schema-5 release-bound,
   complete-tree, duplicate-free, branch-bound, archive-stable, receipt-stable,
   test-bracketed, scope-constrained, atomically no-clobber-published archive and

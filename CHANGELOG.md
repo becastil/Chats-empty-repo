@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Made a failed mandatory Sites dependency audit explicitly block candidate
+  approval with separate vulnerability and audit-endpoint recovery guidance,
+  without offering a bypass or weakened command.
+- Added API and real CLI coverage proving a multi-line audit failure emits one
+  bounded error, stops before lint, build, tests, packaging, or evidence
+  publication, and cannot forge candidate or source-export status.
 - Made the Sites release handoff fail clearly unless the active plugin's
   trusted root packaging helper is executable and the existing project's
   credential-free source repository is available before an approval request.

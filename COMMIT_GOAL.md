@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after making Sites handoff prerequisites explicit:
-  305 / 1,000 (30.5%).
-- Remaining after making Sites handoff prerequisites explicit:
-  695 commits.
+- Progress after making dependency-audit failures actionable:
+  306 / 1,000 (30.6%).
+- Remaining after making dependency-audit failures actionable:
+  694 commits.
 
 ## Commit Standard
 

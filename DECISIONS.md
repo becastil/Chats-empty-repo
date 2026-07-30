@@ -5018,3 +5018,28 @@ and rejects the old fixed candidate paths. This makes the paid-distribution
 handoff repeatable and credential-safe; it does not grant source-export or
 deployment approval, push source, save or deploy a version, or create customer,
 demand, payment, or revenue evidence.
+
+## 2026-07-30: Keep Dependency Audit Failure Outside Candidate Approval
+
+The first post-push rehearsal for the new Sites handoff reached the mandatory
+`npm audit` step, where the execution environment denied network access to the
+configured audit endpoint. Candidate preparation correctly returned nonzero
+and published no archive or receipt, but its generic command failure did not
+state whether approval could proceed, how an endpoint failure differs from a
+vulnerability finding, or whether retrying with a weaker command was allowed.
+
+Preparation now catches only `SiteCandidateError` from the exact dependency
+audit command and adds a stable fail-closed explanation. Reported
+vulnerabilities must be resolved. Endpoint or network failures may be retried
+only with the unchanged preflight in an environment explicitly authorized to
+send resolved dependency metadata to that endpoint. The audit cannot be
+skipped, omitted, or weakened. Every other command failure keeps its prior
+behavior.
+
+API and CLI regressions inject a multi-line endpoint error after `npm ci`.
+They require the command sequence to stop at the audit, leave archive and
+receipt absent, emit no candidate or pending source-export status, and contain
+the complete guidance in one physical stderr line. This improves
+paid-distribution recovery without approving a candidate, exporting source,
+saving or deploying a version, or creating customer, demand, payment, or
+revenue evidence.

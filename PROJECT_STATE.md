@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 305 of
-1,000, with 695 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 306 of
+1,000, with 694 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -183,7 +183,11 @@ alignment take priority over commit volume.
   no-clobber evidence paths for every attempt, and requires the existing
   project's credential-free source remote before printing an approval request.
   Temporary source credentials remain outside remote URLs, Git configuration,
-  logs, documentation, and approval evidence.
+  logs, documentation, and approval evidence. A mandatory dependency-audit
+  failure now states that no candidate exists and approval is blocked, directs
+  endpoint failures to an explicitly authorized environment without changing
+  the preflight, and stops before lint, build, tests, packaging, receipt
+  publication, export, save, or deployment.
 - A canonical `.nvmrc` pin for exact Node `22.13.0` candidate builds, shared by
   local preflight, candidate receipts, and the hosted dependency contract.
   Strict parsing rejects malformed pins before commands run, while package
@@ -832,7 +836,11 @@ active Sites plugin's root-level `scripts/package-site.sh`, allocate the
 runbook's fresh private candidate directory, and obtain only the existing
 project's credential-free source repository URL for the pending request.
 Temporary source authentication must remain per-command and must not enter a
-remote URL or retained evidence. The fresh outside-repository archive and
+remote URL or retained evidence. Run the mandatory npm audit only in an
+environment explicitly authorized to send resolved dependency metadata to its
+configured endpoint. If it fails, resolve reported vulnerabilities or retry
+the unchanged preflight in an authorized environment; never skip or weaken the
+audit. The fresh outside-repository archive and
 receipt paths keep any previously reviewed pair unchanged. Both requested
 paths must be direct regular-file leaves, not symlinks. Stable alternate case
 or Unicode spellings, whole-repository

@@ -580,6 +580,16 @@ reserved for the eventual approved push's per-command credential context.
 This makes the paid-distribution handoff reproducible without granting consent,
 exporting source, saving or deploying a version, or creating customer, demand,
 payment, or revenue evidence.
+The mandatory dependency audit now has an explicit failure boundary. A
+nonzero audit reports that no candidate was produced and approval remains
+blocked, stops before lint, build, tests, packaging, receipt publication, or
+any later handoff action, and distinguishes vulnerability remediation from
+rerunning the unchanged preflight when an audit endpoint is unavailable.
+Because the audit may send resolved dependency metadata to its configured
+endpoint, that retry is limited to an environment explicitly authorized for
+the disclosure. The guidance never offers a skip, omission, or weakened audit.
+This protects the paid buyer path without treating a blocked audit as a
+candidate, approval, deployment, demand, payment, or revenue event.
 Candidate preparation now also repeats the complete clean
 `HEAD == origin/main` check after validation and packaging, requiring both
 observations to retain the original synchronized commit. Read-only verification
