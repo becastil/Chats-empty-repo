@@ -479,6 +479,13 @@ or pipes across the source-export boundary and still receive a candidate
 receipt. This strengthens the local-code promise for security-conscious buyers;
 it does not approve an export, save or deploy a version, or establish demand,
 payment, or revenue.
+When those structural checks reject an archive member, printable names remain
+exact while line, terminal, Unicode-separator, and bidirectional controls are
+JSON-serialized inside one operator error. Unsafe paths, outside-root members,
+special files, and duplicates therefore cannot forge a candidate result or
+source-export request. This protects paid-distribution review integrity; it
+does not authenticate an archive, grant approval, export source, save or deploy
+a version, or create demand, payment, or revenue.
 Schema-2 candidate receipts now bind every tested deployable file's canonical
 path, permission mode, and bytes before the external packaging helper runs.
 Preparation rejects changed or injected output, while later `--verify-only`

@@ -144,8 +144,11 @@ site release:
    Git, Node, or npm command runs.
    Archive members outside `dist/`, path aliases, links, devices, pipes, and
    other special files are rejected; only canonical regular files and
-   directories can cross the candidate boundary. After the build and before
-   the test-only command, the preflight adds the candidate manifest and digests
+   directories can cross the candidate boundary. Rejected printable member
+   names remain exact in the error; presentation-unsafe names are serialized as
+   one JSON string so they cannot forge a candidate result or source-export
+   request. After the build and before the test-only command, the preflight
+   adds the candidate manifest and digests
    every regular directory and file's canonical path, entry type, and
    permission mode plus each file's size and bytes. It recomputes that digest
    after the tests and rejects any candidate payload changed during site tests.

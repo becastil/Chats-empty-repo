@@ -41,7 +41,11 @@
   candidate receipts, and archived manifests must likewise JSON-serialize any
   presentation-unsafe decoded key before an operator error. Reject raw
   whitespace in source repository identities and require percent-encoded URL
-  paths where needed. Preserve nonstandard SSH and SCP usernames and their
+  paths where needed. Structural archive-member failures must preserve
+  printable names and JSON-serialize presentation-unsafe names before an
+  operator error. Apply the same one-line boundary to archive and receipt
+  evidence-path failures before executing the handoff.
+  Preserve nonstandard SSH and SCP usernames and their
   relative-versus-absolute path semantics in that canonical identity while
   treating conventional `git@` as protocol-neutral.
   After approval, push its receipt-bound source to the separate Sites source

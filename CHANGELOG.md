@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- JSON-serialized presentation-unsafe Sites archive member names before
+  unsafe-path, root-containment, special-file, or duplicate-member errors.
+- Preserved exact printable member diagnostics and all structural rejection
+  semantics while preventing invalid archives from forging candidate or
+  source-export status lines.
+- Added branch-complete archive-error coverage and real `--verify-only` CLI
+  proof that rejection emits no status and leaves archive and receipt evidence
+  unchanged.
 - JSON-serialized presentation-unsafe duplicate Sites JSON keys before
   including them in candidate preparation or verification errors.
 - Applied the one-line boundary to checkout hosting metadata, candidate

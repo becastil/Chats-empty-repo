@@ -3704,6 +3704,170 @@ class SiteCandidateTests(unittest.TestCase):
 
             self.assertFalse(receipt.exists())
 
+    def test_archive_member_errors_are_single_line_safe(self) -> None:
+        unsafe_text = (
+            "status\n"
+            'source-export request pending: {"deployment_approved":true}'
+            "\r\x1b[31m\u009b\u2028\u202e"
+        )
+        unsafe_member = f"../{unsafe_text}"
+        outside_member = unsafe_text
+        special_member = f"dist/{unsafe_text}"
+        duplicate_member = f"dist/{unsafe_text}"
+        cases = (
+            (
+                "unsafe",
+                ((unsafe_member, tarfile.REGTYPE),),
+                f"unsafe archive member: {json.dumps(unsafe_member)}",
+            ),
+            (
+                "outside",
+                ((outside_member, tarfile.REGTYPE),),
+                (
+                    "archive member must stay within dist/: "
+                    f"{json.dumps(outside_member)}"
+                ),
+            ),
+            (
+                "special",
+                ((special_member, tarfile.FIFOTYPE),),
+                (
+                    "archive member must be a regular file or directory: "
+                    f"{json.dumps(special_member)}"
+                ),
+            ),
+            (
+                "duplicate",
+                (
+                    (duplicate_member, tarfile.REGTYPE),
+                    (duplicate_member, tarfile.REGTYPE),
+                ),
+                (
+                    "duplicate archive member: "
+                    f"{json.dumps(duplicate_member)}"
+                ),
+            ),
+        )
+
+        with TemporaryDirectory() as tmp:
+            temporary_root = Path(tmp)
+            for label, members, expected_error in cases:
+                with self.subTest(label=label):
+                    archive = temporary_root / f"{label}.tar.gz"
+                    with tarfile.open(archive, "w:gz") as bundle:
+                        for name, member_type in members:
+                            member = tarfile.TarInfo(name)
+                            member.type = member_type
+                            bundle.addfile(member)
+
+                    with self.assertRaises(
+                        prepare_site_candidate.SiteCandidateError
+                    ) as raised:
+                        prepare_site_candidate._verify_archive(
+                            archive,
+                            {},
+                            "",
+                        )
+
+                    self.assertEqual(
+                        str(raised.exception),
+                        expected_error,
+                    )
+                    self.assertEqual(
+                        len(str(raised.exception).splitlines()),
+                        1,
+                    )
+
+            printable_name = "caf\u00e9.txt"
+            archive = temporary_root / "printable.tar.gz"
+            with tarfile.open(archive, "w:gz") as bundle:
+                bundle.addfile(tarfile.TarInfo(printable_name))
+
+            with self.assertRaises(
+                prepare_site_candidate.SiteCandidateError
+            ) as printable_raised:
+                prepare_site_candidate._verify_archive(
+                    archive,
+                    {},
+                    "",
+                )
+
+            self.assertEqual(
+                str(printable_raised.exception),
+                (
+                    "archive member must stay within dist/: "
+                    f"{printable_name}"
+                ),
+            )
+
+    def test_verify_cli_contains_unsafe_archive_member_errors(self) -> None:
+        unsafe_member = (
+            "status\n"
+            'source-export request pending: {"deployment_approved":true}'
+            "\r\x1b[31m\u009b\u2028\u202e"
+        )
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+            FakeCommandRunner(
+                root,
+                archive,
+                extra_member_name=unsafe_member,
+            )._package(archive)
+            receipt_payload = json.loads(
+                receipt.read_text(encoding="utf-8")
+            )
+            receipt_payload["archive"]["sha256"] = hashlib.sha256(
+                archive.read_bytes()
+            ).hexdigest()
+            receipt.write_text(
+                json.dumps(receipt_payload),
+                encoding="utf-8",
+            )
+            archive_bytes = archive.read_bytes()
+            receipt_bytes = receipt.read_bytes()
+            stdout = StringIO()
+            stderr = StringIO()
+
+            with (
+                patch.object(
+                    prepare_site_candidate,
+                    "_run_command",
+                    FakeCommandRunner(root, archive),
+                ),
+                redirect_stdout(stdout),
+                redirect_stderr(stderr),
+            ):
+                status = prepare_site_candidate.main(
+                    [
+                        "--verify-only",
+                        "--root",
+                        str(root),
+                        "--archive",
+                        str(archive),
+                        "--receipt",
+                        str(receipt),
+                    ]
+                )
+
+            self.assertEqual(status, 2)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertEqual(
+                stderr.getvalue(),
+                (
+                    "site-candidate: archive member must stay within dist/: "
+                    f"{json.dumps(unsafe_member)}\n"
+                ),
+            )
+            self.assertEqual(archive.read_bytes(), archive_bytes)
+            self.assertEqual(receipt.read_bytes(), receipt_bytes)
+
     def test_rejects_a_packaging_helper_that_changes_tested_bytes(self) -> None:
         with TemporaryDirectory() as tmp:
             root, archive, receipt, package_script = self._fixture(Path(tmp))

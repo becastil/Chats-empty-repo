@@ -2183,6 +2183,7 @@ def _verify_archive(
                 name = member.name.rstrip("/")
                 normalized = PurePosixPath(name)
                 parts = normalized.parts
+                operator_name = _format_operator_text(member.name)
                 if (
                     not name
                     or name.startswith("/")
@@ -2192,21 +2193,21 @@ def _verify_archive(
                     or member.islnk()
                 ):
                     raise SiteCandidateError(
-                        f"unsafe archive member: {member.name}"
+                        f"unsafe archive member: {operator_name}"
                     )
                 if not parts or parts[0] != ARCHIVE_ROOT:
                     raise SiteCandidateError(
                         "archive member must stay within "
-                        f"{ARCHIVE_ROOT}/: {member.name}"
+                        f"{ARCHIVE_ROOT}/: {operator_name}"
                     )
                 if not (member.isfile() or member.isdir()):
                     raise SiteCandidateError(
                         "archive member must be a regular file or directory: "
-                        f"{member.name}"
+                        f"{operator_name}"
                     )
                 if name in members:
                     raise SiteCandidateError(
-                        f"duplicate archive member: {member.name}"
+                        f"duplicate archive member: {operator_name}"
                     )
                 members[name] = member
 

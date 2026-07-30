@@ -4940,3 +4940,27 @@ unchanged source, archive, and receipt evidence. This protects paid-distribution
 review integrity; it does not authenticate evidence, grant source-export or
 deployment approval, export source, save or deploy a version, or create
 customer, demand, payment, or revenue evidence.
+
+## 2026-07-30: Contain Sites Archive Member Errors Before Approval
+
+The Sites archive verifier already rejected unsafe paths, members outside
+`dist/`, special files, and duplicate members. Each controlled diagnostic still
+interpolated the decoded tar member name verbatim. Tar headers permit names
+containing line, terminal, Unicode-separator, and bidirectional controls, so an
+invalid archive could forge a candidate result or source-export request in
+operator output even though preparation or verification returned exit code 2.
+
+All four structural rejection branches now pass the original member name
+through the shared operator-text formatter. Printable names, including
+printable Unicode, retain their exact existing diagnostic. Presentation-unsafe
+names become one JSON string literal, keeping controls escaped on one physical
+line without changing archive acceptance, payload hashing, receipt evidence, or
+successful structured output.
+
+Source regressions exercise every rejection branch and printable-name
+compatibility. A real `--verify-only` regression uses a receipt-consistent
+malformed archive and requires exit code 2, empty standard output, one exact
+escaped error line, and unchanged archive and receipt bytes. This protects
+paid-distribution review integrity; it does not authenticate an archive, grant
+source-export or deployment approval, export source, save or deploy a version,
+or create customer, demand, payment, or revenue evidence.

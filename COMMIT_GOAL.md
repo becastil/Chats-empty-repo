@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after containing Sites duplicate-key errors:
-  302 / 1,000 (30.2%).
-- Remaining after containing Sites duplicate-key errors:
-  698 commits.
+- Progress after containing Sites archive member errors:
+  303 / 1,000 (30.3%).
+- Remaining after containing Sites archive member errors:
+  697 commits.
 
 ## Commit Standard
 
