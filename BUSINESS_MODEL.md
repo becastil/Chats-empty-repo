@@ -513,6 +513,13 @@ match. Different JSON implementations can select the first or last repeated
 value, so accepting either interpretation would make approval identity
 parser-dependent. This closes that ambiguity without changing valid schema-4
 receipts, granting approval, or creating customer or revenue evidence.
+The shared duplicate-key failure now preserves printable names and
+JSON-serializes presentation-unsafe names before operator output. Line,
+terminal, Unicode-separator, and bidirectional controls therefore remain
+escaped inside one explicit string instead of forging a candidate result or
+source-export request. This preserves valid evidence and approval boundaries;
+it does not authenticate a candidate, grant consent, export source, save or
+deploy a version, or create demand, payment, or revenue.
 Schema-5 evidence adds the public release identity the owner is being asked to
 advance. Preparation strictly parses `project.version` and the website's single
 `RELEASE_VERSION` declaration before commands run, requires the same semantic

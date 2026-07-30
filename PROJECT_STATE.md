@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 301 of
-1,000, with 699 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 302 of
+1,000, with 698 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -220,8 +220,10 @@ alignment take priority over commit volume.
   with the post-export pre-save mode or mistaken for tool-granted consent.
 - Duplicate-free Sites JSON evidence across checkout hosting metadata,
   schema-5 receipts, and archived manifests. Repeated keys fail even when their
-  values match, preventing approval identity from depending on decoder-specific
-  first-key or last-key behavior.
+  values match. Printable names remain exact in operator errors, while
+  presentation-unsafe names are JSON-serialized on one line, preventing
+  approval identity from depending on decoder-specific key selection or forged
+  status lines.
 - Candidate source-stability checks that repeat clean `HEAD == origin/main`
   validation after the long test phase, after packaging, and at the end of
   read-only verification, requiring the same synchronized commit at every

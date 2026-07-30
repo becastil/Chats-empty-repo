@@ -160,7 +160,11 @@ site release:
    for later read-only verification.
    Duplicate JSON keys fail even when repeated values match in checkout hosting
    metadata, candidate receipts, or archived manifests, so approval evidence
-   never depends on a decoder selecting the first or last value.
+   never depends on a decoder selecting the first or last value. The rejected
+   duplicate key remains exact when printable; otherwise it is serialized as
+   one JSON string in operator errors, so decoded line, terminal,
+   Unicode-separator, or bidirectional controls cannot forge a candidate result
+   or source-export request.
    Packaging sets `COPYFILE_DISABLE=1` so macOS cannot inject AppleDouble
    metadata outside the allowed archive root. The preflight also repeats the
    active `refs/heads/main` and clean `HEAD == origin/main` checks after

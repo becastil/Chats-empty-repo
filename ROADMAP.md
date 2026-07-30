@@ -37,10 +37,13 @@
   `refs/heads/main`, and commit as one compact JSON record while keeping
   `deployment_approved=false` as a boolean. Candidate status must use the same
   single-line JSON boundary so opaque IDs and filenames cannot inject approval
-  fields or lines. Reject raw whitespace in source repository identities and
-  require percent-encoded URL paths where needed. Preserve nonstandard SSH and
-  SCP usernames and their relative-versus-absolute path semantics in that
-  canonical identity while treating conventional `git@` as protocol-neutral.
+  fields or lines. Duplicate-key failures across checkout hosting metadata,
+  candidate receipts, and archived manifests must likewise JSON-serialize any
+  presentation-unsafe decoded key before an operator error. Reject raw
+  whitespace in source repository identities and require percent-encoded URL
+  paths where needed. Preserve nonstandard SSH and SCP usernames and their
+  relative-versus-absolute path semantics in that canonical identity while
+  treating conventional `git@` as protocol-neutral.
   After approval, push its receipt-bound source to the separate Sites source
   repository, verify the unchanged archive and receipt again while requiring
   the approved digest and the exact canonical Sites repository identity from

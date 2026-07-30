@@ -2337,6 +2337,154 @@ class SiteCandidateTests(unittest.TestCase):
                     run_command=FakeCommandRunner(root, archive),
                 )
 
+    def test_duplicate_json_key_errors_are_single_line_safe(self) -> None:
+        printable_key = "caf\u00e9"
+        printable_encoded_key = json.dumps(printable_key)
+        with self.assertRaises(
+            prepare_site_candidate.SiteCandidateError
+        ) as printable_raised:
+            prepare_site_candidate._load_json_with_unique_keys(
+                (
+                    f"{{{printable_encoded_key}: 1, "
+                    f"{printable_encoded_key}: 2}}"
+                ),
+                "Sites hosting metadata",
+            )
+        self.assertEqual(
+            str(printable_raised.exception),
+            (
+                "Sites hosting metadata contains duplicate JSON key: "
+                f"{printable_key}"
+            ),
+        )
+
+        unsafe_key = (
+            "status\n"
+            'source-export request pending: {"deployment_approved":true}'
+            "\r\x1b[31m\u009b\u2028\u202e"
+        )
+        encoded_key = json.dumps(unsafe_key)
+        duplicate_object = f"{{{encoded_key}: 1, {encoded_key}: 2}}"
+        for label in (
+            "Sites hosting metadata",
+            "Sites candidate receipt",
+            "archived site candidate manifest",
+        ):
+            with self.subTest(label=label):
+                with self.assertRaises(
+                    prepare_site_candidate.SiteCandidateError
+                ) as raised:
+                    prepare_site_candidate._load_json_with_unique_keys(
+                        duplicate_object,
+                        label,
+                    )
+                self.assertEqual(
+                    str(raised.exception),
+                    f"{label} contains duplicate JSON key: {encoded_key}",
+                )
+                self.assertEqual(len(str(raised.exception).splitlines()), 1)
+
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            hosting = root / ".openai" / "hosting.json"
+            hosting.write_text(duplicate_object, encoding="utf-8")
+            hosting_bytes = hosting.read_bytes()
+            stdout = StringIO()
+            stderr = StringIO()
+            with (
+                patch.object(
+                    prepare_site_candidate,
+                    "_run_command",
+                    FakeCommandRunner(root, archive),
+                ),
+                redirect_stdout(stdout),
+                redirect_stderr(stderr),
+            ):
+                status = prepare_site_candidate.main(
+                    [
+                        "--root",
+                        str(root),
+                        "--package-script",
+                        str(package_script),
+                        "--archive",
+                        str(archive),
+                        "--receipt",
+                        str(receipt),
+                    ]
+                )
+
+            self.assertEqual(status, 2)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertEqual(
+                stderr.getvalue(),
+                (
+                    "site-candidate: Sites hosting metadata contains "
+                    f"duplicate JSON key: {encoded_key}\n"
+                ),
+            )
+            self.assertEqual(hosting.read_bytes(), hosting_bytes)
+            self.assertFalse(archive.exists())
+            self.assertFalse(receipt.exists())
+
+        with TemporaryDirectory() as tmp:
+            root, archive, receipt, package_script = self._fixture(Path(tmp))
+            prepare_site_candidate.prepare_site_candidate(
+                root,
+                archive,
+                receipt,
+                package_script,
+                run_command=FakeCommandRunner(root, archive),
+            )
+            content = receipt.read_text(encoding="utf-8")
+            receipt.write_text(
+                content.replace(
+                    "{\n",
+                    (
+                        "{\n"
+                        f"  {encoded_key}: 1,\n"
+                        f"  {encoded_key}: 2,\n"
+                    ),
+                    1,
+                ),
+                encoding="utf-8",
+            )
+            receipt_bytes = receipt.read_bytes()
+            archive_bytes = archive.read_bytes()
+            stdout = StringIO()
+            stderr = StringIO()
+            with (
+                patch.object(
+                    prepare_site_candidate,
+                    "_run_command",
+                    FakeCommandRunner(root, archive),
+                ),
+                redirect_stdout(stdout),
+                redirect_stderr(stderr),
+            ):
+                status = prepare_site_candidate.main(
+                    [
+                        "--verify-only",
+                        "--root",
+                        str(root),
+                        "--archive",
+                        str(archive),
+                        "--receipt",
+                        str(receipt),
+                    ]
+                )
+
+            self.assertEqual(status, 2)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertEqual(
+                stderr.getvalue(),
+                (
+                    "site-candidate: Sites candidate receipt contains "
+                    f"duplicate JSON key: {encoded_key}\n"
+                ),
+            )
+            self.assertEqual(receipt.read_bytes(), receipt_bytes)
+            self.assertEqual(archive.read_bytes(), archive_bytes)
+
     def test_verification_rejects_changed_payload_with_updated_archive_digest(
         self,
     ) -> None:

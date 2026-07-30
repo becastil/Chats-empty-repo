@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after rejecting unsafe distribution asset names:
-  301 / 1,000 (30.1%).
-- Remaining after rejecting unsafe distribution asset names:
-  699 commits.
+- Progress after containing Sites duplicate-key errors:
+  302 / 1,000 (30.2%).
+- Remaining after containing Sites duplicate-key errors:
+  698 commits.
 
 ## Commit Standard
 

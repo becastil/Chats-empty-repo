@@ -1597,8 +1597,13 @@ def _load_json_with_unique_keys(content: str, label: str) -> object:
         )
     except _DuplicateJsonKeyError as exc:
         raise SiteCandidateError(
-            f"{label} contains duplicate JSON key: {exc.key}"
+            f"{label} contains duplicate JSON key: "
+            f"{_format_operator_text(exc.key)}"
         ) from exc
+
+
+def _format_operator_text(value: str) -> str:
+    return value if value.isprintable() else json.dumps(value)
 
 
 def _reject_duplicate_json_keys(

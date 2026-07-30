@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- JSON-serialized presentation-unsafe duplicate Sites JSON keys before
+  including them in candidate preparation or verification errors.
+- Applied the one-line boundary to checkout hosting metadata, candidate
+  receipts, and archived manifests while preserving duplicate rejection at
+  every object depth.
+- Preserved printable key diagnostics and added real prepare and `--verify-only`
+  CLI proof that control-bearing keys emit no candidate or source-export status
+  and leave approval evidence unchanged.
 - Rejected empty or presentation-unsafe release asset names in both raw exports
   and saved distribution baselines before artifact classification, request
   totals, warnings, or signed movement.

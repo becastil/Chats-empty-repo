@@ -4914,3 +4914,29 @@ standard output, one generic error line, and unchanged current and baseline
 evidence. This protects distribution-report integrity; it does not authenticate
 GitHub evidence, deduplicate requests, prove an install, establish pilot
 demand, collect payment, or create revenue.
+
+## 2026-07-30: Serialize Duplicate Sites Keys Before Operator Errors
+
+Sites candidate preparation and verification already rejected duplicate JSON
+keys at every depth of checkout hosting metadata, candidate receipts, and
+archived manifests. The controlled error still interpolated the decoded key
+verbatim. JSON permits escaped line, terminal, Unicode-separator, and
+bidirectional controls in object names, so rejected approval evidence could
+forge a candidate result or a source-export request even though no operation
+was authorized.
+
+The shared duplicate-key loader now preserves printable repeated names and
+serializes only presentation-unsafe names with `json.dumps` before constructing
+its error. This retains existing ordinary and printable Unicode diagnostics,
+while controls remain ASCII escapes inside one JSON string on one physical
+line. Parsing still stops at the first duplicate before receipt, archive,
+project, source, or approval validation uses either competing value.
+
+Existing regressions retain ordinary duplicate coverage for all three evidence
+types. New printable-Unicode and composite-key regressions exercise each shared
+label plus real prepare and `--verify-only` CLI paths, requiring exit code 2,
+empty standard output, one exact escaped error line, no prepared outputs, and
+unchanged source, archive, and receipt evidence. This protects paid-distribution
+review integrity; it does not authenticate evidence, grant source-export or
+deployment approval, export source, save or deploy a version, or create
+customer, demand, payment, or revenue evidence.
