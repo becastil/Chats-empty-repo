@@ -445,6 +445,20 @@ class ReleaseManifestTests(unittest.TestCase):
             "`receipt_sha256`",
             "release identity the owner reviewed",
             "public release version, Sites project ID, receipt digest",
+            "active Sites plugin's trusted, root-level",
+            ': "${SITES_PACKAGE_SCRIPT:?Set the active Sites plugin '
+            'root-level package-site.sh path}"',
+            'test -x "$SITES_PACKAGE_SCRIPT"',
+            'CANDIDATE_DIR="$(mktemp -d '
+            '"${TMPDIR:-/tmp}/repo-scout-site.XXXXXX")"',
+            'test ! -e "$SITE_ARCHIVE"',
+            'test ! -e "$SITE_RECEIPT"',
+            "connector-issued source credential response",
+            "credential-free remote URL",
+            "Do not put the temporary credential in this variable",
+            "per-command credential context",
+            ': "${SITES_SOURCE_REPOSITORY:?Set the existing Sites '
+            'credential-free source repository URL or alias}"',
             '--approval-source-repository "$SITES_SOURCE_REPOSITORY"',
             "`source-export request pending`",
             "`deployment_approved=false`",
@@ -476,8 +490,24 @@ class ReleaseManifestTests(unittest.TestCase):
             ),
             2,
         )
+        self.assertNotIn("/tmp/repo-scout-site.tar.gz", deployment)
+        self.assertNotIn("/tmp/repo-scout-site-receipt.json", deployment)
         first_verification = normalized.index(
             "Verify the archive and receipt immediately before asking"
+        )
+        package_prerequisite = normalized.index(
+            ': "${SITES_PACKAGE_SCRIPT:?Set the active Sites plugin '
+            'root-level package-site.sh path}"'
+        )
+        first_preparation = normalized.index(
+            "python3 scripts/prepare_site_candidate.py"
+        )
+        source_prerequisite = normalized.index(
+            ': "${SITES_SOURCE_REPOSITORY:?Set the existing Sites '
+            'credential-free source repository URL or alias}"'
+        )
+        approval_request = normalized.index(
+            '--approval-source-repository "$SITES_SOURCE_REPOSITORY"'
         )
         source_approval = "Obtain explicit owner approval before pushing"
         source_push = (
@@ -490,6 +520,8 @@ class ReleaseManifestTests(unittest.TestCase):
         deployment_approval = (
             "Obtain separate explicit owner approval before deploying"
         )
+        self.assertLess(package_prerequisite, first_preparation)
+        self.assertLess(source_prerequisite, approval_request)
         self.assertLess(
             first_verification,
             normalized.index(source_approval),

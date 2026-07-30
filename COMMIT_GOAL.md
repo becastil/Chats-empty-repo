@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after containing Sites evidence path errors:
-  304 / 1,000 (30.4%).
-- Remaining after containing Sites evidence path errors:
-  696 commits.
+- Progress after making Sites handoff prerequisites explicit:
+  305 / 1,000 (30.5%).
+- Remaining after making Sites handoff prerequisites explicit:
+  695 commits.
 
 ## Commit Standard
 

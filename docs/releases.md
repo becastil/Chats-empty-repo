@@ -115,7 +115,34 @@ A release identity change is not complete on the public site until the exact
 committed source is built, saved, approved, deployed, and audited. For every
 site release:
 
-1. From a clean `main` checkout whose `HEAD` matches `origin/main`, use the
+1. Resolve the two operator-owned handoff inputs before using them. Set
+   `SITES_PACKAGE_SCRIPT` to the active Sites plugin's trusted, root-level
+   `scripts/package-site.sh` helper, not a copied or locally reimplemented
+   packager. Require that helper to exist and be executable, then allocate one
+   fresh private candidate directory so preparation never reuses an earlier
+   archive or receipt:
+
+   ```bash
+   : "${SITES_PACKAGE_SCRIPT:?Set the active Sites plugin root-level package-site.sh path}"
+   test -x "$SITES_PACKAGE_SCRIPT"
+
+   CANDIDATE_DIR="$(mktemp -d "${TMPDIR:-/tmp}/repo-scout-site.XXXXXX")"
+   SITE_ARCHIVE="$CANDIDATE_DIR/repo-scout-site.tar.gz"
+   SITE_RECEIPT="$CANDIDATE_DIR/repo-scout-site-receipt.json"
+   test ! -e "$SITE_ARCHIVE"
+   test ! -e "$SITE_RECEIPT"
+   ```
+
+   Obtain `SITES_SOURCE_REPOSITORY` from the existing Sites project's
+   connector-issued source credential response, using only its credential-free
+   remote URL or an already configured alias. Do not put the temporary
+   credential in this variable, a Git remote URL, repository configuration,
+   logs, documentation, or approval evidence. Keep authentication ephemeral
+   and provide it only through the source push's per-command credential
+   context. The source repository value is not needed for candidate
+   preparation, but step 3 requires it before an approval request can be
+   printed.
+2. From a clean `main` checkout whose `HEAD` matches `origin/main`, use the
    hosted Node `22.13.0` runtime to validate and package the exact source:
 
    ```bash
@@ -123,14 +150,13 @@ site release:
    nvm use
    python3 scripts/prepare_site_candidate.py \
      --package-script "$SITES_PACKAGE_SCRIPT" \
-     --archive /tmp/repo-scout-site.tar.gz \
-     --receipt /tmp/repo-scout-site-receipt.json
+     --archive "$SITE_ARCHIVE" \
+     --receipt "$SITE_RECEIPT"
    ```
 
    Run `nvm use` before every candidate build. The version manager reads the
    exact runtime from `.nvmrc`; the same file configures the hosted dependency
    contract and the candidate receipt.
-   `SITES_PACKAGE_SCRIPT` must name the trusted Sites `package-site.sh` helper.
    The preflight runs `npm ci`, `npm run audit:dependencies`,
    `npm run lint`, and `npm run build`, binds the candidate payload, then runs
    `npm run test:site` against the exact existing `dist/` without rebuilding.
@@ -237,13 +263,14 @@ site release:
    `receipt_sha256`; parse and retain that record with the candidate evidence.
    Do not use `npm audit fix --force` when it proposes a framework downgrade;
    review and test a supported patch or explicit transitive override instead.
-2. Verify the archive and receipt immediately before asking for source-export
+3. Verify the archive and receipt immediately before asking for source-export
    approval:
 
    ```bash
+   : "${SITES_SOURCE_REPOSITORY:?Set the existing Sites credential-free source repository URL or alias}"
    python3 scripts/prepare_site_candidate.py --verify-only \
-     --archive /tmp/repo-scout-site.tar.gz \
-     --receipt /tmp/repo-scout-site-receipt.json \
+     --archive "$SITE_ARCHIVE" \
+     --receipt "$SITE_RECEIPT" \
      --approval-source-repository "$SITES_SOURCE_REPOSITORY"
    ```
 
@@ -284,26 +311,26 @@ site release:
    sibling field or terminal line. Configured aliases and resolved repository
    URLs containing raw whitespace fail closed. Percent-encode any legitimate
    URL path space, for example `%20`, before requesting approval.
-3. Obtain explicit owner approval before pushing the exact committed source to
+4. Obtain explicit owner approval before pushing the exact committed source to
    the approved separate Sites source repository. The approval must identify
    the public release version, Sites project ID, receipt digest, canonical
    repository identity, `refs/heads/main`, and receipt commit from the exact
    pending request. Request output is not consent. This source-export approval
    is separate from deployment approval, and the source export does not
    authorize production deployment.
-4. Push the receipt's exact source commit to the separate Sites source
+5. Push the receipt's exact source commit to the separate Sites source
    repository (the existing Sites source repository for this project), and
    reuse the existing Sites project in `.openai/hosting.json`.
    `SITES_SOURCE_REPOSITORY` may be the approved URL or a configured remote
    alias that resolves to it. Pass authentication through the same per-command
    Git credential context rather than embedding a token in either repository
    identity. Do not create a replacement project for a version update.
-5. Verify the unchanged archive and receipt again before saving:
+6. Verify the unchanged archive and receipt again before saving:
 
    ```bash
    python3 scripts/prepare_site_candidate.py --verify-only \
-     --archive /tmp/repo-scout-site.tar.gz \
-     --receipt /tmp/repo-scout-site-receipt.json \
+     --archive "$SITE_ARCHIVE" \
+     --receipt "$SITE_RECEIPT" \
      --expected-receipt-sha256 APPROVED_RECEIPT_SHA256 \
      --exported-source-repository "$SITES_SOURCE_REPOSITORY" \
      --expected-exported-source-repository "$APPROVED_SITES_SOURCE_REPOSITORY"
@@ -326,9 +353,9 @@ site release:
    form therefore uses the network but performs no source export, version save,
    or deployment. Save the verified preflight archive against the receipt's
    exact source commit. Saving a version does not make that version live.
-6. Obtain separate explicit owner approval before deploying the saved version
+7. Obtain separate explicit owner approval before deploying the saved version
    to the existing public production site.
-7. Only after the approved deployment succeeds, immediately run the production
+8. Only after the approved deployment succeeds, immediately run the production
    audit in the next section. A prepared or saved version must not be described
    as deployed before both steps finish.
 

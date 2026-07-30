@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 304 of
-1,000, with 696 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 305 of
+1,000, with 695 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -178,7 +178,12 @@ alignment take priority over commit volume.
   push to that separate repository, keeps saved versions distinct from live
   production, requires separate deployment approval, and immediately audits a
   successful publish. Sites versions 46 and 47 are superseded and must not be
-  published.
+  published. Its operator contract now fails clearly unless the active Sites
+  plugin's trusted root packaging helper is executable, allocates fresh
+  no-clobber evidence paths for every attempt, and requires the existing
+  project's credential-free source remote before printing an approval request.
+  Temporary source credentials remain outside remote URLs, Git configuration,
+  logs, documentation, and approval evidence.
 - A canonical `.nvmrc` pin for exact Node `22.13.0` candidate builds, shared by
   local preflight, candidate receipts, and the hosted dependency contract.
   Strict parsing rejects malformed pins before commands run, while package
@@ -822,10 +827,15 @@ The public site still advertises `v0.3.50`. Sites versions 46 and 47 are
 superseded and must not be deployed; version 47 predates the July 24 React
 Server Components and `brace-expansion` advisories. Run `nvm install` and
 `nvm use` to select the repository's exact Node `22.13.0` pin, then run the
-deployment handoff with `scripts/prepare_site_candidate.py`, using fresh
-outside-repository archive and receipt paths so any previously reviewed pair
-remains unchanged. Both requested paths must be direct regular-file leaves,
-not symlinks. Stable alternate case or Unicode spellings, whole-repository
+deployment handoff with `scripts/prepare_site_candidate.py`. First require the
+active Sites plugin's root-level `scripts/package-site.sh`, allocate the
+runbook's fresh private candidate directory, and obtain only the existing
+project's credential-free source repository URL for the pending request.
+Temporary source authentication must remain per-command and must not enter a
+remote URL or retained evidence. The fresh outside-repository archive and
+receipt paths keep any previously reviewed pair unchanged. Both requested
+paths must be direct regular-file leaves, not symlinks. Stable alternate case
+or Unicode spellings, whole-repository
 aliases, and aliases that expose only a repository subdirectory now fail by
 filesystem identity. Archive and receipt staging, staged reads, validation,
 publication, and cleanup now stay anchored to descriptors held from preflight;

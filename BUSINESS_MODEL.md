@@ -569,6 +569,17 @@ request cannot be combined with the later pre-save mode, does not query a
 remote ref, and grants no approval. This turns validated distribution evidence
 into a precise human decision without exporting source, saving or deploying a
 version, or creating customer, demand, payment, or revenue evidence.
+The release runbook now resolves the operational inputs that a real candidate
+attempt exposed instead of assuming they already exist in an operator's shell.
+It requires the active Sites plugin's trusted root packaging helper to be
+executable, allocates one fresh private evidence directory per attempt, and
+requires the existing project's credential-free source remote before printing
+the pending request. Temporary source credentials stay out of remote URLs, Git
+configuration, logs, documentation, and retained approval evidence; they are
+reserved for the eventual approved push's per-command credential context.
+This makes the paid-distribution handoff reproducible without granting consent,
+exporting source, saving or deploying a version, or creating customer, demand,
+payment, or revenue evidence.
 Candidate preparation now also repeats the complete clean
 `HEAD == origin/main` check after validation and packaging, requiring both
 observations to retain the original synchronized commit. Read-only verification

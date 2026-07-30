@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Made the Sites release handoff fail clearly unless the active plugin's
+  trusted root packaging helper is executable and the existing project's
+  credential-free source repository is available before an approval request.
+- Replaced reusable fixed candidate paths with a fresh private directory and
+  named no-clobber archive and receipt variables shared by prepare, approval,
+  and pre-save verification commands.
+- Documented ephemeral, per-command source authentication and added executable
+  documentation contracts for prerequisite ordering, fresh evidence paths, and
+  credential separation.
 - JSON-serialized complete presentation-unsafe `SiteCandidateError` messages at
   the shared Sites candidate CLI boundary, including archive and receipt paths
   plus wrapped operating-system context.

@@ -4993,3 +4993,28 @@ unquoted diagnostic. This protects paid-distribution operator decisions; it
 does not authenticate evidence, grant source-export or deployment approval,
 export source, save or deploy a version, or create customer, demand, payment,
 or revenue evidence.
+
+## 2026-07-30: Resolve Sites Handoff Inputs Before Candidate Approval
+
+The first exact Node `22.13.0` candidate rehearsal passed preparation and
+read-only verification, but the published runbook assumed
+`SITES_PACKAGE_SCRIPT` and `SITES_SOURCE_REPOSITORY` already existed in the
+operator's shell. It also reused fixed `/tmp` filenames. A careful operator
+could not derive the trusted helper or existing Sites source identity from that
+procedure alone, and a later attempt could collide with evidence from an
+earlier review.
+
+The handoff now requires the active Sites plugin's trusted root-level
+`scripts/package-site.sh` to be executable, creates a fresh private candidate
+directory with named archive and receipt variables, and reuses those exact
+variables through preparation and both verification modes. Before a pending
+request, it separately requires the credential-free URL or configured alias
+returned for the existing Sites project. Temporary authentication may be used
+only in the eventual approved push's per-command credential context and never
+in a remote URL, Git configuration, logs, documentation, or approval evidence.
+
+The documentation contract asserts both prerequisites precede their first use
+and rejects the old fixed candidate paths. This makes the paid-distribution
+handoff repeatable and credential-safe; it does not grant source-export or
+deployment approval, push source, save or deploy a version, or create customer,
+demand, payment, or revenue evidence.
