@@ -29,7 +29,7 @@ elif os.name == "nt":
 
 
 SCHEMA_VERSION = 9
-REVIEW_SCHEMA_VERSION = 5
+REVIEW_SCHEMA_VERSION = 6
 APPROVAL_SCHEMA_VERSION = 1
 DECLINE_SCHEMA_VERSION = 2
 CONTACT_SCHEMA_VERSION = 1
@@ -47,6 +47,10 @@ PUBLIC_PILOT_INTAKE_URL = (
     "https://github.com/becastil/Chats-empty-repo/issues/new"
     "?template=founding-team-pilot.yml"
     "&discovery_source=Direct+outreach"
+)
+DIRECT_OUTREACH_ROUTE = (
+    "https://repo-scout.becastil.chatgpt.site/"
+    "?source=outreach#why-teams-buy"
 )
 LEGACY_LEDGER_FIELDS = (
     "prospect_id",
@@ -109,6 +113,10 @@ HUMAN_REVIEW_CHECKS = (
     "Confirm the recipient and published business channel are appropriate.",
     "Confirm the message states the $299 price and 90-day scope accurately.",
     "Confirm the message states that source code stays local.",
+    (
+        "Confirm the message uses the source-preserving direct-outreach route "
+        "shown above."
+    ),
     "Confirm the message gives a clear opt-out and promises no further contact.",
 )
 
@@ -1347,6 +1355,7 @@ def build_next_outreach_review(
         review = {
             "prospect_id": draft["prospect_id"],
             "channel": draft["channel"],
+            "campaign_route": DIRECT_OUTREACH_ROUTE,
             "fit_signals": len(draft["fit_signals"].split(";")),
             "fit_evidence_links": len(draft["fit_evidence"].split(";")),
             "checks": list(HUMAN_REVIEW_CHECKS),
@@ -1391,6 +1400,7 @@ def _build_outreach_review_digest(
     private_draft: str,
 ) -> str:
     payload = {
+        "campaign_route": DIRECT_OUTREACH_ROUTE,
         "checks": list(HUMAN_REVIEW_CHECKS),
         "ledger_row": {field: draft[field] for field in LEDGER_FIELDS},
         "private_draft": private_draft,
@@ -1590,6 +1600,10 @@ def format_next_outreach_review(
                     "Qualification: "
                     f"{review['fit_signals']} signals / "
                     f"{review['fit_evidence_links']} private links"
+                ),
+                (
+                    "Source-preserving offer route: "
+                    f"{review['campaign_route']}"
                 ),
                 *(
                     [

@@ -984,19 +984,21 @@ The committed schema-9 checkpoint contains only aggregate counts. The first
 complete owner-only review bundle was created in the ignored private workspace
 from the verified `v0.3.48` wheel without changing the ledger, but its July 21
 schema-4 date binding is now superseded and must not be used for a later
-decision. A fresh schema-5 bundle now exists at
-`outreach-private/next-review-v5.md` with owner-only permissions and no ledger
-mutation. All five remain `drafted`: approved messages, attempted outreach,
-replies, pilot requests, and revenue are still zero until a human reviews and
-sends each message through its published business channel.
+decision. A fresh schema-6 bundle now exists at
+`outreach-private/next-review-v6.md` with owner-only permissions and no ledger
+mutation. The schema-4 and schema-5 bundles are superseded. All five remain
+`drafted`: approved messages, attempted outreach, replies, pilot requests, and
+revenue are still zero until a human reviews and sends each message through its
+published business channel.
 
 The operator can now request one deterministic `--review-next` checklist. It
 names only the next private alias and permitted channel, reports qualification
-counts instead of URLs, and prints five unchecked criteria covering observation,
-recipient, price and scope, local-code handling, and opt-out behavior. The mode
-does not expose draft text, edit status or dates, approve a message, or send it.
-Its output stays private and cannot be used as a counts-only public baseline;
-review readiness remains operator preparation rather than demand or revenue.
+counts instead of URLs, displays the canonical direct-outreach offer route, and
+prints six unchecked criteria covering observation, recipient, price and scope,
+local-code handling, source preservation, and opt-out behavior. The mode does
+not expose draft text, edit status or dates, approve a message, or send it. Its
+output stays private and cannot be used as a counts-only public baseline; review
+readiness remains operator preparation rather than demand or revenue.
 When the reviewer needs the underlying qualification sources, the explicit
 `--include-private-evidence` opt-in maps that one draft's signals to their HTTPS
 links without editing the ledger. Default output remains redacted, while the
@@ -1012,17 +1014,17 @@ history for aliases that progressed. This prevents stale or mismatched private
 material from entering a decision while keeping the ledger read-only. It does
 not let Repo Scout judge, approve, send, or count the message as demand or
 revenue.
-A complete evidence-and-draft review now emits a schema-5 SHA-256 receipt over
-the normalized selected ledger row, selected private draft, and five human
-checks. Its generated approve and decline commands carry that receipt plus the
-reviewed notes path, while using actual-date placeholders instead of copying
-the bundle's ledger-audit date into a later human decision. Before either
-mutation, Repo Scout reloads the private files and recomputes the receipt; a
-changed source, channel, draft, or check fails without modifying the ledger or
-exposing the changed content. An unchanged review can therefore be decided on a
-later UTC date without backdating approval evidence. This binds a human
-decision to what was actually reviewed without making Repo Scout perform the
-judgment.
+A complete evidence-and-draft review now emits a schema-6 SHA-256 receipt over
+the normalized selected ledger row, selected private draft, displayed
+source-preserving campaign route, and six human checks. Its generated approve
+and decline commands carry that receipt plus the reviewed notes path, while
+using actual-date placeholders instead of copying the bundle's ledger-audit
+date into a later human decision. Before either mutation, Repo Scout reloads
+the private files and recomputes the receipt; a changed source, channel, draft,
+route, or check fails without modifying the ledger or exposing the changed
+content. An unchanged review can therefore be decided on a later UTC date
+without backdating approval evidence. This binds a human decision to what was
+actually reviewed without making Repo Scout perform the judgment.
 The verified private notes revision now travels into the locked approval or
 decline commit as well. An editor save after receipt verification therefore
 forces a fresh review instead of recording a decision against content that no

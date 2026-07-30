@@ -433,10 +433,11 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
 The command creates an owner-only private file only after the complete bundle
 has been written, keeps its alias and evidence out of terminal output, and
 refuses to overwrite an earlier review. The bundle contains the next ledger
-alias, qualification sources, draft, SHA-256 review receipt, and exact
-content-bound approval and decline commands. Their `YYYY-MM-DD` placeholders
-must be replaced with the actual UTC decision date; the receipt remains valid
-across dates only while the reviewed row, draft, and checklist are unchanged.
+alias, qualification sources, draft, the canonical source-preserving
+direct-outreach route, SHA-256 review receipt, and exact content-bound approval
+and decline commands. Their `YYYY-MM-DD` placeholders must be replaced with the
+actual UTC decision date; the receipt remains valid across dates only while the
+reviewed row, draft, route, and checklist are unchanged.
 Remove or privately archive the bundle after the human decision before writing
 the next review.
 After a content-bound decline, the generated continuation retains the evidence
@@ -449,7 +450,8 @@ Omit `--as-of` to use the current UTC calendar date; the explicit UTC date in
 these examples keeps the initial ledger audit reproducible across operator
 timezones without becoming a later approval date.
 
-After a human completes all five checks, record approval for that exact next
+After a human completes all six checks, including confirming the draft uses the
+displayed direct-outreach route, record approval for that exact next
 alias with the exact command emitted by the review. Its shape is:
 
 ```bash

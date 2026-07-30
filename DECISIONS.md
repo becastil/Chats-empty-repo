@@ -5069,3 +5069,26 @@ baseline remains unchanged because this checkpoint did not fetch a comparable
 traffic window; no view or clone movement is invented. This decision refreshes
 directional public evidence and revenue order. It does not prove users,
 installs, leads, outreach attempts, demand, payment, or revenue.
+
+## 2026-07-30: Bind Outreach Decisions To Their Attributed Offer Route
+
+The prepared private review queue already required a human to verify prospect
+fit, recipient identity, price and scope, the local-code boundary, and opt-out
+language. Its approval receipt bound the selected ledger row and private draft,
+but the review did not display or bind the exact source-preserving offer URL.
+An edited draft or future route change could therefore pass an otherwise valid
+receipt while losing the `source=outreach` attribution needed to distinguish
+direct outreach from release or website traffic.
+
+Complete outreach reviews now display the canonical direct-outreach route and
+require a sixth human check confirming the draft uses it. Schema-6 receipts
+bind that route alongside the selected row, private draft, and six checks, so
+any route drift invalidates the receipt before approval or decline. Source and
+installed-lifecycle tests cover the displayed route, checklist count, and
+stale-receipt rejection without repeating changed private content in an error.
+
+A fresh ignored `outreach-private/next-review-v6.md` bundle was generated with
+owner-only permissions; the schema-4 and schema-5 bundles remain superseded.
+This closes an attribution gap in the next revenue action. It does not approve
+or send a message, mutate prospect state, establish a lead, prove demand,
+collect payment, or create revenue.

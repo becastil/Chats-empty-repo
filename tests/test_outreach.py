@@ -21,6 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from repo_scout.outreach import (  # noqa: E402
     DATE_PLACEHOLDER,
+    DIRECT_OUTREACH_ROUTE,
     LEDGER_FIELDS,
     OUTCOME_PLACEHOLDER,
     OutreachInputError,
@@ -297,7 +298,7 @@ class OutreachReportTests(unittest.TestCase):
 
         report = build_next_outreach_review(rows, as_of=date(2026, 7, 13))
 
-        self.assertEqual(report["schema_version"], 5)
+        self.assertEqual(report["schema_version"], 6)
         self.assertTrue(report["human_review_required"])
         self.assertTrue(report["private_output"])
         self.assertFalse(report["private_evidence_included"])
@@ -306,7 +307,16 @@ class OutreachReportTests(unittest.TestCase):
         self.assertEqual(report["review"]["channel"], "published-business")
         self.assertEqual(report["review"]["fit_signals"], 3)
         self.assertEqual(report["review"]["fit_evidence_links"], 3)
-        self.assertEqual(len(report["review"]["checks"]), 5)
+        self.assertEqual(len(report["review"]["checks"]), 6)
+        self.assertEqual(
+            report["review"]["campaign_route"],
+            DIRECT_OUTREACH_ROUTE,
+        )
+        self.assertIn(
+            "Confirm the message uses the source-preserving direct-outreach "
+            "route shown above.",
+            report["review"]["checks"],
+        )
         self.assertIn(
             "Confirm the message gives a clear opt-out and promises no further contact.",
             report["review"]["checks"],
@@ -318,7 +328,11 @@ class OutreachReportTests(unittest.TestCase):
         self.assertNotIn("approved_on", serialized)
         self.assertNotIn("2026-07-11", serialized)
         text = format_next_outreach_review(report, ledger=Path("ledger.csv"))
-        self.assertEqual(text.count("- [ ]"), 5)
+        self.assertEqual(text.count("- [ ]"), 6)
+        self.assertIn(
+            f"Source-preserving offer route: {DIRECT_OUTREACH_ROUTE}",
+            text,
+        )
         self.assertIn("Keep this alias-only checklist in the private workspace", text)
         self.assertIn("does not approve, modify, or send", text)
         self.assertIn("After human review, choose exactly one decision", text)
@@ -1541,6 +1555,85 @@ class OutreachReportTests(unittest.TestCase):
                 stderr.getvalue(),
             )
             self.assertNotIn("Edited after human review", stderr.getvalue())
+            self.assertEqual(
+                list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
+            )
+
+    def test_content_bound_approve_rejects_campaign_route_drift(self) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            notes = Path(tmp) / "drafts.md"
+            _write_ledger(
+                ledger,
+                [
+                    _row(
+                        status="drafted",
+                        contacted_on="",
+                        next_action_on="",
+                        approved_on="",
+                    )
+                ],
+            )
+            notes.write_text(
+                "## prospect-001\n\nReviewed private message\n",
+                encoding="utf-8",
+            )
+            if os.name == "posix":
+                notes.chmod(0o600)
+
+            review_stdout = io.StringIO()
+            with redirect_stdout(review_stdout):
+                self.assertEqual(
+                    main(
+                        [
+                            str(ledger),
+                            "--as-of",
+                            "2026-07-13",
+                            "--review-next",
+                            "--include-private-evidence",
+                            "--include-private-draft",
+                            str(notes),
+                            "--format",
+                            "json",
+                        ]
+                    ),
+                    0,
+                )
+            review_digest = json.loads(review_stdout.getvalue())["review_digest"]
+            before = ledger.read_bytes()
+            stderr = io.StringIO()
+
+            with (
+                patch(
+                    "repo_scout.outreach.DIRECT_OUTREACH_ROUTE",
+                    "https://example.invalid/changed-route",
+                ),
+                redirect_stderr(stderr),
+            ):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--approve-next",
+                        "prospect-001",
+                        "--approved-on",
+                        "2026-07-13",
+                        "--confirm-reviewed",
+                        "--review-digest",
+                        review_digest,
+                        "--reviewed-private-draft",
+                        str(notes),
+                    ]
+                )
+
+            self.assertEqual(exit_code, 2)
+            self.assertEqual(ledger.read_bytes(), before)
+            self.assertIn(
+                "review content changed; run --review-next again before deciding",
+                stderr.getvalue(),
+            )
+            self.assertNotIn("changed-route", stderr.getvalue())
             self.assertEqual(
                 list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
             )

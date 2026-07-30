@@ -77,10 +77,11 @@ they are not users, leads, or revenue.
   separate deployment approval and the immediate post-deployment production
   audit.
 - Human-review the five prepared, publicly qualified drafts. The fresh
-  owner-only schema-5 bundle is ready at
-  `outreach-private/next-review-v5.md`; keep the July 21 schema-4 bundle
-  superseded, replace the chosen decision command's `YYYY-MM-DD` values with
-  the actual UTC decision date, and use its content-bound `--approve-next` or
+  owner-only schema-6 bundle is ready at
+  `outreach-private/next-review-v6.md`; keep the schema-4 and schema-5 bundles
+  superseded, confirm the selected draft uses the displayed source-preserving
+  route, replace the chosen decision command's `YYYY-MM-DD` values with the
+  actual UTC decision date, and use its content-bound `--approve-next` or
   `--decline-next` command. After a decline, replace
   `PRIVATE-REVIEW-PATH` inside its existing single quotes with a new ignored
   owner-only destination before generating the next complete review; paths

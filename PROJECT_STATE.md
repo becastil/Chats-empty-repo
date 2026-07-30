@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 307 of
-1,000, with 693 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 308 of
+1,000, with 692 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -593,8 +593,10 @@ alignment take priority over commit volume.
 - Release-blocking installed-wheel proof for the guarded draft review, approval,
   contact, and one-follow-up lifecycle, including private-field omission,
   permission retention, safe failed writes, and bounded CSV rejection.
-- An explicit `--review-next` mode that surfaces one private alias and five
+- An explicit `--review-next` mode that surfaces one private alias and six
   unchecked human criteria without editing, approving, or sending outreach.
+- A source-preserving direct-outreach route displayed in every review, with an
+  explicit attribution check before a human can approve the existing draft.
 - Qualification counts in the review checklist without evidence URLs, draft
   text, approval dates, recipient details, or public-baseline eligibility.
 - An explicit private-evidence review opt-in that maps the selected draft's fit
@@ -608,10 +610,12 @@ alignment take priority over commit volume.
 - Cross-file private review preflight requiring notes for every drafted ledger
   alias, rejecting aliases absent from the ledger, and retaining progressed
   aliases as history without exposing their messages.
-- Schema-5 content-bound private review receipts carried into generated approval
-  and decline commands, with mutation-free stale evidence and draft rejection,
-  date-independent content identity, and actual-date placeholders that keep a
-  delayed human decision from inheriting the bundle's ledger-audit date.
+- Schema-6 content-bound private review receipts that bind the displayed
+  campaign route alongside the selected row, draft, and six checks in generated
+  approval and decline commands, with mutation-free stale evidence and draft
+  rejection, date-independent content identity, and actual-date placeholders
+  that keep a delayed human decision from inheriting the bundle's ledger-audit
+  date.
 - Locked private-notes revision checks that reject edits occurring after
   content receipt verification but before approval or decline commits.
 - Symmetric approval and decline race coverage proving commit-window notes
@@ -890,11 +894,13 @@ approval, publish that replacement and run
 `python3 scripts/audit_production_site.py`; do not describe it as live before
 both steps pass.
 
-Then human-review the fresh owner-only schema-5 bundle at
-`outreach-private/next-review-v5.md` while keeping the July 21 schema-4 review
-superseded. Replace every `YYYY-MM-DD` value in the chosen decision command with
-the actual UTC decision date, and record the human decision with its
-content-bound `--approve-next` or `--decline-next` command. Send only approved
+Then human-review the fresh owner-only schema-6 bundle at
+`outreach-private/next-review-v6.md` while keeping the schema-4 and schema-5
+reviews superseded. Confirm the selected draft uses the displayed
+source-preserving outreach route. Replace every `YYYY-MM-DD` value in the
+chosen decision command with the actual UTC decision date, and record the human
+decision with its content-bound `--approve-next` or `--decline-next` command.
+Send only approved
 drafts one at a time through their published business channels. After a
 nonterminal decline, replace `PRIVATE-REVIEW-PATH` inside its existing single
 quotes with a new ignored owner-only destination before running the emitted

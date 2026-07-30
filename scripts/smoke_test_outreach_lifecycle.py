@@ -34,6 +34,14 @@ EVIDENCE = (
 OPT_OUT_REVIEW_CHECK = (
     "Confirm the message gives a clear opt-out and promises no further contact."
 )
+SOURCE_ROUTE_REVIEW_CHECK = (
+    "Confirm the message uses the source-preserving direct-outreach route "
+    "shown above."
+)
+DIRECT_OUTREACH_ROUTE = (
+    "https://repo-scout.becastil.chatgpt.site/"
+    "?source=outreach#why-teams-buy"
+)
 DATE_PLACEHOLDER = "YYYY-MM-DD"
 OUTCOME_PLACEHOLDER = "OUTCOME"
 REVIEW_OUTPUT_PLACEHOLDER = "PRIVATE-REVIEW-PATH"
@@ -585,8 +593,18 @@ def verify_outreach_lifecycle(
             "review did not select the synthetic draft",
         )
         _require(
-            len(review.get("review", {}).get("checks", ())) == 5,
+            len(review.get("review", {}).get("checks", ())) == 6,
             "review checklist changed",
+        )
+        _require(
+            review.get("review", {}).get("campaign_route")
+            == DIRECT_OUTREACH_ROUTE,
+            "review omitted the source-preserving outreach route",
+        )
+        _require(
+            SOURCE_ROUTE_REVIEW_CHECK
+            in review.get("review", {}).get("checks", ()),
+            "review checklist lost the outreach attribution check",
         )
         _require(
             OPT_OUT_REVIEW_CHECK in review.get("review", {}).get("checks", ()),

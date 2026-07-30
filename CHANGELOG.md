@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Bound complete private outreach reviews to the canonical
+  `?source=outreach#why-teams-buy` offer route and added a sixth human check
+  that confirms the selected draft preserves that attribution.
+- Advanced content-bound outreach receipts to schema 6 so route, row, private
+  draft, and checklist drift all require a fresh review before approval or
+  decline.
+- Generated a fresh ignored, owner-only schema-6 review bundle without
+  approving, sending, or mutating any prospect state.
 - Refreshed the reviewed public distribution, pilot, and joined-growth
   baselines on 2026-07-30, reconciling 55 complete releases and 403 cumulative
   primary artifact requests without warnings.

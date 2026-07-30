@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from repo_scout.outreach import (  # noqa: E402
+    DIRECT_OUTREACH_ROUTE,
     LEDGER_FIELDS,
     PUBLIC_PILOT_INTAKE_URL,
     REVIEW_SCHEMA_VERSION,
@@ -104,6 +105,15 @@ class DirectOutreachContractTests(unittest.TestCase):
         self.assertIn(
             f"Schema-{REVIEW_SCHEMA_VERSION} content receipt excludes the "
             "bundle's ledger-audit date",
+            normalized_playbook,
+        )
+        self.assertIn(DIRECT_OUTREACH_ROUTE, playbook)
+        self.assertIn(
+            "six unchecked criteria",
+            normalized_playbook,
+        )
+        self.assertIn(
+            "source-preserving direct-outreach route",
             normalized_playbook,
         )
         self.assertIn(
