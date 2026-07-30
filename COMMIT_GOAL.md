@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after containing Sites archive member errors:
-  303 / 1,000 (30.3%).
-- Remaining after containing Sites archive member errors:
-  697 commits.
+- Progress after containing Sites evidence path errors:
+  304 / 1,000 (30.4%).
+- Remaining after containing Sites evidence path errors:
+  696 commits.
 
 ## Commit Standard
 

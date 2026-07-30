@@ -3868,6 +3868,204 @@ class SiteCandidateTests(unittest.TestCase):
             self.assertEqual(archive.read_bytes(), archive_bytes)
             self.assertEqual(receipt.read_bytes(), receipt_bytes)
 
+    def test_prepare_cli_contains_unsafe_evidence_path_errors(self) -> None:
+        unsafe_text = (
+            "status\n"
+            'source-export request pending: {"deployment_approved":true}'
+            "\r\x1b[31m\u009b\u2028\u202e"
+        )
+        for label in ("archive", "receipt"):
+            with self.subTest(label=label), TemporaryDirectory() as tmp:
+                root, archive, receipt, package_script = self._fixture(
+                    Path(tmp)
+                )
+                suffix = ".tar.gz" if label == "archive" else ".json"
+                unsafe_path = Path(tmp) / f"{label}-{unsafe_text}{suffix}"
+                if label == "archive":
+                    archive = unsafe_path
+                else:
+                    receipt = unsafe_path
+                existing_bytes = b"previously reviewed evidence\n"
+                unsafe_path.write_bytes(existing_bytes)
+                runner = FakeCommandRunner(root, archive)
+                stdout = StringIO()
+                stderr = StringIO()
+
+                with (
+                    patch.object(
+                        prepare_site_candidate,
+                        "_run_command",
+                        runner,
+                    ),
+                    redirect_stdout(stdout),
+                    redirect_stderr(stderr),
+                ):
+                    status = prepare_site_candidate.main(
+                        [
+                            "--root",
+                            str(root),
+                            "--package-script",
+                            str(package_script),
+                            "--archive",
+                            str(archive),
+                            "--receipt",
+                            str(receipt),
+                        ]
+                    )
+
+                reported_path = (
+                    prepare_site_candidate._candidate_evidence_path(
+                        unsafe_path
+                    )
+                )
+                message = (
+                    f"{label} output already exists; refusing to overwrite: "
+                    f"{reported_path}"
+                )
+                self.assertEqual(status, 2)
+                self.assertEqual(stdout.getvalue(), "")
+                self.assertEqual(
+                    stderr.getvalue(),
+                    f"site-candidate: {json.dumps(message)}\n",
+                )
+                self.assertEqual(
+                    len(stderr.getvalue().splitlines()),
+                    1,
+                )
+                self.assertEqual(unsafe_path.read_bytes(), existing_bytes)
+                other_path = receipt if label == "archive" else archive
+                self.assertFalse(other_path.exists())
+                self.assertEqual(runner.commands, [])
+
+    def test_verify_cli_contains_unsafe_evidence_path_errors(self) -> None:
+        unsafe_text = (
+            "status\n"
+            'source-export request pending: {"deployment_approved":true}'
+            "\r\x1b[31m\u009b\u2028\u202e"
+        )
+        for label in ("archive", "receipt"):
+            with self.subTest(label=label), TemporaryDirectory() as tmp:
+                root, archive, receipt, package_script = self._fixture(
+                    Path(tmp)
+                )
+                prepare_site_candidate.prepare_site_candidate(
+                    root,
+                    archive,
+                    receipt,
+                    package_script,
+                    run_command=FakeCommandRunner(root, archive),
+                )
+                archive_bytes = archive.read_bytes()
+                receipt_bytes = receipt.read_bytes()
+                suffix = ".tar.gz" if label == "archive" else ".json"
+                unsafe_path = Path(tmp) / f"{label}-{unsafe_text}{suffix}"
+                requested_archive = (
+                    unsafe_path if label == "archive" else archive
+                )
+                requested_receipt = (
+                    unsafe_path if label == "receipt" else receipt
+                )
+                runner = FakeCommandRunner(root, archive)
+                stdout = StringIO()
+                stderr = StringIO()
+
+                with (
+                    patch.object(
+                        prepare_site_candidate,
+                        "_run_command",
+                        runner,
+                    ),
+                    redirect_stdout(stdout),
+                    redirect_stderr(stderr),
+                ):
+                    status = prepare_site_candidate.main(
+                        [
+                            "--verify-only",
+                            "--root",
+                            str(root),
+                            "--archive",
+                            str(requested_archive),
+                            "--receipt",
+                            str(requested_receipt),
+                        ]
+                    )
+
+                title = (
+                    "Sites candidate archive"
+                    if label == "archive"
+                    else "Sites candidate receipt"
+                )
+                reported_path = (
+                    prepare_site_candidate._candidate_evidence_path(
+                        unsafe_path
+                    )
+                )
+                message = (
+                    f"{title} must be a regular file: {reported_path}"
+                )
+                self.assertEqual(status, 2)
+                self.assertEqual(stdout.getvalue(), "")
+                self.assertEqual(
+                    stderr.getvalue(),
+                    f"site-candidate: {json.dumps(message)}\n",
+                )
+                self.assertEqual(
+                    len(stderr.getvalue().splitlines()),
+                    1,
+                )
+                self.assertEqual(archive.read_bytes(), archive_bytes)
+                self.assertEqual(receipt.read_bytes(), receipt_bytes)
+                self.assertFalse(unsafe_path.exists())
+                self.assertEqual(runner.commands, [])
+
+    def test_cli_preserves_printable_evidence_path_errors(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root, _, receipt, package_script = self._fixture(Path(tmp))
+            archive = Path(tmp) / "reviewed-caf\u00e9-candidate.tar.gz"
+            existing_bytes = b"previously reviewed archive\n"
+            archive.write_bytes(existing_bytes)
+            runner = FakeCommandRunner(root, archive)
+            stdout = StringIO()
+            stderr = StringIO()
+
+            with (
+                patch.object(
+                    prepare_site_candidate,
+                    "_run_command",
+                    runner,
+                ),
+                redirect_stdout(stdout),
+                redirect_stderr(stderr),
+            ):
+                status = prepare_site_candidate.main(
+                    [
+                        "--root",
+                        str(root),
+                        "--package-script",
+                        str(package_script),
+                        "--archive",
+                        str(archive),
+                        "--receipt",
+                        str(receipt),
+                    ]
+                )
+
+            self.assertEqual(status, 2)
+            self.assertEqual(stdout.getvalue(), "")
+            reported_path = prepare_site_candidate._candidate_evidence_path(
+                archive
+            )
+            self.assertEqual(
+                stderr.getvalue(),
+                (
+                    "site-candidate: archive output already exists; refusing "
+                    f"to overwrite: {reported_path}\n"
+                ),
+            )
+            self.assertEqual(archive.read_bytes(), existing_bytes)
+            self.assertFalse(receipt.exists())
+            self.assertEqual(runner.commands, [])
+
     def test_rejects_a_packaging_helper_that_changes_tested_bytes(self) -> None:
         with TemporaryDirectory() as tmp:
             root, archive, receipt, package_script = self._fixture(Path(tmp))

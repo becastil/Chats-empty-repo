@@ -486,6 +486,15 @@ special files, and duplicates therefore cannot forge a candidate result or
 source-export request. This protects paid-distribution review integrity; it
 does not authenticate an archive, grant approval, export source, save or deploy
 a version, or create demand, payment, or revenue.
+The candidate command now applies that presentation boundary once more to every
+controlled `SiteCandidateError` before stderr. This contains requested archive
+and receipt filenames plus operating-system context that may repeat them,
+without changing any fully printable diagnostic or double-escaping an already
+safe archive-member error. Real prepare and verification regressions preserve
+reviewed evidence and emit no candidate or approval status. This protects
+paid-distribution operator decisions; it does not make malformed argv or an
+unhandled runtime fault safe, authenticate evidence, grant approval, export
+source, save or deploy a version, or create demand, payment, or revenue.
 Schema-2 candidate receipts now bind every tested deployable file's canonical
 path, permission mode, and bytes before the external packaging helper runs.
 Preparation rejects changed or injected output, while later `--verify-only`

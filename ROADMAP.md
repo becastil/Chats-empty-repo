@@ -43,8 +43,9 @@
   whitespace in source repository identities and require percent-encoded URL
   paths where needed. Structural archive-member failures must preserve
   printable names and JSON-serialize presentation-unsafe names before an
-  operator error. Apply the same one-line boundary to archive and receipt
-  evidence-path failures before executing the handoff.
+  operator error. Every controlled candidate CLI failure, including archive
+  and receipt evidence-path or wrapped operating-system context, must apply the
+  same one-line boundary while preserving printable diagnostics exactly.
   Preserve nonstandard SSH and SCP usernames and their
   relative-versus-absolute path semantics in that canonical identity while
   treating conventional `git@` as protocol-neutral.

@@ -4964,3 +4964,32 @@ escaped error line, and unchanged archive and receipt bytes. This protects
 paid-distribution review integrity; it does not authenticate an archive, grant
 source-export or deployment approval, export source, save or deploy a version,
 or create customer, demand, payment, or revenue evidence.
+
+## 2026-07-30: Contain Controlled Sites CLI Errors At One Boundary
+
+Archive and receipt paths preserve their requested basename while resolving
+the parent to a stable filesystem identity. Those basenames can contain line,
+terminal, Unicode-separator, and bidirectional controls. Preparation's
+no-clobber errors, verification's regular-file errors, and wrapped
+operating-system messages could therefore forge candidate or source-export
+status lines even though the command returned exit code 2 and emitted no real
+success record.
+
+The command now passes the complete text of every caught `SiteCandidateError`
+through the shared operator formatter before stderr. Fully printable messages
+remain byte-for-byte unchanged. Any presentation-unsafe message becomes one
+JSON string literal, so an embedded path or repeated operating-system context
+cannot split the controlled error across physical lines. Archive-member errors
+that already escaped the untrusted name remain unchanged because their visible
+escape sequences are printable. Argument-parser exits and uncaught runtime
+faults remain outside this deliberately bounded contract.
+
+Real prepare and `--verify-only` regressions exercise both archive and receipt
+paths with newline, carriage-return, terminal, Unicode-separator, and
+bidirectional controls. They require exit code 2, empty standard output, one
+exact escaped stderr line, no packaging commands, preserved reviewed evidence,
+and absent unrequested outputs. A printable Unicode path retains the original
+unquoted diagnostic. This protects paid-distribution operator decisions; it
+does not authenticate evidence, grant source-export or deployment approval,
+export source, save or deploy a version, or create customer, demand, payment,
+or revenue evidence.

@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 303 of
-1,000, with 697 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 304 of
+1,000, with 696 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -190,6 +190,10 @@ alignment take priority over commit volume.
   names and JSON-serialize presentation-unsafe names across unsafe-path,
   root-containment, special-file, and duplicate-member rejection before any
   candidate or source-export status can be emitted.
+- A shared controlled-error output boundary for the Sites candidate CLI that
+  preserves printable diagnostics and JSON-serializes a complete
+  presentation-unsafe `SiteCandidateError`, including archive or receipt paths
+  and wrapped operating-system context, before stderr reaches an operator.
 - Schema-2 Sites receipts that bind every tested payload file's canonical path,
   permission mode, and bytes before packaging, then require the helper-produced
   archive and later read-only verification to reproduce that digest exactly.
@@ -816,12 +820,7 @@ python3 scripts/audit_pilot_labels.py --repo becastil/Chats-empty-repo
 
 The public site still advertises `v0.3.50`. Sites versions 46 and 47 are
 superseded and must not be deployed; version 47 predates the July 24 React
-Server Components and `brace-expansion` advisories. Before executing the
-handoff, contain presentation-unsafe archive and receipt evidence paths at the
-shared CLI error boundary. A rejected path can still forge extra stderr lines
-even though it cannot produce candidate or approval status; ordinary printable
-errors must remain byte-for-byte compatible, and real prepare and verify
-regressions must preserve existing evidence. Then run `nvm install` and
+Server Components and `brace-expansion` advisories. Run `nvm install` and
 `nvm use` to select the repository's exact Node `22.13.0` pin, then run the
 deployment handoff with `scripts/prepare_site_candidate.py`, using fresh
 outside-repository archive and receipt paths so any previously reviewed pair

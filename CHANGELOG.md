@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- JSON-serialized complete presentation-unsafe `SiteCandidateError` messages at
+  the shared Sites candidate CLI boundary, including archive and receipt paths
+  plus wrapped operating-system context.
+- Preserved byte-for-byte printable diagnostics and existing pre-escaped
+  archive-member errors while preventing rejected evidence paths from forging
+  candidate or source-export status lines.
+- Added real prepare and verify CLI coverage for both evidence paths, requiring
+  empty stdout, one stderr line, no packaging commands, and unchanged or absent
+  outputs as appropriate.
 - JSON-serialized presentation-unsafe Sites archive member names before
   unsafe-path, root-containment, special-file, or duplicate-member errors.
 - Preserved exact printable member diagnostics and all structural rejection

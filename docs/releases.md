@@ -147,8 +147,11 @@ site release:
    directories can cross the candidate boundary. Rejected printable member
    names remain exact in the error; presentation-unsafe names are serialized as
    one JSON string so they cannot forge a candidate result or source-export
-   request. After the build and before the test-only command, the preflight
-   adds the candidate manifest and digests
+   request. The command applies the same rule to every controlled
+   `SiteCandidateError` before stderr, containing archive and receipt filenames
+   or wrapped operating-system context while leaving printable errors exact.
+   After the build and before the test-only command, the preflight adds the
+   candidate manifest and digests
    every regular directory and file's canonical path, entry type, and
    permission mode plus each file's size and bytes. It recomputes that digest
    after the tests and rejects any candidate payload changed during site tests.

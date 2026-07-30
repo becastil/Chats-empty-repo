@@ -2499,7 +2499,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
             action = "ready"
     except SiteCandidateError as exc:
-        print(f"site-candidate: {exc}", file=sys.stderr)
+        operator_error = _format_operator_text(str(exc))
+        print(f"site-candidate: {operator_error}", file=sys.stderr)
         return 2
     candidate_record = {
         "archive": result.archive.name,
