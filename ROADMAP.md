@@ -7,6 +7,13 @@
 
 ## Near Term
 
+Revenue order follows the reviewed 2026-07-30 growth evidence: 135 additional
+primary artifact requests produced no attributed pilot request, and 130 of
+those requests were wheel traffic. Human-review the prepared outreach queue and
+execute only approved, source-identifiable attempts before adding another
+acquisition asset or paid-policy feature. Keep release counters directional;
+they are not users, leads, or revenue.
+
 - Resolve the active Sites plugin's trusted root packaging helper, allocate a
   fresh private candidate directory, and retain only the existing project's
   credential-free source remote for approval evidence. Keep temporary source

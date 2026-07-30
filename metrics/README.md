@@ -2,8 +2,8 @@
 
 These generated reports preserve public or privacy-safe starting points for
 future commercial comparisons. Distribution, pilot, and growth reports were
-refreshed on 2026-07-22 at 00:21 UTC. The outreach draft report was captured on
-2026-07-14, and the traffic report was captured on 2026-07-17 at 18:40 UTC,
+refreshed on 2026-07-30 at 16:33 UTC. The outreach draft report remains dated
+2026-07-21, and the traffic report was captured on 2026-07-17 at 18:40 UTC,
 from:
 
 - GitHub's public release API for `becastil/Chats-empty-repo`.
@@ -14,12 +14,12 @@ from:
 
 ## Current Readout
 
-- 53 stable releases, all satisfying their version-aware artifact contracts.
-- 268 cumulative primary artifact requests: 36 portable and 232 wheel.
-- 221 manifest requests, 39 source requests, and 0 unknown requests.
-- 50 additional primary artifact requests since the prior checkpoint: 5
-  portable and 45 wheel. The four new releases account for 29 requests, while
-  `v0.3.45` gained 21 additional wheel requests.
+- 55 stable releases, all satisfying their version-aware artifact contracts.
+- 403 cumulative primary artifact requests: 41 portable and 362 wheel.
+- 348 manifest requests, 44 source requests, and 0 unknown requests.
+- 135 additional primary artifact requests since the prior checkpoint: 5
+  portable and 130 wheel. The two new releases account for 132 requests; older
+  release counters account for the remaining 3.
 - 0 tracked pilot requests, 0 booked pilots, and $0 booked revenue.
 - 0 evidence warnings in the distribution, pilot, and joined growth reports.
 - 5 qualified outreach drafts backed by 16 fit-evidence links, with 0 approvals,
@@ -29,10 +29,10 @@ from:
 
 GitHub reports cumulative asset requests, not unique people or installations.
 The wheel and manifest totals include Repo Scout's own CI and maintainer
-verification, so they are directional reach evidence only. The 50-request
-increase includes 45 wheel and 44 manifest requests but only 5 portable and 5
-source requests. It did not produce a pilot request; the joined report correctly
-keeps acquisition as the commercial bottleneck.
+verification, so they are directional reach evidence only. The signed increase
+is 135 requests, including 130 wheel and 127 manifest requests but only 5
+portable and 5 source requests. It did not produce a pilot request; the joined
+report correctly keeps acquisition as the commercial bottleneck.
 The prior overlapping window contained 1 view from 1 unique viewer, 119 unique
 cloners, and 310 clone events. The new window adds only 2 views and no unique
 viewer while clone activity rises by 652 events and 174 unique cloners. That
@@ -45,14 +45,14 @@ partial rankings rather than exhaustive traffic reconciliations.
 
 - `distribution-baseline.json` is the schema-2 baseline needed for signed
   per-channel deltas and release-set changes.
-- `pilot-baseline.json` is the schema-7 aggregate from the empty public pilot
+- `pilot-baseline.json` is the schema-10 aggregate from the empty public pilot
   queue.
-- `growth-baseline.json` joins the signed 50-request movement from the prior
-  distribution checkpoint with the schema-7 pilot baseline.
+- `growth-baseline.json` joins the signed 135-request movement from the prior
+  distribution checkpoint with the schema-10 pilot baseline.
 - `github-traffic-baseline.json` preserves the owner-visible 14-day aggregate,
   daily series, partial top referrers, and partial popular paths without visitor
   identities.
-- `outreach-draft-baseline.json` preserves only schema-5 aggregate counts; it
+- `outreach-draft-baseline.json` preserves only schema-9 aggregate counts; it
   contains no prospect alias, company, contact address, draft, or source URL.
 
 ## Refresh Contract

@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 306 of
-1,000, with 694 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 307 of
+1,000, with 693 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -517,11 +517,11 @@ alignment take priority over commit volume.
   portable zipapp, with release-tag reconciliation before attestation.
 - Package-metadata-derived proof that the release smoke covers every installed
   command and the adoption guide reports the complete wheel command count.
-- A refreshed schema-2 distribution, schema-7 pilot, and joined growth baseline
-  generated from public evidence on 2026-07-22 UTC.
+- A refreshed schema-2 distribution, schema-10 pilot, and joined growth baseline
+  generated from public evidence on 2026-07-30 UTC.
 - Baseline contract tests reconciling every release channel while preserving zero pilot and revenue truth.
-- A warning-free signed checkpoint showing 50 additional primary artifact
-  requests through the verified `v0.3.49` release, including 45 wheel and 5
+- A warning-free signed checkpoint showing 135 additional primary artifact
+  requests through the verified `v0.3.51` release, including 130 wheel and 5
   portable requests, with zero pilot requests and revenue.
 - A refreshed 14-day owner-visible GitHub traffic baseline with reconciled
   daily views and clones, partial top referrers and paths, and explicit rolling
@@ -826,6 +826,13 @@ python3 scripts/audit_pilot_labels.py --repo becastil/Chats-empty-repo
 ```
 
 ## Next Small Task
+
+The reviewed 2026-07-30 growth baseline names acquisition as the current
+commercial bottleneck: primary artifact requests increased by 135, but no
+request entered the attributed pilot funnel. First human-review the five
+prepared outreach drafts below and execute only approved, source-identifiable
+attempts. Do not add another acquisition asset or paid-policy feature before
+five real attempts.
 
 The public site still advertises `v0.3.50`. Sites versions 46 and 47 are
 superseded and must not be deployed; version 47 predates the July 24 React

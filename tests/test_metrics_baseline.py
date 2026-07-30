@@ -90,14 +90,26 @@ class MetricsBaselineTests(unittest.TestCase):
         self.assertEqual(summary["stable_releases"], len(releases))
         self.assertEqual(summary["complete_releases"], len(releases))
         self.assertTrue(all(release["contract"]["complete"] for release in releases))
-        self.assertEqual(report["latest"]["tag"], "v0.3.49")
-        self.assertEqual(summary["stable_releases"], 53)
-        self.assertEqual(summary["primary_artifact_downloads"], 268)
-        self.assertEqual(summary["portable_downloads"], 36)
-        self.assertEqual(summary["wheel_downloads"], 232)
-        self.assertEqual(summary["source_downloads"], 39)
-        self.assertEqual(summary["manifest_downloads"], 221)
+        self.assertEqual(report["latest"]["tag"], "v0.3.51")
+        self.assertEqual(summary["stable_releases"], 55)
+        self.assertEqual(summary["primary_artifact_downloads"], 403)
+        self.assertEqual(summary["portable_downloads"], 41)
+        self.assertEqual(summary["wheel_downloads"], 362)
+        self.assertEqual(summary["source_downloads"], 44)
+        self.assertEqual(summary["manifest_downloads"], 348)
         self.assertEqual(summary["unknown_downloads"], 0)
+        self.assertEqual(
+            report["latest"]["downloads"],
+            {
+                "manifest": 108,
+                "portable": 1,
+                "primary": 109,
+                "source": 1,
+                "total": 218,
+                "unknown": 0,
+                "wheel": 108,
+            },
+        )
         self.assertEqual(
             summary["primary_artifact_downloads"],
             summary["portable_downloads"] + summary["wheel_downloads"],
@@ -118,9 +130,10 @@ class MetricsBaselineTests(unittest.TestCase):
         pilot = self._read("pilot-baseline.json")
         growth = self._read("growth-baseline.json")
 
-        self.assertEqual(pilot["schema_version"], 7)
-        self.assertEqual(pilot["follow_up"]["as_of"], "2026-07-22")
+        self.assertEqual(pilot["schema_version"], 10)
+        self.assertEqual(pilot["follow_up"]["as_of"], "2026-07-30")
         self.assertEqual(pilot["summary"]["tracked_issues"], 0)
+        self.assertEqual(pilot["summary"]["activated_pilots"], 0)
         self.assertEqual(pilot["summary"]["booked_revenue_usd"], 0)
         self.assertEqual(pilot["summary"]["qualification_review_issues"], 0)
         self.assertEqual(pilot["warnings"], [])
@@ -131,18 +144,19 @@ class MetricsBaselineTests(unittest.TestCase):
         self.assertTrue(growth["summary"]["distribution_baseline_present"])
         self.assertTrue(growth["summary"]["qualification_reporting_available"])
         self.assertEqual(growth["bottleneck"]["stage"], "acquisition")
+        self.assertIn("source-identifiable outreach", growth["bottleneck"]["next_action"])
         self.assertEqual(growth["warnings"], [])
         self.assertEqual(
             growth["distribution_change"],
             {
-                "manifest_downloads_delta": 44,
-                "new_releases": ["v0.3.49", "v0.3.48", "v0.3.47", "v0.3.46"],
+                "manifest_downloads_delta": 127,
+                "new_releases": ["v0.3.51", "v0.3.50"],
                 "portable_downloads_delta": 5,
-                "primary_artifact_downloads_delta": 50,
+                "primary_artifact_downloads_delta": 135,
                 "removed_releases": [],
                 "source_downloads_delta": 5,
                 "unknown_downloads_delta": 0,
-                "wheel_downloads_delta": 45,
+                "wheel_downloads_delta": 130,
             },
         )
 

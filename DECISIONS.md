@@ -5043,3 +5043,29 @@ the complete guidance in one physical stderr line. This improves
 paid-distribution recovery without approving a candidate, exporting source,
 saving or deploying a version, or creating customer, demand, payment, or
 revenue evidence.
+
+## 2026-07-30: Let Reviewed Funnel Evidence Set The Revenue Order
+
+The website experiment's July 24 review point had passed, while the committed
+distribution and pilot baselines still described July 22. Public release
+counters had continued moving, but no later reviewed checkpoint established
+whether that movement reflected lower-friction portable use, CI-heavy wheel
+traffic, or entry into the price-disclosed pilot funnel.
+
+The July 30 export now reconciles 55 contract-complete releases and 403
+cumulative primary artifact requests without warnings. Compared with the July
+22 baseline, primary requests increased by 135: 5 portable and 130 wheel.
+`v0.3.51` alone pairs 108 wheel requests with 108 manifest requests while
+showing one portable and one source request. That pattern is consistent with
+release verification and CI bootstrap activity, but request counters are not
+unique and cannot identify a user. The separately exported public pilot queue
+still contains zero tracked requests and $0 booked revenue.
+
+The reviewed schema-10 pilot and joined growth reports therefore retain
+acquisition as the bottleneck and name source-identifiable outreach as the next
+action. The prepared five-draft human review queue now precedes another
+acquisition asset or paid-policy feature. The owner-visible rolling traffic
+baseline remains unchanged because this checkpoint did not fetch a comparable
+traffic window; no view or clone movement is invented. This decision refreshes
+directional public evidence and revenue order. It does not prove users,
+installs, leads, outreach attempts, demand, payment, or revenue.

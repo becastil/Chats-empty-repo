@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Refreshed the reviewed public distribution, pilot, and joined-growth
+  baselines on 2026-07-30, reconciling 55 complete releases and 403 cumulative
+  primary artifact requests without warnings.
+- Recorded the signed increase of 135 primary requests as 5 portable and 130
+  wheel requests while preserving zero pilot requests and $0 booked revenue.
+- Prioritized approved, source-identifiable outreach as the next revenue action
+  instead of treating CI-confounded release traffic as customer demand.
 - Made a failed mandatory Sites dependency audit explicitly block candidate
   approval with separate vulnerability and audit-endpoint recovery guidance,
   without offering a bypass or weakened command.

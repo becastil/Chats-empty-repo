@@ -45,8 +45,8 @@ an older local artifact or report a false successful scan.
   matching the distributed campaign route.
 - **Secondary evidence:** That request's qualification, purchase readiness,
   primary criterion, offer, and paid stages.
-- **Review point:** 2026-07-24 or after three public pilot requests, whichever
-  comes first.
+- **Latest review:** 2026-07-30. Review again on 2026-08-06 or after the first
+  public pilot request, whichever comes first.
 - **Observed baseline:** On 2026-07-10 the public pilot queue had zero requests.
   The five newest releases had zero requests except one `v0.3.9` wheel request,
   which may be Repo Scout's own verified CI and is not a prospect.
@@ -55,6 +55,12 @@ an older local artifact or report a false successful scan.
   (1 portable and 60 wheel), and zero pilot requests or booked revenue. Repo
   Scout's CI and maintainer verification materially confound the wheel total.
   The machine-readable reports and capture contract live in `metrics/`.
+- **Latest checkpoint:** On 2026-07-30 the reviewed public baseline contained
+  55 contract-complete releases and 403 cumulative primary artifact requests
+  (41 portable and 362 wheel). The signed change since 2026-07-22 was 135
+  primary requests: 5 portable and 130 wheel. The pilot queue still contained
+  zero requests and $0 booked revenue, so acquisition remains the measured
+  bottleneck.
 - **Traffic checkpoint:** The owner-visible 14-day window ending 2026-07-16
   contained 3 views from 1 unique viewer, 293 unique cloners, and 962 clone
   events. Compared with the overlapping window ending 2026-07-11, views rose
@@ -219,11 +225,12 @@ repo-scout-pilot --format json --as-of "$(date -u +%F)" \
 repo-scout-growth distribution-current.json pilot-current.json
 ```
 
-`repo-scout-growth` emits schema 2 from schema-2 distribution and schema-5 or
-schema-6 pilot reports. It shows signed primary, portable, and wheel movement
-beside attributed pilot requests, qualification, offers, booked revenue, source
-totals, and schema-6 purchase-criterion outcomes. Schema-5 criterion evidence is
-explicitly unavailable rather than reported as zero. Its
+`repo-scout-growth` emits schema 2 from schema-2 distribution and schema-5
+through schema-10 pilot reports. It shows signed primary, portable, and wheel
+movement beside attributed pilot requests, qualification, offers, booked
+revenue, activation, source totals, and purchase-criterion outcomes when the
+input schema supports them. Older-schema evidence remains explicitly
+unavailable rather than reported as zero. Its
 deterministic bottleneck names one next action for missing measurement,
 acquisition, qualification, offer, payment, pilot-target progress, retention,
 or validated commercial evidence.

@@ -1645,15 +1645,17 @@ printable Unicode names remain exact. This protects operator-facing
 distribution evidence; it does not authenticate a GitHub export, make requests
 unique, or establish demand, payment, or revenue.
 
-The latest 2026-07-22 UTC public checkpoint records 268 cumulative primary
-artifact requests across 53 contract-complete releases: 36 portable and 232
-wheel. That is 50 more primary requests than the prior checkpoint. The four new
-releases account for 29 requests, while `v0.3.45` gained 21 additional wheel
-requests. The same period added 45 wheel and 44 manifest requests but only 5
-portable and 5 source requests, so Repo Scout's own release, verification,
-pinning, and CI activity materially confound the movement. The checkpoint still
-records zero pilot requests, zero outreach attempts, and $0 booked revenue, so
-acquisition remains the honest bottleneck.
+The latest 2026-07-30 UTC public checkpoint records 403 cumulative primary
+artifact requests across 55 contract-complete releases: 41 portable and 362
+wheel. That is 135 more primary requests than the 2026-07-22 checkpoint. The
+two new releases account for 132 requests; `v0.3.51` alone records 108 wheel
+and 108 manifest requests but only one portable and one source request. The
+period added 130 wheel and 127 manifest requests but only 5 portable and 5
+source requests. That near-paired, wheel-heavy shape is consistent with Repo
+Scout's own release, verification, pinning, and CI activity, not evidence of
+130 prospects. The checkpoint still records zero pilot requests, zero outreach
+attempts, and $0 booked revenue, so acquisition remains the honest bottleneck
+and the next revenue action is source-identifiable outreach.
 
 The refreshed owner-visible 14-day GitHub traffic checkpoint ending 2026-07-16
 records 3 views from one unique repository viewer, 293 unique cloners, and 962

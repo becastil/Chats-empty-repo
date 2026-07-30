@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after making dependency-audit failures actionable:
-  306 / 1,000 (30.6%).
-- Remaining after making dependency-audit failures actionable:
-  694 commits.
+- Progress after refreshing the reviewed growth evidence:
+  307 / 1,000 (30.7%).
+- Remaining after refreshing the reviewed growth evidence:
+  693 commits.
 
 ## Commit Standard
 
