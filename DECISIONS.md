@@ -5206,3 +5206,25 @@ Installed-command coverage executes the intended approval, manual contact
 record, and next private review sequence across two synthetic prospects. This
 improves experiment completion without claiming a real review, attempt, lead,
 demand, payment, or revenue event.
+
+## 2026-07-30: Enforce One Pending Outreach Approval At A Time
+
+The approval receipt now labels its continuation for use only after the manual
+send is recorded, but the runtime still accepted that review command early.
+An operator could therefore review, decline, or approve a later draft while an
+earlier approved message remained unsent, including accumulating multiple new
+approvals despite the experiment's one-at-a-time boundary.
+
+Whenever an approved row and another draft coexist, Repo Scout now rejects
+review, approval, decline, and owner-only review writing with one alias-safe
+instruction to send manually and use the guarded contact record first. The
+failure emits no success output, leaves ledger bytes and permissions unchanged,
+creates no review or staging file, and does not inspect a prospect in its
+message. After contact recording, the same next-review handoff succeeds.
+
+Multiple approved rows are not made globally invalid. Existing ledgers remain
+reportable, recover the lowest approved alias, and can record those contacts
+sequentially. Source and installed-command tests cover both the new block and
+the recovery path. The live five-draft queue remains unchanged, so this
+enforces acquisition discipline without claiming review, outreach, demand,
+payment, or revenue.

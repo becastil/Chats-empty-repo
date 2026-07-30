@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after carrying approved sends into the remaining review queue:
-  313 / 1,000 (31.3%).
-- Remaining after carrying approved sends into the remaining review queue:
-  687 commits.
+- Progress after enforcing one pending outreach approval at a time:
+  314 / 1,000 (31.4%).
+- Remaining after enforcing one pending outreach approval at a time:
+  686 commits.
 
 ## Commit Standard
 

@@ -634,21 +634,6 @@ def verify_outreach_lifecycle(
             and "After that send is recorded" in approval_continuation.stdout,
             "approval did not preserve the post-contact review handoff",
         )
-        approval_contact_arguments = _handoff_arguments(
-            approval_continuation.stdout,
-            action="--record-contact",
-            ledger=continuation_ledger,
-        )
-        approval_contact_arguments = _replace_event_date(
-            approval_contact_arguments,
-            event_date="2026-07-07",
-            action="approval continuation contact",
-        )
-        _run_arguments(
-            outreach_command,
-            approval_contact_arguments,
-            environment=environment,
-        )
         approval_review_arguments = _handoff_arguments(
             approval_continuation.stdout,
             action="--review-next",
@@ -676,6 +661,43 @@ def verify_outreach_lifecycle(
             len(approval_review_lines) == 1
             and f"'{REVIEW_OUTPUT_PLACEHOLDER}'" in approval_review_lines[0],
             "approval did not emit one shell-safe next-review handoff",
+        )
+        blocked_review_path = Path(tmp) / "blocked approval review.md"
+        blocked_approval_review = approval_review_lines[0].replace(
+            DATE_PLACEHOLDER,
+            "2026-07-07",
+        ).replace(
+            REVIEW_OUTPUT_PLACEHOLDER,
+            str(blocked_review_path),
+        )
+        before_blocked_review = continuation_ledger.read_bytes()
+        blocked_review = _run_arguments(
+            outreach_command,
+            tuple(shlex.split(blocked_approval_review)[1:]),
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(
+            "send the pending approved message manually" in blocked_review.stderr
+            and not blocked_review.stdout
+            and not blocked_review_path.exists()
+            and continuation_ledger.read_bytes() == before_blocked_review,
+            "approval review handoff advanced before contact was recorded",
+        )
+        approval_contact_arguments = _handoff_arguments(
+            approval_continuation.stdout,
+            action="--record-contact",
+            ledger=continuation_ledger,
+        )
+        approval_contact_arguments = _replace_event_date(
+            approval_contact_arguments,
+            event_date="2026-07-07",
+            action="approval continuation contact",
+        )
+        _run_arguments(
+            outreach_command,
+            approval_contact_arguments,
+            environment=environment,
         )
         approval_next_review_path = Path(tmp) / "approval next review.md"
         replaced_approval_review = approval_review_lines[0].replace(

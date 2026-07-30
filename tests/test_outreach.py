@@ -294,13 +294,6 @@ class OutreachReportTests(unittest.TestCase):
                 approved_on="",
             ),
             _row(
-                prospect_id="prospect-003",
-                status="approved",
-                contacted_on="",
-                next_action_on="",
-                approved_on="2026-07-11",
-            ),
-            _row(
                 prospect_id="prospect-001",
                 status="drafted",
                 contacted_on="",
@@ -339,7 +332,6 @@ class OutreachReportTests(unittest.TestCase):
         serialized = json.dumps(report)
         self.assertNotIn("evidence.example", serialized)
         self.assertNotIn("approved_on", serialized)
-        self.assertNotIn("2026-07-11", serialized)
         text = format_next_outreach_review(report, ledger=Path("ledger.csv"))
         self.assertEqual(text.count("- [ ]"), 6)
         self.assertIn(
@@ -449,10 +441,7 @@ class OutreachReportTests(unittest.TestCase):
             ),
             _row(
                 prospect_id="prospect-002",
-                status="approved",
-                contacted_on="",
-                next_action_on="",
-                approved_on="2026-07-12",
+                status="contacted",
             ),
         ]
 
@@ -461,13 +450,13 @@ class OutreachReportTests(unittest.TestCase):
             as_of=date(2026, 7, 13),
             private_drafts={
                 "prospect-001": "Selected message",
-                "prospect-002": "Previously approved message",
+                "prospect-002": "Previously contacted message",
             },
         )
 
         self.assertEqual(report["review"]["prospect_id"], "prospect-001")
         self.assertEqual(report["review"]["private_draft"], "Selected message")
-        self.assertNotIn("Previously approved message", json.dumps(report))
+        self.assertNotIn("Previously contacted message", json.dumps(report))
 
     def test_review_next_cli_does_not_modify_the_private_ledger(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -1584,6 +1573,112 @@ class OutreachReportTests(unittest.TestCase):
             "No drafts are awaiting human review.",
             format_next_outreach_review(report, ledger=Path("ledger.csv")),
         )
+
+    def test_pending_approval_blocks_another_review_or_decision(self) -> None:
+        rows = [
+            _row(
+                prospect_id="prospect-001",
+                status="approved",
+                contacted_on="",
+                next_action_on="",
+                approved_on="2026-07-12",
+            ),
+            _row(
+                prospect_id="prospect-002",
+                status="drafted",
+                contacted_on="",
+                next_action_on="",
+                approved_on="",
+            ),
+        ]
+        message = "send the pending approved message manually"
+
+        with self.assertRaisesRegex(OutreachInputError, message):
+            build_next_outreach_review(rows, as_of=date(2026, 7, 13))
+
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            blocked_review = Path(tmp) / "blocked review.md"
+            cases = (
+                ["--review-next"],
+                ["--review-next", "--write-review", str(blocked_review)],
+                [
+                    "--approve-next",
+                    "prospect-002",
+                    "--approved-on",
+                    "2026-07-13",
+                    "--confirm-reviewed",
+                ],
+                [
+                    "--decline-next",
+                    "prospect-002",
+                    "--confirm-not-send",
+                ],
+            )
+            for arguments in cases:
+                with self.subTest(arguments=arguments):
+                    _write_ledger(ledger, rows)
+                    before = ledger.read_bytes()
+                    before_mode = ledger.stat().st_mode
+                    stdout = io.StringIO()
+                    stderr = io.StringIO()
+                    with redirect_stdout(stdout), redirect_stderr(stderr):
+                        exit_code = main(
+                            [
+                                str(ledger),
+                                "--as-of",
+                                "2026-07-13",
+                                *arguments,
+                            ]
+                        )
+
+                    self.assertEqual(exit_code, 2)
+                    self.assertEqual(stdout.getvalue(), "")
+                    self.assertIn(message, stderr.getvalue())
+                    self.assertNotIn("prospect-001", stderr.getvalue())
+                    self.assertNotIn("evidence.example", stderr.getvalue())
+                    self.assertEqual(ledger.read_bytes(), before)
+                    self.assertEqual(ledger.stat().st_mode, before_mode)
+                    self.assertFalse(blocked_review.exists())
+                    self.assertEqual(
+                        list(Path(tmp).glob(".repo-scout-ledger.*.tmp")),
+                        [],
+                    )
+                    self.assertEqual(
+                        list(Path(tmp).glob(".repo-scout-review.*.tmp")),
+                        [],
+                    )
+
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(
+                    main(
+                        [
+                            str(ledger),
+                            "--as-of",
+                            "2026-07-13",
+                            "--record-contact",
+                            "prospect-001",
+                            "--contacted-on",
+                            "2026-07-13",
+                            "--confirm-sent",
+                        ]
+                    ),
+                    0,
+                )
+            review_stdout = io.StringIO()
+            with redirect_stdout(review_stdout):
+                self.assertEqual(
+                    main(
+                        [
+                            str(ledger),
+                            "--as-of",
+                            "2026-07-13",
+                            "--review-next",
+                        ]
+                    ),
+                    0,
+                )
+            self.assertIn("Prospect alias: prospect-002", review_stdout.getvalue())
 
     def test_approve_next_records_review_without_contact_or_private_data(self) -> None:
         with TemporaryDirectory() as tmp:

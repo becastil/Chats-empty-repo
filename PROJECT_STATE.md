@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 313 of
-1,000, with 687 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 314 of
+1,000, with 686 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -653,6 +653,14 @@ alignment take priority over commit volume.
   private evidence, draft notes, and the exact notes path while requiring the
   approved message to be sent and recorded before the emitted shell-quoted
   `PRIVATE-REVIEW-PATH` command writes the next `600` bundle.
+- A pending-approval queue barrier that rejects another `--review-next`,
+  `--approve-next`, `--decline-next`, or owner-only review write while an
+  approved message and a later draft coexist, without output, ledger mutation,
+  permission drift, or staging residue.
+- Backward-compatible recovery for ledgers that already contain multiple
+  approved rows: aggregate and next-contact reporting remain valid so those
+  messages can be recorded one at a time without permitting another draft
+  decision.
 - Schema-9 alias-only recovery of the next approved message and its guarded
   contact-recording handoff after the one-time approval receipt is lost, with
   machine-readable privacy classification for approved and due-follow-up
@@ -929,8 +937,9 @@ review command.
 Immediately record each human send with guarded `--record-contact`, which
 retains approval and calculates the exact seven-day follow-up. Only after that
 record succeeds, use the approval receipt's separate next-review handoff,
-replace its shell-quoted `PRIVATE-REVIEW-PATH`, and review the next draft. When
-due, send that one follow-up manually and close its cadence through guarded
+replace its shell-quoted `PRIVATE-REVIEW-PATH`, and review the next draft; the
+CLI now rejects that handoff before contact is recorded. When due, send that
+one follow-up manually and close its cadence through guarded
 `--record-follow-up`. Record any explicit `$299` resistance as the
 human-observed `price-objection` outcome instead of collapsing it into
 `not-a-fit`; record an explicit existing-tool or DIY preference as

@@ -299,6 +299,14 @@ review flags and the same notes path, then requires a replaced shell-quoted
 zero, the receipt reports that the bounded review queue will be complete after
 the send is recorded and emits no dead review handoff.
 
+The ordering is fail-closed. If an approved row and another draft coexist,
+`--review-next`, `--approve-next`, `--decline-next`, and owner-only
+`--write-review` output all stop before output, mutation, or staging. Send the
+pending approved message manually and record it with `--record-contact` before
+using the next-review handoff. The controlled error omits aliases and evidence.
+Ledgers that already contain multiple approved rows remain readable so their
+contacts can be recorded one at a time.
+
 After review, the aggregate `Approved to send` count must include the selected
 row before contact; the report still does not reveal its alias. A human must
 then send that approved message through the permitted channel. Immediately

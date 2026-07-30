@@ -91,13 +91,14 @@ they are not users, leads, or revenue.
   at a time and record each human send through guarded `--record-contact`.
   After that record succeeds, use the approval receipt's separate next-review
   handoff and replace its shell-quoted `PRIVATE-REVIEW-PATH` before writing the
-  next complete private bundle. Then record the one human-sent, day-seven
-  follow-up through guarded `--record-follow-up`. Record any human-observed
-  reply, pilot request, price objection, existing-solution objection,
-  rejection, or opt-out through guarded `--record-outcome`; keep explicit
-  price resistance and substitute preference separate from generic fit
-  rejection. Do not add another acquisition asset before executing this
-  bounded review queue.
+  next complete private bundle. The pending-approval barrier must continue to
+  reject review, approval, and decline before that contact record. Then record
+  the one human-sent, day-seven follow-up through guarded
+  `--record-follow-up`. Record any human-observed reply, pilot request, price
+  objection, existing-solution objection, rejection, or opt-out through
+  guarded `--record-outcome`; keep explicit price resistance and substitute
+  preference separate from generic fit rejection. Do not add another
+  acquisition asset before executing this bounded review queue.
 - Collect the first three public pilot requests, work only the schema-10 sales
   queue whose detailed source, purchase-readiness, and purchase-criterion
   attribution for requests, qualification, offers, bookings, revenue,

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Enforced one pending approved outreach message at a time by rejecting another
+  review, approval, decline, or owner-only review write until the existing
+  approved send is recorded.
+- Kept legacy multi-approved ledgers readable and contact-recordable while
+  returning an alias-safe, mutation-free error for blocked draft work.
+- Extended source and installed-command coverage to reject the emitted
+  next-review handoff before contact, then accept the same handoff after the
+  manual send record succeeds.
 - Advanced private approval receipts to schema 2 with a privacy-safe
   remaining-draft count and a truthful terminal queue state.
 - Added a distinct post-contact next-review handoff for nonterminal approvals,

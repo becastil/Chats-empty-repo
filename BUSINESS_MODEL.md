@@ -1214,6 +1214,16 @@ successful send. At zero, the receipt ends the bounded queue without a dead
 handoff. This removes manual command reconstruction without completing a
 review, sending a message, or treating operator activity as demand.
 
+That sequence is now enforced rather than merely described. While any approved
+message and another drafted row coexist, review, approval, decline, and
+owner-only review writing fail before output or mutation. The operator must
+send the pending approved message manually and record it through the existing
+guarded contact transition before the next draft can advance. Reports still
+read legacy ledgers with multiple approved rows and recover the lowest alias
+for contact recording, so the new boundary does not strand earlier evidence.
+This serializes the paid-offer experiment without sending outreach, inferring a
+send, or creating demand or revenue evidence.
+
 When the human instead decides a draft must not be sent, guarded
 `--decline-next` requires the exact same next alias and an explicit no-send
 confirmation. The generated complete-review command revalidates the same

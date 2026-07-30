@@ -209,6 +209,7 @@ def approve_next_outreach_draft(
         )
     rows, ledger_revision = _load_outreach_snapshot(path)
     build_outreach_report(rows, as_of=report_date)
+    _require_no_pending_outreach_approval(rows)
     next_draft = _next_status_row(rows, "drafted")
     if next_draft is None:
         raise OutreachInputError("no drafted prospects await human approval")
@@ -289,6 +290,7 @@ def decline_next_outreach_draft(
         )
     rows, ledger_revision = _load_outreach_snapshot(path)
     build_outreach_report(rows, as_of=report_date)
+    _require_no_pending_outreach_approval(rows)
     next_draft = _next_status_row(rows, "drafted")
     if next_draft is None:
         raise OutreachInputError("no drafted prospects await a review decision")
@@ -1346,6 +1348,7 @@ def build_next_outreach_review(
     private_drafts: Mapping[str, str] | None = None,
 ) -> dict[str, Any]:
     build_outreach_report(rows, as_of=as_of)
+    _require_no_pending_outreach_approval(rows)
     if private_drafts is not None:
         ledger_ids = {
             (row.get("prospect_id") or "").strip() for row in rows
@@ -1509,6 +1512,19 @@ def _private_review_disclosure_note(
     if draft_included:
         return "Private draft notes are included only for human review."
     return "Private evidence links and draft notes remain redacted."
+
+
+def _require_no_pending_outreach_approval(
+    rows: list[dict[str, str | None]],
+) -> None:
+    if (
+        _next_status_row(rows, "drafted") is not None
+        and _next_status_row(rows, "approved") is not None
+    ):
+        raise OutreachInputError(
+            "send the pending approved message manually, then record it with "
+            "--record-contact before reviewing or deciding another draft"
+        )
 
 
 def _next_status_row(
