@@ -372,7 +372,7 @@ def verify_outreach_lifecycle(
         )
         declined_summary = declined_report.get("summary", {})
         _require(
-            declined_report.get("schema_version") == 9,
+            declined_report.get("schema_version") == 10,
             "outreach schema changed",
         )
         _require(
@@ -862,7 +862,7 @@ def verify_outreach_lifecycle(
             as_of="2026-07-02",
             environment=environment,
         )
-        _require(approved_report.get("schema_version") == 9, "schema changed")
+        _require(approved_report.get("schema_version") == 10, "schema changed")
         _require(
             approved_report.get("experiment", {}).get("human_approval_required")
             is True,
@@ -1162,6 +1162,68 @@ def verify_outreach_lifecycle(
             "outcome observation date was not retained",
         )
         checked.append("pilot-outcome-recorded")
+
+        price_objection_ledger = Path(tmp) / "price objection ledger.csv"
+        _write_ledger(
+            price_objection_ledger,
+            _row(
+                status="replied",
+                next_action_on="",
+                outcome_on="2026-07-11",
+            ),
+        )
+        price_objection_ledger.chmod(0o600)
+        price_objection = _json_command(
+            outreach_command,
+            price_objection_ledger,
+            as_of="2026-07-12",
+            arguments=(
+                "--record-outcome",
+                "prospect-001",
+                "--outcome",
+                "price-objection",
+                "--outcome-on",
+                "2026-07-12",
+                "--confirm-outcome-observed",
+            ),
+            environment=environment,
+        )
+        _require(
+            price_objection.get("schema_version") == 3,
+            "price-objection receipt schema changed",
+        )
+        _require(
+            price_objection.get("outcome", {}).get("status")
+            == "price-objection",
+            "human-observed price objection was not recorded",
+        )
+        _require(
+            price_objection.get("public_pilot_intake_url") is None,
+            "price objection exposed a pilot conversion URL",
+        )
+        price_objection_row = _read_row(price_objection_ledger)
+        _require(
+            price_objection_row["status"] == "price-objection"
+            and not price_objection_row["next_action_on"]
+            and price_objection_row["outcome_on"] == "2026-07-11",
+            "price objection did not preserve the first reply observation",
+        )
+        price_objection_report = _report(
+            outreach_command,
+            price_objection_ledger,
+            as_of="2026-07-12",
+            environment=environment,
+        )
+        _require(
+            price_objection_report.get("summary", {}).get("price_objections")
+            == 1,
+            "price objection was not counted separately",
+        )
+        _require(
+            price_objection_report.get("summary", {}).get("closed") == 1,
+            "price objection did not close the outreach cadence",
+        )
+        checked.append("price-objection-recorded")
 
         _write_ledger(ledger, _row(approved_on=""))
         missing_approval = _run(

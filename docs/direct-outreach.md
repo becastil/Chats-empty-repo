@@ -94,8 +94,9 @@ this public repository.
 Separate fit-signal keys with semicolons. Use `warm-intro` or
 `published-business` as the channel. Allowed statuses are `researched`,
 `drafted`, `review-declined`, `approved`, `contacted`, `followed-up`, `replied`,
-`pilot-requested`, `not-a-fit`, and `do-not-contact`. Use `drafted` only after a
-personalized message has been saved for review through a permitted channel.
+`pilot-requested`, `price-objection`, `not-a-fit`, and `do-not-contact`. Use
+`drafted` only after a personalized message has been saved for review through a
+permitted channel.
 Change it to `approved` only after a human confirms that the public observation
 is accurate and current, the recipient and published business channel are
 appropriate, and the message accurately states the price, scope, local-code
@@ -341,8 +342,9 @@ because it includes the alias and `as_of` context. Repo Scout sends nothing and
 schedules no additional message. Its text receipt repeats the same exact outcome
 handoff so the operator does not need to reconstruct the alias or ledger path.
 
-When a human observes a reply, pilot request, rejection, or opt-out after the
-initial contact or follow-up, stop the cadence without hand-editing the ledger:
+When a human observes a reply, pilot request, price objection, rejection, or
+opt-out after the initial contact or follow-up, stop the cadence without
+hand-editing the ledger:
 
 ```bash
 repo-scout-outreach outreach-private/outreach-ledger.csv \
@@ -355,8 +357,9 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
 
 `--record-outcome` accepts an exact contacted or followed-up alias because
 responses can arrive out of send order. Supported outcomes are `replied`,
-`pilot-requested`, `not-a-fit`, and `do-not-contact`; a generic `replied` row
-may later move to one of the three specific outcomes after a human observes it.
+`pilot-requested`, `price-objection`, `not-a-fit`, and `do-not-contact`; a
+generic `replied` row may later move to one of the four specific outcomes after
+a human observes it.
 The required `--outcome-on` records that observation date in `outcome_on`,
 separately from the `--as-of` date used to audit the complete ledger. This
 allows a response observed earlier to be recorded honestly during a later
@@ -371,9 +374,9 @@ UTC observation date, and `OUTCOME` with a supported status; leaving any
 placeholder unchanged fails during argument parsing before the private ledger
 is read or modified.
 The generic `replied` receipt emits one final guarded handoff for exactly
-`pilot-requested`, `not-a-fit`, or `do-not-contact`, retaining the same alias
-and ledger path while requiring a fresh observation date. Terminal outcome
-receipts emit no further action command.
+`pilot-requested`, `price-objection`, `not-a-fit`, or `do-not-contact`,
+retaining the same alias and ledger path while requiring a fresh observation
+date. Terminal outcome receipts emit no further action command.
 The guarded action requires explicit confirmation, validates the complete
 ledger before and after the transition, preserves approval, contact, and
 follow-up history, and atomically changes only `status` while clearing
@@ -383,6 +386,9 @@ The private receipt omits evidence and action dates. Repo Scout sends nothing
 and schedules no further message. A private `pilot-requested` status is an
 operator signal only; ask the prospect to submit the public pilot intake before
 counting demand, payment, or revenue.
+A terminal `price-objection` records only human-observed willingness-to-pay
+evidence, closes the cadence, and increments the aggregate
+`price_objections` count. It is not a lead, sale, payment, or revenue event.
 
 The current ledger template has ten columns, ending in `outcome_on`. Existing
 nine-column ledgers remain readable, and the first guarded mutation upgrades
@@ -390,7 +396,7 @@ them to the current shape. Repo Scout does not invent observation dates for
 older outcome rows: the aggregate report counts those as undated legacy
 outcomes so the missing history remains explicit.
 
-Outcome receipt schema 2 includes the existing public intake URL only for
+Outcome receipt schema 3 includes the existing public intake URL only for
 `pilot-requested`, with `Direct outreach` visibly prefilled:
 
 <https://github.com/becastil/Chats-empty-repo/issues/new?template=founding-team-pilot.yml&discovery_source=Direct+outreach>
@@ -435,9 +441,11 @@ The recovery output omits the draft, evidence, channel, and approval date.
 Every report now includes a machine-readable `private_output` flag and matching
 privacy note: any next-approved or due-follow-up alias makes the output private,
 while a report with neither is explicitly counts-only. Source URLs never appear
-in report output. The command never sends outreach, and its
-reply or pilot-requested counts do not become public demand or revenue evidence;
-only public pilot intake and cumulative funnel labels do.
+in report output. The command never sends outreach, and its reply,
+pilot-requested, or price-objection counts do not become public demand or
+revenue evidence; only public pilot intake and cumulative funnel labels do.
+Schema 10 adds the terminal `price-objection` state and reports its dedicated
+aggregate count without exposing prospect aliases or response text.
 
 A reviewed batch may publish the command's counts-only JSON as a measurement
 baseline only when `private_output` is `false`. Before committing it, also

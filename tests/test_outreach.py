@@ -153,26 +153,33 @@ class OutreachReportTests(unittest.TestCase):
                 next_action_on="",
                 approved_on="",
             ),
+            _row(
+                prospect_id="prospect-010",
+                status="price-objection",
+                next_action_on="",
+            ),
         ]
 
         report = build_outreach_report(rows, as_of=date(2026, 7, 10))
 
-        self.assertEqual(report["schema_version"], 9)
+        self.assertEqual(report["schema_version"], 10)
         self.assertTrue(report["experiment"]["human_approval_required"])
-        self.assertEqual(report["summary"]["prospects"], 9)
-        self.assertEqual(report["summary"]["attempted_prospects"], 5)
+        self.assertEqual(report["summary"]["prospects"], 10)
+        self.assertEqual(report["summary"]["attempted_prospects"], 6)
         self.assertEqual(report["summary"]["drafted"], 1)
         self.assertEqual(report["summary"]["review_declined"], 1)
         self.assertEqual(report["summary"]["approved"], 1)
-        self.assertEqual(report["summary"]["closed"], 2)
-        self.assertEqual(report["summary"]["fit_evidence_links"], 27)
+        self.assertEqual(report["summary"]["price_objections"], 1)
+        self.assertEqual(report["summary"]["closed"], 3)
+        self.assertEqual(report["summary"]["fit_evidence_links"], 30)
         self.assertEqual(report["summary"]["dated_outcomes"], 0)
-        self.assertEqual(report["summary"]["undated_outcomes"], 3)
+        self.assertEqual(report["summary"]["undated_outcomes"], 4)
         text = format_outreach_report(report, ledger=Path("private ledger.csv"))
         self.assertIn("Drafts awaiting review: 1", text)
         self.assertIn("Approved to send: 1", text)
         self.assertIn("Declined before contact: 1", text)
-        self.assertIn("Qualification links: 27", text)
+        self.assertIn("Price objections: 1", text)
+        self.assertIn("Qualification links: 30", text)
         self.assertEqual(
             report["next_approved"], {"prospect_id": "prospect-008"}
         )
@@ -2290,7 +2297,7 @@ class OutreachReportTests(unittest.TestCase):
             )
 
             report = load_outreach_report(ledger, as_of=date(2026, 7, 13))
-            self.assertEqual(report["schema_version"], 9)
+            self.assertEqual(report["schema_version"], 10)
             self.assertEqual(report["summary"]["review_declined"], 1)
             self.assertEqual(report["summary"]["closed"], 1)
             self.assertEqual(report["summary"]["attempted_prospects"], 0)
@@ -3081,7 +3088,8 @@ class OutreachReportTests(unittest.TestCase):
                 ]
             )
             self.assertIn(
-                "one of pilot-requested, not-a-fit, do-not-contact",
+                "one of pilot-requested, price-objection, not-a-fit, "
+                "do-not-contact",
                 outcome_output,
             )
             self.assertNotIn("one of replied", outcome_output)
@@ -3324,7 +3332,7 @@ class OutreachReportTests(unittest.TestCase):
             self.assertEqual(report["summary"]["attempted_prospects"], 2)
             self.assertEqual(report["summary"]["due_followups"], 0)
             receipt = json.loads(stdout.getvalue())
-            self.assertEqual(receipt["schema_version"], 2)
+            self.assertEqual(receipt["schema_version"], 3)
             self.assertTrue(receipt["private_output"])
             self.assertTrue(receipt["human_outcome_confirmed"])
             self.assertEqual(receipt["outcome"]["status"], "pilot-requested")
@@ -3390,6 +3398,7 @@ class OutreachReportTests(unittest.TestCase):
                 "do-not-contact",
             ),
             (_row(status="replied", next_action_on=""), "not-a-fit"),
+            (_row(), "price-objection"),
         )
         for row, outcome in cases:
             with self.subTest(source=row["status"], outcome=outcome):
@@ -3427,6 +3436,14 @@ class OutreachReportTests(unittest.TestCase):
                     self.assertEqual(updated["followed_up_on"], row["followed_up_on"])
                     self.assertEqual(updated["next_action_on"], "")
                     self.assertEqual(updated["outcome_on"], "2026-07-10")
+                    if outcome == "price-objection":
+                        text = format_outreach_outcome(receipt, ledger=ledger)
+                        self.assertIn("willingness-to-pay evidence", text)
+                        report = load_outreach_report(
+                            ledger,
+                            as_of=date(2026, 7, 10),
+                        )
+                        self.assertEqual(report["summary"]["price_objections"], 1)
 
     def test_refined_outcome_cannot_precede_recorded_reply(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -4488,7 +4505,7 @@ class OutreachReportTests(unittest.TestCase):
 
             report = load_outreach_report(ledger, as_of=date(2026, 7, 13))
 
-            self.assertEqual(report["schema_version"], 9)
+            self.assertEqual(report["schema_version"], 10)
             self.assertEqual(report["summary"]["dated_outcomes"], 0)
             self.assertEqual(report["summary"]["undated_outcomes"], 1)
 

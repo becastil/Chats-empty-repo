@@ -525,13 +525,15 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
   --confirm-outcome-observed
 ```
 
-The guarded action accepts `replied`, `pilot-requested`, `not-a-fit`, or
-`do-not-contact` after contact, preserves approval and send history, and clears
-any pending follow-up. `--as-of` is the UTC ledger-audit date, while the
-required `--outcome-on` retains when the human actually observed the response
-or stop condition. It sends nothing. Private outreach outcomes remain operator
-evidence; only public pilot intake and paid funnel stages count as demand or
-revenue.
+The guarded action accepts `replied`, `pilot-requested`, `price-objection`,
+`not-a-fit`, or `do-not-contact` after contact, preserves approval and send
+history, and clears any pending follow-up. `--as-of` is the UTC ledger-audit
+date, while the required `--outcome-on` retains when the human actually
+observed the response or stop condition. A terminal `price-objection` preserves
+human-observed willingness-to-pay evidence in the dedicated
+`price_objections` aggregate without treating it as demand or revenue. The
+action sends nothing. Only public pilot intake and paid funnel stages count as
+demand or revenue.
 
 The reporter enforces the 10-prospect experiment, three-signal qualification,
 one private HTTPS evidence link per signal, permitted contact channels, one
@@ -551,8 +553,10 @@ text note mark reports with that alias or any due-follow-up alias as private;
 only reports containing neither are marked counts-only. A review-declined row
 counts as closed without becoming a contact attempt. The auditor also rejects
 malformed CSV and any row with missing or extra cells instead of silently
-dropping private sales evidence. Its activity totals are not lead or revenue
-evidence. See
+dropping private sales evidence. Schema-10 reports add the terminal
+`price-objection` state and a dedicated `price_objections` count so the bounded
+experiment can separate explicit price resistance from a generic fit rejection.
+Its activity totals are not lead or revenue evidence. See
 [docs/direct-outreach.md](docs/direct-outreach.md) for the operating contract.
 
 Install it locally in editable mode:

@@ -52,7 +52,7 @@ partial rankings rather than exhaustive traffic reconciliations.
 - `github-traffic-baseline.json` preserves the owner-visible 14-day aggregate,
   daily series, partial top referrers, and partial popular paths without visitor
   identities.
-- `outreach-draft-baseline.json` preserves only schema-9 aggregate counts; it
+- `outreach-draft-baseline.json` preserves only schema-10 aggregate counts; it
   contains no prospect alias, company, contact address, draft, or source URL.
 
 ## Refresh Contract

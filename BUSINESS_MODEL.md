@@ -980,7 +980,7 @@ boundary by rejecting group/world-accessible files and immediate parent
 directories before reading private material. Counts-only validation of the
 empty public template remains available. This reduces accidental prospect-data
 disclosure; it does not approve a draft, create an attempt, or establish demand.
-The committed schema-9 checkpoint contains only aggregate counts. The first
+The committed schema-10 checkpoint contains only aggregate counts. The first
 complete owner-only review bundle was created in the ignored private workspace
 from the verified `v0.3.48` wheel without changing the ledger, but its July 21
 schema-4 date binding is now superseded and must not be used for a later
@@ -1268,14 +1268,15 @@ truthfully while validation still rejects a send before the due date.
 
 When a response or stop condition arrives, guarded `--record-outcome` records
 the exact alias because replies can arrive out of send order. It accepts
-`replied`, `pilot-requested`, `not-a-fit`, or `do-not-contact` only after contact,
-requires explicit confirmation that a human observed the outcome, preserves
-approval and contact history, and clears any pending follow-up. A generic reply
-may later be refined to a specific terminal outcome, but the refinement date
-cannot precede the recorded reply date and does not replace that first
-observation date. New outcomes retain their actual observation date in
-`outcome_on`; legacy nine-column ledgers remain readable, and older outcomes
-without dates are reported as undated rather than assigned invented history.
+`replied`, `pilot-requested`, `price-objection`, `not-a-fit`, or
+`do-not-contact` only after contact, requires explicit confirmation that a
+human observed the outcome, preserves approval and contact history, and clears
+any pending follow-up. A generic reply may later be refined to a specific
+terminal outcome, but the refinement date cannot precede the recorded reply
+date and does not replace that first observation date. New outcomes retain
+their actual observation date in `outcome_on`; legacy nine-column ledgers
+remain readable, and older outcomes without dates are reported as undated
+rather than assigned invented history.
 The required `--outcome-on` can precede the ledger's `--as-of` audit date, so a
 later operating session can preserve an earlier human observation; an outcome
 after the audit date is rejected. The action sends nothing and schedules
@@ -1285,12 +1286,15 @@ shell-quoted outcome handoff. Separate required recording-date,
 observation-date, and status placeholders stop an unchanged command before
 ledger access, keeping the operator responsible for the observed evidence. A
 generic reply receipt similarly carries one exact refinement handoff limited
-to `pilot-requested`, `not-a-fit`, or `do-not-contact`; terminal outcomes emit
-no next command.
+to `pilot-requested`, `price-objection`, `not-a-fit`, or `do-not-contact`;
+terminal outcomes emit no next command.
 Private `pilot-requested` is an operator signal, not a public funnel event; the
 prospect must still submit pilot intake, and booked revenue requires the
 human-applied `pilot-paid` label.
-Outcome receipt schema 2 now carries the existing GitHub intake with
+Private `price-objection` is human-observed willingness-to-pay evidence, not a
+lead or sale. Report schema 10 gives it a dedicated `price_objections` count
+and closes the contact cadence without exposing response text.
+Outcome receipt schema 3 now carries the existing GitHub intake with
 `Direct outreach` visibly prefilled in both JSON and default text, but only for
 that private pilot-interest status. Other outcomes expose no conversion link.
 The tool does not open or submit the form, and the prospect retains control of

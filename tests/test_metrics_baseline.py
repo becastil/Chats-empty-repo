@@ -165,7 +165,7 @@ class MetricsBaselineTests(unittest.TestCase):
         summary = report["summary"]
         serialized = json.dumps(report)
 
-        self.assertEqual(report["schema_version"], 9)
+        self.assertEqual(report["schema_version"], 10)
         self.assertEqual(report["as_of"], "2026-07-21")
         self.assertEqual(summary["prospects"], 5)
         self.assertEqual(summary["drafted"], 5)
@@ -175,6 +175,7 @@ class MetricsBaselineTests(unittest.TestCase):
         self.assertEqual(summary["contacted"], 0)
         self.assertEqual(summary["replied"], 0)
         self.assertEqual(summary["pilot_requested"], 0)
+        self.assertEqual(summary["price_objections"], 0)
         self.assertEqual(summary["review_declined"], 0)
         self.assertEqual(summary["dated_outcomes"], 0)
         self.assertEqual(summary["undated_outcomes"], 0)

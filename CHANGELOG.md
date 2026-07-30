@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Added a guarded terminal `price-objection` outreach outcome and dedicated
+  aggregate count so explicit `$299` resistance remains distinct from generic
+  fit rejection.
+- Advanced outreach reports to schema 10 and outcome receipts to schema 3,
+  retaining human-observation confirmation, first-reply dates, closed cadence,
+  and null conversion links for price objections.
+- Extended the installed outreach lifecycle to record and count a price
+  objection without exposing private response content or inventing demand.
+- Reissued the counts-only five-draft checkpoint as schema 10 with zero price
+  objections, zero attempts, and no private aliases or evidence.
 - Required exactly one `$299` disclosure in every complete outreach review
   before Repo Scout can emit a content-bound receipt or owner-only bundle.
 - Added API, owner-only file-writing, stale-decision, and installed-lifecycle

@@ -31,8 +31,13 @@ class DirectOutreachContractTests(unittest.TestCase):
 
         self.assertNotIn("Unreleased schema-", readme)
         self.assertIn(
-            f"Schema-{SCHEMA_VERSION} reports add explicit human-approved and "
+            "Schema-9 reports add explicit human-approved and "
             "review-declined pre-send counts",
+            normalized_readme,
+        )
+        self.assertIn(
+            f"Schema-{SCHEMA_VERSION} reports add the terminal "
+            "`price-objection` state",
             normalized_readme,
         )
         self.assertIn(
@@ -207,6 +212,14 @@ class DirectOutreachContractTests(unittest.TestCase):
         )
         self.assertIn("--record-outcome", playbook)
         self.assertIn("--confirm-outcome-observed", playbook)
+        self.assertIn("`price-objection`", playbook)
+        self.assertIn(
+            "human-observed willingness-to-pay evidence",
+            normalized_playbook,
+        )
+        self.assertIn("`price_objections` count", normalized_playbook)
+        self.assertIn("Outcome receipt schema 3", playbook)
+        self.assertIn(f"Schema {SCHEMA_VERSION} adds", playbook)
         self.assertIn(
             "atomically changes only `status` while clearing `next_action_on`",
             normalized_playbook,
@@ -246,6 +259,8 @@ class DirectOutreachContractTests(unittest.TestCase):
         readme = README.read_text(encoding="utf-8")
         self.assertIn("current UTC calendar date", " ".join(readme.split()))
         self.assertNotIn('$(date +%F)', readme)
+        self.assertIn("`price-objection`", readme)
+        self.assertIn("`price_objections`", readme)
 
     def test_private_ledger_template_has_no_prospect_data(self) -> None:
         with LEDGER_TEMPLATE.open(newline="", encoding="utf-8") as ledger_file:

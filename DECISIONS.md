@@ -5136,3 +5136,27 @@ existing schema-6 queue passes the new preflight without changing its receipt
 or prospect state. This makes approved attempts a cleaner willingness-to-pay
 test; it does not perform human review, approve or send outreach, prove demand,
 collect payment, or create revenue.
+
+## 2026-07-30: Preserve Explicit Price Resistance As Its Own Outcome
+
+Decision-ready messages now disclose the `$299` offer, but the guarded outreach
+ledger could classify an observed response only as a generic reply, pilot
+request, fit rejection, or opt-out. Recording explicit price resistance as
+`not-a-fit` would erase the willingness-to-pay signal that the bounded
+experiment is intended to collect.
+
+`price-objection` is now a terminal, human-observed outcome available only
+through the existing confirmed and dated post-contact transition. It preserves
+approval, contact, follow-up, and first-reply timing, clears the remaining
+cadence, exposes no public intake link, contributes to `closed`, and receives a
+dedicated `price_objections` aggregate. Report schema 10 and outcome receipt
+schema 3 make the expanded status contract explicit; review receipt schema 6
+and the ten-column private ledger remain unchanged.
+
+The counts-only five-draft checkpoint was reissued under schema 10 with zero
+price objections, attempts, replies, or pilot requests and no private aliases
+or evidence. Installed-lifecycle coverage proves the packaged command can
+refine a reply into the new terminal state without replacing its first
+observation date. This preserves negative price evidence when a human later
+observes it; it does not approve or send outreach, infer an objection from
+silence, establish demand, collect payment, or create revenue.

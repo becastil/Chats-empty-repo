@@ -8,6 +8,7 @@
     "followed-up": 0,
     "not-a-fit": 0,
     "pilot-requested": 0,
+    "price-objection": 0,
     "replied": 0,
     "researched": 0,
     "review-declined": 0
@@ -23,7 +24,7 @@
   "next_approved": null,
   "privacy_note": "This report is counts-only and contains no prospect aliases.",
   "private_output": false,
-  "schema_version": 9,
+  "schema_version": 10,
   "summary": {
     "approved": 0,
     "attempted_prospects": 0,
@@ -35,6 +36,7 @@
     "fit_evidence_links": 16,
     "followed_up": 0,
     "pilot_requested": 0,
+    "price_objections": 0,
     "prospects": 5,
     "replied": 0,
     "researched": 0,

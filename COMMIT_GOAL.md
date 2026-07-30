@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after enforcing paid-price disclosure in decision-ready outreach:
-  310 / 1,000 (31.0%).
-- Remaining after enforcing paid-price disclosure in decision-ready outreach:
-  690 commits.
+- Progress after preserving human-observed outreach price objections:
+  311 / 1,000 (31.1%).
+- Remaining after preserving human-observed outreach price objections:
+  689 commits.
 
 ## Commit Standard
 
