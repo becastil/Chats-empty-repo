@@ -91,10 +91,11 @@ they are not users, leads, or revenue.
   at a time, record
   each human send through guarded `--record-contact`, then record the one
   human-sent, day-seven follow-up through guarded `--record-follow-up`. Record
-  any human-observed reply, pilot request, price objection, rejection, or
-  opt-out through guarded `--record-outcome`; keep explicit price resistance
-  separate from generic fit rejection. Do not add another acquisition asset
-  before executing this bounded review queue.
+  any human-observed reply, pilot request, price objection, existing-solution
+  objection, rejection, or opt-out through guarded `--record-outcome`; keep
+  explicit price resistance and substitute preference separate from generic
+  fit rejection. Do not add another acquisition asset before executing this
+  bounded review queue.
 - Collect the first three public pilot requests, work only the schema-10 sales
   queue whose detailed source, purchase-readiness, and purchase-criterion
   attribution for requests, qualification, offers, bookings, revenue,

@@ -5160,3 +5160,26 @@ refine a reply into the new terminal state without replacing its first
 observation date. This preserves negative price evidence when a human later
 observes it; it does not approve or send outreach, infer an objection from
 silence, establish demand, collect payment, or create revenue.
+
+## 2026-07-30: Preserve Existing Solutions As Their Own Outreach Outcome
+
+The paid pilot competes with native repository controls, general policy
+engines, internal scripts, and the choice to keep doing the work manually.
+Treating an explicit preference for one of those substitutes as
+`price-objection` or `not-a-fit` would hide whether Repo Scout's commercial
+problem is price, positioning, or replacement friction.
+
+`existing-solution` is now a terminal, human-observed outcome available only
+through the confirmed and dated post-contact transition. It preserves first
+reply timing, closes the cadence, exposes no public intake link, contributes to
+`closed`, and receives a dedicated `existing_solution_objections` aggregate.
+Report schema 11 and outcome receipt schema 4 make the expanded contract
+explicit; the private ledger shape remains unchanged.
+
+The counts-only five-draft checkpoint was reissued under schema 11 with zero
+existing-solution objections, attempts, replies, or pilot requests. Installed
+lifecycle coverage proves the packaged command can refine a reply into this
+state without replacing its first observation date. This records substitute
+evidence only when a human sees it; it does not retain response text, identify
+the substitute, infer intent from silence, establish demand, collect payment,
+or create revenue.

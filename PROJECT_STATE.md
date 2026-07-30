@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 311 of
-1,000, with 689 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 312 of
+1,000, with 688 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -692,7 +692,10 @@ alignment take priority over commit volume.
 - A terminal `price-objection` outcome and dedicated aggregate count that
   preserve human-observed `$299` resistance separately from generic fit
   rejection without counting it as demand or revenue.
-- Schema-3 outcome receipts that carry the existing source-prefilled public
+- A terminal `existing-solution` outcome and dedicated aggregate count that
+  preserve human-observed substitute or DIY preference separately from price
+  and fit objections without retaining reply text or claiming demand.
+- Schema-4 outcome receipts that carry the existing source-prefilled public
   intake only for private pilot interest, without opening or submitting it.
 - Safe refinement of generic replies into specific terminal outcomes without
   converting private outreach status into public demand or revenue evidence.
@@ -738,9 +741,10 @@ alignment take priority over commit volume.
   installed-command behavior, and consistent wheel and zipapp version identity.
 - Five personalized, qualified outreach drafts prepared from narrow
   company-controlled public evidence and kept in the ignored private workspace.
-- A committed schema-10 outreach review checkpoint proving 5 drafts, 16 reviewed
-  fit links, 0 approvals, and 0 attempts while exposing no identity, address,
-  alias, draft, review date, or source URL.
+- A committed schema-11 outreach review checkpoint proving 5 drafts, 16
+  reviewed fit links, 0 approvals, 0 attempts, and 0 existing-solution
+  objections while exposing no identity, address, alias, draft, review date, or
+  source URL.
 - Backward-compatible policy v2 `forbidden_files` rules with normalized exact paths and contradictory-rule rejection.
 - Git-aware forbidden-file enforcement that catches tracked or unignored files without failing properly ignored local environment files.
 - Manual team-policy, CLI, fingerprint, and compatibility coverage for `.env` and `.env.local` protection.
@@ -920,8 +924,10 @@ retains approval and calculates the exact seven-day follow-up before the next
 message. When due, send that one follow-up manually and close its cadence
 through guarded `--record-follow-up`. Record any explicit `$299` resistance as
 the human-observed `price-objection` outcome instead of collapsing it into
-`not-a-fit`. No outreach has been approved or attempted yet, and drafts are not
-leads or revenue. Do not add another acquisition asset or paid-policy feature
-before five real attempts.
+`not-a-fit`; record an explicit existing-tool or DIY preference as
+`existing-solution` instead of collapsing it into price or fit rejection. No
+outreach has been approved or attempted yet, and drafts are not leads or
+revenue. Do not add another acquisition asset or paid-policy feature before
+five real attempts.
 Release, pilot, repository-traffic, and outreach-draft baselines are recorded;
 refresh them only at a deliberate review point or meaningful funnel change.

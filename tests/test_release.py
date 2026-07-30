@@ -621,6 +621,7 @@ class ReleaseManifestTests(unittest.TestCase):
                 "unconfirmed-outcome-rejected",
                 "pilot-outcome-recorded",
                 "price-objection-recorded",
+                "existing-solution-recorded",
                 "missing-approval-rejected",
                 "extra-column-rejected",
             ),

@@ -29,13 +29,13 @@ elif os.name == "nt":
     import msvcrt
 
 
-SCHEMA_VERSION = 10
+SCHEMA_VERSION = 11
 REVIEW_SCHEMA_VERSION = 6
 APPROVAL_SCHEMA_VERSION = 1
 DECLINE_SCHEMA_VERSION = 2
 CONTACT_SCHEMA_VERSION = 1
 FOLLOW_UP_SCHEMA_VERSION = 1
-OUTCOME_SCHEMA_VERSION = 3
+OUTCOME_SCHEMA_VERSION = 4
 MAX_PROSPECTS = 10
 FOLLOW_UP_DAYS = 7
 MAX_FOLLOW_UPS = 1
@@ -90,6 +90,7 @@ STATUSES = (
     "replied",
     "pilot-requested",
     "price-objection",
+    "existing-solution",
     "not-a-fit",
     "do-not-contact",
 )
@@ -100,6 +101,7 @@ NO_NEXT_ACTION_STATUSES = {
     "replied",
     "pilot-requested",
     "price-objection",
+    "existing-solution",
     "not-a-fit",
     "do-not-contact",
 }
@@ -107,12 +109,14 @@ OUTCOME_STATUSES = (
     "replied",
     "pilot-requested",
     "price-objection",
+    "existing-solution",
     "not-a-fit",
     "do-not-contact",
 )
 REFINED_OUTCOME_STATUSES = (
     "pilot-requested",
     "price-objection",
+    "existing-solution",
     "not-a-fit",
     "do-not-contact",
 )
@@ -1276,6 +1280,7 @@ def build_outreach_report(
     closed = (
         status_counts["review-declined"]
         + status_counts["price-objection"]
+        + status_counts["existing-solution"]
         + status_counts["not-a-fit"]
         + status_counts["do-not-contact"]
     )
@@ -1300,6 +1305,7 @@ def build_outreach_report(
             "replied": status_counts["replied"],
             "pilot_requested": status_counts["pilot-requested"],
             "price_objections": status_counts["price-objection"],
+            "existing_solution_objections": status_counts["existing-solution"],
             "closed": closed,
             "due_followups": len(due_followups),
             "fit_evidence_links": fit_evidence_links,
@@ -1546,6 +1552,10 @@ def format_outreach_report(
         f"Due follow-ups: {summary['due_followups']}",
         f"Ledger pilot requests: {summary['pilot_requested']}",
         f"Price objections: {summary['price_objections']}",
+        (
+            "Existing-solution objections: "
+            f"{summary['existing_solution_objections']}"
+        ),
         (
             "Dated outcomes: "
             f"{summary['dated_outcomes']} / "
@@ -1913,6 +1923,11 @@ def format_outreach_outcome(
             "Next: retain this as human-observed willingness-to-pay evidence "
             "and stop contact."
         )
+    elif outcome["status"] == "existing-solution":
+        next_step = (
+            "Next: retain this as human-observed substitute evidence and stop "
+            "contact."
+        )
     else:
         next_step = "Next: stop contact; no further message is scheduled."
     lines = [
@@ -1993,7 +2008,8 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="PROSPECT_ID",
         help=(
             "Record a human-observed reply, pilot request, price objection, "
-            "rejection, or opt-out for a contacted prospect."
+            "existing-solution objection, rejection, or opt-out for a contacted "
+            "prospect."
         ),
     )
     action_group.add_argument(

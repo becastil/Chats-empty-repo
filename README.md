@@ -526,14 +526,16 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
 ```
 
 The guarded action accepts `replied`, `pilot-requested`, `price-objection`,
-`not-a-fit`, or `do-not-contact` after contact, preserves approval and send
-history, and clears any pending follow-up. `--as-of` is the UTC ledger-audit
-date, while the required `--outcome-on` retains when the human actually
-observed the response or stop condition. A terminal `price-objection` preserves
-human-observed willingness-to-pay evidence in the dedicated
-`price_objections` aggregate without treating it as demand or revenue. The
-action sends nothing. Only public pilot intake and paid funnel stages count as
-demand or revenue.
+`existing-solution`, `not-a-fit`, or `do-not-contact` after contact, preserves
+approval and send history, and clears any pending follow-up. `--as-of` is the
+UTC ledger-audit date, while the required `--outcome-on` retains when the human
+actually observed the response or stop condition. A terminal
+`price-objection` preserves human-observed willingness-to-pay evidence in the
+dedicated `price_objections` aggregate without treating it as demand or
+revenue. A terminal `existing-solution` preserves explicit substitute or DIY
+preference in `existing_solution_objections`, without storing response text or
+claiming a competitor win. The action sends nothing. Only public pilot intake
+and paid funnel stages count as demand or revenue.
 
 The reporter enforces the 10-prospect experiment, three-signal qualification,
 one private HTTPS evidence link per signal, permitted contact channels, one
@@ -556,7 +558,10 @@ malformed CSV and any row with missing or extra cells instead of silently
 dropping private sales evidence. Schema-10 reports add the terminal
 `price-objection` state and a dedicated `price_objections` count so the bounded
 experiment can separate explicit price resistance from a generic fit rejection.
-Its activity totals are not lead or revenue evidence. See
+Schema-11 reports add the terminal `existing-solution` state and a dedicated
+`existing_solution_objections` count so observed substitute resistance remains
+separate from price and fit objections. Its activity totals are not lead or
+revenue evidence. See
 [docs/direct-outreach.md](docs/direct-outreach.md) for the operating contract.
 
 Install it locally in editable mode:

@@ -372,7 +372,7 @@ def verify_outreach_lifecycle(
         )
         declined_summary = declined_report.get("summary", {})
         _require(
-            declined_report.get("schema_version") == 10,
+            declined_report.get("schema_version") == 11,
             "outreach schema changed",
         )
         _require(
@@ -862,7 +862,7 @@ def verify_outreach_lifecycle(
             as_of="2026-07-02",
             environment=environment,
         )
-        _require(approved_report.get("schema_version") == 10, "schema changed")
+        _require(approved_report.get("schema_version") == 11, "schema changed")
         _require(
             approved_report.get("experiment", {}).get("human_approval_required")
             is True,
@@ -1189,7 +1189,7 @@ def verify_outreach_lifecycle(
             environment=environment,
         )
         _require(
-            price_objection.get("schema_version") == 3,
+            price_objection.get("schema_version") == 4,
             "price-objection receipt schema changed",
         )
         _require(
@@ -1224,6 +1224,70 @@ def verify_outreach_lifecycle(
             "price objection did not close the outreach cadence",
         )
         checked.append("price-objection-recorded")
+
+        existing_solution_ledger = Path(tmp) / "existing solution ledger.csv"
+        _write_ledger(
+            existing_solution_ledger,
+            _row(
+                status="replied",
+                next_action_on="",
+                outcome_on="2026-07-11",
+            ),
+        )
+        existing_solution_ledger.chmod(0o600)
+        existing_solution = _json_command(
+            outreach_command,
+            existing_solution_ledger,
+            as_of="2026-07-12",
+            arguments=(
+                "--record-outcome",
+                "prospect-001",
+                "--outcome",
+                "existing-solution",
+                "--outcome-on",
+                "2026-07-12",
+                "--confirm-outcome-observed",
+            ),
+            environment=environment,
+        )
+        _require(
+            existing_solution.get("schema_version") == 4,
+            "existing-solution receipt schema changed",
+        )
+        _require(
+            existing_solution.get("outcome", {}).get("status")
+            == "existing-solution",
+            "human-observed existing-solution objection was not recorded",
+        )
+        _require(
+            existing_solution.get("public_pilot_intake_url") is None,
+            "existing-solution objection exposed a pilot conversion URL",
+        )
+        existing_solution_row = _read_row(existing_solution_ledger)
+        _require(
+            existing_solution_row["status"] == "existing-solution"
+            and not existing_solution_row["next_action_on"]
+            and existing_solution_row["outcome_on"] == "2026-07-11",
+            "existing-solution objection did not preserve the first reply observation",
+        )
+        existing_solution_report = _report(
+            outreach_command,
+            existing_solution_ledger,
+            as_of="2026-07-12",
+            environment=environment,
+        )
+        _require(
+            existing_solution_report.get("summary", {}).get(
+                "existing_solution_objections"
+            )
+            == 1,
+            "existing-solution objection was not counted separately",
+        )
+        _require(
+            existing_solution_report.get("summary", {}).get("closed") == 1,
+            "existing-solution objection did not close the outreach cadence",
+        )
+        checked.append("existing-solution-recorded")
 
         _write_ledger(ledger, _row(approved_on=""))
         missing_approval = _run(

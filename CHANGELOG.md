@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Added a guarded terminal `existing-solution` outreach outcome and dedicated
+  aggregate count so explicit substitute or DIY preference remains distinct
+  from price resistance and generic fit rejection.
+- Advanced outreach reports to schema 11 and outcome receipts to schema 4 while
+  retaining confirmation, first-reply timing, closed cadence, and null
+  conversion links for substitute objections.
+- Extended the installed outreach lifecycle to record and count an existing
+  solution objection without retaining private response text or inferring a
+  competitor from silence.
+- Reissued the counts-only five-draft checkpoint as schema 11 with zero
+  existing-solution objections, attempts, replies, or pilot requests.
 - Added a guarded terminal `price-objection` outreach outcome and dedicated
   aggregate count so explicit `$299` resistance remains distinct from generic
   fit rejection.

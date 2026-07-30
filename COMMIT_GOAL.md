@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after preserving human-observed outreach price objections:
-  311 / 1,000 (31.1%).
-- Remaining after preserving human-observed outreach price objections:
-  689 commits.
+- Progress after preserving human-observed existing-solution objections:
+  312 / 1,000 (31.2%).
+- Remaining after preserving human-observed existing-solution objections:
+  688 commits.
 
 ## Commit Standard
 
