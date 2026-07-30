@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after containing rollout unknown-key errors:
-  299 / 1,000 (29.9%).
-- Remaining after containing rollout unknown-key errors:
-  701 commits.
+- Progress after containing bootstrap receipt key errors:
+  300 / 1,000 (30.0%).
+- Remaining after containing bootstrap receipt key errors:
+  700 commits.
 
 ## Commit Standard
 

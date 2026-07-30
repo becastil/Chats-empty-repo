@@ -265,6 +265,9 @@ must name a direct regular-file leaf. Symlinks, directories, FIFOs, other
 special leaves, replacement, or in-place mutation return exit code 2 without a
 verification report. Receipt JSON is parsed and validated through one opened
 descriptor, then its exact bytes and requested leaf are rechecked before use.
+Duplicate and unknown receipt-field errors preserve ordinary printable keys but
+JSON-escape control-bearing decoded names onto one line before verification
+output.
 Receipt input is capped at 128 KiB (131,072 bytes), as is the selected policy;
 oversized sparse files and growth during the bounded reread fail without
 allocating the full input.

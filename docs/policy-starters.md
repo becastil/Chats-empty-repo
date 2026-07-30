@@ -68,12 +68,14 @@ repo-scout-policy verify-receipt bootstrap-receipt.json \
 Verification parses both contracts strictly and compares the receipt's policy
 version and normalized fingerprint to the current TOML. A match returns 0.
 Missing, invalid, or changed policy files emit a report and return 6; malformed,
-duplicate-key, or unsupported receipts return 2 without a success report. The
-receipt file itself must be a direct regular-file leaf. Symlinks, directories,
-FIFOs, other special leaves, replacement, or in-place byte changes return 2
-without a report. The verifier parses and validates JSON through one opened
-descriptor, then rereads the exact bytes and rechecks the requested receipt
-leaf before using its evidence.
+duplicate-key, or unsupported receipts return 2 without a success report.
+Duplicate- and unknown-key diagnostics preserve ordinary printable field names
+but JSON-escape control-bearing decoded names onto one line. The receipt file
+itself must be a direct regular-file leaf. Symlinks, directories, FIFOs, other
+special leaves, replacement, or in-place byte changes return 2 without a
+report. The verifier parses and validates JSON through one opened descriptor,
+then rereads the exact bytes and rechecks the requested receipt leaf before
+using its evidence.
 
 The archived `output` must be an absolute, valid file leaf; relative and
 NUL-bearing values fail before a `--policy` override can bypass that receipt

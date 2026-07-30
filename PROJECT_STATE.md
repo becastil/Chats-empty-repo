@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 299 of
-1,000, with 701 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 300 of
+1,000, with 700 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -788,6 +788,9 @@ alignment take priority over commit volume.
   bootstrap receipts fail without reports or evidence mutation.
 - Stable text and JSON pass or drift evidence, policy-path overrides, and exit code 6 for missing, invalid, or changed policies.
 - Duplicate-key, unsupported-schema, malformed-shape, and unknown-field rejection for receipt evidence.
+- Single-line-safe bootstrap receipt duplicate- and unknown-key errors that
+  preserve printable field names while JSON-escaping decoded presentation
+  controls before policy verification output.
 - Installed-wheel release proof that every clear bootstrap receipt verifies its generated policy.
 
 ## How To Run

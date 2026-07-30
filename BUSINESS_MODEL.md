@@ -341,6 +341,13 @@ version and fingerprint to the policy a team is about to commit or enforce.
 It produces stable drift evidence and a CI failure without uploading either
 file. This is useful free activation proof; paid value remains resolving drift
 and operating one reviewed standard across repositories and teams.
+Duplicate and unknown receipt keys already fail before policy comparison.
+Their decoded names now preserve ordinary printable diagnostics but become
+one-line JSON string literals when they contain presentation controls.
+Installed activation smoke requires empty verification output and unchanged
+evidence for both forms. This prevents malformed handoff evidence from forging
+a successful match; it does not authenticate a receipt, establish policy use,
+pilot demand, payment, or revenue.
 The archived receipt argument must now name a direct regular-file leaf before
 JSON is read. Receipt validation stays on one descriptor and accepts the
 evidence only after the same requested leaf and exact bytes survive a final

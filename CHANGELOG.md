@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- JSON-escaped control-bearing duplicate and unknown bootstrap receipt keys
+  before including them in policy-verification errors.
+- Preserved ordinary printable receipt-field diagnostics while preventing
+  rejected evidence from forging a successful policy-match line.
+- Extended the installed policy-activation smoke to require one-line key
+  rejection with no verification output or evidence mutation.
 - JSON-escaped control-bearing unknown rollout metadata keys before including
   them in top-level, policy, or Git validation errors.
 - Preserved ordinary printable unknown-field diagnostics while preventing

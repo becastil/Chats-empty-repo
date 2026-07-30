@@ -540,6 +540,7 @@ class ReleaseManifestTests(unittest.TestCase):
                 "symlink-cli-policy-rejected",
                 "nonregular-cli-policy-rejected",
                 "oversized-cli-policy-rejected",
+                "unsafe-bootstrap-receipt-keys-rejected",
                 "relative-receipt-output-rejected",
                 "symlink-bootstrap-receipt-rejected",
                 "nonregular-bootstrap-receipt-rejected",

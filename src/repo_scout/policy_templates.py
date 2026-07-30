@@ -809,6 +809,10 @@ def _validate_bootstrap_receipt(receipt: Any) -> dict[str, Any]:
     return receipt
 
 
+def _format_operator_text(text: str) -> str:
+    return text if text.isprintable() else json.dumps(text)
+
+
 def _require_exact_keys(
     value: dict[str, Any], expected: set[str], label: str
 ) -> None:
@@ -821,7 +825,10 @@ def _require_exact_keys(
     if missing:
         details.append(f"missing keys: {', '.join(missing)}")
     if unknown:
-        details.append(f"unknown keys: {', '.join(unknown)}")
+        unknown_display = ", ".join(
+            _format_operator_text(key) for key in unknown
+        )
+        details.append(f"unknown keys: {unknown_display}")
     raise TemplateError(f"{label} has {'; '.join(details)}")
 
 
@@ -831,7 +838,9 @@ def _reject_duplicate_json_keys(
     result: dict[str, Any] = {}
     for key, value in pairs:
         if key in result:
-            raise TemplateError(f"duplicate key: {key}")
+            raise TemplateError(
+                f"duplicate key: {_format_operator_text(key)}"
+            )
         result[key] = value
     return result
 

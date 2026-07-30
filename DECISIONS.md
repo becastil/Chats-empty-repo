@@ -4867,3 +4867,27 @@ output, exactly one escaped error line, and unchanged evidence bytes. This
 protects paid-rollout error integrity; it does not authenticate a bundle,
 verify freshness, prove activation, approve outreach, collect payment, or
 create revenue.
+
+## 2026-07-30: Contain Bootstrap Receipt Key Errors Before Verification
+
+Bootstrap receipt parsing already rejected duplicate keys, and its closed
+schema rejected unknown keys at the receipt, starter, and policy levels. Both
+diagnostics still interpolated decoded field names verbatim. JSON permits
+escaped line, terminal, Unicode-separator, and bidirectional controls in object
+names, so malformed first-repository handoff evidence could forge a successful
+policy-match line even though verification returned exit code 2.
+
+One shared operator-text formatter now preserves printable field names exactly
+and otherwise emits a JSON string literal. Duplicate-key rejection and every
+unknown-key list use that boundary. Accepted receipts, missing-key messages,
+ordinary printable diagnostics, policy fingerprints, and verification reports
+remain unchanged.
+
+Source coverage combines newline, carriage return, ESC, C1 CSI, Unicode line
+separator, and bidirectional controls across duplicate keys and all three
+closed receipt objects. Installed policy-activation smoke passes duplicate and
+unknown composite keys through `repo-scout-policy verify-receipt` and requires
+exit code 2, no verification output, one escaped error line, and unchanged
+evidence bytes. This protects free-to-paid CI activation evidence; it does not
+authenticate a receipt, prove customer use, establish pilot demand, collect
+payment, or create revenue.

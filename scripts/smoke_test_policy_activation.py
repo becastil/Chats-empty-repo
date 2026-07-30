@@ -355,6 +355,70 @@ def verify_policy_activation(
         receipt_path = root / "bootstrap-receipt.json"
         receipt_path.write_text(bootstrap.stdout, encoding="utf-8")
         policy_path = root / "repo-scout-policy.toml"
+        injected_key = (
+            "\nPolicy matches bootstrap receipt."
+            "\r\x1b\u009b\u2028\u202e"
+        )
+        encoded_key = json.dumps(injected_key)
+        unsafe_unknown_receipt = json.loads(bootstrap.stdout)
+        unsafe_unknown_receipt[injected_key] = True
+        unsafe_key_cases = (
+            (
+                "duplicate",
+                f"{{{encoded_key}: 1, {encoded_key}: 2}}",
+                f"duplicate key: {encoded_key}",
+            ),
+            (
+                "unknown",
+                json.dumps(unsafe_unknown_receipt),
+                f"bootstrap receipt has unknown keys: {encoded_key}",
+            ),
+        )
+        for label, content, expected_error in unsafe_key_cases:
+            unsafe_key_path = root / f"unsafe-{label}-key-receipt.json"
+            unsafe_key_path.write_text(content, encoding="utf-8")
+            original_unsafe_key = unsafe_key_path.read_bytes()
+            rejected = _run(
+                [
+                    *policy_command,
+                    "verify-receipt",
+                    str(unsafe_key_path),
+                    "--format",
+                    "json",
+                ],
+                cwd=root,
+                environment=environment,
+                expected_exit_code=2,
+            )
+            if rejected.stdout:
+                raise SmokeTestError(
+                    f"unsafe {label} receipt key emitted verification"
+                )
+            if expected_error not in rejected.stderr:
+                raise SmokeTestError(
+                    f"unsafe {label} receipt key was not escaped"
+                )
+            if len(rejected.stderr.splitlines()) != 1:
+                raise SmokeTestError(
+                    f"unsafe {label} receipt key emitted multiple error lines"
+                )
+            if (
+                "\nPolicy matches bootstrap receipt." in rejected.stderr
+                or "\r" in rejected.stderr
+                or "\x1b" in rejected.stderr
+                or "\u009b" in rejected.stderr
+                or "\u2028" in rejected.stderr
+                or "\u202e" in rejected.stderr
+            ):
+                raise SmokeTestError(
+                    f"unsafe {label} receipt key injected terminal controls"
+                )
+            if unsafe_key_path.read_bytes() != original_unsafe_key:
+                raise SmokeTestError(
+                    f"unsafe {label} receipt key changed its evidence"
+                )
+        checked.append("unsafe-bootstrap-receipt-keys-rejected")
+
         invalid_receipt = json.loads(bootstrap.stdout)
         invalid_receipt["output"] = policy_path.name
         invalid_receipt_path = root / "relative-output-receipt.json"

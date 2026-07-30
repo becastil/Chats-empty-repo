@@ -1300,6 +1300,115 @@ class PolicyTemplateTests(unittest.TestCase):
                     self.assertEqual(malformed_stdout.getvalue(), "")
                     self.assertIn(expected_error, malformed_stderr.getvalue())
 
+    def test_verify_receipt_escapes_unsafe_duplicate_and_unknown_keys(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "pyproject.toml").write_text(
+                "[project]\n",
+                encoding="utf-8",
+            )
+            bootstrap_stdout = io.StringIO()
+            with redirect_stdout(bootstrap_stdout), redirect_stderr(
+                io.StringIO()
+            ):
+                bootstrap_exit_code = main(
+                    ["bootstrap", str(root), "--format", "json"]
+                )
+            self.assertEqual(bootstrap_exit_code, 0)
+            valid_receipt = json.loads(bootstrap_stdout.getvalue())
+
+            injected_key = (
+                "\nPolicy matches bootstrap receipt."
+                "\r\x1b\u009b\u2028\u202e"
+            )
+            encoded_key = json.dumps(injected_key)
+
+            top_level = json.loads(json.dumps(valid_receipt))
+            top_level[injected_key] = True
+            starter = json.loads(json.dumps(valid_receipt))
+            starter["starter"][injected_key] = True
+            policy = json.loads(json.dumps(valid_receipt))
+            policy["policy"][injected_key] = True
+            cases = (
+                (
+                    "duplicate",
+                    f"{{{encoded_key}: 1, {encoded_key}: 2}}",
+                    f"duplicate key: {encoded_key}",
+                ),
+                (
+                    "bootstrap-receipt",
+                    json.dumps(top_level),
+                    f"bootstrap receipt has unknown keys: {encoded_key}",
+                ),
+                (
+                    "starter",
+                    json.dumps(starter),
+                    f"starter has unknown keys: {encoded_key}",
+                ),
+                (
+                    "policy",
+                    json.dumps(policy),
+                    f"policy has unknown keys: {encoded_key}",
+                ),
+            )
+
+            for label, content, expected_error in cases:
+                with self.subTest(label=label):
+                    receipt_path = root / f"{label}.json"
+                    receipt_path.write_text(content, encoding="utf-8")
+                    original = receipt_path.read_bytes()
+                    stdout = io.StringIO()
+                    stderr = io.StringIO()
+
+                    with redirect_stdout(stdout), redirect_stderr(stderr):
+                        exit_code = main(
+                            [
+                                "verify-receipt",
+                                str(receipt_path),
+                                "--format",
+                                "json",
+                            ]
+                        )
+
+                    message = stderr.getvalue()
+                    self.assertEqual(exit_code, 2)
+                    self.assertEqual(stdout.getvalue(), "")
+                    self.assertIn(expected_error, message)
+                    self.assertEqual(len(message.splitlines()), 1)
+                    self.assertNotIn(
+                        "\nPolicy matches bootstrap receipt.",
+                        message,
+                    )
+                    self.assertNotIn("\r", message)
+                    self.assertNotIn("\x1b", message)
+                    self.assertNotIn("\u009b", message)
+                    self.assertNotIn("\u2028", message)
+                    self.assertNotIn("\u202e", message)
+                    self.assertEqual(receipt_path.read_bytes(), original)
+
+            ordinary_unknown = json.loads(json.dumps(valid_receipt))
+            ordinary_unknown["café"] = True
+            with self.assertRaisesRegex(
+                policy_templates_module.TemplateError,
+                r"bootstrap receipt has unknown keys: café$",
+            ):
+                policy_templates_module._validate_bootstrap_receipt(
+                    ordinary_unknown
+                )
+
+            with self.assertRaisesRegex(
+                policy_templates_module.TemplateError,
+                r"duplicate key: schema_version$",
+            ):
+                policy_templates_module._reject_duplicate_json_keys(
+                    [
+                        ("schema_version", 1),
+                        ("schema_version", 1),
+                    ]
+                )
+
     def test_verify_receipt_rejects_invalid_output_before_policy_override(
         self,
     ) -> None:
