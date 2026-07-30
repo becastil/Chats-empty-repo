@@ -438,6 +438,10 @@ direct-outreach route, SHA-256 review receipt, and exact content-bound approval
 and decline commands. Their `YYYY-MM-DD` placeholders must be replaced with the
 actual UTC decision date; the receipt remains valid across dates only while the
 reviewed row, draft, route, and checklist are unchanged.
+Before emitting that receipt, the complete review requires that canonical route
+exactly once in the selected private draft. A missing or repeated route fails
+without a review bundle or ledger mutation; redacted and draft-only inspection
+remain available for correction.
 Remove or privately archive the bundle after the human decision before writing
 the next review.
 After a content-bound decline, the generated continuation retains the evidence

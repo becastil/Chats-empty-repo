@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Refused decision-ready outreach reviews when the selected private draft omits
+  or repeats the canonical source-attributed offer route.
+- Added API, owner-only file-writing, and installed-lifecycle proof that route
+  rejection emits no bundle, leaves no staging file, preserves ledger bytes,
+  and does not repeat private draft text.
+- Revalidated the existing ignored schema-6 review queue under the exact-once
+  route preflight without approving or sending outreach.
 - Bound complete private outreach reviews to the canonical
   `?source=outreach#why-teams-buy` offer route and added a sixth human check
   that confirms the selected draft preserves that attribution.

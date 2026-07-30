@@ -609,6 +609,7 @@ class ReleaseManifestTests(unittest.TestCase):
                 "owner-only-decline-continuation",
                 "draft-reviewed",
                 "draft-ledger-drift-rejected",
+                "draft-route-rejected",
                 "private-review-bundle",
                 "unconfirmed-approval-rejected",
                 "draft-approved",

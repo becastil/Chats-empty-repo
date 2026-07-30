@@ -58,6 +58,10 @@ class DirectOutreachContractTests(unittest.TestCase):
             "leaving it unchanged fails before private material is read",
             normalized_readme,
         )
+        self.assertIn(
+            "requires that canonical route exactly once",
+            normalized_readme,
+        )
 
     def test_playbook_preserves_offer_source_and_bounded_cadence(self) -> None:
         playbook = PLAYBOOK.read_text(encoding="utf-8")
@@ -114,6 +118,10 @@ class DirectOutreachContractTests(unittest.TestCase):
         )
         self.assertIn(
             "source-preserving direct-outreach route",
+            normalized_playbook,
+        )
+        self.assertIn(
+            "requires that exact route once",
             normalized_playbook,
         )
         self.assertIn(

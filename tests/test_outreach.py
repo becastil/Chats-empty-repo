@@ -69,6 +69,10 @@ def _row(**overrides: str) -> dict[str, str]:
     return row
 
 
+def _review_message(message: str) -> str:
+    return f"{message}\n\n{DIRECT_OUTREACH_ROUTE}"
+
+
 def _write_ledger(path: Path, rows: list[dict[str, str]]) -> None:
     with path.open("w", newline="", encoding="utf-8") as ledger_file:
         writer = csv.DictWriter(
@@ -514,7 +518,8 @@ class OutreachReportTests(unittest.TestCase):
                 ],
             )
             notes.write_text(
-                "## prospect-001\n\nSelected private message\n",
+                f"## prospect-001\n\n"
+                f"{_review_message('Selected private message')}\n",
                 encoding="utf-8",
             )
             if os.name == "posix":
@@ -556,6 +561,83 @@ class OutreachReportTests(unittest.TestCase):
             )
             if os.name == "posix":
                 self.assertEqual(review.stat().st_mode & 0o777, 0o600)
+
+    def test_write_review_rejects_invalid_campaign_route_without_artifacts(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            private_directory = Path(tmp) / "private"
+            private_directory.mkdir(mode=0o700)
+            ledger = private_directory / "ledger.csv"
+            notes = private_directory / "drafts.md"
+            review = private_directory / "review.md"
+            _write_ledger(
+                ledger,
+                [
+                    _row(
+                        status="drafted",
+                        contacted_on="",
+                        next_action_on="",
+                        approved_on="",
+                    )
+                ],
+            )
+            ledger_before = ledger.read_bytes()
+            cases = (
+                "Private message without campaign route",
+                (
+                    "Private message with repeated campaign route\n\n"
+                    f"{DIRECT_OUTREACH_ROUTE}\n\n"
+                    f"{DIRECT_OUTREACH_ROUTE}"
+                ),
+            )
+
+            for private_draft in cases:
+                with self.subTest(
+                    route_count=private_draft.count(DIRECT_OUTREACH_ROUTE)
+                ):
+                    notes.write_text(
+                        f"## prospect-001\n\n{private_draft}\n",
+                        encoding="utf-8",
+                    )
+                    if os.name == "posix":
+                        notes.chmod(0o600)
+                    stdout = io.StringIO()
+                    stderr = io.StringIO()
+
+                    with redirect_stdout(stdout), redirect_stderr(stderr):
+                        exit_code = main(
+                            [
+                                str(ledger),
+                                "--as-of",
+                                "2026-07-13",
+                                "--review-next",
+                                "--include-private-evidence",
+                                "--include-private-draft",
+                                str(notes),
+                                "--write-review",
+                                str(review),
+                            ]
+                        )
+
+                    self.assertEqual(exit_code, 2)
+                    self.assertEqual(stdout.getvalue(), "")
+                    self.assertIn(
+                        "private draft must contain the canonical "
+                        "direct-outreach route exactly once",
+                        stderr.getvalue(),
+                    )
+                    self.assertNotIn("Private message", stderr.getvalue())
+                    self.assertEqual(ledger.read_bytes(), ledger_before)
+                    self.assertFalse(review.exists())
+                    self.assertEqual(
+                        list(
+                            private_directory.glob(
+                                ".repo-scout-review.*.tmp"
+                            )
+                        ),
+                        [],
+                    )
 
     def test_write_review_refuses_overwrite_without_leaving_staged_files(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -1102,7 +1184,8 @@ class OutreachReportTests(unittest.TestCase):
             _write_ledger(ledger, [row])
             notes.write_text(
                 "# Private drafts\n\n"
-                "## prospect-001\n\nSelected private message\n",
+                f"## prospect-001\n\n"
+                f"{_review_message('Selected private message')}\n",
                 encoding="utf-8",
             )
             if os.name == "posix":
@@ -1132,7 +1215,8 @@ class OutreachReportTests(unittest.TestCase):
             self.assertTrue(report["private_draft_included"])
             self.assertRegex(report["review_digest"], r"\Asha256:[0-9a-f]{64}\Z")
             self.assertEqual(
-                report["review"]["private_draft"], "Selected private message"
+                report["review"]["private_draft"],
+                _review_message("Selected private message"),
             )
             text = format_next_outreach_review(
                 report,
@@ -1148,6 +1232,42 @@ class OutreachReportTests(unittest.TestCase):
             self.assertEqual(text.count("--as-of YYYY-MM-DD"), 2)
             self.assertIn("--approved-on YYYY-MM-DD", text)
             self.assertNotIn("--as-of 2026-07-13 --approve-next", text)
+
+    def test_content_bound_review_requires_exactly_one_campaign_route(
+        self,
+    ) -> None:
+        rows = [
+            _row(
+                status="drafted",
+                contacted_on="",
+                next_action_on="",
+                approved_on="",
+            )
+        ]
+        cases = (
+            "Reviewed private message without the offer link",
+            (
+                "Reviewed private message\n\n"
+                f"{DIRECT_OUTREACH_ROUTE}\n\n"
+                f"{DIRECT_OUTREACH_ROUTE}"
+            ),
+        )
+
+        for private_draft in cases:
+            with self.subTest(
+                route_count=private_draft.count(DIRECT_OUTREACH_ROUTE)
+            ):
+                with self.assertRaisesRegex(
+                    OutreachInputError,
+                    "private draft must contain the canonical "
+                    "direct-outreach route exactly once",
+                ):
+                    build_next_outreach_review(
+                        rows,
+                        as_of=date(2026, 7, 13),
+                        include_private_evidence=True,
+                        private_drafts={"prospect-001": private_draft},
+                    )
 
     def test_content_bound_review_can_be_decided_on_a_later_date(self) -> None:
         cases = (
@@ -1190,7 +1310,8 @@ class OutreachReportTests(unittest.TestCase):
                     ],
                 )
                 notes.write_text(
-                    "## prospect-001\n\nReviewed private message\n",
+                    f"## prospect-001\n\n"
+                    f"{_review_message('Reviewed private message')}\n",
                     encoding="utf-8",
                 )
                 if os.name == "posix":
@@ -1499,7 +1620,8 @@ class OutreachReportTests(unittest.TestCase):
                 ],
             )
             notes.write_text(
-                "## prospect-001\n\nReviewed private message\n",
+                f"## prospect-001\n\n"
+                f"{_review_message('Reviewed private message')}\n",
                 encoding="utf-8",
             )
             if os.name == "posix":
@@ -1523,7 +1645,8 @@ class OutreachReportTests(unittest.TestCase):
             review_digest = json.loads(review_stdout.getvalue())["review_digest"]
 
             notes.write_text(
-                "## prospect-001\n\nEdited after human review\n",
+                f"## prospect-001\n\n"
+                f"{_review_message('Edited after human review')}\n",
                 encoding="utf-8",
             )
             if os.name == "posix":
@@ -1575,7 +1698,8 @@ class OutreachReportTests(unittest.TestCase):
                 ],
             )
             notes.write_text(
-                "## prospect-001\n\nReviewed private message\n",
+                f"## prospect-001\n\n"
+                f"{_review_message('Reviewed private message')}\n",
                 encoding="utf-8",
             )
             if os.name == "posix":
@@ -1679,7 +1803,8 @@ class OutreachReportTests(unittest.TestCase):
                     ],
                 )
                 notes.write_text(
-                    "## prospect-001\n\nReviewed private message\n",
+                    f"## prospect-001\n\n"
+                    f"{_review_message('Reviewed private message')}\n",
                     encoding="utf-8",
                 )
                 if os.name == "posix":
@@ -1704,7 +1829,8 @@ class OutreachReportTests(unittest.TestCase):
                     ) = None,
                 ) -> None:
                     notes.write_text(
-                        f"## prospect-001\n\n{edited_message}\n",
+                        f"## prospect-001\n\n"
+                        f"{_review_message(edited_message)}\n",
                         encoding="utf-8",
                     )
                     original_write(
@@ -1766,7 +1892,8 @@ class OutreachReportTests(unittest.TestCase):
                 ],
             )
             notes.write_text(
-                "## prospect-001\n\nReviewed private message\n",
+                f"## prospect-001\n\n"
+                f"{_review_message('Reviewed private message')}\n",
                 encoding="utf-8",
             )
             if os.name == "posix":
@@ -1824,7 +1951,8 @@ class OutreachReportTests(unittest.TestCase):
             )
             _write_ledger(ledger, [row])
             notes.write_text(
-                "## prospect-001\n\nReviewed private message\n",
+                f"## prospect-001\n\n"
+                f"{_review_message('Reviewed private message')}\n",
                 encoding="utf-8",
             )
             if os.name == "posix":
@@ -1906,8 +2034,10 @@ class OutreachReportTests(unittest.TestCase):
                 ],
             )
             notes.write_text(
-                "## prospect-001\n\nFirst private message\n\n"
-                "## prospect-002\n\nSecond private message\n",
+                f"## prospect-001\n\n"
+                f"{_review_message('First private message')}\n\n"
+                f"## prospect-002\n\n"
+                f"{_review_message('Second private message')}\n",
                 encoding="utf-8",
             )
             if os.name == "posix":

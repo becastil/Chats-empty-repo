@@ -1025,6 +1025,14 @@ route, or check fails without modifying the ledger or exposing the changed
 content. An unchanged review can therefore be decided on a later UTC date
 without backdating approval evidence. This binds a human decision to what was
 actually reviewed without making Repo Scout perform the judgment.
+Before Repo Scout emits that decision-ready receipt, the selected private draft
+must contain the exact canonical direct-outreach route once. Missing and
+repeated routes fail before JSON or owner-only bundle output, preserve the
+ledger, and leave draft text out of the error. Redacted and draft-only review
+remain available as correction paths. Later receipt verification maps any route
+cardinality drift to the same generic stale-review failure. The existing
+schema-6 owner-only queue passes this preflight without changing its receipt,
+but a human still decides whether the message is accurate and appropriate.
 The verified private notes revision now travels into the locked approval or
 decline commit as well. An editor save after receipt verification therefore
 forces a fresh review instead of recording a decision against content that no

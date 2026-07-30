@@ -52,6 +52,9 @@ DIRECT_OUTREACH_ROUTE = (
     "https://repo-scout.becastil.chatgpt.site/"
     "?source=outreach#why-teams-buy"
 )
+_PRIVATE_DRAFT_ROUTE_ERROR = (
+    "private draft must contain the canonical direct-outreach route exactly once"
+)
 LEGACY_LEDGER_FIELDS = (
     "prospect_id",
     "fit_signals",
@@ -123,6 +126,10 @@ HUMAN_REVIEW_CHECKS = (
 
 class OutreachInputError(ValueError):
     """Raised when private outreach activity cannot be processed safely."""
+
+
+class _PrivateDraftRouteError(OutreachInputError):
+    """Raised when a decision-ready draft has an invalid campaign route."""
 
 
 def load_outreach_report(path: Path, *, as_of: date | None = None) -> dict[str, Any]:
@@ -1371,6 +1378,8 @@ def build_next_outreach_review(
                 )
             review["private_draft"] = private_draft.strip()
         if private_evidence_included and private_draft_included:
+            if review["private_draft"].count(DIRECT_OUTREACH_ROUTE) != 1:
+                raise _PrivateDraftRouteError(_PRIVATE_DRAFT_ROUTE_ERROR)
             review_digest = _build_outreach_review_digest(
                 draft,
                 private_draft=review["private_draft"],
@@ -1445,12 +1454,17 @@ def _verify_next_outreach_review(
     private_drafts, private_draft_revision = _load_private_drafts_snapshot(
         private_drafts_path
     )
-    current_review = build_next_outreach_review(
-        rows,
-        as_of=as_of,
-        include_private_evidence=True,
-        private_drafts=private_drafts,
-    )
+    try:
+        current_review = build_next_outreach_review(
+            rows,
+            as_of=as_of,
+            include_private_evidence=True,
+            private_drafts=private_drafts,
+        )
+    except _PrivateDraftRouteError:
+        raise OutreachInputError(
+            "review content changed; run --review-next again before deciding"
+        ) from None
     current_digest = current_review["review_digest"]
     if not isinstance(current_digest, str) or not compare_digest(
         current_digest, review_digest

@@ -5092,3 +5092,25 @@ owner-only permissions; the schema-4 and schema-5 bundles remain superseded.
 This closes an attribution gap in the next revenue action. It does not approve
 or send a message, mutate prospect state, establish a lead, prove demand,
 collect payment, or create revenue.
+
+## 2026-07-30: Require One Attributed Offer Route Before Review Receipt
+
+Schema-6 reviews displayed and bound the canonical direct-outreach route, but
+the receipt could still be created when the selected private draft omitted that
+route or repeated it. The sixth human check made the problem visible, yet a
+decision-ready artifact should not ask a reviewer to approve an attribution
+failure the tool can determine exactly.
+
+Complete evidence-and-draft reviews now require one literal occurrence of the
+canonical route in the selected normalized draft before emitting JSON, an
+owner-only bundle, or a receipt. Zero or multiple occurrences return a
+controlled error without draft text, review output, staging residue, or ledger
+mutation. Redacted and draft-only review remain available for correction.
+During a later bound decision, route-cardinality drift uses the existing
+generic stale-review error rather than disclosing what changed.
+
+The current ignored schema-6 review queue passes the new preflight without
+changing its receipt, and its five rows remain drafted. This makes the next
+source-identifiable acquisition attempt measurable; it does not perform human
+review, approve or send outreach, establish demand, collect payment, or create
+revenue.

@@ -190,6 +190,11 @@ and use `YYYY-MM-DD` for both the new audit date and, on approval,
 `approved_on`. Replace both `YYYY-MM-DD` placeholders with the actual UTC
 decision date. Changing the row, draft, route, or checks invalidates the
 receipt and requires a fresh review.
+Before emitting a content-bound receipt, the complete review requires that
+exact route once in the selected private draft. A missing or repeated route
+fails without emitting the private bundle or changing the ledger. Redacted and
+draft-only review modes remain available so the message can be corrected
+without weakening the decision-ready boundary.
 
 `--write-review` keeps that complete text out of terminal logs. It requires
 `--review-next` text mode, an existing owner-only parent directory, and an

@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after binding outreach review to its source-attributed offer route:
-  308 / 1,000 (30.8%).
-- Remaining after binding outreach review to its source-attributed offer
-  route: 692 commits.
+- Progress after enforcing the attributed route in decision-ready outreach:
+  309 / 1,000 (30.9%).
+- Remaining after enforcing the attributed route in decision-ready outreach:
+  691 commits.
 
 ## Commit Standard
 

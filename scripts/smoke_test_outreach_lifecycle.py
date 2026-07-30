@@ -430,8 +430,10 @@ def verify_outreach_lifecycle(
         continuation_drafts = Path(tmp) / "continuation drafts.md"
         continuation_drafts.write_text(
             "# Private drafts\n\n"
-            "## prospect-001\n\nFirst private message\n\n"
-            "## prospect-002\n\nSecond private message\n",
+            "## prospect-001\n\n"
+            f"First private message\n\n{DIRECT_OUTREACH_ROUTE}\n\n"
+            "## prospect-002\n\n"
+            f"Second private message\n\n{DIRECT_OUTREACH_ROUTE}\n",
             encoding="utf-8",
         )
         continuation_drafts.chmod(0o600)
@@ -648,6 +650,45 @@ def verify_outreach_lifecycle(
             f"## {draft['prospect_id']}\n\nSelected private message\n",
             encoding="utf-8",
         )
+        missing_route_review = _run(
+            outreach_command,
+            ledger,
+            as_of="2026-07-02",
+            arguments=(
+                "--review-next",
+                "--include-private-evidence",
+                "--include-private-draft",
+                str(private_drafts),
+            ),
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(
+            missing_route_review.stdout == "",
+            "missing-route review emitted a private bundle",
+        )
+        _require(
+            "private draft must contain the canonical direct-outreach route "
+            "exactly once"
+            in missing_route_review.stderr,
+            "missing-route review did not produce its controlled error",
+        )
+        _require(
+            "Selected private message" not in missing_route_review.stderr,
+            "missing-route review exposed private message text",
+        )
+        _require(
+            ledger.read_bytes() == draft_bytes,
+            "missing-route review modified the ledger",
+        )
+        checked.append("draft-route-rejected")
+
+        private_drafts.write_text(
+            "# Private drafts\n\n"
+            f"## {draft['prospect_id']}\n\n"
+            f"Selected private message\n\n{DIRECT_OUTREACH_ROUTE}\n",
+            encoding="utf-8",
+        )
 
         evidence_review = _json_command(
             outreach_command,
@@ -692,7 +733,8 @@ def verify_outreach_lifecycle(
         )
         private_draft = evidence_review.get("review", {}).get("private_draft")
         _require(
-            private_draft == "Selected private message",
+            private_draft
+            == f"Selected private message\n\n{DIRECT_OUTREACH_ROUTE}",
             "private review did not select the synthetic draft notes",
         )
         review_digest = evidence_review.get("review_digest")
