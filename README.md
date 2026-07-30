@@ -442,6 +442,9 @@ Before emitting that receipt, the complete review requires that canonical route
 exactly once in the selected private draft. A missing or repeated route fails
 without a review bundle or ledger mutation; redacted and draft-only inspection
 remain available for correction.
+It also requires the disclosed `$299` price exactly once so the approved
+attempt tests the stated paid offer. Missing or repeated price text has the
+same no-bundle, no-mutation boundary.
 Remove or privately archive the bundle after the human decision before writing
 the next review.
 After a content-bound decline, the generated continuation retains the evidence

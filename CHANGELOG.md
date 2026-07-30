@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Required exactly one `$299` disclosure in every complete outreach review
+  before Repo Scout can emit a content-bound receipt or owner-only bundle.
+- Added API, owner-only file-writing, stale-decision, and installed-lifecycle
+  coverage for missing or repeated price text without private output, ledger
+  mutation, or staging residue.
+- Revalidated the existing five-draft private queue under the price preflight
+  without approving or sending outreach.
 - Refused decision-ready outreach reviews when the selected private draft omits
   or repeats the canonical source-attributed offer route.
 - Added API, owner-only file-writing, and installed-lifecycle proof that route

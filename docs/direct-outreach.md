@@ -195,6 +195,9 @@ exact route once in the selected private draft. A missing or repeated route
 fails without emitting the private bundle or changing the ledger. Redacted and
 draft-only review modes remain available so the message can be corrected
 without weakening the decision-ready boundary.
+The complete review also requires that `$299` disclosure exactly once. Missing
+or repeated price text fails at the same boundary, so an approved message can
+test willingness to pay for the stated offer instead of an undisclosed price.
 
 `--write-review` keeps that complete text out of terminal logs. It requires
 `--review-next` text mode, an existing owner-only parent directory, and an
@@ -279,7 +282,7 @@ preserves file permissions, and atomically changes only `status` and
 `approved_on`. Missing confirmation, out-of-order aliases, stale review
 content, future dates, or invalid ledger state leave the file unchanged. The
 content receipt remains valid across dates only while the reviewed row, private
-draft, and five-check contract are unchanged. The generated command
+draft, and six-check contract are unchanged. The generated command
 deliberately does not reuse the bundle's earlier ledger-audit date. The
 private receipt omits evidence URLs and the review date. This action records a
 human decision; it does not send outreach or create a contact or follow-up

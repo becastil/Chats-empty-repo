@@ -5114,3 +5114,25 @@ changing its receipt, and its five rows remain drafted. This makes the next
 source-identifiable acquisition attempt measurable; it does not perform human
 review, approve or send outreach, establish demand, collect payment, or create
 revenue.
+
+## 2026-07-30: Disclose The Pilot Price Before Testing Willingness To Pay
+
+The prepared outreach messages were written around the public `$299` founding
+pilot, and the human checklist asked reviewers to confirm price and scope.
+However, complete review receipts did not fail when the selected draft omitted
+the price or repeated it. A response to an unpriced message would not establish
+whether the prospect had considered the paid offer, while repeated price text
+would make the reviewed message ambiguous.
+
+Complete evidence-and-draft reviews now require one literal `$299` disclosure
+before emitting JSON, an owner-only bundle, or a receipt. Zero or multiple
+occurrences return a controlled error without private draft text, review
+output, staging residue, or ledger mutation. Draft-only review remains the
+correction path. Removing or duplicating the price after review produces the
+same generic stale-review error at approval or decline.
+
+All five prepared private messages contain one `$299` disclosure, and the
+existing schema-6 queue passes the new preflight without changing its receipt
+or prospect state. This makes approved attempts a cleaner willingness-to-pay
+test; it does not perform human review, approve or send outreach, prove demand,
+collect payment, or create revenue.

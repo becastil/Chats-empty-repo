@@ -19,6 +19,7 @@ import sys
 from tempfile import NamedTemporaryFile
 from typing import Any, Iterator, Mapping, Sequence
 
+from .pilot_funnel import PUBLIC_INTAKE_PILOT_PRICE_USD
 from .version import add_version_argument
 from urllib.parse import urlsplit
 
@@ -54,6 +55,10 @@ DIRECT_OUTREACH_ROUTE = (
 )
 _PRIVATE_DRAFT_ROUTE_ERROR = (
     "private draft must contain the canonical direct-outreach route exactly once"
+)
+_PILOT_PRICE_TEXT = f"${PUBLIC_INTAKE_PILOT_PRICE_USD}"
+_PRIVATE_DRAFT_PRICE_ERROR = (
+    f"private draft must disclose the {_PILOT_PRICE_TEXT} pilot price exactly once"
 )
 LEGACY_LEDGER_FIELDS = (
     "prospect_id",
@@ -128,8 +133,8 @@ class OutreachInputError(ValueError):
     """Raised when private outreach activity cannot be processed safely."""
 
 
-class _PrivateDraftRouteError(OutreachInputError):
-    """Raised when a decision-ready draft has an invalid campaign route."""
+class _PrivateDraftContractError(OutreachInputError):
+    """Raised when a decision-ready draft violates a commercial invariant."""
 
 
 def load_outreach_report(path: Path, *, as_of: date | None = None) -> dict[str, Any]:
@@ -1379,7 +1384,9 @@ def build_next_outreach_review(
             review["private_draft"] = private_draft.strip()
         if private_evidence_included and private_draft_included:
             if review["private_draft"].count(DIRECT_OUTREACH_ROUTE) != 1:
-                raise _PrivateDraftRouteError(_PRIVATE_DRAFT_ROUTE_ERROR)
+                raise _PrivateDraftContractError(_PRIVATE_DRAFT_ROUTE_ERROR)
+            if review["private_draft"].count(_PILOT_PRICE_TEXT) != 1:
+                raise _PrivateDraftContractError(_PRIVATE_DRAFT_PRICE_ERROR)
             review_digest = _build_outreach_review_digest(
                 draft,
                 private_draft=review["private_draft"],
@@ -1461,7 +1468,7 @@ def _verify_next_outreach_review(
             include_private_evidence=True,
             private_drafts=private_drafts,
         )
-    except _PrivateDraftRouteError:
+    except _PrivateDraftContractError:
         raise OutreachInputError(
             "review content changed; run --review-next again before deciding"
         ) from None

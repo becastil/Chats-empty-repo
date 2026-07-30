@@ -70,7 +70,7 @@ def _row(**overrides: str) -> dict[str, str]:
 
 
 def _review_message(message: str) -> str:
-    return f"{message}\n\n{DIRECT_OUTREACH_ROUTE}"
+    return f"{message}\n\nPilot price: $299\n\n{DIRECT_OUTREACH_ROUTE}"
 
 
 def _write_ledger(path: Path, rows: list[dict[str, str]]) -> None:
@@ -562,7 +562,7 @@ class OutreachReportTests(unittest.TestCase):
             if os.name == "posix":
                 self.assertEqual(review.stat().st_mode & 0o777, 0o600)
 
-    def test_write_review_rejects_invalid_campaign_route_without_artifacts(
+    def test_write_review_rejects_invalid_commercial_markers_without_artifacts(
         self,
     ) -> None:
         with TemporaryDirectory() as tmp:
@@ -584,17 +584,35 @@ class OutreachReportTests(unittest.TestCase):
             )
             ledger_before = ledger.read_bytes()
             cases = (
-                "Private message without campaign route",
                 (
-                    "Private message with repeated campaign route\n\n"
-                    f"{DIRECT_OUTREACH_ROUTE}\n\n"
-                    f"{DIRECT_OUTREACH_ROUTE}"
+                    "Private message without campaign route for $299",
+                    "private draft must contain the canonical "
+                    "direct-outreach route exactly once",
+                ),
+                (
+                    "Private message with repeated campaign route for $299\n\n"
+                    f"{DIRECT_OUTREACH_ROUTE}\n\n{DIRECT_OUTREACH_ROUTE}",
+                    "private draft must contain the canonical "
+                    "direct-outreach route exactly once",
+                ),
+                (
+                    "Private message without price\n\n"
+                    f"{DIRECT_OUTREACH_ROUTE}",
+                    "private draft must disclose the $299 pilot price "
+                    "exactly once",
+                ),
+                (
+                    "Private message with $299 repeated at $299\n\n"
+                    f"{DIRECT_OUTREACH_ROUTE}",
+                    "private draft must disclose the $299 pilot price "
+                    "exactly once",
                 ),
             )
 
-            for private_draft in cases:
+            for private_draft, expected_error in cases:
                 with self.subTest(
-                    route_count=private_draft.count(DIRECT_OUTREACH_ROUTE)
+                    route_count=private_draft.count(DIRECT_OUTREACH_ROUTE),
+                    price_count=private_draft.count("$299"),
                 ):
                     notes.write_text(
                         f"## prospect-001\n\n{private_draft}\n",
@@ -622,11 +640,7 @@ class OutreachReportTests(unittest.TestCase):
 
                     self.assertEqual(exit_code, 2)
                     self.assertEqual(stdout.getvalue(), "")
-                    self.assertIn(
-                        "private draft must contain the canonical "
-                        "direct-outreach route exactly once",
-                        stderr.getvalue(),
-                    )
+                    self.assertIn(expected_error, stderr.getvalue())
                     self.assertNotIn("Private message", stderr.getvalue())
                     self.assertEqual(ledger.read_bytes(), ledger_before)
                     self.assertFalse(review.exists())
@@ -1269,6 +1283,39 @@ class OutreachReportTests(unittest.TestCase):
                         private_drafts={"prospect-001": private_draft},
                     )
 
+    def test_content_bound_review_requires_exactly_one_pilot_price(
+        self,
+    ) -> None:
+        rows = [
+            _row(
+                status="drafted",
+                contacted_on="",
+                next_action_on="",
+                approved_on="",
+            )
+        ]
+        cases = (
+            f"Reviewed private message\n\n{DIRECT_OUTREACH_ROUTE}",
+            (
+                "Reviewed private message for $299, repeated at $299\n\n"
+                f"{DIRECT_OUTREACH_ROUTE}"
+            ),
+        )
+
+        for private_draft in cases:
+            with self.subTest(price_count=private_draft.count("$299")):
+                with self.assertRaisesRegex(
+                    OutreachInputError,
+                    r"private draft must disclose the \$299 pilot price "
+                    "exactly once",
+                ):
+                    build_next_outreach_review(
+                        rows,
+                        as_of=date(2026, 7, 13),
+                        include_private_evidence=True,
+                        private_drafts={"prospect-001": private_draft},
+                    )
+
     def test_content_bound_review_can_be_decided_on_a_later_date(self) -> None:
         cases = (
             (
@@ -1644,43 +1691,53 @@ class OutreachReportTests(unittest.TestCase):
             self.assertEqual(exit_code, 0)
             review_digest = json.loads(review_stdout.getvalue())["review_digest"]
 
-            notes.write_text(
-                f"## prospect-001\n\n"
-                f"{_review_message('Edited after human review')}\n",
-                encoding="utf-8",
+            edited_drafts = (
+                _review_message("Edited after human review"),
+                (
+                    "Edited after removing the price\n\n"
+                    f"{DIRECT_OUTREACH_ROUTE}"
+                ),
             )
-            if os.name == "posix":
-                notes.chmod(0o600)
-            before = ledger.read_bytes()
-            stderr = io.StringIO()
-            with redirect_stderr(stderr):
-                exit_code = main(
-                    [
-                        str(ledger),
-                        "--as-of",
-                        "2026-07-13",
-                        "--approve-next",
-                        "prospect-001",
-                        "--approved-on",
-                        "2026-07-13",
-                        "--confirm-reviewed",
-                        "--review-digest",
-                        review_digest,
-                        "--reviewed-private-draft",
-                        str(notes),
-                    ]
-                )
+            for edited_draft in edited_drafts:
+                with self.subTest(price_count=edited_draft.count("$299")):
+                    notes.write_text(
+                        f"## prospect-001\n\n{edited_draft}\n",
+                        encoding="utf-8",
+                    )
+                    if os.name == "posix":
+                        notes.chmod(0o600)
+                    before = ledger.read_bytes()
+                    stderr = io.StringIO()
+                    with redirect_stderr(stderr):
+                        exit_code = main(
+                            [
+                                str(ledger),
+                                "--as-of",
+                                "2026-07-13",
+                                "--approve-next",
+                                "prospect-001",
+                                "--approved-on",
+                                "2026-07-13",
+                                "--confirm-reviewed",
+                                "--review-digest",
+                                review_digest,
+                                "--reviewed-private-draft",
+                                str(notes),
+                            ]
+                        )
 
-            self.assertEqual(exit_code, 2)
-            self.assertEqual(ledger.read_bytes(), before)
-            self.assertIn(
-                "review content changed; run --review-next again before deciding",
-                stderr.getvalue(),
-            )
-            self.assertNotIn("Edited after human review", stderr.getvalue())
-            self.assertEqual(
-                list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
-            )
+                    self.assertEqual(exit_code, 2)
+                    self.assertEqual(ledger.read_bytes(), before)
+                    self.assertIn(
+                        "review content changed; run --review-next again "
+                        "before deciding",
+                        stderr.getvalue(),
+                    )
+                    self.assertNotIn("Edited after", stderr.getvalue())
+                    self.assertEqual(
+                        list(Path(tmp).glob(".repo-scout-ledger.*.tmp")),
+                        [],
+                    )
 
     def test_content_bound_approve_rejects_campaign_route_drift(self) -> None:
         with TemporaryDirectory() as tmp:

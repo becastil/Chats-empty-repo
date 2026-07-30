@@ -79,8 +79,9 @@ they are not users, leads, or revenue.
 - Human-review the five prepared, publicly qualified drafts. The fresh
   owner-only schema-6 bundle is ready at
   `outreach-private/next-review-v6.md`; keep the schema-4 and schema-5 bundles
-  superseded. Its selected message passes the exact-once canonical-route
-  preflight; still complete the human accuracy and appropriateness checks.
+  superseded. Its selected message passes the exact-once canonical-route and
+  `$299` price preflights; still complete the human accuracy and
+  appropriateness checks.
   Replace the chosen decision command's `YYYY-MM-DD` values with the actual UTC
   decision date, and use its content-bound `--approve-next` or `--decline-next`
   command. After a decline, replace

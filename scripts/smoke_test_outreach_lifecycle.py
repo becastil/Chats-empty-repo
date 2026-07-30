@@ -42,6 +42,7 @@ DIRECT_OUTREACH_ROUTE = (
     "https://repo-scout.becastil.chatgpt.site/"
     "?source=outreach#why-teams-buy"
 )
+PILOT_PRICE_TEXT = "$299"
 DATE_PLACEHOLDER = "YYYY-MM-DD"
 OUTCOME_PLACEHOLDER = "OUTCOME"
 REVIEW_OUTPUT_PLACEHOLDER = "PRIVATE-REVIEW-PATH"
@@ -431,9 +432,11 @@ def verify_outreach_lifecycle(
         continuation_drafts.write_text(
             "# Private drafts\n\n"
             "## prospect-001\n\n"
-            f"First private message\n\n{DIRECT_OUTREACH_ROUTE}\n\n"
+            f"First private message for {PILOT_PRICE_TEXT}\n\n"
+            f"{DIRECT_OUTREACH_ROUTE}\n\n"
             "## prospect-002\n\n"
-            f"Second private message\n\n{DIRECT_OUTREACH_ROUTE}\n",
+            f"Second private message for {PILOT_PRICE_TEXT}\n\n"
+            f"{DIRECT_OUTREACH_ROUTE}\n",
             encoding="utf-8",
         )
         continuation_drafts.chmod(0o600)
@@ -689,6 +692,47 @@ def verify_outreach_lifecycle(
             f"Selected private message\n\n{DIRECT_OUTREACH_ROUTE}\n",
             encoding="utf-8",
         )
+        missing_price_review = _run(
+            outreach_command,
+            ledger,
+            as_of="2026-07-02",
+            arguments=(
+                "--review-next",
+                "--include-private-evidence",
+                "--include-private-draft",
+                str(private_drafts),
+            ),
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(
+            missing_price_review.stdout == "",
+            "missing-price review emitted a private bundle",
+        )
+        _require(
+            f"private draft must disclose the {PILOT_PRICE_TEXT} pilot price "
+            "exactly once"
+            in missing_price_review.stderr,
+            "missing-price review did not produce its controlled error",
+        )
+        _require(
+            "Selected private message" not in missing_price_review.stderr,
+            "missing-price review exposed private message text",
+        )
+        _require(
+            ledger.read_bytes() == draft_bytes,
+            "missing-price review modified the ledger",
+        )
+        checked.append("draft-price-rejected")
+
+        private_drafts.write_text(
+            "# Private drafts\n\n"
+            f"## {draft['prospect_id']}\n\n"
+            f"Selected private message\n\n"
+            f"Pilot price: {PILOT_PRICE_TEXT}\n\n"
+            f"{DIRECT_OUTREACH_ROUTE}\n",
+            encoding="utf-8",
+        )
 
         evidence_review = _json_command(
             outreach_command,
@@ -734,7 +778,11 @@ def verify_outreach_lifecycle(
         private_draft = evidence_review.get("review", {}).get("private_draft")
         _require(
             private_draft
-            == f"Selected private message\n\n{DIRECT_OUTREACH_ROUTE}",
+            == (
+                f"Selected private message\n\n"
+                f"Pilot price: {PILOT_PRICE_TEXT}\n\n"
+                f"{DIRECT_OUTREACH_ROUTE}"
+            ),
             "private review did not select the synthetic draft notes",
         )
         review_digest = evidence_review.get("review_digest")

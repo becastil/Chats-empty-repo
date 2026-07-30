@@ -62,6 +62,10 @@ class DirectOutreachContractTests(unittest.TestCase):
             "requires that canonical route exactly once",
             normalized_readme,
         )
+        self.assertIn(
+            "requires the disclosed `$299` price exactly once",
+            normalized_readme,
+        )
 
     def test_playbook_preserves_offer_source_and_bounded_cadence(self) -> None:
         playbook = PLAYBOOK.read_text(encoding="utf-8")
@@ -122,6 +126,10 @@ class DirectOutreachContractTests(unittest.TestCase):
         )
         self.assertIn(
             "requires that exact route once",
+            normalized_playbook,
+        )
+        self.assertIn(
+            "requires that `$299` disclosure exactly once",
             normalized_playbook,
         )
         self.assertIn(

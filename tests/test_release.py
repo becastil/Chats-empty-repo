@@ -610,6 +610,7 @@ class ReleaseManifestTests(unittest.TestCase):
                 "draft-reviewed",
                 "draft-ledger-drift-rejected",
                 "draft-route-rejected",
+                "draft-price-rejected",
                 "private-review-bundle",
                 "unconfirmed-approval-rejected",
                 "draft-approved",

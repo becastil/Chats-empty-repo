@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after enforcing the attributed route in decision-ready outreach:
-  309 / 1,000 (30.9%).
-- Remaining after enforcing the attributed route in decision-ready outreach:
-  691 commits.
+- Progress after enforcing paid-price disclosure in decision-ready outreach:
+  310 / 1,000 (31.0%).
+- Remaining after enforcing paid-price disclosure in decision-ready outreach:
+  690 commits.
 
 ## Commit Standard
 
