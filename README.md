@@ -480,13 +480,15 @@ ledger's file permissions. It refuses an alias other than the one shown by
 after the receipt was created. Calling `--approve-next` without both
 `--review-digest` and `--reviewed-private-draft` fails without mutation. It does
 not send a message or create contact or follow-up dates. Its schema-2 receipt
-reports the remaining drafted count. If another draft remains, the text output
-also includes a separate next-review command labeled for use only after the
-approved message has been sent and recorded. A content-bound approval preserves
-the private evidence and draft flags, notes path, and shell-quoted
-`PRIVATE-REVIEW-PATH`; replace that literal with a new ignored owner-only
-destination before writing the next complete bundle. A terminal approval queue
-emits no `--review-next` command.
+reports the remaining drafted count. Its manual-send handoff preserves the
+review digest and private notes path so `--record-contact` can reject a changed
+selected message before counting the attempt. If another draft remains, the
+text output also includes a separate next-review command labeled for use only
+after the approved message has been sent and recorded. A content-bound
+approval preserves the private evidence and draft flags, notes path, and
+shell-quoted `PRIVATE-REVIEW-PATH`; replace that literal with a new ignored
+owner-only destination before writing the next complete bundle. A terminal
+approval queue emits no `--review-next` command.
 When an approved row and another draft coexist, Repo Scout rejects
 `--review-next`, `--approve-next`, `--decline-next`, and `--write-review` until
 the approved message is sent manually and recorded with `--record-contact`.
@@ -502,15 +504,20 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
   --as-of "$(date -u +%F)" \
   --record-contact prospect-001 \
   --contacted-on "$(date -u +%F)" \
-  --confirm-sent
+  --confirm-sent \
+  --review-digest 'sha256:<digest-from-review-output>' \
+  --reviewed-private-draft outreach-private/drafts.md
 ```
 
 This action accepts only the next approved alias, retains `approved_on`, records
-the contact date, and sets `next_action_on` to exactly seven days later. Its
-private receipt names the manual follow-up date. Repo Scout sends no message and
-schedules no automatic follow-up. The generated contact-recording command uses
-date placeholders so approval and sending on different days cannot silently
-backdate the send.
+the contact date, and sets `next_action_on` to exactly seven days later. When
+the approval receipt supplies the review binding, it reconstructs the approved
+row's reviewed state, reloads the selected private draft, and rejects content
+or commit-window notes drift without exposing the changed text or mutating the
+ledger. Its private receipt names the manual follow-up date. Repo Scout sends
+no message and schedules no automatic follow-up. The generated
+contact-recording command uses date placeholders so approval and sending on
+different days cannot silently backdate the send.
 
 On that due date, after a human sends the one allowed follow-up, close the
 cadence with a guarded record:
@@ -565,11 +572,13 @@ drafted, approved, and review-declined rows outside attempted outreach. They
 also separate dated outcomes from legacy outcomes whose observation date was
 never retained. When an approval receipt is no longer visible, the report
 recovers only the next approved alias and an exact manual-send recording
-handoff with required date placeholders. It still omits the draft, evidence,
-channel, and approval date. A machine-readable `private_output` flag and matching
-text note mark reports with that alias or any due-follow-up alias as private;
-only reports containing neither are marked counts-only. A review-declined row
-counts as closed without becoming a contact attempt. The auditor also rejects
+handoff with required date placeholders. This ledger-only recovery cannot
+revalidate the reviewed draft and says to prefer the content-bound approval
+receipt. It still omits the draft, evidence, channel, and approval date. A
+machine-readable `private_output` flag and matching text note mark reports with
+that alias or any due-follow-up alias as private; only reports containing
+neither are marked counts-only. A review-declined row counts as closed without
+becoming a contact attempt. The auditor also rejects
 malformed CSV and any row with missing or extra cells instead of silently
 dropping private sales evidence. Schema-10 reports add the terminal
 `price-objection` state and a dedicated `price_objections` count so the bounded

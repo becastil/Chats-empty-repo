@@ -61,6 +61,10 @@ _PRIVATE_DRAFT_PRICE_ERROR = (
     f"private draft must disclose the {_PILOT_PRICE_TEXT} pilot price exactly "
     "once without negation or another dollar price"
 )
+_APPROVED_REVIEW_CHANGED_ERROR = (
+    "approved review content changed; restore the reviewed draft before "
+    "recording contact"
+)
 _DOLLAR_PRICE_PATTERN = re.compile(
     r"(?<![\w$])\$(?:0|[1-9][0-9]*)(?:,[0-9]{3})*"
     r"(?:\.[0-9]{1,2})?(?!\w|[.,][0-9])"
@@ -370,6 +374,8 @@ def record_next_outreach_contact(
     prospect_id: str,
     contacted_on: date,
     send_confirmed: bool,
+    review_digest: str | None = None,
+    reviewed_private_drafts_path: Path | None = None,
     as_of: date | None = None,
 ) -> dict[str, Any]:
     report_date = _resolve_report_date(as_of)
@@ -382,8 +388,17 @@ def record_next_outreach_contact(
         )
     if not PROSPECT_ID_PATTERN.fullmatch(prospect_id):
         raise OutreachInputError("prospect_id must match prospect-NNN")
+    _validate_review_binding_options(
+        review_digest=review_digest,
+        private_drafts_path=reviewed_private_drafts_path,
+    )
 
     _require_private_live_path(path, label="outreach ledger")
+    if reviewed_private_drafts_path is not None:
+        _require_private_live_path(
+            reviewed_private_drafts_path,
+            label="reviewed private draft notes",
+        )
     rows, ledger_revision = _load_outreach_snapshot(path)
     build_outreach_report(rows, as_of=report_date)
     next_approved = _next_status_row(rows, "approved")
@@ -394,6 +409,13 @@ def record_next_outreach_contact(
             f"next approved prospect is {next_approved['prospect_id']}; "
             "record it first"
         )
+    private_draft_guard = _verify_approved_outreach_review(
+        rows,
+        prospect_id=prospect_id,
+        as_of=report_date,
+        review_digest=review_digest,
+        private_drafts_path=reviewed_private_drafts_path,
+    )
 
     follow_up_due = contacted_on + timedelta(days=FOLLOW_UP_DAYS)
     updated_rows = [dict(row) for row in rows]
@@ -405,11 +427,20 @@ def record_next_outreach_contact(
             break
 
     build_outreach_report(updated_rows, as_of=report_date)
-    _write_outreach_rows(
-        path,
-        updated_rows,
-        expected_revision=ledger_revision,
-    )
+    if private_draft_guard is None:
+        _write_outreach_rows(
+            path,
+            updated_rows,
+            expected_revision=ledger_revision,
+        )
+    else:
+        _write_outreach_rows(
+            path,
+            updated_rows,
+            expected_revision=ledger_revision,
+            expected_private_draft_revision=private_draft_guard,
+            private_draft_change_error=_APPROVED_REVIEW_CHANGED_ERROR,
+        )
     return {
         "schema_version": CONTACT_SCHEMA_VERSION,
         "as_of": report_date.isoformat(),
@@ -919,6 +950,9 @@ def _write_outreach_rows(
     *,
     expected_revision: str | None = None,
     expected_private_draft_revision: tuple[Path, str] | None = None,
+    private_draft_change_error: str = (
+        "review content changed; run --review-next again before deciding"
+    ),
 ) -> None:
     temporary_path: Path | None = None
     operation_error: OutreachInputError | None = None
@@ -989,10 +1023,7 @@ def _write_outreach_rows(
                         private_draft_revision,
                     )
                 ):
-                    raise OutreachInputError(
-                        "review content changed; run --review-next again "
-                        "before deciding"
-                    )
+                    raise OutreachInputError(private_draft_change_error)
             os.replace(temporary_path, path)
             temporary_path = None
     except OutreachInputError as exc:
@@ -1493,7 +1524,7 @@ def _validate_review_binding_options(
 ) -> None:
     if (review_digest is None) != (private_drafts_path is None):
         raise OutreachInputError(
-            "content-bound decisions require both --review-digest and "
+            "content-bound actions require both --review-digest and "
             "--reviewed-private-draft"
         )
     if review_digest is not None and not REVIEW_DIGEST_PATTERN.fullmatch(
@@ -1546,6 +1577,47 @@ def _verify_next_outreach_review(
         raise OutreachInputError(
             "review content changed; run --review-next again before deciding"
         )
+    return private_drafts_path, private_draft_revision
+
+
+def _verify_approved_outreach_review(
+    rows: list[dict[str, str | None]],
+    *,
+    prospect_id: str,
+    as_of: date,
+    review_digest: str | None,
+    private_drafts_path: Path | None,
+) -> tuple[Path, str] | None:
+    if review_digest is None or private_drafts_path is None:
+        return None
+    review_rows = [dict(row) for row in rows]
+    for row in review_rows:
+        if (
+            (row.get("prospect_id") or "").strip() == prospect_id
+            and (row.get("status") or "").strip() == "approved"
+        ):
+            row["status"] = "drafted"
+            row["approved_on"] = ""
+            break
+    else:
+        raise OutreachInputError(_APPROVED_REVIEW_CHANGED_ERROR)
+    try:
+        private_drafts, private_draft_revision = (
+            _load_private_drafts_snapshot(private_drafts_path)
+        )
+        current_review = build_next_outreach_review(
+            review_rows,
+            as_of=as_of,
+            include_private_evidence=True,
+            private_drafts=private_drafts,
+        )
+    except OutreachInputError:
+        raise OutreachInputError(_APPROVED_REVIEW_CHANGED_ERROR) from None
+    current_digest = current_review["review_digest"]
+    if not isinstance(current_digest, str) or not compare_digest(
+        current_digest, review_digest
+    ):
+        raise OutreachInputError(_APPROVED_REVIEW_CHANGED_ERROR)
     return private_drafts_path, private_draft_revision
 
 
@@ -1664,6 +1736,11 @@ def format_outreach_report(
                         "--contacted-on",
                         DATE_PLACEHOLDER,
                         "--confirm-sent",
+                    ),
+                    (
+                        "Recovery boundary: this ledger-only handoff cannot "
+                        "revalidate the reviewed draft content. Prefer the "
+                        "content-bound command from the approval receipt."
                     ),
                 ]
             )
@@ -1810,7 +1887,8 @@ def format_outreach_approval(
     approval_report: dict[str, Any],
     *,
     ledger: Path,
-    private_drafts_path: Path | None = None,
+    review_digest: str,
+    private_drafts_path: Path,
 ) -> str:
     approval = approval_report["approval"]
     drafts_remaining = approval_report["queue"]["drafts_remaining"]
@@ -1835,6 +1913,10 @@ def format_outreach_approval(
             "--contacted-on",
             DATE_PLACEHOLDER,
             "--confirm-sent",
+            "--review-digest",
+            review_digest,
+            "--reviewed-private-draft",
+            str(private_drafts_path),
         ),
     ]
     if drafts_remaining:
@@ -2187,7 +2269,7 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "Content-bound receipt emitted by a complete --review-next bundle. "
             "Required with --reviewed-private-draft for approval; optional for "
-            "a content-bound decline."
+            "a content-bound decline or approval-receipt contact handoff."
         ),
     )
     parser.add_argument(
@@ -2195,8 +2277,8 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         metavar="DRAFTS_MD",
         help=(
-            "Private draft notes used for a content-bound review. Required "
-            "with --review-digest."
+            "Private draft notes used for a content-bound review or contact "
+            "handoff. Required with --review-digest."
         ),
     )
     parser.add_argument(
@@ -2324,9 +2406,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             args.review_digest is not None
             and args.approve_next is None
             and args.decline_next is None
+            and args.record_contact is None
         ):
             raise OutreachInputError(
-                "--review-digest requires --approve-next or --decline-next"
+                "--review-digest requires --approve-next, --decline-next, or "
+                "--record-contact"
             )
         if args.record_outcome is None and outcome_options:
             raise OutreachInputError(
@@ -2405,6 +2489,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 prospect_id=args.record_contact,
                 contacted_on=args.contacted_on,
                 send_confirmed=args.confirm_sent,
+                review_digest=args.review_digest,
+                reviewed_private_drafts_path=args.reviewed_private_draft,
                 as_of=args.as_of,
             )
         elif args.record_follow_up is not None:
@@ -2513,6 +2599,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         rendered_output = format_outreach_approval(
             report,
             ledger=args.ledger,
+            review_digest=args.review_digest,
             private_drafts_path=args.reviewed_private_draft,
         )
     elif args.decline_next is not None:

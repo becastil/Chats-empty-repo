@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Carried complete-review digests and private notes paths into approval
+  receipts' manual-send handoffs, then revalidated the reviewed state before
+  `--record-contact` can count an attempt.
+- Rejected selected-draft edits before contact and during the atomic commit
+  window without private output or ledger mutation, with source and installed
+  lifecycle coverage plus an explicit unbound-recovery disclosure.
 - Rejected decision-ready outreach drafts that negate the canonical `$299`
   offer or include any competing dollar amount before a review receipt or
   owner-only bundle can be emitted.

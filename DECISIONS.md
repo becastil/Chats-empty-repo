@@ -5269,3 +5269,27 @@ Source and installed-command lifecycle coverage exercises missing, repeated,
 negated, competing, and lookalike pricing. The existing five-draft private
 queue remains unchanged and valid; this update does not approve or send a
 message, record demand, collect payment, or create revenue.
+
+## 2026-07-31: Revalidate Approved Content Before Recording Contact
+
+Complete review receipts bound human approval to one ledger row, selected
+draft, canonical route, `$299` offer, and checklist. Their generated
+manual-send handoff then discarded that binding. Editing the selected private
+draft after approval still allowed `--record-contact` to count the message as
+an attempt, weakening the willingness-to-pay evidence attached to that send.
+
+The approval receipt's contact command now carries the original review digest
+and private notes path. Before recording contact, Repo Scout reconstructs the
+approved row's reviewed state, rebuilds the complete review from the current
+selected draft, compares the digest, and holds the verified notes revision
+through the atomic ledger commit. Pre-action and commit-window drift return one
+generic private error, preserve ledger bytes, and expose no changed message.
+
+Existing approved ledgers remain recoverable when the one-time approval receipt
+is gone. Their alias-only report still emits the prior confirmation-based
+contact command, but now explicitly states that this ledger-only path cannot
+revalidate reviewed content and that the content-bound receipt is preferred.
+Source and installed-command lifecycle coverage proves both the new rejection
+and successful recovery after restoring reviewed content. The real five-draft
+queue remains unchanged; no message was approved, sent, or counted as demand,
+payment, or revenue.

@@ -72,6 +72,14 @@ class DirectOutreachContractTests(unittest.TestCase):
             normalized_readme,
         )
         self.assertIn("any competing dollar amount", normalized_readme)
+        self.assertIn(
+            "approval receipt supplies the review binding",
+            normalized_readme,
+        )
+        self.assertIn(
+            "ledger-only recovery cannot revalidate the reviewed draft",
+            normalized_readme,
+        )
 
     def test_playbook_preserves_offer_source_and_bounded_cadence(self) -> None:
         playbook = PLAYBOOK.read_text(encoding="utf-8")
@@ -139,6 +147,16 @@ class DirectOutreachContractTests(unittest.TestCase):
             normalized_playbook,
         )
         self.assertIn("any competing dollar amount fail", normalized_playbook)
+        self.assertIn(
+            "approval receipt's handoff also carries the content digest and "
+            "notes path",
+            normalized_playbook,
+        )
+        self.assertIn(
+            "ledger-only recovery explicitly cannot revalidate the reviewed "
+            "draft",
+            normalized_playbook,
+        )
         self.assertIn(
             "Replace both `YYYY-MM-DD` placeholders with the actual UTC "
             "decision date",

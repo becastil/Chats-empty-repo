@@ -1049,6 +1049,15 @@ forces a fresh review instead of recording a decision against content that no
 longer matches the human evidence. Symmetric regression coverage now forces
 that exact commit-window edit during both approval and decline, proving each
 branch preserves ledger bytes, hides changed text, and removes staged output.
+The approval receipt's manual-send handoff now retains the same review digest
+and private notes path. Before `--record-contact` counts the attempt, Repo Scout
+reconstructs the approved row's reviewed state, reloads the selected draft, and
+holds the verified notes revision through the atomic ledger write. Selected
+message drift before or during contact recording fails without exposing the
+changed text or creating activity. The ledger-only recovery handoff remains
+available for an already-lost receipt, but explicitly says it cannot revalidate
+the reviewed draft. This protects the normal `$299` experiment path without
+claiming what was transmitted outside Repo Scout.
 
 The same complete review can now be created with `--write-review` inside the
 ignored private workspace instead of exposing the draft, alias, and evidence to

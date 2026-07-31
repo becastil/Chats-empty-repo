@@ -316,6 +316,10 @@ class OutreachReportTests(unittest.TestCase):
             report["next_approved"], {"prospect_id": "prospect-002"}
         )
         self.assertIn("--record-contact prospect-002", text)
+        self.assertIn(
+            "cannot revalidate the reviewed draft content",
+            text,
+        )
         self.assertNotIn("prospect-003", json.dumps(report))
         self.assertNotIn("prospect-003", text)
 
@@ -3402,6 +3406,192 @@ class OutreachReportTests(unittest.TestCase):
             text = format_outreach_contact(receipt, ledger=ledger)
             self.assertIn("Manual follow-up due: 2026-07-19", text)
             self.assertIn("follow up manually", text)
+            self.assertEqual(
+                list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
+            )
+
+    def test_approval_contact_handoff_rejects_draft_drift(self) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "private-ledger.csv"
+            notes = Path(tmp) / "drafts.md"
+            rows = [
+                _row(
+                    status="drafted",
+                    contacted_on="",
+                    next_action_on="",
+                    approved_on="",
+                )
+            ]
+            _write_ledger(ledger, rows)
+            review_digest = _write_content_bound_review(
+                notes,
+                rows,
+                as_of=date(2026, 7, 13),
+            )
+            approval_stdout = io.StringIO()
+
+            with redirect_stdout(approval_stdout):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--approve-next",
+                        "prospect-001",
+                        "--approved-on",
+                        "2026-07-13",
+                        "--confirm-reviewed",
+                        "--review-digest",
+                        review_digest,
+                        "--reviewed-private-draft",
+                        str(notes),
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            contact_commands = [
+                shlex.split(line)
+                for line in approval_stdout.getvalue().splitlines()
+                if line.startswith("repo-scout-outreach ")
+                and "--record-contact" in shlex.split(line)
+            ]
+            self.assertEqual(len(contact_commands), 1)
+            contact_command = contact_commands[0]
+            self.assertIn("--review-digest", contact_command)
+            self.assertIn(review_digest, contact_command)
+            self.assertIn("--reviewed-private-draft", contact_command)
+            self.assertIn(str(notes), contact_command)
+            contact_arguments = [
+                (
+                    "2026-07-14"
+                    if value == DATE_PLACEHOLDER
+                    else value
+                )
+                for value in contact_command[1:]
+            ]
+
+            edited_message = "Edited after approval"
+            notes.write_text(
+                f"## prospect-001\n\n"
+                f"{_review_message(edited_message)}\n",
+                encoding="utf-8",
+            )
+            before_contact = ledger.read_bytes()
+            stderr = io.StringIO()
+            with redirect_stderr(stderr):
+                exit_code = main(contact_arguments)
+
+            self.assertEqual(exit_code, 2)
+            self.assertIn(
+                "approved review content changed; restore the reviewed draft "
+                "before recording contact",
+                stderr.getvalue(),
+            )
+            self.assertNotIn(edited_message, stderr.getvalue())
+            self.assertEqual(ledger.read_bytes(), before_contact)
+
+            notes.write_text(
+                f"## prospect-001\n\n"
+                f"{_review_message('Reviewed private message for prospect-001')}"
+                "\n",
+                encoding="utf-8",
+            )
+            with redirect_stdout(io.StringIO()):
+                exit_code = main(contact_arguments)
+
+            self.assertEqual(exit_code, 0)
+            with ledger.open(newline="", encoding="utf-8") as ledger_file:
+                contacted = next(csv.DictReader(ledger_file))
+            self.assertEqual(contacted["status"], "contacted")
+            self.assertEqual(contacted["contacted_on"], "2026-07-14")
+            self.assertEqual(
+                list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
+            )
+
+    def test_content_bound_contact_rejects_commit_window_draft_edit(
+        self,
+    ) -> None:
+        import repo_scout.outreach as outreach_module
+
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "private-ledger.csv"
+            notes = Path(tmp) / "drafts.md"
+            rows = [
+                _row(
+                    status="drafted",
+                    contacted_on="",
+                    next_action_on="",
+                    approved_on="",
+                )
+            ]
+            _write_ledger(ledger, rows)
+            review_digest = _write_content_bound_review(
+                notes,
+                rows,
+                as_of=date(2026, 7, 13),
+            )
+            outreach_module.approve_next_outreach_draft(
+                ledger,
+                prospect_id="prospect-001",
+                approved_on=date(2026, 7, 13),
+                review_confirmed=True,
+                review_digest=review_digest,
+                reviewed_private_drafts_path=notes,
+                as_of=date(2026, 7, 13),
+            )
+            before_contact = ledger.read_bytes()
+            original_write = outreach_module._write_outreach_rows
+            edited_message = "Edited during contact recording"
+
+            def write_after_private_edit(
+                path: Path,
+                rows: list[dict[str, str]],
+                *,
+                expected_revision: str | None = None,
+                expected_private_draft_revision: (
+                    tuple[Path, str] | None
+                ) = None,
+                private_draft_change_error: str = "",
+            ) -> None:
+                notes.write_text(
+                    f"## prospect-001\n\n"
+                    f"{_review_message(edited_message)}\n",
+                    encoding="utf-8",
+                )
+                original_write(
+                    path,
+                    rows,
+                    expected_revision=expected_revision,
+                    expected_private_draft_revision=(
+                        expected_private_draft_revision
+                    ),
+                    private_draft_change_error=private_draft_change_error,
+                )
+
+            with (
+                patch.object(
+                    outreach_module,
+                    "_write_outreach_rows",
+                    side_effect=write_after_private_edit,
+                ),
+                self.assertRaisesRegex(
+                    OutreachInputError,
+                    "approved review content changed; restore the reviewed "
+                    "draft before recording contact",
+                ) as raised,
+            ):
+                outreach_module.record_next_outreach_contact(
+                    ledger,
+                    prospect_id="prospect-001",
+                    contacted_on=date(2026, 7, 14),
+                    send_confirmed=True,
+                    review_digest=review_digest,
+                    reviewed_private_drafts_path=notes,
+                    as_of=date(2026, 7, 14),
+                )
+
+            self.assertEqual(ledger.read_bytes(), before_contact)
+            self.assertNotIn(edited_message, str(raised.exception))
             self.assertEqual(
                 list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
             )

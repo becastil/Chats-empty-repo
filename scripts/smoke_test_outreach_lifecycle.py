@@ -1158,6 +1158,54 @@ def verify_outreach_lifecycle(
         checked.append("draft-approved")
         checked.append("counts-only-publication-guard")
 
+        approved_ledger_bytes = ledger.read_bytes()
+        approved_private_drafts = private_drafts.read_text(encoding="utf-8")
+        private_drafts.write_text(
+            approved_private_drafts.replace(
+                "Selected private message",
+                "Edited after approval",
+                1,
+            ),
+            encoding="utf-8",
+        )
+        changed_approved_draft = _run(
+            outreach_command,
+            ledger,
+            as_of="2026-07-04",
+            arguments=(
+                "--record-contact",
+                draft["prospect_id"],
+                "--contacted-on",
+                "2026-07-03",
+                "--confirm-sent",
+                "--review-digest",
+                review_digest,
+                "--reviewed-private-draft",
+                str(private_drafts),
+            ),
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(
+            "approved review content changed; restore the reviewed draft "
+            "before recording contact"
+            in changed_approved_draft.stderr,
+            "changed approved draft did not produce its controlled error",
+        )
+        _require(
+            "Edited after approval" not in changed_approved_draft.stderr,
+            "changed approved draft was exposed in the contact error",
+        )
+        _require(
+            ledger.read_bytes() == approved_ledger_bytes,
+            "changed approved draft modified the ledger",
+        )
+        private_drafts.write_text(
+            approved_private_drafts,
+            encoding="utf-8",
+        )
+        checked.append("approved-draft-drift-rejected")
+
         contact = _json_command(
             outreach_command,
             ledger,
@@ -1168,6 +1216,10 @@ def verify_outreach_lifecycle(
                 "--contacted-on",
                 "2026-07-03",
                 "--confirm-sent",
+                "--review-digest",
+                review_digest,
+                "--reviewed-private-draft",
+                str(private_drafts),
             ),
             environment=environment,
         )

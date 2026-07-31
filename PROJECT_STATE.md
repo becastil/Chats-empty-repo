@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 316 of
-1,000, with 684 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 317 of
+1,000, with 683 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -694,6 +694,13 @@ alignment take priority over commit volume.
   rejects late private-ledger privacy drift without replacing its bytes.
 - Guarded `--record-contact` recording that requires the exact next approved
   alias, an explicit send date, and confirmation that a human already sent it.
+- Content-bound contact handoffs in every approval receipt, preserving the
+  review digest and notes path, reconstructing the approved row's reviewed
+  state, and rejecting selected-message or commit-window notes drift before an
+  attempt can be counted.
+- Explicitly labeled ledger-only contact recovery for a lost approval receipt,
+  preserving backward compatibility while stating that recovered output cannot
+  revalidate reviewed draft content.
 - Approval-date retention and automatic calculation of the exact seven-day
   next action without sending or scheduling an automatic message.
 - Guarded `--record-follow-up` recording for the earliest due contacted alias
@@ -938,12 +945,15 @@ channels. After a
 nonterminal decline, replace `PRIVATE-REVIEW-PATH` inside its existing single
 quotes with a new ignored owner-only destination before running the emitted
 review command.
-Immediately record each human send with guarded `--record-contact`, which
-retains approval and calculates the exact seven-day follow-up. Only after that
-record succeeds, use the approval receipt's separate next-review handoff,
-replace its shell-quoted `PRIVATE-REVIEW-PATH`, and review the next draft; the
-CLI now rejects that handoff before contact is recorded. When due, send that
-one follow-up manually and close its cadence through guarded
+Immediately record each human send with the approval receipt's
+digest-and-notes-bound `--record-contact` handoff, which rejects reviewed draft
+drift, retains approval, and calculates the exact seven-day follow-up. Use the
+explicitly unbound ledger-only recovery only when that receipt is genuinely
+lost. Only after the contact record succeeds, use the approval receipt's
+separate next-review handoff, replace its shell-quoted
+`PRIVATE-REVIEW-PATH`, and review the next draft; the CLI now rejects that
+handoff before contact is recorded. When due, send that one follow-up manually
+and close its cadence through guarded
 `--record-follow-up`. Record any explicit `$299` resistance as the
 human-observed `price-objection` outcome instead of collapsing it into
 `not-a-fit`; record an explicit existing-tool or DIY preference as

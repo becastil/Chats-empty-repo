@@ -296,16 +296,16 @@ does not reuse the bundle's earlier ledger-audit date. The private receipt omits
 evidence URLs and the review date. This action records a human decision. It
 does not send outreach or create a contact or follow-up date. Its text receipt
 ends with a complete command for recording the manual send, using the same alias
-and private ledger path with `YYYY-MM-DD` placeholders. Replace both placeholders
-with the actual UTC send date; an unchanged placeholder fails parsing instead
-of reusing the approval date. The schema-2 receipt also reports the remaining
-drafted count. When that count is nonzero, it emits a separate next-review
-command labeled for use only after the manual send has been recorded. A
-content-bound approval preserves both private review flags and the same notes
-path, then requires a replaced shell-quoted `PRIVATE-REVIEW-PATH` before writing
-the next complete owner-only bundle. At zero, the receipt reports that the
-bounded review queue will be complete after the send is recorded and emits no
-dead review handoff.
+and private ledger path with `YYYY-MM-DD` placeholders plus the review digest
+and private notes path. Replace both placeholders with the actual UTC send
+date; an unchanged placeholder fails parsing instead of reusing the approval
+date. The schema-2 receipt also reports the remaining drafted count. When that
+count is nonzero, it emits a separate next-review command labeled for use only
+after the manual send has been recorded. A content-bound approval preserves
+both private review flags and the same notes path, then requires a replaced
+shell-quoted `PRIVATE-REVIEW-PATH` before writing the next complete owner-only
+bundle. At zero, the receipt reports that the bounded review queue will be
+complete after the send is recorded and emits no dead review handoff.
 
 The ordering is fail-closed. If an approved row and another draft coexist,
 `--review-next`, `--approve-next`, `--decline-next`, and owner-only
@@ -325,24 +325,30 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
   --as-of "$(date -u +%F)" \
   --record-contact prospect-001 \
   --contacted-on "$(date -u +%F)" \
-  --confirm-sent
+  --confirm-sent \
+  --review-digest 'sha256:<digest-from-review-output>' \
+  --reviewed-private-draft outreach-private/drafts.md
 ```
 
 `--record-contact` requires the lowest approved alias, an explicit send date,
-and confirmation that a human already sent the message. It retains
+and confirmation that a human already sent the message. The approval receipt's
+handoff also carries the content digest and notes path. Repo Scout reconstructs
+the approved row's reviewed state, reloads the selected draft, and holds that
+notes revision through the ledger commit. A changed message or commit-window
+edit fails without exposing content or recording an attempt. The action retains
 `approved_on`, changes only `status`, `contacted_on`, and `next_action_on`, and
 computes the next action at exactly seven days. Keep `approved_on` on every
-later status. Missing confirmation,
-out-of-order aliases, dates before approval, future dates, invalid ledger state,
-or write failures leave the file unchanged. The private receipt omits evidence,
-approval dates, and the explicit contact field while naming the manual follow-up
-due date. That date makes send timing inferable, so keep the receipt private.
-Repo Scout sends nothing and schedules no automatic message. The text receipt
-ends with a complete follow-up recording command whose `as_of` and
-`followed-up-on` values are placeholders for the actual UTC send date. The
-receipt still displays the earliest due date, and validation rejects an earlier
-follow-up. It also emits an exact outcome command for a response observed before
-that due date, preserving the alias and shell-quoted private ledger path.
+later status. Missing confirmation, out-of-order aliases, dates before
+approval, future dates, invalid ledger state, stale bound content, or write
+failures leave the file unchanged. The private receipt omits evidence, approval
+dates, and the explicit contact field while naming the manual follow-up due
+date. That date makes send timing inferable, so keep the receipt private. Repo
+Scout sends nothing and schedules no automatic message. The text receipt ends
+with a complete follow-up recording command whose `as_of` and `followed-up-on`
+values are placeholders for the actual UTC send date. The receipt still
+displays the earliest due date, and validation rejects an earlier follow-up. It
+also emits an exact outcome command for a response observed before that due
+date, preserving the alias and shell-quoted private ledger path.
 
 On the due date, after a human sends the one allowed follow-up, record it:
 
@@ -467,7 +473,9 @@ reports drafts awaiting review and approved messages separately from sent
 attempts. Schema 9 also surfaces only the next approved alias and a guarded
 `--record-contact` handoff with two date placeholders, so an operator can resume
 after losing the one-time approval receipt without opening or editing the CSV.
-The recovery output omits the draft, evidence, channel, and approval date.
+This ledger-only recovery explicitly cannot revalidate the reviewed draft and
+directs the operator to prefer the approval receipt when it is available. The
+recovery output omits the draft, evidence, channel, and approval date.
 Every report now includes a machine-readable `private_output` flag and matching
 privacy note: any next-approved or due-follow-up alias makes the output private,
 while a report with neither is explicitly counts-only. Source URLs never appear
