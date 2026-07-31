@@ -614,6 +614,7 @@ class ReleaseManifestTests(unittest.TestCase):
                 "draft-price-rejected",
                 "private-review-bundle",
                 "unconfirmed-approval-rejected",
+                "unbound-approval-rejected",
                 "draft-approved",
                 "counts-only-publication-guard",
                 "contact-recorded",

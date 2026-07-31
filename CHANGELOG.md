@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Required every guarded outreach approval to carry the digest and private
+  notes path from a complete evidence-and-draft review.
+- Removed approval handoffs from redacted and partial reviews while retaining
+  an explicit no-send decline path for malformed or unsuitable drafts.
+- Extended source and installed-command lifecycle coverage to prove a confirmed
+  receipt-free approval emits no private output and leaves the ledger unchanged.
 - Enforced one pending approved outreach message at a time by rejecting another
   review, approval, decline, or owner-only review write until the existing
   approved send is recorded.

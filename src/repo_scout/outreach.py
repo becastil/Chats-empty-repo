@@ -218,12 +218,6 @@ def approve_next_outreach_draft(
             f"next drafted prospect is {next_draft['prospect_id']}; "
             "review and approve it first"
         )
-    private_draft_guard = _verify_next_outreach_review(
-        rows,
-        as_of=report_date,
-        review_digest=review_digest,
-        private_drafts_path=reviewed_private_drafts_path,
-    )
 
     updated_rows = [dict(row) for row in rows]
     for row in updated_rows:
@@ -233,6 +227,16 @@ def approve_next_outreach_draft(
             break
 
     build_outreach_report(updated_rows, as_of=report_date)
+    _require_content_bound_approval(
+        review_digest=review_digest,
+        private_drafts_path=reviewed_private_drafts_path,
+    )
+    private_draft_guard = _verify_next_outreach_review(
+        rows,
+        as_of=report_date,
+        review_digest=review_digest,
+        private_drafts_path=reviewed_private_drafts_path,
+    )
     _write_outreach_rows(
         path,
         updated_rows,
@@ -1469,6 +1473,18 @@ def _validate_review_binding_options(
         )
 
 
+def _require_content_bound_approval(
+    *,
+    review_digest: str | None,
+    private_drafts_path: Path | None,
+) -> None:
+    if review_digest is None or private_drafts_path is None:
+        raise OutreachInputError(
+            "--approve-next requires --review-digest and "
+            "--reviewed-private-draft from a complete evidence-and-draft review"
+        )
+
+
 def _verify_next_outreach_review(
     rows: list[dict[str, str | None]],
     *,
@@ -1690,31 +1706,58 @@ def format_next_outreach_review(
                     if review_digest is not None
                     else []
                 ),
-                "After human review, choose exactly one decision:",
-                "Approve for manual sending:",
-                _format_outreach_command(
-                    ledger,
-                    "--as-of",
-                    DATE_PLACEHOLDER,
-                    "--approve-next",
-                    review["prospect_id"],
-                    "--approved-on",
-                    DATE_PLACEHOLDER,
-                    "--confirm-reviewed",
-                    *decision_guard,
-                ),
-                "Decline without sending:",
-                _format_outreach_command(
-                    ledger,
-                    "--as-of",
-                    DATE_PLACEHOLDER,
-                    "--decline-next",
-                    review["prospect_id"],
-                    "--confirm-not-send",
-                    *decision_guard,
-                ),
             ]
         )
+        if review_digest is not None:
+            lines.extend(
+                [
+                    "After human review, choose exactly one decision:",
+                    "Approve for manual sending:",
+                    _format_outreach_command(
+                        ledger,
+                        "--as-of",
+                        DATE_PLACEHOLDER,
+                        "--approve-next",
+                        review["prospect_id"],
+                        "--approved-on",
+                        DATE_PLACEHOLDER,
+                        "--confirm-reviewed",
+                        *decision_guard,
+                    ),
+                    "Decline without sending:",
+                    _format_outreach_command(
+                        ledger,
+                        "--as-of",
+                        DATE_PLACEHOLDER,
+                        "--decline-next",
+                        review["prospect_id"],
+                        "--confirm-not-send",
+                        *decision_guard,
+                    ),
+                ]
+            )
+        else:
+            lines.extend(
+                [
+                    (
+                        "Approval requires a complete evidence-and-draft review "
+                        "with a content-bound receipt."
+                    ),
+                    (
+                        "Re-run --review-next with --include-private-evidence "
+                        "and --include-private-draft before approval."
+                    ),
+                    "Decline without sending:",
+                    _format_outreach_command(
+                        ledger,
+                        "--as-of",
+                        DATE_PLACEHOLDER,
+                        "--decline-next",
+                        review["prospect_id"],
+                        "--confirm-not-send",
+                    ),
+                ]
+            )
     if review_report["private_evidence_included"] and review_report[
         "private_draft_included"
     ]:
@@ -2112,7 +2155,8 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="SHA256",
         help=(
             "Content-bound receipt emitted by a complete --review-next bundle. "
-            "Use with --reviewed-private-draft when approving or declining."
+            "Required with --reviewed-private-draft for approval; optional for "
+            "a content-bound decline."
         ),
     )
     parser.add_argument(

@@ -155,13 +155,13 @@ evidence and saved draft before using a guarded review decision. The sixth
 check requires the draft to use the displayed route so a later public pilot
 application retains its direct-outreach discovery source. The checklist is
 private operator material because it names a ledger alias; do not commit it as
-a measurement baseline. Text mode ends with complete, shell-quoted commands to
-approve or decline the selected alias using `YYYY-MM-DD` decision-date
-placeholders and the supplied ledger path. Choose exactly one after human
-review and replace every placeholder with that decision's actual UTC date.
-Omit `--as-of` to use the current UTC calendar date. The explicit UTC date in
-these examples keeps the initial ledger audit reproducible across operator
-timezones; it is not the later human decision date.
+a measurement baseline. Because this alias-only checklist cannot bind the
+private message, price, and evidence, it emits no approval command. It retains
+a shell-quoted no-send decline command and directs the reviewer to create the
+complete evidence-and-draft bundle before approval. Omit `--as-of` to use the
+current UTC calendar date. The explicit UTC date in these examples keeps the
+initial ledger audit reproducible across operator timezones; it is not the
+later human decision date.
 
 To inspect the selected draft and its qualification links without manually
 cross-referencing the CSV and notes file, request both explicitly in the same
@@ -224,7 +224,10 @@ the ignored workspace and do not move it into committed reports, logs, issue
 comments, or CI artifacts.
 Without the flags, review output remains redacted. Showing the bundle still does
 not verify a claim, approve a draft, or send a message; the human must read the
-draft, open each source, and complete every displayed check.
+draft, open each source, and complete every displayed check. Redacted,
+evidence-only, and draft-only reviews intentionally omit `--approve-next`;
+only a complete evidence-and-draft review can generate the receipt-bound
+approval handoff.
 
 If a human decides the selected draft must not be sent, close it without
 creating contact activity:
@@ -241,17 +244,20 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
 `--decline-next` requires the lowest drafted alias selected by `--review-next`
 and explicit confirmation of the human no-send decision. It validates the
 complete ledger before and after the transition, preserves file permissions,
-and recomputes the content receipt. It atomically changes only `status` to
-`review-declined`. Missing confirmation, out-of-order aliases, stale review
-content, invalid ledger state, or write failures leave the file unchanged. The
-private receipt contains no evidence URL or persisted decision date and reports
-only the number of drafts remaining. While that count is positive, it ends with
-a command for reviewing the next draft with a `YYYY-MM-DD` placeholder. Replace
-that placeholder with the actual UTC date when the next human review begins;
-leaving it unchanged fails before the ledger is read or modified. At zero, the
-receipt reports that the bounded review queue is complete and emits no dead
-handoff. When the decline came from a complete evidence-and-draft review, the
-next command preserves both private review flags and the same shell-quoted notes
+and recomputes the content receipt when the decision carries one. An incomplete
+review may still decline without a digest so a malformed message can be closed
+without first being repaired; this escape hatch can never approve or send it.
+The action atomically changes only `status` to `review-declined`. Missing
+confirmation, out-of-order aliases, stale bound review content, invalid ledger
+state, or write failures leave the file unchanged. The private receipt contains
+no evidence URL or persisted decision date and reports only the number of
+drafts remaining. While that count is positive, it ends with a command for
+reviewing the next draft with a `YYYY-MM-DD` placeholder. Replace that
+placeholder with the actual UTC date when the next human review begins; leaving
+it unchanged fails before the ledger is read or modified. At zero, the receipt
+reports that the bounded review queue is complete and emits no dead handoff.
+When the decline came from a complete evidence-and-draft review, the next
+command preserves both private review flags and the same shell-quoted notes
 path, and adds `--write-review 'PRIVATE-REVIEW-PATH'`. Replace the literal
 inside those existing quotes with a new destination in the ignored owner-only
 workspace after privately archiving or removing the completed review. A path
@@ -277,27 +283,28 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
 ```
 
 `--approve-next` requires the lowest drafted alias selected by `--review-next`,
-an explicit review date, and the confirmation flag. It validates the complete
-ledger before and after the transition, recomputes the content receipt,
-preserves file permissions, and atomically changes only `status` and
-`approved_on`. Missing confirmation, out-of-order aliases, stale review
+an explicit review date, the confirmation flag, the complete review digest, and
+the reviewed private notes path. It validates the complete ledger before and
+after the transition, recomputes the content receipt, preserves file
+permissions, and atomically changes only `status` and `approved_on`. Missing
+binding options, missing confirmation, out-of-order aliases, stale review
 content, future dates, or invalid ledger state leave the file unchanged. The
 content receipt remains valid across dates only while the reviewed row, private
-draft, and six-check contract are unchanged. The generated command
-deliberately does not reuse the bundle's earlier ledger-audit date. The
-private receipt omits evidence URLs and the review date. This action records a
-human decision; it does not send outreach or create a contact or follow-up
-date. Its text receipt ends with a complete command for recording the manual
-send, using the same alias and private ledger path with `YYYY-MM-DD`
-placeholders. Replace both placeholders with the actual UTC send date; an
-unchanged placeholder fails parsing instead of reusing the approval date. The
-schema-2 receipt also reports the remaining drafted count. When that count is
-nonzero, it emits a separate next-review command labeled for use only after the
-manual send has been recorded. A content-bound approval preserves both private
-review flags and the same notes path, then requires a replaced shell-quoted
-`PRIVATE-REVIEW-PATH` before writing the next complete owner-only bundle. At
-zero, the receipt reports that the bounded review queue will be complete after
-the send is recorded and emits no dead review handoff.
+draft, and six-check contract are unchanged. The generated command deliberately
+does not reuse the bundle's earlier ledger-audit date. The private receipt omits
+evidence URLs and the review date. This action records a human decision. It
+does not send outreach or create a contact or follow-up date. Its text receipt
+ends with a complete command for recording the manual send, using the same alias
+and private ledger path with `YYYY-MM-DD` placeholders. Replace both placeholders
+with the actual UTC send date; an unchanged placeholder fails parsing instead
+of reusing the approval date. The schema-2 receipt also reports the remaining
+drafted count. When that count is nonzero, it emits a separate next-review
+command labeled for use only after the manual send has been recorded. A
+content-bound approval preserves both private review flags and the same notes
+path, then requires a replaced shell-quoted `PRIVATE-REVIEW-PATH` before writing
+the next complete owner-only bundle. At zero, the receipt reports that the
+bounded review queue will be complete after the send is recorded and emits no
+dead review handoff.
 
 The ordering is fail-closed. If an approved row and another draft coexist,
 `--review-next`, `--approve-next`, `--decline-next`, and owner-only

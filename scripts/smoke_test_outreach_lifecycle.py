@@ -165,6 +165,16 @@ def verify_outreach_lifecycle(
         )
         checked.append("permissive-ledger-rejected")
         handoff_ledger.chmod(0o600)
+        handoff_drafts = Path(tmp) / "handoff drafts.md"
+        handoff_drafts.write_text(
+            f"## prospect-001\n\n"
+            f"Reviewed handoff message\n\n"
+            f"Pilot price: {PILOT_PRICE_TEXT}\n\n"
+            f"{DIRECT_OUTREACH_ROUTE}\n",
+            encoding="utf-8",
+        )
+        if os.name == "posix":
+            handoff_drafts.chmod(0o600)
 
         private_review = Path(tmp) / "private review.md"
         written_review = _run_arguments(
@@ -185,9 +195,15 @@ def verify_outreach_lifecycle(
             == "Private review written with owner-only permissions.\n",
             "private review write disclosed alias-bearing output",
         )
+        private_review_text = private_review.read_text(encoding="utf-8")
         _require(
-            "prospect-001" in private_review.read_text(encoding="utf-8"),
+            "prospect-001" in private_review_text,
             "private review write omitted the selected alias",
+        )
+        _require(
+            "--approve-next" not in private_review_text
+            and "--decline-next" in private_review_text,
+            "incomplete review exposed an approval handoff",
         )
         if os.name == "posix":
             _require(
@@ -202,6 +218,9 @@ def verify_outreach_lifecycle(
                 "--as-of",
                 "2026-07-01",
                 "--review-next",
+                "--include-private-evidence",
+                "--include-private-draft",
+                str(handoff_drafts),
                 "--",
                 str(handoff_ledger),
             ),
@@ -989,6 +1008,35 @@ def verify_outreach_lifecycle(
             "unconfirmed-approval error exposed evidence",
         )
         checked.append("unconfirmed-approval-rejected")
+
+        unbound_approval = _run(
+            outreach_command,
+            ledger,
+            as_of="2026-07-02",
+            arguments=(
+                "--approve-next",
+                draft["prospect_id"],
+                "--approved-on",
+                "2026-07-01",
+                "--confirm-reviewed",
+            ),
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(
+            "--approve-next requires --review-digest and "
+            "--reviewed-private-draft" in unbound_approval.stderr,
+            "unbound approval did not require a complete review receipt",
+        )
+        _require(
+            ledger.read_bytes() == draft_bytes,
+            "unbound approval modified the ledger",
+        )
+        _require(
+            "https://evidence.example" not in unbound_approval.stderr,
+            "unbound-approval error exposed evidence",
+        )
+        checked.append("unbound-approval-rejected")
 
         approval = _json_command(
             outreach_command,

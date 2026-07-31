@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after enforcing one pending outreach approval at a time:
-  314 / 1,000 (31.4%).
-- Remaining after enforcing one pending outreach approval at a time:
-  686 commits.
+- Progress after requiring content-bound outreach approval:
+  315 / 1,000 (31.5%).
+- Remaining after requiring content-bound outreach approval:
+  685 commits.
 
 ## Commit Standard
 

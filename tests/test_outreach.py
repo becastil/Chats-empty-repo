@@ -86,6 +86,41 @@ def _write_ledger(path: Path, rows: list[dict[str, str]]) -> None:
         path.chmod(0o600)
 
 
+def _write_content_bound_review(
+    path: Path,
+    rows: list[dict[str, str]],
+    *,
+    as_of: date,
+) -> str:
+    private_drafts = {
+        row["prospect_id"]: _review_message(
+            f"Reviewed private message for {row['prospect_id']}"
+        )
+        for row in rows
+        if row["status"] == "drafted"
+    }
+    path.write_text(
+        "\n\n".join(
+            f"## {prospect_id}\n\n{message}"
+            for prospect_id, message in sorted(private_drafts.items())
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    if os.name == "posix":
+        path.chmod(0o600)
+    report = build_next_outreach_review(
+        rows,
+        as_of=as_of,
+        include_private_evidence=True,
+        private_drafts=private_drafts,
+    )
+    review_digest = report["review_digest"]
+    if not isinstance(review_digest, str):
+        raise AssertionError("complete review did not produce a digest")
+    return review_digest
+
+
 class OutreachReportTests(unittest.TestCase):
     def test_installed_command_points_to_the_outreach_auditor(self) -> None:
         with (ROOT / "pyproject.toml").open("rb") as project_file:
@@ -340,8 +375,10 @@ class OutreachReportTests(unittest.TestCase):
         )
         self.assertIn("Keep this alias-only checklist in the private workspace", text)
         self.assertIn("does not approve, modify, or send", text)
-        self.assertIn("After human review, choose exactly one decision", text)
-        self.assertIn("--approve-next prospect-001", text)
+        self.assertIn(
+            "Approval requires a complete evidence-and-draft review", text
+        )
+        self.assertNotIn("--approve-next", text)
         self.assertIn("--decline-next prospect-001 --confirm-not-send", text)
 
     def test_review_next_can_explicitly_include_private_evidence(self) -> None:
@@ -388,6 +425,8 @@ class OutreachReportTests(unittest.TestCase):
             text,
         )
         self.assertIn("evidence-bearing review", text)
+        self.assertNotIn("--approve-next", text)
+        self.assertIn("--decline-next prospect-001 --confirm-not-send", text)
         self.assertIn("does not approve, modify, or send", text)
 
     def test_review_next_can_include_only_the_selected_private_draft(self) -> None:
@@ -429,6 +468,8 @@ class OutreachReportTests(unittest.TestCase):
         self.assertIn("Private draft notes (do not commit or share):", text)
         self.assertIn("Selected message", text)
         self.assertIn("draft-bearing review", text)
+        self.assertNotIn("--approve-next", text)
+        self.assertIn("--decline-next prospect-001 --confirm-not-send", text)
 
     def test_private_draft_notes_can_retain_progressed_ledger_sections(self) -> None:
         rows = [
@@ -1683,6 +1724,7 @@ class OutreachReportTests(unittest.TestCase):
     def test_approve_next_records_review_without_contact_or_private_data(self) -> None:
         with TemporaryDirectory() as tmp:
             ledger = Path(tmp) / "ledger.csv"
+            notes = Path(tmp) / "drafts.md"
             original_rows = [
                 _row(
                     prospect_id="prospect-002",
@@ -1701,6 +1743,11 @@ class OutreachReportTests(unittest.TestCase):
             ]
             _write_ledger(ledger, original_rows)
             ledger.chmod(0o600)
+            review_digest = _write_content_bound_review(
+                notes,
+                original_rows,
+                as_of=date(2026, 7, 13),
+            )
             stdout = io.StringIO()
 
             with redirect_stdout(stdout):
@@ -1714,6 +1761,10 @@ class OutreachReportTests(unittest.TestCase):
                         "--approved-on",
                         "2026-07-12",
                         "--confirm-reviewed",
+                        "--review-digest",
+                        review_digest,
+                        "--reviewed-private-draft",
+                        str(notes),
                         "--format",
                         "json",
                     ]
@@ -1753,6 +1804,54 @@ class OutreachReportTests(unittest.TestCase):
             self.assertNotIn("2026-07-12", json.dumps(receipt))
             self.assertNotIn("evidence.example", json.dumps(receipt))
             self.assertIn("No outreach was sent", receipt["action_note"])
+            self.assertEqual(
+                list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
+            )
+
+    def test_approve_next_requires_a_content_bound_review_without_mutation(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.csv"
+            rows = [
+                _row(
+                    status="drafted",
+                    contacted_on="",
+                    next_action_on="",
+                    approved_on="",
+                )
+            ]
+            _write_ledger(ledger, rows)
+            before = ledger.read_bytes()
+            before_mode = ledger.stat().st_mode
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+
+            with redirect_stdout(stdout), redirect_stderr(stderr):
+                exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--approve-next",
+                        "prospect-001",
+                        "--approved-on",
+                        "2026-07-12",
+                        "--confirm-reviewed",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 2)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertIn(
+                "--approve-next requires --review-digest and "
+                "--reviewed-private-draft",
+                stderr.getvalue(),
+            )
+            self.assertNotIn("prospect-001", stderr.getvalue())
+            self.assertNotIn("evidence.example", stderr.getvalue())
+            self.assertEqual(ledger.read_bytes(), before)
+            self.assertEqual(ledger.stat().st_mode, before_mode)
             self.assertEqual(
                 list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
             )
@@ -2803,16 +2902,20 @@ class OutreachReportTests(unittest.TestCase):
     def test_approve_next_preserves_original_when_atomic_replace_fails(self) -> None:
         with TemporaryDirectory() as tmp:
             ledger = Path(tmp) / "ledger.csv"
-            _write_ledger(
-                ledger,
-                [
-                    _row(
-                        status="drafted",
-                        contacted_on="",
-                        next_action_on="",
-                        approved_on="",
-                    )
-                ],
+            notes = Path(tmp) / "drafts.md"
+            rows = [
+                _row(
+                    status="drafted",
+                    contacted_on="",
+                    next_action_on="",
+                    approved_on="",
+                )
+            ]
+            _write_ledger(ledger, rows)
+            review_digest = _write_content_bound_review(
+                notes,
+                rows,
+                as_of=date(2026, 7, 13),
             )
             before = ledger.read_bytes()
             stderr = io.StringIO()
@@ -2831,6 +2934,10 @@ class OutreachReportTests(unittest.TestCase):
                         "--approved-on",
                         "2026-07-12",
                         "--confirm-reviewed",
+                        "--review-digest",
+                        review_digest,
+                        "--reviewed-private-draft",
+                        str(notes),
                     ]
                 )
 
@@ -2846,16 +2953,20 @@ class OutreachReportTests(unittest.TestCase):
             private_directory = Path(tmp) / "private"
             private_directory.mkdir(mode=0o700)
             ledger = private_directory / "prospect-001-private-ledger.csv"
-            _write_ledger(
-                ledger,
-                [
-                    _row(
-                        status="drafted",
-                        contacted_on="",
-                        next_action_on="",
-                        approved_on="",
-                    )
-                ],
+            notes = private_directory / "drafts.md"
+            rows = [
+                _row(
+                    status="drafted",
+                    contacted_on="",
+                    next_action_on="",
+                    approved_on="",
+                )
+            ]
+            _write_ledger(ledger, rows)
+            review_digest = _write_content_bound_review(
+                notes,
+                rows,
+                as_of=date(2026, 7, 13),
             )
             before = ledger.read_bytes()
             stdout = io.StringIO()
@@ -2886,6 +2997,10 @@ class OutreachReportTests(unittest.TestCase):
                         "--approved-on",
                         "2026-07-12",
                         "--confirm-reviewed",
+                        "--review-digest",
+                        review_digest,
+                        "--reviewed-private-draft",
+                        str(notes),
                     ]
                 )
 
@@ -2916,16 +3031,20 @@ class OutreachReportTests(unittest.TestCase):
 
         with TemporaryDirectory() as tmp:
             ledger = Path(tmp) / "private-ledger.csv"
-            _write_ledger(
-                ledger,
-                [
-                    _row(
-                        status="drafted",
-                        contacted_on="",
-                        next_action_on="",
-                        approved_on="",
-                    )
-                ],
+            notes = Path(tmp) / "drafts.md"
+            rows = [
+                _row(
+                    status="drafted",
+                    contacted_on="",
+                    next_action_on="",
+                    approved_on="",
+                )
+            ]
+            _write_ledger(ledger, rows)
+            review_digest = _write_content_bound_review(
+                notes,
+                rows,
+                as_of=date(2026, 7, 13),
             )
             before = ledger.read_bytes()
             environment = os.environ.copy()
@@ -2942,6 +3061,10 @@ class OutreachReportTests(unittest.TestCase):
                 "--approved-on",
                 "2026-07-12",
                 "--confirm-reviewed",
+                "--review-digest",
+                review_digest,
+                "--reviewed-private-draft",
+                str(notes),
             ]
 
             with _outreach_ledger_lock(ledger):
@@ -3087,16 +3210,20 @@ class OutreachReportTests(unittest.TestCase):
 
         with TemporaryDirectory() as tmp:
             ledger = Path(tmp) / "private-ledger.csv"
-            _write_ledger(
-                ledger,
-                [
-                    _row(
-                        status="drafted",
-                        contacted_on="",
-                        next_action_on="",
-                        approved_on="",
-                    )
-                ],
+            notes = Path(tmp) / "drafts.md"
+            rows = [
+                _row(
+                    status="drafted",
+                    contacted_on="",
+                    next_action_on="",
+                    approved_on="",
+                )
+            ]
+            _write_ledger(ledger, rows)
+            review_digest = _write_content_bound_review(
+                notes,
+                rows,
+                as_of=date(2026, 7, 13),
             )
             before = ledger.read_bytes()
             original_write = outreach_module._write_outreach_rows
@@ -3134,6 +3261,8 @@ class OutreachReportTests(unittest.TestCase):
                     prospect_id="prospect-001",
                     approved_on=date(2026, 7, 13),
                     review_confirmed=True,
+                    review_digest=review_digest,
+                    reviewed_private_drafts_path=notes,
                     as_of=date(2026, 7, 13),
                 )
 
@@ -3231,16 +3360,20 @@ class OutreachReportTests(unittest.TestCase):
     def test_text_handoffs_require_actual_human_event_dates(self) -> None:
         with TemporaryDirectory() as tmp:
             ledger = Path(tmp) / "private ledger.csv"
-            _write_ledger(
-                ledger,
-                [
-                    _row(
-                        status="drafted",
-                        contacted_on="",
-                        next_action_on="",
-                        approved_on="",
-                    )
-                ],
+            notes = Path(tmp) / "private drafts.md"
+            rows = [
+                _row(
+                    status="drafted",
+                    contacted_on="",
+                    next_action_on="",
+                    approved_on="",
+                )
+            ]
+            _write_ledger(ledger, rows)
+            _write_content_bound_review(
+                notes,
+                rows,
+                as_of=date(2026, 7, 1),
             )
 
             def run(arguments: list[str]) -> str:
@@ -3271,7 +3404,15 @@ class OutreachReportTests(unittest.TestCase):
                 ]
 
             review_output = run(
-                [str(ledger), "--as-of", "2026-07-01", "--review-next"]
+                [
+                    str(ledger),
+                    "--as-of",
+                    "2026-07-01",
+                    "--review-next",
+                    "--include-private-evidence",
+                    "--include-private-draft",
+                    str(notes),
+                ]
             )
             approval_command = command_for(review_output, "--approve-next")
             self.assertEqual(approval_command.count(DATE_PLACEHOLDER), 2)
@@ -4196,16 +4337,20 @@ class OutreachReportTests(unittest.TestCase):
     def test_guarded_outreach_lifecycle_actions_compose(self) -> None:
         with TemporaryDirectory() as tmp:
             ledger = Path(tmp) / "ledger.csv"
-            _write_ledger(
-                ledger,
-                [
-                    _row(
-                        status="drafted",
-                        contacted_on="",
-                        next_action_on="",
-                        approved_on="",
-                    )
-                ],
+            notes = Path(tmp) / "drafts.md"
+            rows = [
+                _row(
+                    status="drafted",
+                    contacted_on="",
+                    next_action_on="",
+                    approved_on="",
+                )
+            ]
+            _write_ledger(ledger, rows)
+            review_digest = _write_content_bound_review(
+                notes,
+                rows,
+                as_of=date(2026, 7, 10),
             )
             stdout = io.StringIO()
 
@@ -4220,6 +4365,10 @@ class OutreachReportTests(unittest.TestCase):
                         "--approved-on",
                         "2026-07-01",
                         "--confirm-reviewed",
+                        "--review-digest",
+                        review_digest,
+                        "--reviewed-private-draft",
+                        str(notes),
                     ]
                 )
                 contact_exit = main(

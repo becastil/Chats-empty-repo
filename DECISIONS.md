@@ -5228,3 +5228,24 @@ sequentially. Source and installed-command tests cover both the new block and
 the recovery path. The live five-draft queue remains unchanged, so this
 enforces acquisition discipline without claiming review, outreach, demand,
 payment, or revenue.
+
+## 2026-07-31: Require Content-Bound Evidence For Outreach Approval
+
+An alias-only or partial review could previously emit and execute
+`--approve-next` without the schema-6 receipt or reviewed private notes path.
+That allowed a message to become eligible for manual sending without proving
+that the human reviewed its exact qualification evidence, draft, `$299`
+disclosure, canonical route, and checklist.
+
+Every approval now requires the digest and notes path from a complete
+evidence-and-draft review, and the runtime revalidates that receipt before the
+atomic ledger write. Redacted and partial review output no longer offers an
+approval command. A receipt-free decline remains intentionally available
+because rejecting a malformed or unsuitable message must not require repairing
+it first.
+
+Source and installed-command lifecycle coverage proves that a confirmed but
+unbound approval emits no private output, changes no ledger bytes or
+permissions, and leaves no staging file. The live five-draft queue remains
+unchanged. This strengthens the paid-offer experiment without claiming a human
+review, send, response, payment, or revenue event.

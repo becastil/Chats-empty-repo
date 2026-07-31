@@ -82,6 +82,8 @@ they are not users, leads, or revenue.
   superseded. Its selected message passes the exact-once canonical-route and
   `$299` price preflights; still complete the human accuracy and
   appropriateness checks.
+  Redacted or partial reviews can decline but cannot approve; approval must use
+  the digest and reviewed notes path emitted by this complete bundle.
   Replace the chosen decision command's `YYYY-MM-DD` values with the actual UTC
   decision date, and use its content-bound `--approve-next` or `--decline-next`
   command. After a decline, replace

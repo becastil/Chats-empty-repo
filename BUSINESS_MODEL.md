@@ -1025,6 +1025,12 @@ route, or check fails without modifying the ledger or exposing the changed
 content. An unchanged review can therefore be decided on a later UTC date
 without backdating approval evidence. This binds a human decision to what was
 actually reviewed without making Repo Scout perform the judgment.
+Redacted, evidence-only, and draft-only inspections now omit an approval
+command, and guarded `--approve-next` always requires both the digest and
+reviewed notes path. An unbound decline remains available as an explicit
+no-send escape hatch so a malformed draft can be rejected without repairing it.
+This makes send eligibility depend on review of the exact `$299` offer while
+keeping negative judgment operationally cheap.
 Before Repo Scout emits that decision-ready receipt, the selected private draft
 must contain the exact canonical direct-outreach route once. Missing and
 repeated routes fail before JSON or owner-only bundle output, preserve the
@@ -1192,11 +1198,11 @@ or claim revenue.
 
 After a human completes those checks, guarded `--approve-next` can record the
 decision without hand-editing CSV. It requires the exact next alias, an explicit
-review date, and a confirmation flag; validates all rows before and after; and
-revalidates the content-bound receipt when the generated complete-review
-command is used; then it atomically preserves file permissions while changing
-only status and approval date. The approval result receipt excludes evidence
-and review dates.
+review date, a confirmation flag, the complete review digest, and the reviewed
+private notes path; validates all rows before and after; and always revalidates
+the content-bound receipt before atomically preserving file permissions while
+changing only status and approval date. The approval result receipt excludes
+evidence and review dates.
 Approval still sends nothing, creates no contact or follow-up date, and is not
 an attempt, lead, pilot request, or revenue event. Private complete-review
 output carries the selected alias, confirmation flag, review receipt,

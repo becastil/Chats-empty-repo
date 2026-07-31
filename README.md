@@ -441,7 +441,9 @@ reviewed row, draft, route, and checklist are unchanged.
 Before emitting that receipt, the complete review requires that canonical route
 exactly once in the selected private draft. A missing or repeated route fails
 without a review bundle or ledger mutation; redacted and draft-only inspection
-remain available for correction.
+remain available for correction. Those incomplete reviews never emit an
+approval command. They retain a no-send decline escape hatch, while every
+approval requires the complete review's digest and reviewed notes path.
 It also requires the disclosed `$299` price exactly once so the approved
 attempt tests the stated paid offer. Missing or repeated price text has the
 same no-bundle, no-mutation boundary.
@@ -475,14 +477,16 @@ The guarded action validates the full ledger before and after the change,
 atomically records only `status=approved` and `approved_on`, and preserves the
 ledger's file permissions. It refuses an alias other than the one shown by
 `--review-next`, and refuses when the reviewed row or private draft changed
-after the receipt was created. It does not send a message or create contact or
-follow-up dates. Its schema-2 receipt reports the remaining drafted count. If
-another draft remains, the text output also includes a separate next-review
-command labeled for use only after the approved message has been sent and
-recorded. A content-bound approval preserves the private evidence and draft
-flags, notes path, and shell-quoted `PRIVATE-REVIEW-PATH`; replace that literal
-with a new ignored owner-only destination before writing the next complete
-bundle. A terminal approval queue emits no `--review-next` command.
+after the receipt was created. Calling `--approve-next` without both
+`--review-digest` and `--reviewed-private-draft` fails without mutation. It does
+not send a message or create contact or follow-up dates. Its schema-2 receipt
+reports the remaining drafted count. If another draft remains, the text output
+also includes a separate next-review command labeled for use only after the
+approved message has been sent and recorded. A content-bound approval preserves
+the private evidence and draft flags, notes path, and shell-quoted
+`PRIVATE-REVIEW-PATH`; replace that literal with a new ignored owner-only
+destination before writing the next complete bundle. A terminal approval queue
+emits no `--review-next` command.
 When an approved row and another draft coexist, Repo Scout rejects
 `--review-next`, `--approve-next`, `--decline-next`, and `--write-review` until
 the approved message is sent manually and recorded with `--record-contact`.

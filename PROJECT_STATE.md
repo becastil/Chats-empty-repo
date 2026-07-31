@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 314 of
-1,000, with 686 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 315 of
+1,000, with 685 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -645,7 +645,11 @@ alignment take priority over commit volume.
 - `v0.3.36` patch-release boundary for explicit, bounded private evidence and
   draft review with complete note-to-ledger identity preflight.
 - Guarded `--approve-next` recording that requires the exact next alias, an
-  explicit review date, and confirmation that a human completed every check.
+  explicit review date, confirmation that a human completed every check, and
+  the digest plus private notes path from a complete evidence-and-draft review.
+- Incomplete outreach reviews that omit approval handoffs while retaining a
+  no-send decline escape hatch, with mutation-free CLI and installed-command
+  rejection of receipt-free approvals.
 - Schema-2 approval receipts that report the privacy-safe remaining-draft
   count, terminate cleanly at zero, and carry nonempty queues into a distinct
   post-contact review handoff rather than leaving the next prospect stranded.
