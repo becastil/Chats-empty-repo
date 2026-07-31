@@ -444,9 +444,9 @@ without a review bundle or ledger mutation; redacted and draft-only inspection
 remain available for correction. Those incomplete reviews never emit an
 approval command. They retain a no-send decline escape hatch, while every
 approval requires the complete review's digest and reviewed notes path.
-It also requires the disclosed `$299` price exactly once so the approved
-attempt tests the stated paid offer. Missing or repeated price text has the
-same no-bundle, no-mutation boundary.
+It also requires one unambiguous `$299` price so the approved attempt tests the
+stated paid offer. Missing, repeated, or negated price text and any competing
+dollar amount have the same no-bundle, no-mutation boundary.
 Remove or privately archive the bundle after the human decision before writing
 the next review.
 After a content-bound decline, the generated continuation retains the evidence

@@ -5249,3 +5249,23 @@ unbound approval emits no private output, changes no ledger bytes or
 permissions, and leaves no staging file. The live five-draft queue remains
 unchanged. This strengthens the paid-offer experiment without claiming a human
 review, send, response, payment, or revenue event.
+
+## 2026-07-31: Reject Ambiguous Outreach Pricing Before Review
+
+The decision-ready price preflight previously counted the literal `$299`
+substring. A draft could therefore pass while saying the pilot was not `$299`,
+naming a second dollar price, or embedding the text in a different value such
+as `$2999`. Any resulting attempt would weaken the willingness-to-pay evidence
+the acquisition experiment is meant to collect.
+
+Complete evidence-and-draft reviews now require one canonical `$299` amount,
+reject obvious negation, and reject every additional dollar-denominated amount
+before emitting a content-bound receipt or owner-only bundle. Failures retain
+the same controlled private error, preserve ledger bytes, and emit no draft
+text. Human review remains responsible for semantic accuracy, scope, and
+appropriateness.
+
+Source and installed-command lifecycle coverage exercises missing, repeated,
+negated, competing, and lookalike pricing. The existing five-draft private
+queue remains unchanged and valid; this update does not approve or send a
+message, record demand, collect payment, or create revenue.

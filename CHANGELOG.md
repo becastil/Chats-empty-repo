@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Rejected decision-ready outreach drafts that negate the canonical `$299`
+  offer or include any competing dollar amount before a review receipt or
+  owner-only bundle can be emitted.
+- Extended API, owner-only writing, and installed-command lifecycle coverage
+  across missing, repeated, negated, competing, and lookalike price text while
+  preserving private-output and ledger-mutation boundaries.
 - Required every guarded outreach approval to carry the digest and private
   notes path from a complete evidence-and-draft review.
 - Removed approval handoffs from redacted and partial reviews while retaining

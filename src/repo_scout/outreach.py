@@ -58,7 +58,29 @@ _PRIVATE_DRAFT_ROUTE_ERROR = (
 )
 _PILOT_PRICE_TEXT = f"${PUBLIC_INTAKE_PILOT_PRICE_USD}"
 _PRIVATE_DRAFT_PRICE_ERROR = (
-    f"private draft must disclose the {_PILOT_PRICE_TEXT} pilot price exactly once"
+    f"private draft must disclose the {_PILOT_PRICE_TEXT} pilot price exactly "
+    "once without negation or another dollar price"
+)
+_DOLLAR_PRICE_PATTERN = re.compile(
+    r"(?<![\w$])\$(?:0|[1-9][0-9]*)(?:,[0-9]{3})*"
+    r"(?:\.[0-9]{1,2})?(?!\w|[.,][0-9])"
+)
+_NEGATED_PILOT_PRICE_PATTERN = re.compile(
+    rf"(?:\b(?:is|was)\s+(?:not|never)\s+"
+    rf"{re.escape(_PILOT_PRICE_TEXT)}(?![0-9])"
+    rf"|\b(?:isn't|wasn't)\s+{re.escape(_PILOT_PRICE_TEXT)}(?![0-9])"
+    rf"|\b(?:doesn't|does\s+not|didn't|did\s+not)\s+cost\s+"
+    rf"{re.escape(_PILOT_PRICE_TEXT)}(?![0-9])"
+    rf"|\b(?:not|never)\s+(?:priced\s+at\s+|available\s+for\s+|costing\s+)?"
+    rf"{re.escape(_PILOT_PRICE_TEXT)}(?![0-9])"
+    rf"|\b(?:excluding|except(?:\s+for)?)\s+"
+    rf"{re.escape(_PILOT_PRICE_TEXT)}(?![0-9])"
+    rf"|\bno\s+(?:pilot\s+)?(?:price\s+of\s+)?"
+    rf"{re.escape(_PILOT_PRICE_TEXT)}(?![0-9])"
+    rf"|{re.escape(_PILOT_PRICE_TEXT)}(?![0-9])"
+    r"[^.!?;\n]{0,20}\b(?:is|was)\s+not\s+"
+    r"(?:the\s+)?(?:pilot\s+)?(?:price|cost)\b)",
+    re.IGNORECASE,
 )
 LEGACY_LEDGER_FIELDS = (
     "prospect_id",
@@ -1409,7 +1431,16 @@ def build_next_outreach_review(
         if private_evidence_included and private_draft_included:
             if review["private_draft"].count(DIRECT_OUTREACH_ROUTE) != 1:
                 raise _PrivateDraftContractError(_PRIVATE_DRAFT_ROUTE_ERROR)
-            if review["private_draft"].count(_PILOT_PRICE_TEXT) != 1:
+            dollar_prices = _DOLLAR_PRICE_PATTERN.findall(
+                review["private_draft"]
+            )
+            if (
+                dollar_prices != [_PILOT_PRICE_TEXT]
+                or _NEGATED_PILOT_PRICE_PATTERN.search(
+                    review["private_draft"]
+                )
+                is not None
+            ):
                 raise _PrivateDraftContractError(_PRIVATE_DRAFT_PRICE_ERROR)
             review_digest = _build_outreach_review_digest(
                 draft,

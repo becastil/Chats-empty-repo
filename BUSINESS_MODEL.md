@@ -1035,10 +1035,11 @@ Before Repo Scout emits that decision-ready receipt, the selected private draft
 must contain the exact canonical direct-outreach route once. Missing and
 repeated routes fail before JSON or owner-only bundle output, preserve the
 ledger, and leave draft text out of the error. Redacted and draft-only review
-remain available as correction paths. The same boundary now requires exactly
-one `$299` disclosure so each approved attempt can test willingness to pay for
-the stated offer. Missing or repeated price text fails without output or
-mutation. Later receipt verification maps route or price cardinality drift to
+remain available as correction paths. The same boundary now requires one
+canonical `$299` disclosure, no competing dollar amount, and no obvious
+negation so each approved attempt can test willingness to pay for the stated
+offer. Missing, repeated, negated, or competing price text fails without
+output or mutation. Later receipt verification maps route or pricing drift to
 the same generic stale-review failure. The existing schema-6 owner-only queue
 passes both preflights without changing its receipt, but a human still decides
 whether the message is accurate and appropriate.

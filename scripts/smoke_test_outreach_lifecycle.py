@@ -873,43 +873,61 @@ def verify_outreach_lifecycle(
         )
         checked.append("draft-route-rejected")
 
-        private_drafts.write_text(
-            "# Private drafts\n\n"
-            f"## {draft['prospect_id']}\n\n"
-            f"Selected private message\n\n{DIRECT_OUTREACH_ROUTE}\n",
-            encoding="utf-8",
-        )
-        missing_price_review = _run(
-            outreach_command,
-            ledger,
-            as_of="2026-07-02",
-            arguments=(
-                "--review-next",
-                "--include-private-evidence",
-                "--include-private-draft",
-                str(private_drafts),
+        invalid_price_drafts = (
+            (
+                "missing",
+                f"Selected private message\n\n{DIRECT_OUTREACH_ROUTE}",
             ),
-            environment=environment,
-            expected_exit_code=2,
+            (
+                "negated",
+                "Selected private message: this pilot is not "
+                f"{PILOT_PRICE_TEXT}.\n\n{DIRECT_OUTREACH_ROUTE}",
+            ),
+            (
+                "competing",
+                f"Selected private message\n\nPilot price: {PILOT_PRICE_TEXT}; "
+                f"alternate price: $199\n\n{DIRECT_OUTREACH_ROUTE}",
+            ),
         )
-        _require(
-            missing_price_review.stdout == "",
-            "missing-price review emitted a private bundle",
-        )
-        _require(
-            f"private draft must disclose the {PILOT_PRICE_TEXT} pilot price "
-            "exactly once"
-            in missing_price_review.stderr,
-            "missing-price review did not produce its controlled error",
-        )
-        _require(
-            "Selected private message" not in missing_price_review.stderr,
-            "missing-price review exposed private message text",
-        )
-        _require(
-            ledger.read_bytes() == draft_bytes,
-            "missing-price review modified the ledger",
-        )
+        for price_case, private_draft in invalid_price_drafts:
+            private_drafts.write_text(
+                "# Private drafts\n\n"
+                f"## {draft['prospect_id']}\n\n"
+                f"{private_draft}\n",
+                encoding="utf-8",
+            )
+            invalid_price_review = _run(
+                outreach_command,
+                ledger,
+                as_of="2026-07-02",
+                arguments=(
+                    "--review-next",
+                    "--include-private-evidence",
+                    "--include-private-draft",
+                    str(private_drafts),
+                ),
+                environment=environment,
+                expected_exit_code=2,
+            )
+            _require(
+                invalid_price_review.stdout == "",
+                f"{price_case}-price review emitted a private bundle",
+            )
+            _require(
+                f"private draft must disclose the {PILOT_PRICE_TEXT} pilot "
+                "price exactly once without negation or another dollar price"
+                in invalid_price_review.stderr,
+                f"{price_case}-price review did not produce its controlled "
+                "error",
+            )
+            _require(
+                "Selected private message" not in invalid_price_review.stderr,
+                f"{price_case}-price review exposed private message text",
+            )
+            _require(
+                ledger.read_bytes() == draft_bytes,
+                f"{price_case}-price review modified the ledger",
+            )
         checked.append("draft-price-rejected")
 
         private_drafts.write_text(

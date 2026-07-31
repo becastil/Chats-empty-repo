@@ -80,7 +80,7 @@ they are not users, leads, or revenue.
   owner-only schema-6 bundle is ready at
   `outreach-private/next-review-v6.md`; keep the schema-4 and schema-5 bundles
   superseded. Its selected message passes the exact-once canonical-route and
-  `$299` price preflights; still complete the human accuracy and
+  unambiguous `$299` price preflights; still complete the human accuracy and
   appropriateness checks.
   Redacted or partial reviews can decline but cannot approve; approval must use
   the digest and reviewed notes path emitted by this complete bundle.

@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 315 of
-1,000, with 685 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 316 of
+1,000, with 684 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -600,9 +600,9 @@ alignment take priority over commit volume.
 - Decision-ready evidence-and-draft reviews that require exactly one canonical
   route in the selected private message before emitting a receipt or owner-only
   bundle, while retaining draft-only inspection as the correction path.
-- Exactly one `$299` disclosure required at the same decision-ready boundary so
-  an approved attempt tests willingness to pay for the stated offer rather than
-  an undisclosed or ambiguous price.
+- One unambiguous `$299` disclosure required at the same decision-ready
+  boundary, rejecting missing, repeated, negated, or competing dollar prices so
+  an approved attempt tests willingness to pay for the stated offer.
 - Qualification counts in the review checklist without evidence URLs, draft
   text, approval dates, recipient details, or public-baseline eligibility.
 - An explicit private-evidence review opt-in that maps the selected draft's fit
@@ -929,8 +929,8 @@ both steps pass.
 Then human-review the fresh owner-only schema-6 bundle at
 `outreach-private/next-review-v6.md` while keeping the schema-4 and schema-5
 reviews superseded. Its selected message now passes the exact-once canonical
-route and `$299` price preflights; still confirm both are accurate and
-appropriate in the human checklist. Replace every `YYYY-MM-DD` value in the
+route and unambiguous `$299` price preflights; still confirm both are accurate
+and appropriate in the human checklist. Replace every `YYYY-MM-DD` value in the
 chosen decision command with the actual UTC decision date, and record the human
 decision with its content-bound `--approve-next` or `--decline-next` command.
 Send only approved drafts one at a time through their published business

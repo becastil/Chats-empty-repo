@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after requiring content-bound outreach approval:
-  315 / 1,000 (31.5%).
-- Remaining after requiring content-bound outreach approval:
-  685 commits.
+- Progress after rejecting ambiguous outreach pricing:
+  316 / 1,000 (31.6%).
+- Remaining after rejecting ambiguous outreach pricing:
+  684 commits.
 
 ## Commit Standard
 

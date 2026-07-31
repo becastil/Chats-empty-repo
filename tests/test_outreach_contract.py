@@ -68,9 +68,10 @@ class DirectOutreachContractTests(unittest.TestCase):
             normalized_readme,
         )
         self.assertIn(
-            "requires the disclosed `$299` price exactly once",
+            "requires one unambiguous `$299` price",
             normalized_readme,
         )
+        self.assertIn("any competing dollar amount", normalized_readme)
 
     def test_playbook_preserves_offer_source_and_bounded_cadence(self) -> None:
         playbook = PLAYBOOK.read_text(encoding="utf-8")
@@ -134,9 +135,10 @@ class DirectOutreachContractTests(unittest.TestCase):
             normalized_playbook,
         )
         self.assertIn(
-            "requires that `$299` disclosure exactly once",
+            "requires one unambiguous `$299` disclosure",
             normalized_playbook,
         )
+        self.assertIn("any competing dollar amount fail", normalized_playbook)
         self.assertIn(
             "Replace both `YYYY-MM-DD` placeholders with the actual UTC "
             "decision date",

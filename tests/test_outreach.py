@@ -638,13 +638,25 @@ class OutreachReportTests(unittest.TestCase):
                     "Private message without price\n\n"
                     f"{DIRECT_OUTREACH_ROUTE}",
                     "private draft must disclose the $299 pilot price "
-                    "exactly once",
+                    "exactly once without negation or another dollar price",
                 ),
                 (
                     "Private message with $299 repeated at $299\n\n"
                     f"{DIRECT_OUTREACH_ROUTE}",
                     "private draft must disclose the $299 pilot price "
-                    "exactly once",
+                    "exactly once without negation or another dollar price",
+                ),
+                (
+                    "This pilot is not $299.\n\n"
+                    f"{DIRECT_OUTREACH_ROUTE}",
+                    "private draft must disclose the $299 pilot price "
+                    "exactly once without negation or another dollar price",
+                ),
+                (
+                    "Pilot price: $299; alternate price: $199\n\n"
+                    f"{DIRECT_OUTREACH_ROUTE}",
+                    "private draft must disclose the $299 pilot price "
+                    "exactly once without negation or another dollar price",
                 ),
             )
 
@@ -1322,7 +1334,7 @@ class OutreachReportTests(unittest.TestCase):
                         private_drafts={"prospect-001": private_draft},
                     )
 
-    def test_content_bound_review_requires_exactly_one_pilot_price(
+    def test_content_bound_review_requires_unambiguous_pilot_price(
         self,
     ) -> None:
         rows = [
@@ -1339,6 +1351,18 @@ class OutreachReportTests(unittest.TestCase):
                 "Reviewed private message for $299, repeated at $299\n\n"
                 f"{DIRECT_OUTREACH_ROUTE}"
             ),
+            (
+                "Reviewed private message: this pilot is not $299.\n\n"
+                f"{DIRECT_OUTREACH_ROUTE}"
+            ),
+            (
+                "Reviewed private message for $299, or $199 instead.\n\n"
+                f"{DIRECT_OUTREACH_ROUTE}"
+            ),
+            (
+                "Reviewed private message for $2999.\n\n"
+                f"{DIRECT_OUTREACH_ROUTE}"
+            ),
         )
 
         for private_draft in cases:
@@ -1346,7 +1370,7 @@ class OutreachReportTests(unittest.TestCase):
                 with self.assertRaisesRegex(
                     OutreachInputError,
                     r"private draft must disclose the \$299 pilot price "
-                    "exactly once",
+                    "exactly once without negation or another dollar price",
                 ):
                     build_next_outreach_review(
                         rows,
@@ -1354,6 +1378,31 @@ class OutreachReportTests(unittest.TestCase):
                         include_private_evidence=True,
                         private_drafts={"prospect-001": private_draft},
                     )
+
+    def test_content_bound_review_accepts_fixed_pilot_price_wording(
+        self,
+    ) -> None:
+        rows = [
+            _row(
+                status="drafted",
+                contacted_on="",
+                next_action_on="",
+                approved_on="",
+            )
+        ]
+        private_draft = (
+            "The pilot price is not negotiable at $299.\n\n"
+            f"{DIRECT_OUTREACH_ROUTE}"
+        )
+
+        report = build_next_outreach_review(
+            rows,
+            as_of=date(2026, 7, 13),
+            include_private_evidence=True,
+            private_drafts={"prospect-001": private_draft},
+        )
+
+        self.assertIsInstance(report["review_digest"], str)
 
     def test_content_bound_review_can_be_decided_on_a_later_date(self) -> None:
         cases = (
