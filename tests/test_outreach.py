@@ -3420,17 +3420,31 @@ class OutreachReportTests(unittest.TestCase):
             self.assertEqual(report["summary"]["attempted_prospects"], 1)
             self.assertEqual(report["summary"]["due_followups"], 0)
             receipt = json.loads(stdout.getvalue())
+            self.assertEqual(receipt["schema_version"], 2)
             self.assertTrue(receipt["private_output"])
             self.assertTrue(receipt["human_send_confirmed"])
             self.assertEqual(receipt["contact"]["status"], "contacted")
             self.assertEqual(receipt["contact"]["follow_up_due"], "2026-07-19")
+            self.assertEqual(
+                receipt["review_binding"],
+                {
+                    "approved_review_digest": None,
+                    "content_revalidated": False,
+                },
+            )
             serialized = json.dumps(receipt)
             self.assertNotIn("approved_on", serialized)
             self.assertNotIn("contacted_on", serialized)
             self.assertNotIn("2026-07-12", serialized)
             self.assertNotIn("evidence.example", serialized)
+            self.assertNotIn(LEGACY_UNBOUND_REVIEW, serialized)
             self.assertIn("Repo Scout sent nothing", receipt["action_note"])
             text = format_outreach_contact(receipt, ledger=ledger)
+            self.assertIn(
+                "Review binding: legacy approval without a durable review "
+                "digest; current content not revalidated.",
+                text,
+            )
             self.assertIn("Manual follow-up due: 2026-07-19", text)
             self.assertIn("follow up manually", text)
             self.assertEqual(
@@ -3496,6 +3510,11 @@ class OutreachReportTests(unittest.TestCase):
                 )
                 for value in contact_command[1:]
             ]
+            separator_index = contact_arguments.index("--")
+            contact_arguments[separator_index:separator_index] = [
+                "--format",
+                "json",
+            ]
 
             edited_message = "Edited after approval"
             notes.write_text(
@@ -3523,16 +3542,102 @@ class OutreachReportTests(unittest.TestCase):
                 "\n",
                 encoding="utf-8",
             )
-            with redirect_stdout(io.StringIO()):
+            contact_stdout = io.StringIO()
+            with redirect_stdout(contact_stdout):
                 exit_code = main(contact_arguments)
 
             self.assertEqual(exit_code, 0)
+            contact_receipt = json.loads(contact_stdout.getvalue())
+            self.assertEqual(contact_receipt["schema_version"], 2)
+            self.assertEqual(
+                contact_receipt["review_binding"],
+                {
+                    "approved_review_digest": review_digest,
+                    "content_revalidated": True,
+                },
+            )
             with ledger.open(newline="", encoding="utf-8") as ledger_file:
                 contacted = next(csv.DictReader(ledger_file))
             self.assertEqual(contacted["status"], "contacted")
             self.assertEqual(contacted["contacted_on"], "2026-07-14")
             self.assertEqual(
                 list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
+            )
+
+    def test_legacy_contact_receipt_separates_revalidation_from_approval_identity(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "legacy-ledger.csv"
+            notes = Path(tmp) / "drafts.md"
+            draft_rows = [
+                _row(
+                    status="drafted",
+                    contacted_on="",
+                    next_action_on="",
+                    approved_on="",
+                )
+            ]
+            review_digest = _write_content_bound_review(
+                notes,
+                draft_rows,
+                as_of=date(2026, 7, 13),
+            )
+            approved_row = dict(draft_rows[0])
+            approved_row["status"] = "approved"
+            approved_row["approved_on"] = "2026-07-13"
+            with ledger.open("w", newline="", encoding="utf-8") as ledger_file:
+                writer = csv.DictWriter(
+                    ledger_file,
+                    fieldnames=OUTCOME_LEDGER_FIELDS,
+                    lineterminator="\n",
+                    extrasaction="ignore",
+                )
+                writer.writeheader()
+                writer.writerow(approved_row)
+            if os.name == "posix":
+                ledger.chmod(0o600)
+
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                self.assertEqual(
+                    main(
+                        [
+                            str(ledger),
+                            "--as-of",
+                            "2026-07-14",
+                            "--record-contact",
+                            "prospect-001",
+                            "--contacted-on",
+                            "2026-07-14",
+                            "--confirm-sent",
+                            "--review-digest",
+                            review_digest,
+                            "--reviewed-private-draft",
+                            str(notes),
+                            "--format",
+                            "json",
+                        ]
+                    ),
+                    0,
+                )
+
+            receipt = json.loads(stdout.getvalue())
+            self.assertEqual(
+                receipt["review_binding"],
+                {
+                    "approved_review_digest": None,
+                    "content_revalidated": True,
+                },
+            )
+            self.assertNotIn(review_digest, json.dumps(receipt))
+            self.assertNotIn(LEGACY_UNBOUND_REVIEW, json.dumps(receipt))
+            self.assertTrue(receipt["private_output"])
+            text = format_outreach_contact(receipt, ledger=ledger)
+            self.assertIn(
+                "legacy approval without a durable review digest; current "
+                "content revalidated",
+                text,
             )
 
     def test_report_recovers_contact_with_the_stored_review_digest(self) -> None:
@@ -3631,8 +3736,23 @@ class OutreachReportTests(unittest.TestCase):
                 "2026-07-14" if value == DATE_PLACEHOLDER else value
                 for value in recovery_command
             ]
-            with redirect_stdout(io.StringIO()):
+            separator_index = recovered_command.index("--")
+            recovered_command[separator_index:separator_index] = [
+                "--format",
+                "json",
+            ]
+            recovered_stdout = io.StringIO()
+            with redirect_stdout(recovered_stdout):
                 self.assertEqual(main(recovered_command), 0)
+            recovered_receipt = json.loads(recovered_stdout.getvalue())
+            self.assertEqual(recovered_receipt["schema_version"], 2)
+            self.assertEqual(
+                recovered_receipt["review_binding"],
+                {
+                    "approved_review_digest": review_digest,
+                    "content_revalidated": False,
+                },
+            )
             with ledger.open(newline="", encoding="utf-8") as ledger_file:
                 contacted = next(csv.DictReader(ledger_file))
             self.assertEqual(contacted["status"], "contacted")

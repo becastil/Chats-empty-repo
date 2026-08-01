@@ -97,7 +97,9 @@ they are not users, leads, or revenue.
   digest-and-notes-bound contact handoff so a changed reviewed message cannot
   enter the attempt count. If the receipt is genuinely lost, use the report's
   stored-digest recovery handoff; only legacy approvals without durable review
-  identity remain explicitly unbound. The pending-approval barrier must continue to
+  identity remain explicitly unbound. Retain the schema-2 private contact
+  receipt, which records durable approval identity separately from whether the
+  current notes were revalidated. The pending-approval barrier must continue to
   reject review, approval, and decline before that contact record. Then record
   the one human-sent, day-seven follow-up through guarded
   `--record-follow-up`. Record any human-observed reply, pilot request, price

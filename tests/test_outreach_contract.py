@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from repo_scout.outreach import (  # noqa: E402
+    CONTACT_SCHEMA_VERSION,
     DIRECT_OUTREACH_ROUTE,
     LEDGER_FIELDS,
     PUBLIC_PILOT_INTAKE_URL,
@@ -84,6 +85,13 @@ class DirectOutreachContractTests(unittest.TestCase):
             "retain an explicitly labeled legacy unbound recovery",
             normalized_readme,
         )
+        self.assertIn(
+            f"Its schema-{CONTACT_SCHEMA_VERSION} private receipt",
+            normalized_readme,
+        )
+        self.assertIn("stored `approved_review_digest`", normalized_readme)
+        self.assertIn("separate `content_revalidated` boolean", normalized_readme)
+        self.assertIn("legacy approval with current notes", normalized_readme)
 
     def test_playbook_preserves_offer_source_and_bounded_cadence(self) -> None:
         playbook = PLAYBOOK.read_text(encoding="utf-8")
@@ -225,6 +233,14 @@ class DirectOutreachContractTests(unittest.TestCase):
             "Both outputs omit the draft, evidence, channel, and approval date",
             normalized_playbook,
         )
+        self.assertIn(
+            f"Contact receipt schema {CONTACT_SCHEMA_VERSION}",
+            normalized_playbook,
+        )
+        self.assertIn("`approved_review_digest`", playbook)
+        self.assertIn("`content_revalidated` boolean", normalized_playbook)
+        self.assertIn("four combinations distinguish", normalized_playbook)
+        self.assertIn("internal legacy marker never appears", normalized_playbook)
         self.assertIn("makes send timing inferable", " ".join(playbook.split()))
         self.assertIn("--record-follow-up", playbook)
         self.assertIn("--confirm-follow-up-sent", playbook)

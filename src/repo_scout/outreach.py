@@ -33,7 +33,7 @@ SCHEMA_VERSION = 12
 REVIEW_SCHEMA_VERSION = 6
 APPROVAL_SCHEMA_VERSION = 3
 DECLINE_SCHEMA_VERSION = 2
-CONTACT_SCHEMA_VERSION = 1
+CONTACT_SCHEMA_VERSION = 2
 FOLLOW_UP_SCHEMA_VERSION = 1
 OUTCOME_SCHEMA_VERSION = 4
 MAX_PROSPECTS = 10
@@ -431,6 +431,12 @@ def record_next_outreach_contact(
         review_digest=review_digest,
         private_drafts_path=reviewed_private_drafts_path,
     )
+    stored_review_digest = next_approved["approved_review_digest"]
+    receipt_review_digest = (
+        None
+        if stored_review_digest == LEGACY_UNBOUND_REVIEW
+        else stored_review_digest
+    )
 
     follow_up_due = contacted_on + timedelta(days=FOLLOW_UP_DAYS)
     updated_rows = [dict(row) for row in rows]
@@ -465,6 +471,10 @@ def record_next_outreach_contact(
             "prospect_id": prospect_id,
             "status": "contacted",
             "follow_up_due": follow_up_due.isoformat(),
+        },
+        "review_binding": {
+            "approved_review_digest": receipt_review_digest,
+            "content_revalidated": private_draft_guard is not None,
         },
         "action_note": (
             "The human-confirmed send was recorded atomically. Repo Scout "
@@ -2152,11 +2162,35 @@ def format_outreach_contact(
     contact_report: dict[str, Any], *, ledger: Path
 ) -> str:
     contact = contact_report["contact"]
+    review_binding = contact_report["review_binding"]
+    approved_review_digest = review_binding["approved_review_digest"]
+    content_revalidated = review_binding["content_revalidated"]
+    if approved_review_digest is not None and content_revalidated:
+        review_binding_text = (
+            "approved digest matched and current content revalidated: "
+            f"{approved_review_digest}"
+        )
+    elif approved_review_digest is not None:
+        review_binding_text = (
+            f"stored approval digest matched {approved_review_digest}; "
+            "current content not revalidated"
+        )
+    elif content_revalidated:
+        review_binding_text = (
+            "legacy approval without a durable review digest; current "
+            "content revalidated"
+        )
+    else:
+        review_binding_text = (
+            "legacy approval without a durable review digest; current "
+            "content not revalidated"
+        )
     lines = [
         "Repo Scout outreach contact record",
         f"As of: {contact_report['as_of']}",
         f"Prospect alias: {contact['prospect_id']}",
         f"Status: {contact['status']}",
+        f"Review binding: {review_binding_text}.",
         f"Manual follow-up due: {contact['follow_up_due']}",
         "Private ledger updated atomically.",
         f"Boundary: {contact_report['action_note']}",

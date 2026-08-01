@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Advanced private contact receipts to schema 2 with a structured review
+  binding that carries durable approval identity when it exists and separately
+  records contact-time content revalidation.
+- Reported durable approval identity independently from contact-time content
+  revalidation, truthfully covering all four current and legacy combinations
+  without inventing a hash for pre-digest approvals.
+- Extended source, documentation-contract, and installed-command lifecycle
+  coverage across all four receipt states while retaining the no-send and
+  no-delivery-proof boundaries.
 - Persisted each complete review's SHA-256 identity in the approved outreach
   ledger row and schema-3 approval receipt without changing schema-6 review
   digest compatibility.

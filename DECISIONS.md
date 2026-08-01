@@ -5316,3 +5316,27 @@ rows with a blank or malformed identity fail closed. Source and installed
 lifecycle coverage proves missing and mismatched recovery digests cannot change
 the ledger. The live five-draft queue remains unchanged; this records no human
 review, send, demand, payment, or revenue.
+
+## 2026-08-01: Carry Review Binding Into Contact Receipts
+
+Persisting the review digest made approval recoverable, but the resulting
+contact receipt still reported only the alias, contacted status, and follow-up
+due date. A team retaining receipts outside the private CSV could not tell
+whether the recorded send used full draft revalidation, exact stored-digest
+recovery, or a grandfathered approval with no review identity.
+
+Contact receipts now use schema 2 and include a structured `review_binding`.
+`approved_review_digest` contains only identity stored at approval and is null
+for a legacy row. The independent `content_revalidated` boolean records whether
+the private notes were checked at contact time. This gives current and legacy
+approvals separate bound/unbound combinations without treating a newly supplied
+legacy review as historical approval identity. The compatibility marker itself
+is not exposed as a hash, and the receipt remains private because it carries an
+alias and inferable send timing.
+
+Source and installed-command tests cover the current paths, while source
+coverage exercises both legacy states. The receipt still
+omits the draft, evidence URLs, approval date, and explicit contact date. It
+proves the Repo Scout binding used for the ledger transition, not what an
+external service delivered, whether a prospect saw the message, demand,
+payment, or revenue. The live five-draft queue remains unchanged.

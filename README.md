@@ -516,11 +516,18 @@ to exactly seven days later. New approvals require the supplied review digest
 to match the value stored at approval. When the original receipt also supplies
 the private notes path, Repo Scout reconstructs the approved row's reviewed
 state, reloads the selected draft, and rejects content or commit-window notes
-drift without exposing the changed text or mutating the ledger. Its private
-receipt names the manual follow-up date. Repo Scout sends no message and
-schedules no automatic follow-up. The generated contact-recording command uses
-date placeholders so approval and sending on different days cannot silently
-backdate the send.
+drift without exposing the changed text or mutating the ledger. Its schema-2
+private receipt names the manual follow-up date and carries a structured
+`review_binding` with the stored `approved_review_digest`, or null for a legacy
+approval, plus a separate `content_revalidated` boolean. Those independent
+fields distinguish current approval with full notes revalidation, current
+digest-only recovery, legacy approval with current notes revalidation, and
+fully unbound legacy contact. This lets a private audit match a recorded attempt
+to its truthful approval boundary without exposing the draft, evidence URLs, or
+the internal legacy marker. Repo Scout sends no message and schedules no
+automatic follow-up. The generated
+contact-recording command uses date placeholders so approval and sending on
+different days cannot silently backdate the send.
 
 On that due date, after a human sends the one allowed follow-up, close the
 cadence with a guarded record:

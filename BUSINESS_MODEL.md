@@ -1216,8 +1216,8 @@ decision without hand-editing CSV. It requires the exact next alias, an explicit
 review date, a confirmation flag, the complete review digest, and the reviewed
 private notes path; validates all rows before and after; and always revalidates
 the content-bound receipt before atomically preserving file permissions while
-changing only status and approval date. The approval result receipt excludes
-evidence and review dates.
+changing only status, approval date, and approved review digest. The approval
+result receipt excludes evidence and review dates.
 Approval still sends nothing, creates no contact or follow-up date, and is not
 an attempt, lead, pilot request, or revenue event. Private complete-review
 output carries the selected alias, confirmation flag, review receipt,
@@ -1225,7 +1225,7 @@ shell-quoted private paths, and actual-date placeholders into a complete
 decision command. The approval receipt's contact handoff instead uses explicit
 date placeholders;
 requiring the operator to replace them prevents a later manual send from
-inheriting the earlier approval date. Schema-2 approval receipts also report
+inheriting the earlier approval date. Schema-3 approval receipts also report
 the remaining drafted count. When another draft remains, the text receipt
 emits a separate command for use only after that contact record succeeds. A
 content-bound approval preserves the private evidence and draft flags, exact
@@ -1276,6 +1276,18 @@ evidence and approval dates. The follow-up date makes send timing inferable, so
 the receipt stays private. The tool does not deliver the message or an automatic
 follow-up. A recorded contact enters outreach-attempt operations, but still is
 not a lead, pilot request, payment, or revenue.
+
+Contact receipt schema 2 now preserves the approval-to-attempt audit link in a
+structured `review_binding`. `approved_review_digest` records only identity
+that was stored at approval and is null for a legacy approval, while the
+separate `content_revalidated` boolean records whether the private notes were
+checked at contact time. The four combinations therefore distinguish current
+approval with full revalidation, current digest-only recovery, legacy approval
+with current notes revalidation, and fully unbound legacy contact. The private
+receipt still omits draft text, evidence URLs, approval dates, the explicit
+contact date, and the internal legacy marker. This can show which Repo Scout
+review boundary governed the ledger transition, but it cannot prove what the
+external channel delivered or that a prospect saw or answered the message.
 
 Schema 12 makes that transition recoverable if the one-time approval receipt is
 lost. The ordinary report surfaces only the lowest approved alias and the

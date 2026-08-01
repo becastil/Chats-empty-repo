@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after persisting approved outreach identity for receipt recovery:
-  318 / 1,000 (31.8%).
-- Remaining after persisting approved outreach identity for receipt recovery:
-  682 commits.
+- Progress after carrying review identity into contact receipts:
+  319 / 1,000 (31.9%).
+- Remaining after carrying review identity into contact receipts:
+  681 commits.
 
 ## Commit Standard
 

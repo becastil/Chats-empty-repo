@@ -345,10 +345,19 @@ the notes path from the original receipt adds current-draft and commit-window
 revalidation. Keep both approval fields on every later status. Missing
 confirmation, out-of-order aliases, dates before approval, future dates,
 invalid ledger state, stale bound content, or write failures leave the file
-unchanged. The private receipt omits evidence, approval dates, and the explicit
-contact field while naming the manual follow-up due date. That date makes send
-timing inferable, so keep the receipt private. Repo Scout sends nothing and
-schedules no automatic message. The text receipt ends
+unchanged. Contact receipt schema 2 omits evidence, approval dates, and the
+explicit contact field while naming the manual follow-up due date. Its
+structured `review_binding` records `approved_review_digest` as the durable
+approval digest or null for a legacy approval, independently from the
+`content_revalidated` boolean. The four combinations distinguish current
+approval with full notes revalidation, current digest-only recovery, legacy
+approval with current notes revalidation, and fully unbound legacy contact.
+The internal legacy marker never appears as a hash. The receipt therefore
+preserves truthful approval identity without claiming that Repo Scout observed
+delivery by the external channel. The follow-up due date makes send timing
+inferable, and the alias is also private operator evidence, so keep the receipt
+private. Repo Scout sends nothing and schedules no automatic
+message. The text receipt ends
 with a complete follow-up recording command whose `as_of` and `followed-up-on`
 values are placeholders for the actual UTC send date. The receipt still
 displays the earliest due date, and validation rejects an earlier follow-up. It

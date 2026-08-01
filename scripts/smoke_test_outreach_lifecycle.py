@@ -1223,7 +1223,7 @@ def verify_outreach_lifecycle(
             recovery_ledger.read_bytes() == approved_ledger_bytes,
             "rejected unbound recovery modified the ledger",
         )
-        _run_arguments(
+        recovered_contact = _run_arguments(
             outreach_command,
             _replace_event_date(
                 recovery_arguments,
@@ -1231,6 +1231,12 @@ def verify_outreach_lifecycle(
                 action="contact recovery",
             ),
             environment=environment,
+        )
+        _require(
+            f"Review binding: stored approval digest matched {review_digest}; "
+            "current content not revalidated."
+            in recovered_contact.stdout,
+            "digest-bound recovery receipt did not retain review identity",
         )
         recovered_row = _read_row(recovery_ledger)
         _require(
@@ -1311,6 +1317,15 @@ def verify_outreach_lifecycle(
         _require(
             contact.get("contact", {}).get("follow_up_due") == "2026-07-10",
             "contact did not create the exact seven-day follow-up",
+        )
+        _require(
+            contact.get("schema_version") == 2
+            and contact.get("review_binding")
+            == {
+                "approved_review_digest": review_digest,
+                "content_revalidated": True,
+            },
+            "contact receipt did not retain content-bound review identity",
         )
         _require_private_values_absent(
             contact,
