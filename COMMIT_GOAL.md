@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after carrying review identity into contact receipts:
-  319 / 1,000 (31.9%).
-- Remaining after carrying review identity into contact receipts:
-  681 commits.
+- Progress after grounding pilot positioning in market research:
+  320 / 1,000 (32.0%).
+- Remaining after grounding pilot positioning in market research:
+  680 commits.
 
 ## Commit Standard
 

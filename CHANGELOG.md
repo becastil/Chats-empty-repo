@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added a dated, official-source market map covering SAST, linter
+  orchestration, policy-as-code, GitHub governance, and internal scripts, with
+  explicit buyer-fit, substitution, validation, and non-claim boundaries.
+- Repositioned the hosted pilot as a repository-policy rollout layer alongside
+  existing scanners and controls, and linked the public comparison from the
+  buyer page and README.
+- Tightened rollout copy to describe submitted bundles' reported normalized
+  policy fingerprints rather than claiming independent enforcement proof.
 - Advanced private contact receipts to schema 2 with a structured review
   binding that carries durable approval identity when it exists and separately
   records contact-time content revalidation.

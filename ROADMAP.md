@@ -105,8 +105,11 @@ they are not users, leads, or revenue.
   `--record-follow-up`. Record any human-observed reply, pilot request, price
   objection, existing-solution objection, rejection, or opt-out through
   guarded `--record-outcome`; keep explicit price resistance and substitute
-  preference separate from generic fit rejection. Do not add another
-  acquisition asset before executing this bounded review queue.
+  preference separate from generic fit rejection. Use the dated
+  [`docs/competitive-positioning.md`](docs/competitive-positioning.md) category
+  map to review claims and interpret explicit substitute objections, but do not
+  infer a competitor from silence or count research as demand. Do not add
+  another acquisition asset before executing this bounded review queue.
 - Collect the first three public pilot requests, work only the schema-10 sales
   queue whose detailed source, purchase-readiness, and purchase-criterion
   attribution for requests, qualification, offers, bookings, revenue,

@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 319 of
-1,000, with 681 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 320 of
+1,000, with 680 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -50,6 +50,13 @@ alignment take priority over commit volume.
 - Unit tests covering scanner behavior and JSON CLI output.
 - Responsive Repo Scout web companion with a server-rendered snapshot lab and accessible format toggle.
 - A hosted founding-team pilot offer with price, scope, implemented policy proof, and a direct conversion CTA.
+- A dated official-source competitor-category review that positions the paid
+  pilot as repository-policy rollout and support alongside scanners, linter
+  orchestration, general policy engines, GitHub controls, and internal scripts,
+  with explicit claims to avoid and demand-validation boundaries.
+- Buyer-facing website and README copy that links that comparison and limits
+  cross-repository proof to normalized policy identity reported by submitted
+  rollout bundles.
 - A structured public pilot intake that qualifies team size, repository count, CI provider, and policy need.
 - A dependency-free pilot funnel reporter with stable text and JSON revenue summaries.
 - Duplicate-key-safe pilot issue ingestion that rejects ambiguous payment
@@ -885,7 +892,9 @@ commercial bottleneck: primary artifact requests increased by 135, but no
 request entered the attributed pilot funnel. First human-review the five
 prepared outreach drafts below and execute only approved, source-identifiable
 attempts. Do not add another acquisition asset or paid-policy feature before
-five real attempts.
+five real attempts. The dated competitor-category review now supplies an
+honest response to scanner, policy-engine, hosting-control, and DIY objections;
+it does not change that execution priority or count as demand.
 
 The public site still advertises `v0.3.50`. Sites versions 46 and 47 are
 superseded and must not be deployed; version 47 predates the July 24 React

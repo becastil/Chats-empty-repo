@@ -5340,3 +5340,25 @@ omits the draft, evidence URLs, approval date, and explicit contact date. It
 proves the Repo Scout binding used for the ledger transition, not what an
 external service delivered, whether a prospect saw the message, demand,
 payment, or revenue. The live five-draft queue remains unchanged.
+
+## 2026-08-01: Position Repo Scout Beside Existing Controls
+
+Official product documentation shows that Semgrep and SonarQube analyze source
+code, Trunk orchestrates code-quality tools, Conftest and Open Policy Agent
+offer general policy evaluation, and GitHub rulesets govern hosted repository
+activity. Calling Repo Scout a replacement for those categories would promise
+capabilities it does not ship and obscure the real build-it-yourself
+alternative of scripts or a general policy engine.
+
+The commercial message now tells teams to keep those tools. Repo Scout's
+narrow paid wedge is a repository-operating baseline, normalized policy
+identity reported by submitted rollout bundles, and hands-on rollout support
+across up to 10 projects. The public comparison records official sources,
+buyer fit, substitute objections, and claims to avoid. Website proof language
+now says what bundles report instead of implying independent execution or
+freshness verification.
+
+This is a positioning decision, not proof of uniqueness or willingness to pay.
+The five prepared outreach attempts remain the next commercial action, explicit
+tool or DIY preference remains an `existing-solution` outcome, and billing or
+license enforcement still waits for the first paid pilot.

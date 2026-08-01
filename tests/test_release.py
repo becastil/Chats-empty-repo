@@ -177,7 +177,8 @@ class ReleaseManifestTests(unittest.TestCase):
         self.assertEqual(
             package["scripts"]["test:site"],
             "node --test tests/rendered-html.test.mjs "
-            "tests/dependency-compatibility.test.mjs",
+            "tests/dependency-compatibility.test.mjs "
+            "tests/market-positioning.test.mjs",
         )
         self.assertEqual(
             package["scripts"]["test"],

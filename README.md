@@ -5,9 +5,10 @@
 For teams using coding agents across multiple repositories, the free scanner is
 the starting point. The $299 founding-team pilot turns the team's rules into one
 reviewed standard, rolls it out across up to 10 projects, and helps fix the
-repositories that do not fit neatly without uploading source code.
+repositories that do not fit neatly without uploading source code to a hosted
+Repo Scout service.
 
-[See why teams buy](https://repo-scout.becastil.chatgpt.site/?source=github#why-teams-buy) | [Apply for the $299 pilot](https://github.com/becastil/Chats-empty-repo/issues/new?template=founding-team-pilot.yml&discovery_source=GitHub+repository+or+release)
+[See why teams buy](https://repo-scout.becastil.chatgpt.site/?source=github#why-teams-buy) | [Compare alternatives](docs/competitive-positioning.md) | [Apply for the $299 pilot](https://github.com/becastil/Chats-empty-repo/issues/new?template=founding-team-pilot.yml&discovery_source=GitHub+repository+or+release)
 
 It currently reports:
 

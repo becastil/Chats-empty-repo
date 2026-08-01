@@ -63,14 +63,19 @@ test("server-renders the Repo Scout companion page", async () => {
   assert.doesNotMatch(html, /PYTHONPATH=src python3 -m repo_scout/i);
   assert.match(html, /Snapshot lab/i);
   assert.match(html, /id="why-teams-buy"/i);
-  assert.match(html, /An AI can build checks\. We make them work across your team\./i);
-  assert.match(html, /not payment for another scanner/i);
-  assert.match(html, /Your rules, made repeatable/i);
-  assert.match(html, /One rollout across 10 projects/i);
-  assert.match(html, /Proof and support when something fails/i);
-  assert.match(html, /Your code stays with you\. The scanner stays free and open source\./i);
+  assert.match(html, /Keep your scanners\. Add one repository-policy baseline across projects\./i);
+  assert.match(html, /Semgrep, SonarQube, linters, policy engines, and GitHub rulesets/i);
+  assert.match(html, /One baseline around existing tools/i);
+  assert.match(html, /Comparable evidence across 10 projects/i);
+  assert.match(html, /Hands-on help when projects differ/i);
+  assert.match(html, /No source upload to a hosted Repo Scout service\. The CLI stays free and open source\./i);
   assert.match(html, /Apply for the \$299 pilot/i);
-  assert.match(html, /See the rollout proof/i);
+  assert.match(html, /See the rollout evidence/i);
+  assert.match(html, /Compare alternatives/i);
+  assert.match(
+    html,
+    /href="https:\/\/github\.com\/becastil\/Chats-empty-repo\/blob\/main\/docs\/competitive-positioning\.md"/i,
+  );
   assert.match(html, /Share with your engineering lead/i);
   assert.match(
     html,
@@ -79,11 +84,13 @@ test("server-renders the Repo Scout companion page", async () => {
   assert.equal(countOccurrences(html, 'href="mailto:'), 1);
   assert.match(html, /id="team-pilot"/i);
   assert.ok(html.indexOf('id="why-teams-buy"') < html.indexOf('id="team-pilot"'));
-  assert.match(html, /Prove one policy across every repository\./i);
+  assert.match(html, /Compare one policy across every pilot repository\./i);
+  assert.match(html, /submitted rollout bundles report the same normalized policy fingerprint/i);
+  assert.doesNotMatch(html, /every rollout bundle enforced the same policy/i);
   assert.match(html, /\$299/i);
   assert.match(html, /90 days/i);
   assert.match(html, /up to 10 repositories/i);
-  assert.match(html, /shared policy \/ verified/i);
+  assert.match(html, /reported policy \/ matched/i);
   assert.match(html, /3 \/ 3/i);
   assert.match(html, /policy fingerprints/i);
   assert.match(html, /commits recorded/i);

@@ -55,16 +55,16 @@ const controls = [
 
 const teamAdvantages = [
   {
-    title: "Your rules, made repeatable",
-    copy: "We turn your repository requirements into one reviewed rulebook your team can reuse.",
+    title: "One baseline around existing tools",
+    copy: "Keep your scanners, linters, and hosting controls. We turn the repository requirements around them into one reviewed TOML policy.",
   },
   {
-    title: "One rollout across 10 projects",
-    copy: "We install the same standard in your existing workflow and identify which projects need work.",
+    title: "Comparable evidence across 10 projects",
+    copy: "Each submitted rollout bundle reports a normalized policy fingerprint, showing which projects match the baseline and which need review.",
   },
   {
-    title: "Proof and support when something fails",
-    copy: "Your team gets clear evidence, a rollout checklist, and help resolving the projects that do not fit neatly.",
+    title: "Hands-on help when projects differ",
+    copy: "Your team gets an agreed CI path, a rollout checklist, and help resolving projects that do not fit the standard neatly.",
   },
 ];
 
@@ -218,11 +218,12 @@ export default function RepoScoutPage({
           <div className="moat-heading">
             <p className="section-number">04 / Why teams buy</p>
             <div>
-              <h2 id="moat-title">An AI can build checks. We make them work across your team.</h2>
+              <h2 id="moat-title">Keep your scanners. Add one repository-policy baseline across projects.</h2>
               <p className="moat-lede">
-                The $299 pilot is not payment for another scanner. It pays for
-                turning your rules into one shared standard, rolling it out across
-                up to 10 software projects, and helping your team fix what fails.
+                Semgrep, SonarQube, linters, policy engines, and GitHub rulesets
+                solve different parts of code quality and governance. The $299
+                pilot pays for one local baseline, rollout across up to 10
+                projects, and help resolving mismatched evidence.
               </p>
             </div>
           </div>
@@ -237,13 +238,14 @@ export default function RepoScoutPage({
           </div>
           <div className="moat-conclusion">
             <p>
-              Your code stays with you. The scanner stays free and open source.
+              No source upload to a hosted Repo Scout service. The CLI stays free and open source.
             </p>
             <div className="moat-actions">
               <a className="button button-moat" href={pilotRequestUrl}>
                 Apply for the $299 pilot <span aria-hidden="true">-&gt;</span>
               </a>
-              <a className="moat-proof-link" href="#team-pilot">See the rollout proof</a>
+              <a className="moat-proof-link" href="#team-pilot">See the rollout evidence</a>
+              <a className="moat-proof-link" href="https://github.com/becastil/Chats-empty-repo/blob/main/docs/competitive-positioning.md">Compare alternatives</a>
               <a className="moat-proof-link" href={referralEmailUrl}>Share with your engineering lead</a>
             </div>
           </div>
@@ -252,18 +254,19 @@ export default function RepoScoutPage({
         <section id="team-pilot" className="pilot-section" aria-labelledby="pilot-title">
           <div className="pilot-copy">
             <p className="section-number">05 / Founding team pilot</p>
-            <h2 id="pilot-title">Prove one policy across every repository.</h2>
+            <h2 id="pilot-title">Compare one policy across every pilot repository.</h2>
             <p className="pilot-lede">
               For software teams using coding agents across multiple repositories,
-              Repo Scout turns local standards into comparable CI evidence, then
-              verifies whether every rollout bundle enforced the same policy,
-              without uploading source code.
+              Repo Scout turns local standards into comparable CI evidence and
+              shows whether submitted rollout bundles report the same normalized
+              policy fingerprint, without uploading source code to a hosted Repo
+              Scout service.
             </p>
 
             <div className="rollout-proof" aria-label="Example cross-repository policy rollout">
               <div className="rollout-proof-heading">
                 <code>repo-scout-rollout</code>
-                <span><i aria-hidden="true" /> shared policy / verified</span>
+                <span><i aria-hidden="true" /> reported policy / matched</span>
               </div>
               <div className="rollout-metrics" aria-label="Rollout evidence coverage">
                 <div><strong>3</strong><span>repositories</span></div>

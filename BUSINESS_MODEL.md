@@ -16,6 +16,27 @@ initial revenue before licensing or billing infrastructure is built.
 - Engineering leads who own review quality, repository standards, or handoffs.
 - Security-conscious teams that prefer local tooling over source-code uploads.
 
+## Market Positioning
+
+A qualitative review completed on 2026-08-01 places Repo Scout beside four
+established categories rather than above them. Semgrep and SonarQube analyze
+source code, Trunk orchestrates code-quality tools, Conftest and Open Policy
+Agent provide a broad build-it-yourself policy engine, and GitHub rulesets
+govern activity in GitHub's control plane. Repo Scout does not replace those
+products or claim better vulnerability, lint, or hosting enforcement.
+
+The narrow paid wedge is one repository-operating baseline, normalized policy
+identity reported by each submitted rollout bundle, and hands-on adoption
+across up to 10 projects. Internal scripts and Conftest are credible
+substitutes; the pilot earns its price only when its fixed scope, evidence
+contract, and remediation help cost less than building and supporting the same
+workflow internally. The dated category map, official sources, buyer fit,
+objection answers, and claims to avoid are recorded in
+[`docs/competitive-positioning.md`](docs/competitive-positioning.md).
+
+This is positioning evidence, not demand evidence or a moat. Billing and
+license enforcement remain deferred until a team pays for the pilot.
+
 ## Offer
 
 ### Free Core
@@ -402,9 +423,12 @@ actual identity unavailable. This is an activation-availability correction,
 not another paid-policy feature or evidence of demand.
 
 An AI can recreate a scanner, but that is not the commercial claim being
-tested. The active website experiment presents the paid outcome in plain
-language: help agreeing on one rulebook, installing it across uneven projects,
-and keeping reviewable evidence useful without uploading private code. The
+tested. The active website experiment now explicitly tells buyers to keep
+their scanners and presents the paid outcome in plain language: help agreeing
+on one repository-policy baseline, installing it across uneven projects, and
+comparing the normalized policy fingerprint reported by each submitted bundle
+without uploading source code to a hosted Repo Scout service. It links the
+dated competitor-category review rather than claiming exclusivity. The
 experiment succeeds only when the public intake records website-attributed
 pilot demand; copy alone is not evidence of a moat or willingness to pay.
 
