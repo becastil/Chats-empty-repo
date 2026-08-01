@@ -617,6 +617,7 @@ class ReleaseManifestTests(unittest.TestCase):
                 "unbound-approval-rejected",
                 "draft-approved",
                 "counts-only-publication-guard",
+                "digest-bound-contact-recovery",
                 "approved-draft-drift-rejected",
                 "contact-recorded",
                 "follow-up-recorded",

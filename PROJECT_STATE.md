@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 317 of
-1,000, with 683 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 318 of
+1,000, with 682 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -572,18 +572,18 @@ alignment take priority over commit volume.
   reply, pilot-requested, rejection, and opt-out states.
 - Missing, future, and post-contact approval-date rejection without exposing
   private review dates in report output.
-- Backward-compatible nine-column outreach reads and strict ten-column current
-  writes with controlled malformed-quoting, missing-cell, and extra-cell
-  rejection.
+- Backward-compatible nine- and ten-column outreach reads and strict
+  eleven-column current writes with controlled malformed-quoting, missing-cell,
+  and extra-cell rejection.
 - Durable outcome observation dates with chronology validation, backdated
   refinement rejection, first-observation retention across classification, and
   explicit dated-versus-legacy outcome coverage.
 - Separate required outcome-event and ledger-audit dates so delayed human
   recording retains the actual observation without weakening future-date
   validation.
-- An executable operator-guide contract deriving the current ten-column
+- An executable operator-guide contract deriving the current eleven-column
   private outreach ledger shape from runtime fields while preserving explicit
-  legacy nine-column reads.
+  legacy nine- and ten-column reads.
 - Current-UTC defaults and explicit UTC operator dates across outreach review,
   approval, contact, follow-up, and outcome recording.
 - Canonical zero-padded outreach dates enforced in private ledgers and CLI
@@ -650,9 +650,10 @@ alignment take priority over commit volume.
 - Incomplete outreach reviews that omit approval handoffs while retaining a
   no-send decline escape hatch, with mutation-free CLI and installed-command
   rejection of receipt-free approvals.
-- Schema-2 approval receipts that report the privacy-safe remaining-draft
-  count, terminate cleanly at zero, and carry nonempty queues into a distinct
-  post-contact review handoff rather than leaving the next prospect stranded.
+- Schema-3 approval receipts that report the privacy-safe remaining-draft
+  count, retain the approved review digest, terminate cleanly at zero, and
+  carry nonempty queues into a distinct post-contact review handoff rather than
+  leaving the next prospect stranded.
 - Complete-review continuity after a content-bound approval, preserving
   private evidence, draft notes, and the exact notes path while requiring the
   approved message to be sent and recorded before the emitted shell-quoted
@@ -665,10 +666,11 @@ alignment take priority over commit volume.
   approved rows: aggregate and next-contact reporting remain valid so those
   messages can be recorded one at a time without permitting another draft
   decision.
-- Schema-9 alias-only recovery of the next approved message and its guarded
-  contact-recording handoff after the one-time approval receipt is lost, with
-  machine-readable privacy classification for approved and due-follow-up
-  reports versus alias-free counts-only output.
+- Schema-12 alias-only recovery of the next approved message after the one-time
+  approval receipt is lost, regenerating a digest-bound contact command from
+  durable ledger evidence while retaining machine-readable privacy
+  classification for approved and due-follow-up reports versus alias-free
+  counts-only output.
 - A mutation-free `--require-counts-only` publication guard that emits no
   alias-bearing report and returns a dedicated exit code for CI automation.
 - Schema-6 pre-contact `review-declined` decisions that close an unsuitable
@@ -698,9 +700,13 @@ alignment take priority over commit volume.
   review digest and notes path, reconstructing the approved row's reviewed
   state, and rejecting selected-message or commit-window notes drift before an
   attempt can be counted.
-- Explicitly labeled ledger-only contact recovery for a lost approval receipt,
-  preserving backward compatibility while stating that recovered output cannot
-  revalidate reviewed draft content.
+- Durable approved-review identity in every current post-approval ledger row,
+  with canonical SHA-256 validation, exact-match contact recovery, and a
+  reserved marker that keeps legacy approvals usable without pretending they
+  are content-bound.
+- Explicitly labeled unbound contact recovery only for legacy approvals that
+  predate durable review identity; current approvals recover with their stored
+  digest and reject missing or mismatched identity before mutation.
 - Approval-date retention and automatic calculation of the exact seven-day
   next action without sending or scheduling an automatic message.
 - Guarded `--record-follow-up` recording for the earliest due contacted alias
@@ -767,7 +773,7 @@ alignment take priority over commit volume.
   installed-command behavior, and consistent wheel and zipapp version identity.
 - Five personalized, qualified outreach drafts prepared from narrow
   company-controlled public evidence and kept in the ignored private workspace.
-- A committed schema-11 outreach review checkpoint proving 5 drafts, 16
+- A committed schema-12 outreach review checkpoint proving 5 drafts, 16
   reviewed fit links, 0 approvals, 0 attempts, and 0 existing-solution
   objections while exposing no identity, address, alias, draft, review date, or
   source URL.
@@ -947,9 +953,10 @@ quotes with a new ignored owner-only destination before running the emitted
 review command.
 Immediately record each human send with the approval receipt's
 digest-and-notes-bound `--record-contact` handoff, which rejects reviewed draft
-drift, retains approval, and calculates the exact seven-day follow-up. Use the
-explicitly unbound ledger-only recovery only when that receipt is genuinely
-lost. Only after the contact record succeeds, use the approval receipt's
+drift, retains approval, and calculates the exact seven-day follow-up. If that
+receipt is genuinely lost, use the report's stored-digest recovery handoff;
+only pre-schema-12 legacy approvals remain explicitly unbound. Only after the
+contact record succeeds, use the approval receipt's
 separate next-review handoff, replace its shell-quoted
 `PRIVATE-REVIEW-PATH`, and review the next draft; the CLI now rejects that
 handoff before contact is recorded. When due, send that one follow-up manually

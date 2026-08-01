@@ -29,9 +29,9 @@ elif os.name == "nt":
     import msvcrt
 
 
-SCHEMA_VERSION = 11
+SCHEMA_VERSION = 12
 REVIEW_SCHEMA_VERSION = 6
-APPROVAL_SCHEMA_VERSION = 2
+APPROVAL_SCHEMA_VERSION = 3
 DECLINE_SCHEMA_VERSION = 2
 CONTACT_SCHEMA_VERSION = 1
 FOLLOW_UP_SCHEMA_VERSION = 1
@@ -97,7 +97,8 @@ LEGACY_LEDGER_FIELDS = (
     "next_action_on",
     "approved_on",
 )
-LEDGER_FIELDS = (*LEGACY_LEDGER_FIELDS, "outcome_on")
+OUTCOME_LEDGER_FIELDS = (*LEGACY_LEDGER_FIELDS, "outcome_on")
+LEDGER_FIELDS = (*OUTCOME_LEDGER_FIELDS, "approved_review_digest")
 FIT_SIGNALS = (
     "team_5_50",
     "multi_repo",
@@ -150,6 +151,7 @@ OUTCOME_SOURCE_STATUSES = {"contacted", "followed-up", "replied"}
 PROSPECT_ID_PATTERN = re.compile(r"prospect-[0-9]{3}\Z")
 PRIVATE_DRAFT_HEADING_PATTERN = re.compile(r"## (prospect-[0-9]{3})\Z")
 REVIEW_DIGEST_PATTERN = re.compile(r"sha256:[0-9a-f]{64}\Z")
+LEGACY_UNBOUND_REVIEW = "legacy-unbound"
 HUMAN_REVIEW_CHECKS = (
     "Confirm the public observation is accurate and current.",
     "Confirm the recipient and published business channel are appropriate.",
@@ -250,6 +252,7 @@ def approve_next_outreach_draft(
         if (row.get("prospect_id") or "").strip() == prospect_id:
             row["status"] = "approved"
             row["approved_on"] = approved_on.isoformat()
+            row["approved_review_digest"] = LEGACY_UNBOUND_REVIEW
             break
 
     build_outreach_report(updated_rows, as_of=report_date)
@@ -263,6 +266,11 @@ def approve_next_outreach_draft(
         review_digest=review_digest,
         private_drafts_path=reviewed_private_drafts_path,
     )
+    for row in updated_rows:
+        if (row.get("prospect_id") or "").strip() == prospect_id:
+            row["approved_review_digest"] = review_digest
+            break
+    build_outreach_report(updated_rows, as_of=report_date)
     _write_outreach_rows(
         path,
         updated_rows,
@@ -277,6 +285,7 @@ def approve_next_outreach_draft(
         "approval": {
             "prospect_id": prospect_id,
             "status": "approved",
+            "review_digest": review_digest,
         },
         "queue": {
             "drafts_remaining": sum(
@@ -391,6 +400,7 @@ def record_next_outreach_contact(
     _validate_review_binding_options(
         review_digest=review_digest,
         private_drafts_path=reviewed_private_drafts_path,
+        allow_digest_only=True,
     )
 
     _require_private_live_path(path, label="outreach ledger")
@@ -409,6 +419,11 @@ def record_next_outreach_contact(
             f"next approved prospect is {next_approved['prospect_id']}; "
             "record it first"
         )
+    _require_approved_contact_binding(
+        next_approved,
+        review_digest=review_digest,
+        private_drafts_path=reviewed_private_drafts_path,
+    )
     private_draft_guard = _verify_approved_outreach_review(
         rows,
         prospect_id=prospect_id,
@@ -862,12 +877,19 @@ def _load_outreach_snapshot(
         with io.StringIO(text, newline="") as ledger_file:
             reader = csv.reader(ledger_file, strict=True)
             header = tuple(next(reader, []))
-            if header not in {LEDGER_FIELDS, LEGACY_LEDGER_FIELDS}:
+            supported_headers = {
+                LEDGER_FIELDS,
+                OUTCOME_LEDGER_FIELDS,
+                LEGACY_LEDGER_FIELDS,
+            }
+            if header not in supported_headers:
                 expected = ",".join(LEDGER_FIELDS)
-                legacy = ",".join(LEGACY_LEDGER_FIELDS)
+                outcome_legacy = ",".join(OUTCOME_LEDGER_FIELDS)
+                original_legacy = ",".join(LEGACY_LEDGER_FIELDS)
                 raise OutreachInputError(
-                    "ledger header must be exactly the current or legacy "
-                    f"schema: {expected} OR {legacy}"
+                    "ledger header must be exactly the current or a supported "
+                    f"legacy schema: {expected} OR {outcome_legacy} OR "
+                    f"{original_legacy}"
                 )
             rows = []
             for row_number, values in enumerate(reader, start=2):
@@ -877,8 +899,14 @@ def _load_outreach_snapshot(
                         f"{len(header)} columns; found {len(values)}"
                     )
                 row = dict(zip(header, values, strict=True))
-                if header == LEGACY_LEDGER_FIELDS:
-                    row["outcome_on"] = ""
+                for field in LEDGER_FIELDS:
+                    row.setdefault(field, "")
+                if (
+                    header != LEDGER_FIELDS
+                    and (row.get("status") or "").strip()
+                    not in {"researched", "drafted", "review-declined"}
+                ):
+                    row["approved_review_digest"] = LEGACY_UNBOUND_REVIEW
                 rows.append(row)
     except csv.Error as exc:
         raise OutreachInputError(f"cannot parse outreach ledger: {exc}") from exc
@@ -1151,7 +1179,7 @@ def build_outreach_report(
     undated_outcomes = 0
 
     for row_number, raw_row in enumerate(rows, start=2):
-        row = {field: (raw_row.get(field) or "").strip() for field in LEDGER_FIELDS}
+        row = _normalize_outreach_row(raw_row)
         prospect_id = row["prospect_id"]
         if not PROSPECT_ID_PATTERN.fullmatch(prospect_id):
             raise OutreachInputError(
@@ -1223,6 +1251,32 @@ def build_outreach_report(
         outcome_on = _optional_date(
             row["outcome_on"], row_number=row_number, field="outcome_on"
         )
+        approved_review_digest = row["approved_review_digest"]
+        if (
+            approved_review_digest
+            and approved_review_digest != LEGACY_UNBOUND_REVIEW
+            and not REVIEW_DIGEST_PATTERN.fullmatch(approved_review_digest)
+        ):
+            raise OutreachInputError(
+                f"row {row_number}: approved_review_digest must match "
+                "sha256:<64 lowercase hex digits> or the legacy marker"
+            )
+        if (
+            status in {"researched", "drafted", "review-declined"}
+            and approved_review_digest
+        ):
+            raise OutreachInputError(
+                f"row {row_number}: {status} prospects cannot have "
+                "approved_review_digest"
+            )
+        if (
+            status not in {"researched", "drafted", "review-declined"}
+            and not approved_review_digest
+        ):
+            raise OutreachInputError(
+                f"row {row_number}: {status} prospects require "
+                "approved_review_digest"
+            )
 
         if status in PRE_CONTACT_STATUSES:
             if any(
@@ -1378,7 +1432,15 @@ def build_outreach_report(
         },
         "by_status": status_counts,
         "next_approved": (
-            {"prospect_id": next_approved_row["prospect_id"]}
+            {
+                "prospect_id": next_approved_row["prospect_id"],
+                "review_digest": (
+                    None
+                    if next_approved_row["approved_review_digest"]
+                    == LEGACY_UNBOUND_REVIEW
+                    else next_approved_row["approved_review_digest"]
+                ),
+            }
             if next_approved_row is not None
             else None
         ),
@@ -1504,7 +1566,9 @@ def _build_outreach_review_digest(
     payload = {
         "campaign_route": DIRECT_OUTREACH_ROUTE,
         "checks": list(HUMAN_REVIEW_CHECKS),
-        "ledger_row": {field: draft[field] for field in LEDGER_FIELDS},
+        "ledger_row": {
+            field: draft[field] for field in OUTCOME_LEDGER_FIELDS
+        },
         "private_draft": private_draft,
         "review_schema_version": REVIEW_SCHEMA_VERSION,
     }
@@ -1521,8 +1585,18 @@ def _validate_review_binding_options(
     *,
     review_digest: str | None,
     private_drafts_path: Path | None,
+    allow_digest_only: bool = False,
 ) -> None:
-    if (review_digest is None) != (private_drafts_path is None):
+    if private_drafts_path is not None and review_digest is None:
+        raise OutreachInputError(
+            "content-bound actions require both --review-digest and "
+            "--reviewed-private-draft"
+        )
+    if (
+        review_digest is not None
+        and private_drafts_path is None
+        and not allow_digest_only
+    ):
         raise OutreachInputError(
             "content-bound actions require both --review-digest and "
             "--reviewed-private-draft"
@@ -1532,6 +1606,32 @@ def _validate_review_binding_options(
     ):
         raise OutreachInputError(
             "--review-digest must match sha256:<64 lowercase hex digits>"
+        )
+
+
+def _require_approved_contact_binding(
+    approved_row: Mapping[str, str],
+    *,
+    review_digest: str | None,
+    private_drafts_path: Path | None,
+) -> None:
+    approved_review_digest = approved_row["approved_review_digest"]
+    if approved_review_digest == LEGACY_UNBOUND_REVIEW:
+        if review_digest is not None and private_drafts_path is None:
+            raise OutreachInputError(
+                "digest-only contact recovery requires an approval with a "
+                "stored review digest"
+            )
+        return
+    if review_digest is None:
+        raise OutreachInputError(
+            "--record-contact requires --review-digest from the approval "
+            "receipt or digest-bound recovery handoff"
+        )
+    if not compare_digest(approved_review_digest, review_digest):
+        raise OutreachInputError(
+            "review digest does not match the approved message; use the "
+            "approval receipt or current ledger recovery handoff"
         )
 
 
@@ -1598,6 +1698,7 @@ def _verify_approved_outreach_review(
         ):
             row["status"] = "drafted"
             row["approved_on"] = ""
+            row["approved_review_digest"] = ""
             break
     else:
         raise OutreachInputError(_APPROVED_REVIEW_CHANGED_ERROR)
@@ -1652,7 +1753,7 @@ def _next_status_row(
 ) -> dict[str, str] | None:
     matching_rows = sorted(
         (
-            {field: (raw_row.get(field) or "").strip() for field in LEDGER_FIELDS}
+            _normalize_outreach_row(raw_row)
             for raw_row in rows
             if (raw_row.get("status") or "").strip() == status
         ),
@@ -1666,13 +1767,25 @@ def _next_contacted_row(
 ) -> dict[str, str] | None:
     contacted_rows = sorted(
         (
-            {field: (raw_row.get(field) or "").strip() for field in LEDGER_FIELDS}
+            _normalize_outreach_row(raw_row)
             for raw_row in rows
             if (raw_row.get("status") or "").strip() == "contacted"
         ),
         key=lambda row: (row["next_action_on"], row["prospect_id"]),
     )
     return contacted_rows[0] if contacted_rows else None
+
+
+def _normalize_outreach_row(
+    raw_row: Mapping[str, str | None],
+) -> dict[str, str]:
+    row = {field: (raw_row.get(field) or "").strip() for field in LEDGER_FIELDS}
+    if (
+        "approved_review_digest" not in raw_row
+        and row["status"] not in {"researched", "drafted", "review-declined"}
+    ):
+        row["approved_review_digest"] = LEGACY_UNBOUND_REVIEW
+    return row
 
 
 def format_outreach_report(
@@ -1720,6 +1833,12 @@ def format_outreach_report(
             f"{next_approved['prospect_id']}"
         )
         if ledger is not None:
+            review_digest = next_approved.get("review_digest")
+            contact_binding = (
+                ("--review-digest", review_digest)
+                if review_digest is not None
+                else ()
+            )
             lines.extend(
                 [
                     (
@@ -1736,11 +1855,21 @@ def format_outreach_report(
                         "--contacted-on",
                         DATE_PLACEHOLDER,
                         "--confirm-sent",
+                        *contact_binding,
                     ),
-                    (
-                        "Recovery boundary: this ledger-only handoff cannot "
-                        "revalidate the reviewed draft content. Prefer the "
-                        "content-bound command from the approval receipt."
+                    *(
+                        (
+                            "Recovery binding: this command must match the "
+                            "review digest stored at approval. It does not "
+                            "revalidate current private draft notes; prefer "
+                            "the approval receipt when it is available.",
+                        )
+                        if review_digest is not None
+                        else (
+                            "Legacy recovery boundary: this approval predates "
+                            "stored review digests, so the ledger-only handoff "
+                            "cannot revalidate reviewed content.",
+                        )
                     ),
                 ]
             )
@@ -2268,8 +2397,8 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="SHA256",
         help=(
             "Content-bound receipt emitted by a complete --review-next bundle. "
-            "Required with --reviewed-private-draft for approval; optional for "
-            "a content-bound decline or approval-receipt contact handoff."
+            "Required with --reviewed-private-draft for approval; accepted "
+            "without that path only for a digest-bound contact recovery."
         ),
     )
     parser.add_argument(
@@ -2278,7 +2407,8 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="DRAFTS_MD",
         help=(
             "Private draft notes used for a content-bound review or contact "
-            "handoff. Required with --review-digest."
+            "handoff. Required with --review-digest except for digest-bound "
+            "contact recovery."
         ),
     )
     parser.add_argument(
@@ -2401,6 +2531,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         _validate_review_binding_options(
             review_digest=args.review_digest,
             private_drafts_path=args.reviewed_private_draft,
+            allow_digest_only=args.record_contact is not None,
         )
         if (
             args.review_digest is not None

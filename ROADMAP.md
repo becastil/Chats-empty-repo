@@ -95,8 +95,9 @@ they are not users, leads, or revenue.
   handoff and replace its shell-quoted `PRIVATE-REVIEW-PATH` before writing the
   next complete private bundle. Use the approval receipt's
   digest-and-notes-bound contact handoff so a changed reviewed message cannot
-  enter the attempt count; reserve the explicitly unbound ledger-only recovery
-  for a genuinely lost receipt. The pending-approval barrier must continue to
+  enter the attempt count. If the receipt is genuinely lost, use the report's
+  stored-digest recovery handoff; only legacy approvals without durable review
+  identity remain explicitly unbound. The pending-approval barrier must continue to
   reject review, approval, and decline before that contact record. Then record
   the one human-sent, day-seven follow-up through guarded
   `--record-follow-up`. Record any human-observed reply, pilot request, price

@@ -474,17 +474,18 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
 ```
 
 The guarded action validates the full ledger before and after the change,
-atomically records only `status=approved` and `approved_on`, and preserves the
-ledger's file permissions. It refuses an alias other than the one shown by
-`--review-next`, and refuses when the reviewed row or private draft changed
-after the receipt was created. Calling `--approve-next` without both
+atomically records `status=approved`, `approved_on`, and the content receipt in
+`approved_review_digest`, and preserves the ledger's file permissions. It
+refuses an alias other than the one shown by `--review-next`, and refuses when
+the reviewed row or private draft changed after the receipt was created.
+Calling `--approve-next` without both
 `--review-digest` and `--reviewed-private-draft` fails without mutation. It does
-not send a message or create contact or follow-up dates. Its schema-2 receipt
-reports the remaining drafted count. Its manual-send handoff preserves the
-review digest and private notes path so `--record-contact` can reject a changed
-selected message before counting the attempt. If another draft remains, the
-text output also includes a separate next-review command labeled for use only
-after the approved message has been sent and recorded. A content-bound
+not send a message or create contact or follow-up dates. Its schema-3 receipt
+returns that digest and the remaining drafted count. Its manual-send handoff
+also preserves the private notes path so `--record-contact` can reject a
+changed selected message before counting the attempt. If another draft
+remains, the text output includes a separate next-review command labeled for
+use only after the approved message has been sent and recorded. A content-bound
 approval preserves the private evidence and draft flags, notes path, and
 shell-quoted `PRIVATE-REVIEW-PATH`; replace that literal with a new ignored
 owner-only destination before writing the next complete bundle. A terminal
@@ -509,15 +510,17 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
   --reviewed-private-draft outreach-private/drafts.md
 ```
 
-This action accepts only the next approved alias, retains `approved_on`, records
-the contact date, and sets `next_action_on` to exactly seven days later. When
-the approval receipt supplies the review binding, it reconstructs the approved
-row's reviewed state, reloads the selected private draft, and rejects content
-or commit-window notes drift without exposing the changed text or mutating the
-ledger. Its private receipt names the manual follow-up date. Repo Scout sends
-no message and schedules no automatic follow-up. The generated
-contact-recording command uses date placeholders so approval and sending on
-different days cannot silently backdate the send.
+This action accepts only the next approved alias, retains `approved_on` and
+`approved_review_digest`, records the contact date, and sets `next_action_on`
+to exactly seven days later. New approvals require the supplied review digest
+to match the value stored at approval. When the original receipt also supplies
+the private notes path, Repo Scout reconstructs the approved row's reviewed
+state, reloads the selected draft, and rejects content or commit-window notes
+drift without exposing the changed text or mutating the ledger. Its private
+receipt names the manual follow-up date. Repo Scout sends no message and
+schedules no automatic follow-up. The generated contact-recording command uses
+date placeholders so approval and sending on different days cannot silently
+backdate the send.
 
 On that due date, after a human sends the one allowed follow-up, close the
 cadence with a guarded record:
@@ -570,11 +573,14 @@ Schema-9 reports add explicit human-approved and review-declined pre-send counts
 require a retained approval date no later than contact, and keep researched,
 drafted, approved, and review-declined rows outside attempted outreach. They
 also separate dated outcomes from legacy outcomes whose observation date was
-never retained. When an approval receipt is no longer visible, the report
-recovers only the next approved alias and an exact manual-send recording
-handoff with required date placeholders. This ledger-only recovery cannot
-revalidate the reviewed draft and says to prefer the content-bound approval
-receipt. It still omits the draft, evidence, channel, and approval date. A
+never retained. Schema-12 reports add the digest stored by new approvals to the
+private next-approved recovery record. When an approval receipt is no longer
+visible, its manual-send handoff carries that digest and `--record-contact`
+requires an exact match before counting the attempt. This recovery does not
+revalidate the current private notes, so the original receipt remains the
+stronger handoff when available. Approvals from older nine- or ten-column
+ledgers have no stored digest and retain an explicitly labeled legacy unbound
+recovery. Both forms omit the draft, evidence, channel, and approval date. A
 machine-readable `private_output` flag and matching text note mark reports with
 that alias or any due-follow-up alias as private; only reports containing
 neither are marked counts-only. A review-declined row counts as closed without
@@ -585,8 +591,10 @@ dropping private sales evidence. Schema-10 reports add the terminal
 experiment can separate explicit price resistance from a generic fit rejection.
 Schema-11 reports add the terminal `existing-solution` state and a dedicated
 `existing_solution_objections` count so observed substitute resistance remains
-separate from price and fit objections. Its activity totals are not lead or
-revenue evidence. See
+separate from price and fit objections. Schema-12 reports add durable approved
+review identity and digest-bound contact recovery without changing the
+schema-6 review digest algorithm. Its activity totals are not lead or revenue
+evidence. See
 [docs/direct-outreach.md](docs/direct-outreach.md) for the operating contract.
 
 Install it locally in editable mode:

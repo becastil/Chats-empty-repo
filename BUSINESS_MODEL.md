@@ -980,7 +980,7 @@ boundary by rejecting group/world-accessible files and immediate parent
 directories before reading private material. Counts-only validation of the
 empty public template remains available. This reduces accidental prospect-data
 disclosure; it does not approve a draft, create an attempt, or establish demand.
-The committed schema-11 checkpoint contains only aggregate counts. The first
+The committed schema-12 checkpoint contains only aggregate counts. The first
 complete owner-only review bundle was created in the ignored private workspace
 from the verified `v0.3.48` wheel without changing the ledger, but its July 21
 schema-4 date binding is now superseded and must not be used for a later
@@ -1054,10 +1054,15 @@ and private notes path. Before `--record-contact` counts the attempt, Repo Scout
 reconstructs the approved row's reviewed state, reloads the selected draft, and
 holds the verified notes revision through the atomic ledger write. Selected
 message drift before or during contact recording fails without exposing the
-changed text or creating activity. The ledger-only recovery handoff remains
-available for an already-lost receipt, but explicitly says it cannot revalidate
-the reviewed draft. This protects the normal `$299` experiment path without
-claiming what was transmitted outside Repo Scout.
+changed text or creating activity. Approval also persists that digest in the
+current eleven-column private ledger and schema-3 receipt. If the one-time
+receipt is lost, schema-12 reporting regenerates a digest-bound contact handoff
+that must exactly match the durable approval identity; it cannot revalidate
+later draft edits without the notes path, but it no longer discards the human
+review's identity. Nine- and ten-column legacy approvals remain recoverable
+through an explicitly unbound marker and never masquerade as current bound
+evidence. This protects the normal `$299` experiment path without claiming
+what was transmitted outside Repo Scout.
 
 The same complete review can now be created with `--write-review` inside the
 ignored private workspace instead of exposing the draft, alias, and evidence to
@@ -1272,16 +1277,19 @@ the receipt stays private. The tool does not deliver the message or an automatic
 follow-up. A recorded contact enters outreach-attempt operations, but still is
 not a lead, pilot request, payment, or revenue.
 
-Schema 9 makes that transition recoverable if the one-time approval receipt is
-lost. The ordinary report surfaces only the lowest approved alias and regenerates
-the guarded contact-recording command with required send-date placeholders. It
-does not expose the draft, qualification evidence, channel, or approval date,
-and a machine-readable `private_output` flag marks that alias-bearing report as
+Schema 12 makes that transition recoverable if the one-time approval receipt is
+lost. The ordinary report surfaces only the lowest approved alias and the
+durable review digest, then regenerates a digest-bound guarded contact command
+with required send-date placeholders. It does not expose the draft,
+qualification evidence, channel, approval date, or private notes path, and a
+machine-readable `private_output` flag marks that alias-bearing report as
 private. Due-follow-up aliases receive the same classification; only reports
-with neither kind of alias are marked counts-only. This lets publication
-automation refuse private execution evidence before it becomes an artifact and
-prevents a reviewed message from being stranded without approving or sending
-it, creating demand, or recording revenue.
+with neither kind of alias are marked counts-only. Legacy approvals that predate
+the digest column remain explicitly unbound instead of receiving invented
+identity. This lets publication automation refuse private execution evidence
+before it becomes an artifact and prevents a reviewed message from being
+stranded without approving or sending it, creating demand, or recording
+revenue.
 The companion `--require-counts-only` guard makes that refusal executable: it
 emits no report and exits with code 7 when either alias source is present. The
 flag cannot be combined with a review or lifecycle mutation, so a CI or

@@ -36,12 +36,12 @@ class DirectOutreachContractTests(unittest.TestCase):
             normalized_readme,
         )
         self.assertIn(
-            f"Schema-{SCHEMA_VERSION} reports add the terminal "
-            "`existing-solution` state",
+            "Schema-11 reports add the terminal `existing-solution` state",
             normalized_readme,
         )
         self.assertIn(
-            "recovers only the next approved alias",
+            f"Schema-{SCHEMA_VERSION} reports add durable approved review "
+            "identity and digest-bound contact recovery",
             normalized_readme,
         )
         self.assertIn(
@@ -73,11 +73,15 @@ class DirectOutreachContractTests(unittest.TestCase):
         )
         self.assertIn("any competing dollar amount", normalized_readme)
         self.assertIn(
-            "approval receipt supplies the review binding",
+            "original receipt also supplies the private notes path",
             normalized_readme,
         )
         self.assertIn(
-            "ledger-only recovery cannot revalidate the reviewed draft",
+            "This recovery does not revalidate the current private notes",
+            normalized_readme,
+        )
+        self.assertIn(
+            "retain an explicitly labeled legacy unbound recovery",
             normalized_readme,
         )
 
@@ -111,7 +115,7 @@ class DirectOutreachContractTests(unittest.TestCase):
             normalized_playbook,
         )
         self.assertIn(
-            "Keep `approved_on` on every later status",
+            "Keep both approval fields on every later status",
             " ".join(playbook.split()),
         )
         self.assertIn("does not approve or", playbook)
@@ -153,8 +157,8 @@ class DirectOutreachContractTests(unittest.TestCase):
             normalized_playbook,
         )
         self.assertIn(
-            "ledger-only recovery explicitly cannot revalidate the reviewed "
-            "draft",
+            "legacy approval with no stored digest receives an explicitly "
+            "labeled unbound handoff",
             normalized_playbook,
         )
         self.assertIn(
@@ -200,7 +204,8 @@ class DirectOutreachContractTests(unittest.TestCase):
         self.assertIn("number of drafts remaining", normalized_playbook)
         self.assertIn("emits no dead handoff", normalized_playbook)
         self.assertIn(
-            "atomically changes only `status` and `approved_on`",
+            "atomically changes `status`, `approved_on`, and "
+            "`approved_review_digest`",
             normalized_playbook,
         )
         self.assertIn("does not send outreach", playbook)
@@ -208,16 +213,16 @@ class DirectOutreachContractTests(unittest.TestCase):
         self.assertIn("--confirm-sent", playbook)
         self.assertIn(
             "changes only `status`, `contacted_on`, and `next_action_on`",
-            playbook,
+            normalized_playbook,
         )
         self.assertIn("Repo Scout sends nothing", playbook)
         self.assertIn(
-            "only the next approved alias and a guarded `--record-contact` "
-            "handoff",
+            "next approved alias and its stored digest in a private guarded "
+            "`--record-contact` handoff",
             normalized_playbook,
         )
         self.assertIn(
-            "omits the draft, evidence, channel, and approval date",
+            "Both outputs omit the draft, evidence, channel, and approval date",
             normalized_playbook,
         )
         self.assertIn("makes send timing inferable", " ".join(playbook.split()))
@@ -275,7 +280,7 @@ class DirectOutreachContractTests(unittest.TestCase):
             normalized_playbook,
         )
         self.assertIn(
-            "Legacy nine-column ledgers remain readable",
+            "Legacy nine- and ten-column ledgers remain readable",
             playbook,
         )
 

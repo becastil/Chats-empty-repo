@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Persisted each complete review's SHA-256 identity in the approved outreach
+  ledger row and schema-3 approval receipt without changing schema-6 review
+  digest compatibility.
+- Advanced outreach reports to schema 12 and regenerated lost-receipt contact
+  handoffs from the stored digest, rejecting missing or mismatched identity
+  before mutation while retaining full notes revalidation when available.
+- Kept nine- and ten-column legacy ledgers usable through an explicit unbound
+  marker, while requiring every current eleven-column post-approval row to
+  carry a canonical digest or that reserved legacy marker.
 - Carried complete-review digests and private notes paths into approval
   receipts' manual-send handoffs, then revalidated the reviewed state before
   `--record-contact` can count an attempt.

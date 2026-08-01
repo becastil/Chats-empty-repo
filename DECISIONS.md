@@ -5293,3 +5293,26 @@ Source and installed-command lifecycle coverage proves both the new rejection
 and successful recovery after restoring reviewed content. The real five-draft
 queue remains unchanged; no message was approved, sent, or counted as demand,
 payment, or revenue.
+
+## 2026-08-01: Persist Approved Review Identity For Receipt Recovery
+
+The normal contact handoff carried a complete review digest and private notes
+path, but losing that one-time approval receipt discarded both bindings. The
+alias-only recovery report could still record a send from approval dates alone,
+so current approvals had no durable way to prove which reviewed content made
+the message eligible.
+
+Approval now writes the verified schema-6 digest into an eleventh private
+ledger column and returns it in a schema-3 receipt. Schema-12 recovery includes
+that stored digest in `--record-contact`, requires an exact match before
+mutation, and retains the stronger digest-plus-notes path when the original
+receipt is available. The digest stays outside the schema-6 review hash, so
+pre-upgrade receipts keep their established identity.
+
+Nine- and ten-column ledgers remain readable. Their post-approval rows receive
+a reserved `legacy-unbound` marker on the first mutation, and recovery remains
+explicitly unbound rather than inventing review evidence. Current post-approval
+rows with a blank or malformed identity fail closed. Source and installed
+lifecycle coverage proves missing and mismatched recovery digests cannot change
+the ledger. The live five-draft queue remains unchanged; this records no human
+review, send, demand, payment, or revenue.

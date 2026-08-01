@@ -287,9 +287,10 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
 an explicit review date, the confirmation flag, the complete review digest, and
 the reviewed private notes path. It validates the complete ledger before and
 after the transition, recomputes the content receipt, preserves file
-permissions, and atomically changes only `status` and `approved_on`. Missing
-binding options, missing confirmation, out-of-order aliases, stale review
-content, future dates, or invalid ledger state leave the file unchanged. The
+permissions, and atomically changes `status`, `approved_on`, and
+`approved_review_digest`. Missing binding options, missing confirmation,
+out-of-order aliases, stale review content, future dates, or invalid ledger
+state leave the file unchanged. The
 content receipt remains valid across dates only while the reviewed row, private
 draft, and six-check contract are unchanged. The generated command deliberately
 does not reuse the bundle's earlier ledger-audit date. The private receipt omits
@@ -299,7 +300,8 @@ ends with a complete command for recording the manual send, using the same alias
 and private ledger path with `YYYY-MM-DD` placeholders plus the review digest
 and private notes path. Replace both placeholders with the actual UTC send
 date; an unchanged placeholder fails parsing instead of reusing the approval
-date. The schema-2 receipt also reports the remaining drafted count. When that
+date. The schema-3 receipt returns the stored digest and reports the remaining
+drafted count. When that
 count is nonzero, it emits a separate next-review command labeled for use only
 after the manual send has been recorded. A content-bound approval preserves
 both private review flags and the same notes path, then requires a replaced
@@ -336,14 +338,17 @@ handoff also carries the content digest and notes path. Repo Scout reconstructs
 the approved row's reviewed state, reloads the selected draft, and holds that
 notes revision through the ledger commit. A changed message or commit-window
 edit fails without exposing content or recording an attempt. The action retains
-`approved_on`, changes only `status`, `contacted_on`, and `next_action_on`, and
-computes the next action at exactly seven days. Keep `approved_on` on every
-later status. Missing confirmation, out-of-order aliases, dates before
-approval, future dates, invalid ledger state, stale bound content, or write
-failures leave the file unchanged. The private receipt omits evidence, approval
-dates, and the explicit contact field while naming the manual follow-up due
-date. That date makes send timing inferable, so keep the receipt private. Repo
-Scout sends nothing and schedules no automatic message. The text receipt ends
+`approved_on` and `approved_review_digest`, changes only `status`,
+`contacted_on`, and `next_action_on`, and computes the next action at exactly
+seven days. New approvals reject a missing or mismatched digest before contact;
+the notes path from the original receipt adds current-draft and commit-window
+revalidation. Keep both approval fields on every later status. Missing
+confirmation, out-of-order aliases, dates before approval, future dates,
+invalid ledger state, stale bound content, or write failures leave the file
+unchanged. The private receipt omits evidence, approval dates, and the explicit
+contact field while naming the manual follow-up due date. That date makes send
+timing inferable, so keep the receipt private. Repo Scout sends nothing and
+schedules no automatic message. The text receipt ends
 with a complete follow-up recording command whose `as_of` and `followed-up-on`
 values are placeholders for the actual UTC send date. The receipt still
 displays the earliest due date, and validation rejects an earlier follow-up. It
@@ -425,11 +430,16 @@ cadence, and its dedicated `existing_solution_objections` count increments
 without retaining response text, identifying the substitute, or establishing
 demand, payment, or revenue.
 
-The current ledger template has ten columns, ending in `outcome_on`. Existing
-nine-column ledgers remain readable, and the first guarded mutation upgrades
-them to the current shape. Repo Scout does not invent observation dates for
-older outcome rows: the aggregate report counts those as undated legacy
-outcomes so the missing history remains explicit.
+The current ledger template has eleven columns, ending in
+`approved_review_digest`. Existing nine-column ledgers without `outcome_on` and
+ten-column ledgers without the digest remain readable; the first guarded
+mutation upgrades either to the current shape. Repo Scout does not invent
+observation dates for older outcome rows or review identities for older
+approvals. The aggregate report counts missing outcome dates explicitly, and
+legacy approvals receive the explicit `legacy-unbound` marker when rewritten
+and retain a confirmation-only recovery path. A blank digest on a post-approval
+row that already uses the eleven-column header is invalid rather than silently
+treated as legacy.
 
 Outcome receipt schema 4 includes the existing public intake URL only for
 `pilot-requested`, with `Direct outreach` visibly prefilled:
@@ -462,20 +472,22 @@ The command requires at least three recognized fit signals and one secure
 source link for each, accepts only `prospect-NNN` aliases, caps the batch at 10,
 schedules a contacted prospect's single follow-up exactly seven days later,
 and rejects next actions after a follow-up, reply, pilot request, objection,
-rejection, or opt-out. Every current-format CSV row must contain exactly 10
+rejection, or opt-out. Every current-format CSV row must contain exactly 11
 header columns;
 missing or extra cells and malformed quoting fail without echoing private
-values. Legacy nine-column ledgers remain readable until the first guarded
-mutation upgrades them. Missing, extra, duplicate, insecure, and
+values. Legacy nine- and ten-column ledgers remain readable until the first
+guarded mutation upgrades them. Missing, extra, duplicate, insecure, and
 credential-bearing evidence links also fail validation. A separate
 `followed_up_on` field rejects a second message sent before that date. It
 reports drafts awaiting review and approved messages separately from sent
-attempts. Schema 9 also surfaces only the next approved alias and a guarded
-`--record-contact` handoff with two date placeholders, so an operator can resume
-after losing the one-time approval receipt without opening or editing the CSV.
-This ledger-only recovery explicitly cannot revalidate the reviewed draft and
-directs the operator to prefer the approval receipt when it is available. The
-recovery output omits the draft, evidence, channel, and approval date.
+attempts. Schema 12 surfaces the next approved alias and its stored digest in a
+private guarded `--record-contact` handoff with two date placeholders, so an
+operator can resume after losing the one-time approval receipt without opening
+or editing the CSV. The digest must match before a new approval can become an
+attempt. This recovery cannot revalidate the current private notes and directs
+the operator to prefer the original receipt when it is available. A legacy
+approval with no stored digest receives an explicitly labeled unbound handoff
+instead. Both outputs omit the draft, evidence, channel, and approval date.
 Every report now includes a machine-readable `private_output` flag and matching
 privacy note: any next-approved or due-follow-up alias makes the output private,
 while a report with neither is explicitly counts-only. Source URLs never appear
@@ -488,6 +500,8 @@ aggregate count without exposing prospect aliases or response text.
 Schema 11 adds the terminal `existing-solution` state and reports its dedicated
 aggregate count without exposing the substitute, prospect aliases, or response
 text.
+Schema 12 adds durable approved review identity and digest-bound recovery while
+preserving the schema-6 review digest algorithm and legacy contact recording.
 
 A reviewed batch may publish the command's counts-only JSON as a measurement
 baseline only when `private_output` is `false`. Before committing it, also

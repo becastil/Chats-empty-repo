@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after binding approved outreach content through contact recording:
-  317 / 1,000 (31.7%).
-- Remaining after binding approved outreach content through contact recording:
-  683 commits.
+- Progress after persisting approved outreach identity for receipt recovery:
+  318 / 1,000 (31.8%).
+- Remaining after persisting approved outreach identity for receipt recovery:
+  682 commits.
 
 ## Commit Standard
 

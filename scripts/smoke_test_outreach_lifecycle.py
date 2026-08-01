@@ -24,7 +24,9 @@ LEDGER_FIELDS = (
     "next_action_on",
     "approved_on",
     "outcome_on",
+    "approved_review_digest",
 )
+LEGACY_UNBOUND_REVIEW = "legacy-unbound"
 SIGNALS = "team_5_50;multi_repo;agent_use"
 EVIDENCE = (
     "team_5_50=https://evidence.example/team;"
@@ -391,7 +393,7 @@ def verify_outreach_lifecycle(
         )
         declined_summary = declined_report.get("summary", {})
         _require(
-            declined_report.get("schema_version") == 11,
+            declined_report.get("schema_version") == 12,
             "outreach schema changed",
         )
         _require(
@@ -1082,13 +1084,17 @@ def verify_outreach_lifecycle(
             "approval confirmation is missing",
         )
         _require(
-            approval.get("schema_version") == 2
+            approval.get("schema_version") == 3
             and approval.get("queue") == {"drafts_remaining": 0},
             "approval receipt did not report the remaining review queue",
         )
         _require(
             approval.get("approval", {}).get("status") == "approved",
             "draft was not approved",
+        )
+        _require(
+            approval.get("approval", {}).get("review_digest") == review_digest,
+            "approval receipt did not retain the reviewed content identity",
         )
         _require_private_values_absent(
             approval,
@@ -1101,7 +1107,7 @@ def verify_outreach_lifecycle(
             as_of="2026-07-02",
             environment=environment,
         )
-        _require(approved_report.get("schema_version") == 11, "schema changed")
+        _require(approved_report.get("schema_version") == 12, "schema changed")
         _require(
             approved_report.get("experiment", {}).get("human_approval_required")
             is True,
@@ -1116,7 +1122,10 @@ def verify_outreach_lifecycle(
         serialized = json.dumps(approved_report, sort_keys=True)
         _require(
             approved_report.get("next_approved")
-            == {"prospect_id": draft["prospect_id"]},
+            == {
+                "prospect_id": draft["prospect_id"],
+                "review_digest": review_digest,
+            },
             "approved report did not recover the next alias",
         )
         _require(
@@ -1152,6 +1161,10 @@ def verify_outreach_lifecycle(
             "approval date was not saved",
         )
         _require(
+            approved_row["approved_review_digest"] == review_digest,
+            "approval review digest was not saved",
+        )
+        _require(
             not approved_row["contacted_on"] and not approved_row["next_action_on"],
             "approval created contact activity",
         )
@@ -1159,6 +1172,74 @@ def verify_outreach_lifecycle(
         checked.append("counts-only-publication-guard")
 
         approved_ledger_bytes = ledger.read_bytes()
+        recovery_ledger = Path(tmp) / "recovery ledger.csv"
+        recovery_ledger.write_bytes(approved_ledger_bytes)
+        if os.name == "posix":
+            recovery_ledger.chmod(0o600)
+        recovery_report = _run_arguments(
+            outreach_command,
+            (str(recovery_ledger), "--as-of", "2026-07-04"),
+            environment=environment,
+        )
+        recovery_arguments = _handoff_arguments(
+            recovery_report.stdout,
+            action="--record-contact",
+            ledger=recovery_ledger,
+        )
+        _require(
+            "--review-digest" in recovery_arguments
+            and review_digest in recovery_arguments,
+            "ledger recovery did not carry the stored review digest",
+        )
+        _require(
+            "--reviewed-private-draft" not in recovery_arguments,
+            "ledger recovery unexpectedly required the original notes path",
+        )
+        _require(
+            "Recovery binding:" in recovery_report.stdout,
+            "ledger recovery did not disclose its digest-only boundary",
+        )
+        digest_index = recovery_arguments.index("--review-digest")
+        unbound_recovery = (
+            recovery_arguments[:digest_index]
+            + recovery_arguments[digest_index + 2 :]
+        )
+        rejected_recovery = _run_arguments(
+            outreach_command,
+            _replace_event_date(
+                unbound_recovery,
+                event_date="2026-07-03",
+                action="contact recovery",
+            ),
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(
+            "requires --review-digest from the approval receipt or "
+            "digest-bound recovery handoff" in rejected_recovery.stderr,
+            "stored approval accepted an unbound contact recovery",
+        )
+        _require(
+            recovery_ledger.read_bytes() == approved_ledger_bytes,
+            "rejected unbound recovery modified the ledger",
+        )
+        _run_arguments(
+            outreach_command,
+            _replace_event_date(
+                recovery_arguments,
+                event_date="2026-07-03",
+                action="contact recovery",
+            ),
+            environment=environment,
+        )
+        recovered_row = _read_row(recovery_ledger)
+        _require(
+            recovered_row["status"] == "contacted"
+            and recovered_row["approved_review_digest"] == review_digest,
+            "digest-bound contact recovery did not retain approval identity",
+        )
+        checked.append("digest-bound-contact-recovery")
+
         approved_private_drafts = private_drafts.read_text(encoding="utf-8")
         private_drafts.write_text(
             approved_private_drafts.replace(
@@ -1607,7 +1688,7 @@ def verify_outreach_lifecycle(
             expected_exit_code=2,
         )
         _require(
-            "ledger row must have exactly 10 columns; found 11"
+            "ledger row must have exactly 11 columns; found 12"
             in extra_column.stderr,
             "extra column did not produce its controlled error",
         )
@@ -1637,17 +1718,23 @@ def _outreach_command(
 
 
 def _row(**overrides: str) -> dict[str, str]:
+    status = overrides.get("status", "contacted")
     row = {
         "prospect_id": "prospect-001",
         "fit_signals": SIGNALS,
         "fit_evidence": EVIDENCE,
         "contacted_on": "2026-07-01",
         "channel": "published-business",
-        "status": "contacted",
+        "status": status,
         "followed_up_on": "",
         "next_action_on": "2026-07-08",
         "approved_on": "2026-06-30",
         "outcome_on": "",
+        "approved_review_digest": (
+            ""
+            if status in {"researched", "drafted", "review-declined"}
+            else LEGACY_UNBOUND_REVIEW
+        ),
     }
     row.update(overrides)
     return row
