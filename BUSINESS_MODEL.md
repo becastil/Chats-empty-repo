@@ -1061,12 +1061,13 @@ repeated routes fail before JSON or owner-only bundle output, preserve the
 ledger, and leave draft text out of the error. Redacted and draft-only review
 remain available as correction paths. The same boundary now requires one
 canonical `$299` disclosure, no competing dollar amount, and no obvious
-negation so each approved attempt can test willingness to pay for the stated
-offer. Missing, repeated, negated, or competing price text fails without
-output or mutation. Later receipt verification maps route or pricing drift to
-the same generic stale-review failure. The existing schema-6 owner-only queue
-passes both preflights without changing its receipt, but a human still decides
-whether the message is accurate and appropriate.
+negation, including nearby post-price language saying the recipient will not
+pay or no payment is required, so each approved attempt can test willingness to
+pay for the stated offer. Missing, repeated, negated, nonpayable, or competing
+price text fails without output or mutation. Later receipt verification maps
+route or pricing drift to the same generic stale-review failure. The existing
+schema-6 owner-only queue passes both preflights without changing its receipt,
+but a human still decides whether the message is accurate and appropriate.
 The verified private notes revision now travels into the locked approval or
 decline commit as well. An editor save after receipt verification therefore
 forces a fresh review instead of recording a decision against content that no

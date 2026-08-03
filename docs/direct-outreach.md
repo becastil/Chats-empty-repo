@@ -197,9 +197,10 @@ fails without emitting the private bundle or changing the ledger. Redacted and
 draft-only review modes remain available so the message can be corrected
 without weakening the decision-ready boundary.
 The complete review also requires one unambiguous `$299` disclosure. Missing,
-repeated, or negated price text and any competing dollar amount fail at the
-same boundary, so an approved message can test willingness to pay for the
-stated offer instead of an undisclosed or contradictory price.
+repeated, or negated price text, nearby post-price language saying the recipient
+will not pay or no payment is required, and any competing dollar amount fail at
+the same boundary. An approved message can therefore test willingness to pay
+for the stated offer instead of an undisclosed or contradictory price.
 
 `--write-review` keeps that complete text out of terminal logs. It requires
 `--review-next` text mode, an existing owner-only parent directory, and an

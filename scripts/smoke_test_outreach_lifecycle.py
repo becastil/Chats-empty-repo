@@ -886,6 +886,11 @@ def verify_outreach_lifecycle(
                 f"{PILOT_PRICE_TEXT}.\n\n{DIRECT_OUTREACH_ROUTE}",
             ),
             (
+                "post-price-nonpayment",
+                f"Pilot price: {PILOT_PRICE_TEXT}, but you will not pay it."
+                f"\n\n{DIRECT_OUTREACH_ROUTE}",
+            ),
+            (
                 "competing",
                 f"Selected private message\n\nPilot price: {PILOT_PRICE_TEXT}; "
                 f"alternate price: $199\n\n{DIRECT_OUTREACH_ROUTE}",

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Rejected post-price outreach clauses that void the stated `$299` payment,
+  including direct nonpayment and no-payment-required wording, before a
+  content-bound review receipt can be emitted.
+- Preserved valid fixed-price wording such as `not negotiable at $299` and
+  added source and installed-lifecycle regression coverage for both sides of
+  the boundary.
 - Added a dated, official-source market map covering SAST, linter
   orchestration, policy-as-code, GitHub governance, and internal scripts, with
   explicit buyer-fit, substitution, validation, and non-claim boundaries.

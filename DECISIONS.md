@@ -5362,3 +5362,21 @@ This is a positioning decision, not proof of uniqueness or willingness to pay.
 The five prepared outreach attempts remain the next commercial action, explicit
 tool or DIY preference remains an `existing-solution` outcome, and billing or
 license enforcement still waits for the first paid pilot.
+
+## 2026-08-03: Reject Post-Price Nonpayment Terms
+
+The decision-ready price preflight rejected negation attached directly to the
+`$299` amount, but it still accepted a single canonical price followed by text
+such as `but you will not pay it` or `no payment required`. Such a draft could
+receive a content-bound approval even though it was not a payable `$299`
+experiment, corrupting later willingness-to-pay evidence.
+
+Complete evidence-and-draft reviews now reject nearby post-price clauses that
+explicitly remove the recipient's payment obligation. The focused boundary
+still accepts fixed-price language such as `not negotiable at $299`, while
+direct nonpayment and no-payment-required wording fail before a review receipt
+or owner-only bundle is emitted.
+
+This strengthens the meaning of any future approved attempt without replacing
+human judgment. It does not review or send one of the five prepared drafts,
+record demand, collect payment, or create revenue.

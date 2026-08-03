@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after grounding pilot positioning in market research:
-  320 / 1,000 (32.0%).
-- Remaining after grounding pilot positioning in market research:
-  680 commits.
+- Progress after rejecting negated outreach payment terms:
+  321 / 1,000 (32.1%).
+- Remaining after rejecting negated outreach payment terms:
+  679 commits.
 
 ## Commit Standard
 
