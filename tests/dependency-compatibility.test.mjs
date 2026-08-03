@@ -19,7 +19,7 @@ test("the patched Sharp override processes an image", async () => {
   assert.ok(output.length > 0);
 });
 
-test("Miniflare runs with the patched Sharp override", async () => {
+test("Miniflare runs with the patched runtime overrides", async () => {
   const worker = new Miniflare({
     modules: true,
     script: 'export default { fetch() { return new Response("ok") } }',

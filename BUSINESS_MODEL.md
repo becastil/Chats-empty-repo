@@ -480,14 +480,17 @@ digest, independent read-only verification before source-export approval,
 explicit approval before pushing to the separate Sites source repository,
 repeat verification before an exact-source save against the existing Sites
 project, separate owner approval before public deployment, and an immediate
-live audit afterward. The audited lock advances Next to its `16.2.11` security
+live audit afterward. The site lock advances Next to its `16.2.11` security
 patch, current supported Cloudflare and Vite tooling, and advisory-fixed
-PostCSS and Sharp releases without changing the offer. Sites version 46 is
-superseded; exact-source commit `4d0053f` was saved as version 47, but newly
-published July 24 dependency advisories supersede that undeployed candidate
-too. Production remains on `v0.3.50` until a newly tested replacement is saved,
-explicitly approved, deployed, and audited. A clean audit or saved version is
-not a visitor, customer activation, demand, payment, or revenue event.
+PostCSS and Sharp releases without changing the offer. The lock now also pins
+every resolved `fast-uri`, PostCSS, and Undici copy to `3.1.5`, `8.5.23`, and
+`7.29.0`, respectively, closing the seven ranges GitHub reported on
+2026-08-03. Sites version 46 is superseded; exact-source commit `4d0053f` was
+saved as version 47, but newly published July 24 dependency advisories
+supersede that undeployed candidate too. Production remains on `v0.3.50` until
+a newly tested replacement is saved, explicitly approved, deployed, and
+audited. A clean audit or saved version is not a visitor, customer activation,
+demand, payment, or revenue event.
 The repository now carries one exact `.nvmrc` selector for Node `22.13.0`.
 Local candidate preparation strictly parses that pin before running commands,
 uses it for the active-runtime gate and receipt, and the hosted dependency

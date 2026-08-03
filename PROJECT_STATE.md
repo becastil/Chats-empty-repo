@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 321 of
-1,000, with 679 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 322 of
+1,000, with 678 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -330,12 +330,14 @@ alignment take priority over commit volume.
   home-relative SCP paths from absolute SSH paths. A matching host, path, and
   commit under an unapproved port, username, or path mode therefore cannot
   satisfy source-export approval.
-- A zero-vulnerability site dependency lock with Next `16.2.11`, React and
-  React Server Components `19.2.8`, `brace-expansion` `5.0.8`, current
-  Cloudflare and Vite tooling, and advisory-fixed PostCSS and Sharp overrides.
-  Direct ESLint 10, TypeScript, React Hooks, and Next rule sets preserve linting
-  without the vulnerable legacy config bundle. Sites version 47 contains the
-  prior lock and is superseded; production is unchanged.
+- An advisory-remediated site dependency lock with Next `16.2.11`, React and
+  React Server Components `19.2.8`, `brace-expansion` `5.0.8`, `fast-uri`
+  `3.1.5`, PostCSS `8.5.23`, Undici `7.29.0`, current Cloudflare and Vite
+  tooling, and the patched Sharp override. Direct ESLint 10, TypeScript, React
+  Hooks, and Next rule sets preserve linting without the vulnerable legacy
+  config bundle. The executable contract requires every resolved copy of the
+  newly patched transitive packages to use those exact versions. Sites version
+  47 contains the prior lock and is superseded; production is unchanged.
 - A read-only hosted site dependency contract that runs on relevant lock and
   workflow changes, manual dispatch, and a weekly schedule. It installs the
   exact lock on Node `22.13.0`, requires zero reported vulnerabilities, builds
@@ -910,7 +912,12 @@ remote URL or retained evidence. Run the mandatory npm audit only in an
 environment explicitly authorized to send resolved dependency metadata to its
 configured endpoint. If it fails, resolve reported vulnerabilities or retry
 the unchanged preflight in an authorized environment; never skip or weaken the
-audit. The fresh outside-repository archive and
+audit. The local lock now resolves the first patched releases for the seven
+GitHub alerts opened on 2026-08-03 and passes a clean install, build, runtime
+tests, and lint. This automation was not authorized to submit the resolved
+dependency payload to npm's audit endpoint, so those checks do not satisfy the
+mandatory preflight audit and no candidate is yet approved. The fresh
+outside-repository archive and
 receipt paths keep any previously reviewed pair unchanged. Both requested
 paths must be direct regular-file leaves, not symlinks. Stable alternate case
 or Unicode spellings, whole-repository

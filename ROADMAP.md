@@ -21,9 +21,11 @@ they are not users, leads, or revenue.
   approval records. Run the mandatory npm audit only where sending resolved
   dependency metadata to the configured endpoint is explicitly authorized;
   endpoint or vulnerability failures must block approval and cannot be bypassed
-  by weakening the preflight. Select the exact Node `22.13.0` runtime from
-  `.nvmrc` with `nvm install` and `nvm use`, run the fail-closed preflight for
-  patched `main`, then obtain
+  by weakening the preflight. The lock now pins the first patched releases for
+  all seven GitHub alerts opened on 2026-08-03, but candidate readiness still
+  requires the unsuppressed audit in an authorized environment. Select the
+  exact Node `22.13.0` runtime from `.nvmrc` with `nvm install` and `nvm use`,
+  run the fail-closed preflight for patched `main`, then obtain
   read-only independent verification of its schema-5 release-bound,
   complete-tree, duplicate-free, branch-bound, archive-stable, receipt-stable,
   test-bracketed, scope-constrained, atomically no-clobber-published archive and

@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after rejecting negated outreach payment terms:
-  321 / 1,000 (32.1%).
-- Remaining after rejecting negated outreach payment terms:
-  679 commits.
+- Progress after remediating seven site dependency alerts:
+  322 / 1,000 (32.2%).
+- Remaining after remediating seven site dependency alerts:
+  678 commits.
 
 ## Commit Standard
 

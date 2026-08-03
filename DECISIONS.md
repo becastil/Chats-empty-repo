@@ -5380,3 +5380,25 @@ or owner-only bundle is emitted.
 This strengthens the meaning of any future approved attempt without replacing
 human judgment. It does not review or send one of the five prepared drafts,
 record demand, collect payment, or create revenue.
+
+## 2026-08-03: Patch Seven Newly Reported Site Dependency Alerts
+
+GitHub reported seven open alerts after the prior push: five Undici findings,
+including one high-severity cache parsing issue; one high-severity `fast-uri`
+host-confusion issue; and one medium-severity PostCSS source-map issue. The
+installed versions were below each advisory's first patched release even
+though the previously reviewed lock had passed its earlier audit.
+
+The root overrides and lock now require `fast-uri` `3.1.5`, PostCSS `8.5.23`,
+and Undici `7.29.0`. The executable dependency contract checks every resolved
+copy rather than only the root package, and the existing Miniflare runtime test
+now names the complete patched runtime boundary. A clean lock install,
+production build, all nine site/runtime tests, lint, and all 519 Python tests
+pass with the new tree.
+
+This environment did not receive permission to submit resolved dependency
+metadata to npm's audit endpoint, so the separately mandatory unsuppressed
+audit remains a hard candidate-preparation gate. No candidate was created,
+source was not exported, and no site version was saved or deployed. The patch
+protects the conversion path but does not create a visit, demand, payment, or
+revenue evidence.

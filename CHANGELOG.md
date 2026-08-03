@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Remediated seven newly reported site dependency alerts by pinning every
+  resolved `fast-uri`, PostCSS, and Undici copy to the first patched releases:
+  `3.1.5`, `8.5.23`, and `7.29.0`.
+- Extended the executable dependency contract across nested copies and passed
+  a clean lock install, production build, nine runtime/site tests, lint, and
+  the 519-test Python suite without weakening the separately required npm
+  audit boundary.
 - Rejected post-price outreach clauses that void the stated `$299` payment,
   including direct nonpayment and no-payment-required wording, before a
   content-bound review receipt can be emitted.

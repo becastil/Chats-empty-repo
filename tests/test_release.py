@@ -188,8 +188,10 @@ class ReleaseManifestTests(unittest.TestCase):
             package["overrides"],
             {
                 "brace-expansion": "5.0.8",
-                "postcss": "8.5.22",
+                "fast-uri": "3.1.5",
+                "postcss": "8.5.23",
                 "sharp": "0.35.3",
+                "undici": "7.29.0",
             },
         )
         self.assertEqual(lock["node_modules/next"]["version"], "16.2.11")
@@ -200,14 +202,19 @@ class ReleaseManifestTests(unittest.TestCase):
             "19.2.8",
         )
         self.assertEqual(lock["node_modules/eslint"]["version"], "10.8.0")
-        brace_versions = {
-            metadata["version"]
-            for path, metadata in lock.items()
-            if path.endswith("node_modules/brace-expansion")
-        }
-        self.assertEqual(brace_versions, {"5.0.8"})
+        for dependency, expected_version in (
+            ("brace-expansion", "5.0.8"),
+            ("fast-uri", "3.1.5"),
+            ("postcss", "8.5.23"),
+            ("undici", "7.29.0"),
+        ):
+            resolved_versions = {
+                metadata["version"]
+                for path, metadata in lock.items()
+                if path.endswith(f"node_modules/{dependency}")
+            }
+            self.assertEqual(resolved_versions, {expected_version})
         self.assertNotIn("node_modules/eslint-config-next", lock)
-        self.assertEqual(lock["node_modules/postcss"]["version"], "8.5.22")
         self.assertEqual(lock["node_modules/sharp"]["version"], "0.35.3")
         self.assertEqual(
             lock["node_modules/vite"]["dependencies"]["postcss"],
