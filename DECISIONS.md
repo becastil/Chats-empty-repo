@@ -5402,3 +5402,23 @@ audit remains a hard candidate-preparation gate. No candidate was created,
 source was not exported, and no site version was saved or deployed. The patch
 protects the conversion path but does not create a visit, demand, payment, or
 revenue evidence.
+
+## 2026-08-04: Exclude Unknown Labels From Pilot Demand
+
+The pilot reporter treated every label beginning with `pilot-` as evidence of
+a request. An issue carrying only an unrecognized label therefore entered
+source, readiness, purchase-criterion, and qualification totals, produced an
+untracked deal, and could move joined growth from acquisition to lifecycle
+repair despite having no recognized funnel milestone.
+
+The reporter now emits the existing `unknown_pilot_label` and
+`missing_known_stage` warnings, increments the ignored count, and stops before
+commercial classification when no recognized lifecycle label is present. An
+issue with at least one recognized lifecycle label remains reportable and any
+unknown extra label still produces its warning. Legacy saved untracked deals
+remain readable and repairable through joined growth.
+
+Source, joined-growth, and command-level release-smoke regressions prove an
+unknown-only label creates no deal or sales action and leaves acquisition as
+the bottleneck. This corrects evidence integrity; it does not create a request,
+customer, payment, or revenue.

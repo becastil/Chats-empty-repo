@@ -40,7 +40,10 @@ the cumulative label and a non-sensitive status note.
 `pilot-lost` can retain the milestones reached before the opportunity ended.
 Never apply both `pilot-converted` and `pilot-lost`; the reporter flags that as
 a terminal conflict. It also flags skipped milestones and unknown `pilot-*`
-labels.
+labels. An issue carrying only unknown pilot labels receives both the unknown-
+label and missing-known-stage warnings but is ignored as commercial evidence.
+An unknown label alongside a recognized lifecycle label still warns while the
+recognized request remains in the funnel.
 
 ## Weekly Report
 
@@ -123,10 +126,12 @@ through an open pilot target, a validated empty schema-7+ queue remains distinct
 from those legacy reports: growth preserves cumulative milestone history,
 states that no open pre-payment deal is available, and recommends replenishing
 the queue rather than sending terms, confirming payment, closing, or naming a
-nonexistent deal. An open request with an untracked or conflicting lifecycle
-stage instead requires label repair before another sales action, even when a
-different deal remains active. Acquisition, retention, and validated stages
-retain their existing evidence priorities.
+nonexistent deal. An open request with a conflicting lifecycle stage, or a
+legacy saved report containing an untracked deal, instead requires label repair
+before another sales action, even when a different deal remains active. The
+current funnel producer ignores unknown-only labels rather than creating a new
+untracked deal. Acquisition, retention, and validated stages retain their
+existing evidence priorities.
 Before deferring, growth reconciles `summary.sales_actions` with the embedded
 queue, requires every open pre-payment deal identity, stage, readiness, and
 action-driving qualification field to appear exactly once, and requires
@@ -272,6 +277,11 @@ Controlled errors do not repeat the unsafe title or URL.
 Unrecognized edited source, readiness, and purchase-criterion answers and
 unrecognized pilot labels remain in escaped JSON review fields. Text warnings
 are generic and do not interpolate those public values into terminal output.
+Unknown-only pilot labels are ignored before source, readiness, purchase-
+criterion, qualification, stage, deal, and queue totals are built, so taxonomy
+drift cannot fabricate demand or move the joined growth bottleneck away from
+acquisition. A recognized lifecycle label still counts when an unknown extra
+label is present.
 
 Resolved annual-conversion totals also require `pilot-paid`. A
 `pilot-converted` issue that skipped payment keeps its visible stage and

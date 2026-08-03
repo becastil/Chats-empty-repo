@@ -276,6 +276,18 @@ def build_funnel(
                 )
             )
 
+        if not known_labels:
+            warnings.append(
+                _warning(
+                    issue,
+                    "missing_known_stage",
+                    "Issue has pilot labels but no recognized funnel stage.",
+                    labels=unknown_labels,
+                )
+            )
+            ignored_issues += 1
+            continue
+
         source, source_raw, source_warning = _classify_lead_source(issue)
         if source_warning is not None:
             warnings.append(source_warning)

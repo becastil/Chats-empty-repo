@@ -102,8 +102,8 @@ class PilotFunnelTests(unittest.TestCase):
         report = build_funnel(payload, as_of=date(2026, 7, 10))
 
         self.assertEqual(report["schema_version"], 10)
-        self.assertEqual(report["summary"]["tracked_issues"], 8)
-        self.assertEqual(report["summary"]["ignored_issues"], 1)
+        self.assertEqual(report["summary"]["tracked_issues"], 7)
+        self.assertEqual(report["summary"]["ignored_issues"], 2)
         self.assertEqual(report["summary"]["booked_pilots"], 3)
         self.assertEqual(report["summary"]["activated_pilots"], 2)
         self.assertEqual(report["summary"]["booked_revenue_usd"], 897)
@@ -113,16 +113,16 @@ class PilotFunnelTests(unittest.TestCase):
         self.assertEqual(report["summary"]["lost_pilots"], 1)
         self.assertEqual(report["summary"]["stale_deals"], 2)
         self.assertEqual(report["summary"]["sales_actions"], 2)
-        self.assertEqual(report["summary"]["attributed_issues"], 8)
+        self.assertEqual(report["summary"]["attributed_issues"], 7)
         self.assertEqual(report["summary"]["unattributed_issues"], 0)
         self.assertEqual(report["summary"]["unknown_source_issues"], 0)
         self.assertEqual(report["summary"]["ready_issues"], 3)
         self.assertEqual(report["summary"]["needs_approval_issues"], 3)
-        self.assertEqual(report["summary"]["exploring_issues"], 2)
+        self.assertEqual(report["summary"]["exploring_issues"], 1)
         self.assertEqual(report["summary"]["missing_readiness_issues"], 0)
         self.assertEqual(report["summary"]["unknown_readiness_issues"], 0)
         self.assertEqual(
-            report["summary"]["declared_decision_criterion_issues"], 8
+            report["summary"]["declared_decision_criterion_issues"], 7
         )
         self.assertEqual(
             report["summary"]["missing_decision_criterion_issues"], 0
@@ -132,7 +132,7 @@ class PilotFunnelTests(unittest.TestCase):
         )
         self.assertEqual(report["summary"]["complete_qualification_issues"], 0)
         self.assertEqual(report["summary"]["target_profile_issues"], 0)
-        self.assertEqual(report["summary"]["qualification_review_issues"], 8)
+        self.assertEqual(report["summary"]["qualification_review_issues"], 7)
         self.assertEqual(report["summary"]["subset_scope_issues"], 0)
         self.assertEqual(
             report["by_stage"],
@@ -145,7 +145,7 @@ class PilotFunnelTests(unittest.TestCase):
                 "converted": 1,
                 "lost": 1,
                 "conflict": 1,
-                "untracked": 1,
+                "untracked": 0,
             },
         )
         self.assertEqual(
@@ -244,7 +244,7 @@ class PilotFunnelTests(unittest.TestCase):
                 "lost_pilots": 0,
             },
         )
-        self.assertEqual(report["by_readiness"]["exploring"]["deals"], 2)
+        self.assertEqual(report["by_readiness"]["exploring"]["deals"], 1)
         self.assertEqual(report["by_readiness"]["exploring"]["lost_pilots"], 1)
         self.assertEqual(
             report["by_decision_criterion"]["policy_fit"]["booked_pilots"],

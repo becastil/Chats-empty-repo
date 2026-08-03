@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 322 of
-1,000, with 678 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 323 of
+1,000, with 677 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -78,6 +78,11 @@ alignment take priority over commit volume.
   surrounding whitespace before operator output.
 - Generic operator warnings for unrecognized public form answers and pilot
   labels, retaining raw values only in structurally escaped JSON fields.
+  Issues carrying only unrecognized pilot labels are ignored before demand,
+  attribution, qualification, deal, and growth-bottleneck accounting while
+  retaining both unknown-label and missing-stage repair warnings. Unknown
+  labels alongside a recognized lifecycle label still warn without hiding the
+  valid request.
 - Qualification-aware ready-buyer actions that preserve normal terms and
   payment guidance only for target-profile GitHub Actions requests within the
   10-repository offer. Non-GitHub or unresolved CI evidence retains its

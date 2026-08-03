@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Excluded issues carrying only unrecognized `pilot-*` labels from pilot
+  demand, attribution, qualification, deal, queue, and growth-bottleneck
+  accounting while preserving both taxonomy-repair warnings.
+- Added source, joined-growth, and command-level release-smoke regressions
+  proving unknown-only labels cannot fabricate a request, while recognized
+  lifecycle labels with an unknown extra label remain reportable and visibly
+  warned.
 - Remediated seven newly reported site dependency alerts by pinning every
   resolved `fast-uri`, PostCSS, and Undici copy to the first patched releases:
   `3.1.5`, `8.5.23`, and `7.29.0`.

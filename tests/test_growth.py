@@ -604,7 +604,7 @@ class GrowthReportTests(unittest.TestCase):
                     ),
                 )
 
-    def test_schema_seven_empty_queue_prioritizes_open_lifecycle_repair(
+    def test_unknown_only_pilot_label_does_not_create_demand(
         self,
     ) -> None:
         raw_issue = {
@@ -634,28 +634,29 @@ class GrowthReportTests(unittest.TestCase):
             as_of=date(2026, 7, 10),
         )
 
-        self.assertEqual(pilot["deals"][0]["stage"], "untracked")
+        self.assertEqual(pilot["summary"]["tracked_issues"], 0)
+        self.assertEqual(pilot["summary"]["ignored_issues"], 1)
+        self.assertEqual(pilot["summary"]["attributed_issues"], 0)
+        self.assertEqual(pilot["deals"], [])
+        self.assertEqual(pilot["by_stage"]["untracked"], 0)
         self.assertEqual(pilot["sales_queue"]["deals"], [])
-        self.assertIn(
-            "missing_known_stage",
+        self.assertEqual(
             [warning["kind"] for warning in pilot["warnings"]],
+            ["unknown_pilot_label", "missing_known_stage"],
         )
 
         report = build_growth_report(self._distribution(), pilot)
 
-        self.assertEqual(report["bottleneck"]["stage"], "qualification")
+        self.assertEqual(report["bottleneck"]["stage"], "acquisition")
         self.assertEqual(
             report["bottleneck"]["reason"],
-            (
-                "An open pilot request cannot enter the sales queue until its "
-                "lifecycle evidence is reconciled."
-            ),
+            "No pilot request has entered the attributed funnel.",
         )
         self.assertEqual(
             report["bottleneck"]["next_action"],
             (
-                "Reconcile open pilot lifecycle labels before selecting another "
-                "sales action."
+                "Run one source-identifiable outreach or launch experiment and "
+                "ask qualified teams to submit the price-disclosed pilot form."
             ),
         )
 
@@ -671,16 +672,15 @@ class GrowthReportTests(unittest.TestCase):
             [raw_issue, open_lead],
             as_of=date(2026, 7, 10),
         )
+        self.assertEqual(mixed_pilot["summary"]["tracked_issues"], 1)
         self.assertEqual(len(mixed_pilot["sales_queue"]["deals"]), 1)
 
         mixed_report = build_growth_report(self._distribution(), mixed_pilot)
 
+        self.assertEqual(mixed_report["bottleneck"]["stage"], "qualification")
         self.assertEqual(
             mixed_report["bottleneck"]["next_action"],
-            (
-                "Reconcile open pilot lifecycle labels before selecting another "
-                "sales action."
-            ),
+            "Work the sales queue and qualify the team policy need.",
         )
 
     def test_schema_seven_growth_rejects_an_untrusted_sales_queue_gate(

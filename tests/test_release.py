@@ -695,6 +695,7 @@ class ReleaseManifestTests(unittest.TestCase):
                 "invalid-distribution-rejected",
                 "duplicate-payment-key-rejected",
                 "unknown-answer-text-safe",
+                "unknown-label-not-demand",
                 "unsafe-url-rejected",
                 "unsafe-title-rejected",
                 "invalid-export-rejected",

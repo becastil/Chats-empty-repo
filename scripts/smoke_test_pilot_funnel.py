@@ -1076,8 +1076,47 @@ def verify_pilot_funnel(
         )
         checked.append("unknown-answer-text-safe")
 
+        issue_export.write_text(
+            json.dumps(
+                [
+                    _issue(
+                        number=104,
+                        title="Unknown-only lifecycle label",
+                        source="Repo Scout website",
+                        readiness="Ready to purchase the $299 pilot",
+                        criterion="The $299 scope and price fit",
+                        labels=("pilot-needs-review",),
+                    )
+                ],
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        unknown_only = _json_report(
+            pilot_command,
+            issue_export,
+            environment=environment,
+        )
+        unknown_summary = unknown_only.get("summary", {})
+        _require(
+            unknown_summary.get("tracked_issues") == 0
+            and unknown_summary.get("ignored_issues") == 1
+            and unknown_summary.get("attributed_issues") == 0,
+            "unknown-only pilot label counted as commercial demand",
+        )
+        _require(
+            unknown_only.get("deals") == [],
+            "unknown-only pilot label created a deal",
+        )
+        _require(
+            [warning.get("kind") for warning in unknown_only.get("warnings", [])]
+            == ["unknown_pilot_label", "missing_known_stage"],
+            "unknown-only pilot label lost its repair warnings",
+        )
+        checked.append("unknown-label-not-demand")
+
         unsafe_url_issue = _issue(
-            number=104,
+            number=105,
             title="Unsafe exported URL",
             source="Repo Scout website",
             readiness="Ready to purchase the $299 pilot",
@@ -1085,7 +1124,7 @@ def verify_pilot_funnel(
             labels=("pilot-lead",),
         )
         unsafe_url_issue["url"] = (
-            "https://example.invalid/pilots/104\n"
+            "https://example.invalid/pilots/105\n"
             f"{INJECTED_URL_MARKER}\x1b[31m"
         )
         issue_export.write_text(

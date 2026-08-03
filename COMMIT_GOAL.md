@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after remediating seven site dependency alerts:
-  322 / 1,000 (32.2%).
-- Remaining after remediating seven site dependency alerts:
-  678 commits.
+- Progress after excluding unknown labels from pilot demand:
+  323 / 1,000 (32.3%).
+- Remaining after excluding unknown labels from pilot demand:
+  677 commits.
 
 ## Commit Standard
 

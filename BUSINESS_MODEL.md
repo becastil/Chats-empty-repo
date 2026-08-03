@@ -1485,6 +1485,12 @@ Unrecognized edited source, readiness, and purchase-criterion answers remain
 available in escaped JSON deal fields. Unknown pilot labels remain in escaped
 JSON warning fields. Operator-facing warning messages are generic and never
 interpolate those values into terminal output.
+An issue carrying only unknown pilot labels now emits both taxonomy-repair
+warnings and is ignored before source, readiness, purchase-criterion,
+qualification, stage, deal, queue, and joined-growth accounting. It therefore
+cannot fabricate demand or displace acquisition as the commercial bottleneck.
+An unknown extra label still warns when a recognized lifecycle label makes the
+underlying request reportable.
 
 Schema-7 through schema-10 joined growth require every detailed deal to carry an
 explicit boolean `booked` value and reconcile their total to
