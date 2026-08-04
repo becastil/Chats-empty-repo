@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Made the decision-ready outreach payment preflight order-independent, so a
+  nonpayment clause before the sole `$299` disclosure cannot receive a review
+  digest or proceed toward approval.
+- Extended source and installed-lifecycle regressions with the pre-price
+  contradiction while preserving the generic error, empty output, and
+  mutation-free rejection contract.
 - Routed open `pilot-active` and `pilot-converted` records without
   `pilot-paid` evidence to lifecycle repair instead of treating them as an
   empty sales queue and recommending more acquisition.

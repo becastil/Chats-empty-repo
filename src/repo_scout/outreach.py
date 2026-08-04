@@ -86,9 +86,8 @@ _NEGATED_PILOT_PRICE_PATTERN = re.compile(
     r"(?:the\s+)?(?:pilot\s+)?(?:price|cost)\b)",
     re.IGNORECASE,
 )
-_PRICE_FOLLOWED_BY_NONPAYMENT_PATTERN = re.compile(
-    rf"{re.escape(_PILOT_PRICE_TEXT)}(?![0-9])"
-    r"[\s\S]{0,120}\b(?:"
+_NONPAYMENT_PATTERN = re.compile(
+    r"\b(?:"
     r"(?:will|would|do|does|are|is)\s+not\s+"
     r"(?:(?:need|required|have)\s+to\s+)?(?:pay|charge|be\s+charged)\b"
     r"|(?:won't|wouldn't|don't|doesn't|aren't|isn't)\s+"
@@ -1556,7 +1555,7 @@ def build_next_outreach_review(
                     review["private_draft"]
                 )
                 is not None
-                or _PRICE_FOLLOWED_BY_NONPAYMENT_PATTERN.search(
+                or _NONPAYMENT_PATTERN.search(
                     review["private_draft"]
                 )
                 is not None

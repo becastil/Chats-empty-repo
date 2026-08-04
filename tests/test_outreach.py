@@ -1379,6 +1379,11 @@ class OutreachReportTests(unittest.TestCase):
                 f"{DIRECT_OUTREACH_ROUTE}"
             ),
             (
+                "No payment is required for this pilot. "
+                "The pilot price is $299.\n\n"
+                f"{DIRECT_OUTREACH_ROUTE}"
+            ),
+            (
                 "Reviewed private message for $299, or $199 instead.\n\n"
                 f"{DIRECT_OUTREACH_ROUTE}"
             ),

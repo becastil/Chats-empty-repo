@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 324 of
-1,000, with 676 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 325 of
+1,000, with 675 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -617,9 +617,9 @@ alignment take priority over commit volume.
   route in the selected private message before emitting a receipt or owner-only
   bundle, while retaining draft-only inspection as the correction path.
 - One unambiguous `$299` disclosure required at the same decision-ready
-  boundary, rejecting missing, repeated, negated, competing, or nearby
-  post-price nonpayment terms so an approved attempt tests willingness to pay
-  for the stated offer.
+  boundary, rejecting missing, repeated, negated, competing, or explicit
+  nonpayment terms on either side of the price so an approved attempt tests
+  willingness to pay for the stated offer.
 - Qualification counts in the review checklist without evidence URLs, draft
   text, approval dates, recipient details, or public-baseline eligibility.
 - An explicit private-evidence review opt-in that maps the selected draft's fit

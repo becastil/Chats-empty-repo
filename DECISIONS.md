@@ -5445,3 +5445,20 @@ regressions cover active and converted drift and the command-level release
 smoke protects the packaged repair recommendation. This protects commercial
 prioritization; it does not apply a label, contact a buyer, collect payment, or
 create revenue.
+
+## 2026-08-04: Reject Nonpayment Terms on Either Side of the Pilot Price
+
+The decision-ready outreach preflight rejected direct `$299` negation and
+nearby nonpayment wording after the price. It still accepted a draft that first
+said no payment was required and disclosed `$299` later, allowing a free offer
+to receive the same content-bound review digest as the paid experiment.
+
+Complete evidence-and-draft reviews now scan the selected message for explicit
+nonpayment clauses independently of their position relative to `$299`. Missing,
+repeated, negated, nonpayable, and competing prices continue to share one
+generic failure that emits no review bundle or digest and does not mutate the
+ledger. Fixed-price wording such as `not negotiable at $299` remains valid.
+
+Source and installed-command regressions cover the pre-price contradiction.
+This protects the meaning of any future approved outreach attempt; it does not
+review or send a draft, create demand, collect payment, or record revenue.
