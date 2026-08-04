@@ -5422,3 +5422,26 @@ Source, joined-growth, and command-level release-smoke regressions prove an
 unknown-only label creates no deal or sales action and leaves acquisition as
 the bottleneck. This corrects evidence integrity; it does not create a request,
 customer, payment, or revenue.
+
+## 2026-08-04: Repair Unsupported Post-Payment Stages Before Acquisition
+
+The funnel deliberately preserves an active or converted label without
+`pilot-paid` as visible lifecycle drift: the deal remains unbooked and carries
+a missing-prior-stage warning. Joined growth marked only open conflicts and
+legacy untracked deals for repair. An open active or converted record therefore
+looked like a valid empty sales queue and produced an instruction to replenish
+opportunities, hiding a live buyer whose payment evidence needed reconciliation.
+
+Joined growth now marks an open active or converted deal without booking
+evidence as repair-required. It retains the payment bottleneck but replaces the
+empty-queue recommendation with the existing lifecycle-reconciliation action.
+Valid closed history, correctly paid stages, and acquisition or retention
+priorities keep their established behavior.
+
+The read-only pilot-intake workflow now selects changes to `growth.py` or its
+behavior suite and runs `tests.test_growth` before the live label audit. Its
+contract proves both trigger blocks and the exact test order, while focused
+regressions cover active and converted drift and the command-level release
+smoke protects the packaged repair recommendation. This protects commercial
+prioritization; it does not apply a label, contact a buyer, collect payment, or
+create revenue.

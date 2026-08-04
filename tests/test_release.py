@@ -689,6 +689,7 @@ class ReleaseManifestTests(unittest.TestCase):
                 "schema-ten-activation-gate",
                 "schema-ten-activation-attribution-gate",
                 "growth-boundaries",
+                "post-payment-repair-gate",
                 "growth-ci-integration-gate",
                 "invalid-growth-rejected",
                 "duplicate-growth-keys-rejected",

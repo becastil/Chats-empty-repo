@@ -863,6 +863,61 @@ def verify_pilot_funnel(
         )
         checked.append("growth-boundaries")
 
+        unsupported_stage_export = Path(tmp) / "unsupported-stage-issues.json"
+        unsupported_stage_export.write_text(
+            json.dumps(
+                [
+                    _issue(
+                        number=103,
+                        title="Active stage without payment evidence",
+                        source="Repo Scout website",
+                        readiness="Ready to purchase the $299 pilot",
+                        criterion="The $299 scope and price fit",
+                        labels=(
+                            "pilot-lead",
+                            "pilot-qualified",
+                            "pilot-offered",
+                            "pilot-active",
+                        ),
+                    )
+                ],
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        unsupported_stage = _json_report(
+            pilot_command,
+            unsupported_stage_export,
+            environment=environment,
+        )
+        unsupported_stage_report = Path(tmp) / "unsupported-stage-report.json"
+        unsupported_stage_report.write_text(
+            json.dumps(unsupported_stage, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+        unsupported_growth = _growth_report(
+            growth_command,
+            distribution_report,
+            unsupported_stage_report,
+            environment=environment,
+        )
+        unsupported_bottleneck = unsupported_growth.get("bottleneck", {})
+        _require(
+            unsupported_bottleneck.get("stage") == "payment"
+            and unsupported_bottleneck.get("reason")
+            == (
+                "An open pilot request cannot enter the sales queue until its "
+                "lifecycle evidence is reconciled."
+            )
+            and unsupported_bottleneck.get("next_action")
+            == (
+                "Reconcile open pilot lifecycle labels before selecting another "
+                "sales action."
+            ),
+            "unsupported post-payment stage bypassed lifecycle repair",
+        )
+        checked.append("post-payment-repair-gate")
+
         integration_pilot_report = Path(tmp) / "integration-pilot-report.json"
         integration_pilot_report.write_text(
             json.dumps(integration_report, indent=2, sort_keys=True),

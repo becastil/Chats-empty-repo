@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after excluding unknown labels from pilot demand:
-  323 / 1,000 (32.3%).
-- Remaining after excluding unknown labels from pilot demand:
-  677 commits.
+- Progress after protecting post-payment lifecycle repair in hosted CI:
+  324 / 1,000 (32.4%).
+- Remaining after protecting post-payment lifecycle repair in hosted CI:
+  676 commits.
 
 ## Commit Standard
 

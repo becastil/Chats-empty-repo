@@ -26,8 +26,10 @@ TRIGGER_PATHS = (
     "examples/pilot-delivery-record.md",
     "pyproject.toml",
     "scripts/audit_pilot_labels.py",
+    "src/repo_scout/growth.py",
     "src/repo_scout/pilot_funnel.py",
     "tests/fixtures/pilot_issues.json",
+    "tests/test_growth.py",
     "tests/test_pilot_delivery_contract.py",
     "tests/test_pilot_funnel.py",
     "tests/test_pilot_intake_workflow.py",
@@ -108,6 +110,7 @@ class PilotIntakeWorkflowContractTests(unittest.TestCase):
             "          tests.test_pilot_intake_workflow\n"
             "          tests.test_pilot_label_audit\n"
             "          tests.test_pilot_delivery_contract\n"
+            "          tests.test_growth\n"
             "          tests.test_pilot_funnel"
         )
         label_audit_command = (

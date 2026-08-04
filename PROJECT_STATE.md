@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 323 of
-1,000, with 677 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 324 of
+1,000, with 676 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -102,10 +102,11 @@ alignment take priority over commit volume.
   evidence, while detailed stage counts must match `by_stage` and visible
   qualification and offer progression must agree with `by_source`. Historical
   milestones remain intact. Pre-target empty queues replenish live
-  opportunities, and open untracked evidence takes repair precedence over
-  another sales action. Active queue priority and age must match the canonical
-  detailed deal, and the queue sequence must preserve readiness, stage, age,
-  and issue-number ordering before joined growth can defer to it. Every
+  opportunities, while open untracked, conflicting, active-without-payment,
+  and converted-without-payment evidence takes repair precedence over another
+  sales action. Active queue priority and age must match the canonical detailed
+  deal, and the queue sequence must preserve readiness, stage, age, and issue-
+  number ordering before joined growth can defer to it. Every
   actionable age must also equal canonical `follow_up.as_of` minus the deal's
   canonical UTC `updated_at`, with queue timestamps bound to detailed evidence.
   Booked-pilot totals must equal explicit boolean booking evidence across every
@@ -152,10 +153,11 @@ alignment take priority over commit volume.
 - A dedicated pilot-intake workflow contract covering both trigger blocks,
   read-only permissions, immutable actions, bounded runtime, exact test and
   live-label commands, test-before-audit ordering, and the absence of repair,
-  secrets, or failure masking. The workflow runs the complete pilot-funnel
-  behavior suite, including payment-backed conversion accounting, before the
-  live audit and watches that suite's fixture plus every commercial document
-  read by the paid-delivery tests.
+  secrets, or failure masking. The workflow runs the complete pilot-funnel and
+  joined-growth behavior suites, including payment-backed conversion accounting
+  and lifecycle-repair prioritization, before the live audit. Both trigger
+  blocks watch the two commercial producers, both suites, the funnel fixture,
+  and every commercial document read by the paid-delivery tests.
 - Label-drift warnings and tested $299 pilot / $897 target accounting semantics.
 - Exact `pilot-paid` revenue recognition that keeps later-stage label drift
   visible without treating missing payment evidence as booked revenue.

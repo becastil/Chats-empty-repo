@@ -126,12 +126,13 @@ through an open pilot target, a validated empty schema-7+ queue remains distinct
 from those legacy reports: growth preserves cumulative milestone history,
 states that no open pre-payment deal is available, and recommends replenishing
 the queue rather than sending terms, confirming payment, closing, or naming a
-nonexistent deal. An open request with a conflicting lifecycle stage, or a
-legacy saved report containing an untracked deal, instead requires label repair
-before another sales action, even when a different deal remains active. The
-current funnel producer ignores unknown-only labels rather than creating a new
-untracked deal. Acquisition, retention, and validated stages retain their
-existing evidence priorities.
+nonexistent deal. An open request with a conflicting lifecycle stage, a legacy
+saved report containing an untracked deal, or an active or converted stage
+without payment evidence instead requires label repair before another sales
+action, even when a different deal remains active. The current funnel producer
+ignores unknown-only labels rather than creating a new untracked deal.
+Acquisition, retention, and validated stages retain their existing evidence
+priorities.
 Before deferring, growth reconciles `summary.sales_actions` with the embedded
 queue, requires every open pre-payment deal identity, stage, readiness, and
 action-driving qualification field to appear exactly once, and requires
@@ -216,6 +217,9 @@ requires activation to be payment-backed, and reconciles the detailed total to
 commercial bottleneck before another sale or retention action. Schema-5 through
 schema-8 reports remain readable with activation reporting marked unavailable
 rather than zero, so historical evidence never invents an activation result.
+An open active or converted record without `pilot-paid` remains visible with
+its missing-stage warning and now forces lifecycle repair instead of an empty-
+queue instruction to acquire another prospect.
 Schema 10 additionally requires `activated_pilots` in every source, readiness,
 and purchase-criterion row. Joined growth reconciles all three segment families
 to the global activation total and independently derives each segment count

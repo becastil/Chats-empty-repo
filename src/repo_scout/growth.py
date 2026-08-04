@@ -1097,7 +1097,9 @@ def _expected_sales_queue_members(
                 report_date,
                 priority_field="sales_priority",
             )
-        elif stage in {"conflict", "untracked"}:
+        elif stage in {"conflict", "untracked"} or (
+            stage in {"active", "converted"} and not booked
+        ):
             needs_lifecycle_repair = True
 
     if observed_booked_pilots != summary["booked_pilots"]:

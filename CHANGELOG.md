@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Routed open `pilot-active` and `pilot-converted` records without
+  `pilot-paid` evidence to lifecycle repair instead of treating them as an
+  empty sales queue and recommending more acquisition.
+- Expanded the read-only pilot-intake workflow to select changes to the joined
+  growth producer or suite and run the complete growth behavior tests before
+  the live lifecycle-label audit, with a packaged-command smoke gate for the
+  same repair recommendation.
 - Excluded issues carrying only unrecognized `pilot-*` labels from pilot
   demand, attribution, qualification, deal, queue, and growth-bottleneck
   accounting while preserving both taxonomy-repair warnings.

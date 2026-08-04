@@ -683,6 +683,78 @@ class GrowthReportTests(unittest.TestCase):
             "Work the sales queue and qualify the team policy need.",
         )
 
+    def test_open_post_payment_stage_without_payment_requires_repair(
+        self,
+    ) -> None:
+        body = "\n\n".join(
+            (
+                "### Team size\n\n12",
+                "### Repository count\n\n6",
+                "### CI provider\n\nGitHub Actions",
+                "### Repository standard to enforce\n\n"
+                "Use one reviewed repository policy.",
+                "### How did you hear about Repo Scout?\n\n"
+                "Repo Scout website",
+                "### Purchase readiness\n\n"
+                "Ready to purchase the $299 pilot",
+                "### Primary purchase criterion\n\n"
+                "Works across our repositories and CI",
+            )
+        )
+        for final_label in ("pilot-active", "pilot-converted"):
+            with self.subTest(final_label=final_label):
+                labels = [
+                    "pilot-lead",
+                    "pilot-qualified",
+                    "pilot-offered",
+                    "pilot-active",
+                ]
+                if final_label == "pilot-converted":
+                    labels.append(final_label)
+                pilot = build_funnel(
+                    [
+                        {
+                            "number": 1,
+                            "title": "Open post-payment stage without payment",
+                            "state": "OPEN",
+                            "updatedAt": "2026-07-10T00:00:00Z",
+                            "body": body,
+                            "labels": labels,
+                        }
+                    ],
+                    as_of=date(2026, 7, 10),
+                )
+
+                self.assertEqual(
+                    pilot["deals"][0]["stage"],
+                    final_label.removeprefix("pilot-"),
+                )
+                self.assertFalse(pilot["deals"][0]["booked"])
+                self.assertEqual(pilot["sales_queue"]["deals"], [])
+                self.assertEqual(
+                    [warning["kind"] for warning in pilot["warnings"]],
+                    ["missing_prior_stage"],
+                )
+                self.assertEqual(pilot["warnings"][0]["labels"], ["pilot-paid"])
+
+                report = build_growth_report(self._distribution(), pilot)
+
+                self.assertEqual(report["bottleneck"]["stage"], "payment")
+                self.assertEqual(
+                    report["bottleneck"]["reason"],
+                    (
+                        "An open pilot request cannot enter the sales queue until "
+                        "its lifecycle evidence is reconciled."
+                    ),
+                )
+                self.assertEqual(
+                    report["bottleneck"]["next_action"],
+                    (
+                        "Reconcile open pilot lifecycle labels before selecting "
+                        "another sales action."
+                    ),
+                )
+
     def test_schema_seven_growth_rejects_an_untrusted_sales_queue_gate(
         self,
     ) -> None:

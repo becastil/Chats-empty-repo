@@ -1618,11 +1618,13 @@ That hosted check now has a dedicated fail-closed workflow contract covering
 both trigger blocks, read-only permissions, immutable actions, bounded runtime,
 the exact workflow, intake-label, and delivery tests, test-before-live-audit
 ordering, and the absence of repair, secrets, or failure masking. The workflow
-runs the complete pilot-funnel behavioral suite before the live label audit,
-including direct proof that annual conversion requires explicit payment. Both
-trigger blocks watch that suite and its revenue fixture, while
-`DISTRIBUTION.md` remains watched because the delivery test reads it, so
-weakening conversion evidence or its protection selects the same hosted check.
+runs the complete pilot-funnel and joined-growth behavioral suites before the
+live label audit, including direct proof that annual conversion requires
+explicit payment and that unsupported post-payment stages require repair.
+Both trigger blocks watch the two commercial producers, both suites, and the
+funnel revenue fixture, while `DISTRIBUTION.md` remains watched because the
+delivery test reads it. Weakening conversion evidence, commercial
+prioritization, or their protection therefore selects the same hosted check.
 This protects conversion infrastructure; it does not submit, qualify, or
 contact a lead and does not create payment or revenue evidence.
 
@@ -1693,12 +1695,14 @@ During qualification through an open pilot target, a valid but empty schema-7+
 queue is not treated as a legacy report: cumulative qualification, offer,
 payment, and loss history remains visible, but growth states that no open
 pre-payment deal exists and recommends replenishing the queue instead of
-inventing commercial work. Open untracked or conflicting lifecycle evidence
-takes repair precedence over another active deal at those stages. Acquisition
-and post-target retention keep their existing evidence priorities. Older pilot
-schemas retain their existing aggregate recommendations. The queue is an
-operating aid, not an automated decision, and it neither sends outreach nor
-records payment.
+inventing commercial work. Open untracked or conflicting lifecycle evidence,
+and open active or converted stages without booked payment evidence, take
+repair precedence over another active deal at those stages. This prevents a
+live buyer with contradictory post-payment evidence from disappearing behind a
+queue-replenishment instruction. Acquisition and post-target retention keep
+their existing evidence priorities. Older pilot schemas retain their existing
+aggregate recommendations. The queue is an operating aid, not an automated
+decision, and it neither sends outreach nor records payment.
 
 Schema 7+ also verifies the required application scope before an operator relies
 on a qualification label. It normalizes team size, repository count, and CI

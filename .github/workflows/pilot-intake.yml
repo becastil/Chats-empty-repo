@@ -14,8 +14,10 @@ on:
       - "examples/pilot-delivery-record.md"
       - "pyproject.toml"
       - "scripts/audit_pilot_labels.py"
+      - "src/repo_scout/growth.py"
       - "src/repo_scout/pilot_funnel.py"
       - "tests/fixtures/pilot_issues.json"
+      - "tests/test_growth.py"
       - "tests/test_pilot_delivery_contract.py"
       - "tests/test_pilot_funnel.py"
       - "tests/test_pilot_intake_workflow.py"
@@ -34,8 +36,10 @@ on:
       - "examples/pilot-delivery-record.md"
       - "pyproject.toml"
       - "scripts/audit_pilot_labels.py"
+      - "src/repo_scout/growth.py"
       - "src/repo_scout/pilot_funnel.py"
       - "tests/fixtures/pilot_issues.json"
+      - "tests/test_growth.py"
       - "tests/test_pilot_delivery_contract.py"
       - "tests/test_pilot_funnel.py"
       - "tests/test_pilot_intake_workflow.py"
@@ -67,6 +71,7 @@ jobs:
           tests.test_pilot_intake_workflow
           tests.test_pilot_label_audit
           tests.test_pilot_delivery_contract
+          tests.test_growth
           tests.test_pilot_funnel
 
       - name: Audit live pilot labels
