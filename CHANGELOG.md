@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Required a separate `--confirm-not-sent` attestation before an approved
+  outreach message can be canceled, preventing a real external send from being
+  erased before its guarded contact record is written.
+- Advanced decline receipts to schema 4 with explicit no-prior-send evidence;
+  source and installed-lifecycle regressions prove omission is mutation-free
+  while properly confirmed cancellation remains outside attempted outreach.
 - Allowed the exact pending approved outreach message to be canceled through
   confirmed `--decline-next`, clearing its approval eligibility without
   fabricating contact, follow-up, attempt, or outcome evidence.

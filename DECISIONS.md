@@ -5518,3 +5518,24 @@ This qualifies the earlier send-first barrier while preserving serial review,
 atomic mutation, owner-only evidence, and explicit human confirmation. It does
 not send outreach, create an attempt or response, validate demand, collect
 payment, or record revenue.
+
+## 2026-08-04: Require Evidence That A Canceled Approval Was Never Sent
+
+Approved cancellation originally required a human decision that the message
+must not be sent. That future-facing decision did not explicitly confirm the
+historical fact that no external send had already occurred. An operator who
+sent a message but had not yet recorded contact could cancel its approval,
+clear the digest, and incorrectly remove one attempt from the five-message
+paid-pilot experiment.
+
+Approved-to-declined transitions now additionally require
+`--confirm-not-sent`. The generated approval and lost-receipt recovery
+handoffs include both confirmations. Omitting the historical attestation fails
+before output, mutation, permission changes, or staging; supplying it for an
+ordinary drafted decline also fails because no approved send history exists to
+attest. Decline receipt schema 4 records the attestation independently from the
+existing no-send decision.
+
+This protects the experiment denominator without inferring delivery or relying
+on ledger state to prove an external event. It does not send a message, record
+contact, create demand, collect payment, or create revenue.

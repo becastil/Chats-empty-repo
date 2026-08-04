@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after adding approved-outreach cancellation:
-  328 / 1,000 (32.8%).
-- Remaining after adding approved-outreach cancellation:
-  672 commits.
+- Progress after requiring unsent cancellation evidence:
+  329 / 1,000 (32.9%).
+- Remaining after requiring unsent cancellation evidence:
+  671 commits.
 
 ## Commit Standard
 

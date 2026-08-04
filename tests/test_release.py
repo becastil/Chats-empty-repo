@@ -616,6 +616,7 @@ class ReleaseManifestTests(unittest.TestCase):
                 "draft-declined-without-contact",
                 "owner-only-decline-continuation",
                 "owner-only-approval-continuation",
+                "unattested-approved-cancel-rejected",
                 "approved-send-canceled-without-contact",
                 "draft-reviewed",
                 "draft-ledger-drift-rejected",

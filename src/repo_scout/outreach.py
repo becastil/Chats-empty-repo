@@ -32,7 +32,7 @@ elif os.name == "nt":
 SCHEMA_VERSION = 12
 REVIEW_SCHEMA_VERSION = 6
 APPROVAL_SCHEMA_VERSION = 3
-DECLINE_SCHEMA_VERSION = 3
+DECLINE_SCHEMA_VERSION = 4
 CONTACT_SCHEMA_VERSION = 2
 FOLLOW_UP_SCHEMA_VERSION = 1
 OUTCOME_SCHEMA_VERSION = 4
@@ -316,6 +316,7 @@ def decline_next_outreach_draft(
     *,
     prospect_id: str,
     decline_confirmed: bool,
+    not_sent_confirmed: bool = False,
     review_digest: str | None = None,
     reviewed_private_drafts_path: Path | None = None,
     as_of: date | None = None,
@@ -346,11 +347,21 @@ def decline_next_outreach_draft(
         next_approved is not None
         and next_approved["prospect_id"] == prospect_id
     )
+    if canceling_approval and not_sent_confirmed is not True:
+        raise OutreachInputError(
+            "canceling an approved message requires --confirm-not-sent after "
+            "a human confirms it was not already sent"
+        )
     if next_approved is not None and not canceling_approval:
         _require_no_pending_outreach_approval(rows)
         raise OutreachInputError(
             f"next approved prospect is {next_approved['prospect_id']}; "
             "cancel it or record contact first"
+        )
+    if not canceling_approval and not_sent_confirmed:
+        raise OutreachInputError(
+            "--confirm-not-sent applies only when canceling the pending "
+            "approved message"
         )
     if canceling_approval:
         private_draft_guard = _verify_approved_outreach_review(
@@ -399,6 +410,7 @@ def decline_next_outreach_draft(
         "as_of": report_date.isoformat(),
         "private_output": True,
         "human_no_send_confirmed": True,
+        "human_not_sent_confirmed": not_sent_confirmed,
         "queue": {
             "drafts_remaining": updated_report["summary"]["drafted"],
             "approvals_remaining": updated_report["summary"]["approved"],
@@ -413,7 +425,8 @@ def decline_next_outreach_draft(
         "action_note": (
             (
                 "The pending approval was canceled atomically. No outreach "
-                "was sent, and no contact or follow-up date was created."
+                "was sent, as explicitly confirmed by the human, and no "
+                "contact or follow-up date was created."
             )
             if canceling_approval
             else (
@@ -1806,7 +1819,8 @@ def _require_no_pending_outreach_approval(
         raise OutreachInputError(
             "send the pending approved message manually and record it with "
             "--record-contact, or cancel it with --decline-next "
-            "--confirm-not-send, before reviewing or deciding another draft"
+            "--confirm-not-send --confirm-not-sent, before reviewing or "
+            "deciding another draft"
         )
 
 
@@ -1950,6 +1964,7 @@ def format_outreach_report(
                         "--decline-next",
                         next_approved["prospect_id"],
                         "--confirm-not-send",
+                        "--confirm-not-sent",
                     ),
                 ]
             )
@@ -2139,6 +2154,7 @@ def format_outreach_approval(
             "--decline-next",
             approval["prospect_id"],
             "--confirm-not-send",
+            "--confirm-not-sent",
         ),
     ]
     if drafts_remaining:
@@ -2529,6 +2545,14 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--confirm-not-sent",
+        action="store_true",
+        help=(
+            "Confirm the pending approved message was not already sent. "
+            "Required with --decline-next when canceling an approval."
+        ),
+    )
+    parser.add_argument(
         "--review-digest",
         metavar="SHA256",
         help=(
@@ -2633,7 +2657,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     approval_options = args.approved_on is not None or args.confirm_reviewed
-    decline_options = args.confirm_not_send
+    decline_options = args.confirm_not_send or args.confirm_not_sent
     contact_options = args.contacted_on is not None or args.confirm_sent
     follow_up_options = (
         args.followed_up_on is not None or args.confirm_follow_up_sent
@@ -2687,7 +2711,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.approve_next is not None:
             if decline_options:
                 raise OutreachInputError(
-                    "--confirm-not-send requires --decline-next"
+                    "--confirm-not-send and --confirm-not-sent require "
+                    "--decline-next"
                 )
             if contact_options:
                 raise OutreachInputError(
@@ -2729,6 +2754,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 args.ledger,
                 prospect_id=args.decline_next,
                 decline_confirmed=args.confirm_not_send,
+                not_sent_confirmed=args.confirm_not_sent,
                 review_digest=args.review_digest,
                 reviewed_private_drafts_path=args.reviewed_private_draft,
                 as_of=args.as_of,
@@ -2736,7 +2762,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         elif args.record_contact is not None:
             if decline_options:
                 raise OutreachInputError(
-                    "--confirm-not-send requires --decline-next"
+                    "--confirm-not-send and --confirm-not-sent require "
+                    "--decline-next"
                 )
             if approval_options:
                 raise OutreachInputError(
@@ -2763,7 +2790,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         elif args.record_follow_up is not None:
             if decline_options:
                 raise OutreachInputError(
-                    "--confirm-not-send requires --decline-next"
+                    "--confirm-not-send and --confirm-not-sent require "
+                    "--decline-next"
                 )
             if approval_options:
                 raise OutreachInputError(
@@ -2787,7 +2815,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         elif args.record_outcome is not None:
             if decline_options:
                 raise OutreachInputError(
-                    "--confirm-not-send requires --decline-next"
+                    "--confirm-not-send and --confirm-not-sent require "
+                    "--decline-next"
                 )
             if approval_options:
                 raise OutreachInputError(
@@ -2823,7 +2852,10 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "--approved-on and --confirm-reviewed require --approve-next"
             )
         elif decline_options:
-            raise OutreachInputError("--confirm-not-send requires --decline-next")
+            raise OutreachInputError(
+                "--confirm-not-send and --confirm-not-sent require "
+                "--decline-next"
+            )
         elif contact_options:
             raise OutreachInputError(
                 "--contacted-on and --confirm-sent require --record-contact"

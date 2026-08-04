@@ -488,9 +488,11 @@ changed selected message before counting the attempt. If another draft
 remains, the text output includes a separate next-review command labeled for
 use only after the approved message has been sent and recorded or the approval
 has been canceled. The approval output also includes an alternate
-`--decline-next --confirm-not-send` command for canceling that exact pending
-approval without recording an attempt. A content-bound approval preserves the
-private evidence and draft flags, notes path, and
+`--decline-next --confirm-not-send --confirm-not-sent` command for canceling
+that exact pending approval without recording an attempt. The second
+confirmation attests that no external send already occurred; omitting it leaves
+the approval and attempt evidence unchanged. A content-bound approval preserves
+the private evidence and draft flags, notes path, and
 shell-quoted `PRIVATE-REVIEW-PATH`; replace that literal with a new ignored
 owner-only destination before writing the next complete bundle. A terminal
 approval queue emits no `--review-next` command.
@@ -498,9 +500,10 @@ When an approved row and another draft coexist, Repo Scout rejects
 `--review-next`, `--approve-next`, decline of the later draft, and
 `--write-review` until the approved message is sent manually and recorded with
 `--record-contact`, or the exact pending approval is canceled through
-`--decline-next --confirm-not-send`. Cancellation clears the approval date and
-stored review digest, creates no contact or follow-up dates, and leaves the
-attempt count unchanged. The barrier error exposes no alias or evidence and
+`--decline-next --confirm-not-send --confirm-not-sent`. Cancellation clears the
+approval date and stored review digest only after both the no-send decision and
+the no-prior-send attestation, creates no contact or follow-up dates, and leaves
+the attempt count unchanged. The barrier error exposes no alias or evidence and
 changes no private file. Existing ledgers with multiple approved rows remain
 readable so their sends can be recorded or canceled in alias order.
 

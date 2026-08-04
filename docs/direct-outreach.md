@@ -246,21 +246,25 @@ repo-scout-outreach outreach-private/outreach-ledger.csv \
 
 `--decline-next` requires either the lowest drafted alias selected by
 `--review-next` or the exact pending approved alias, plus explicit confirmation
-of the human no-send decision. It validates the complete ledger before and
-after the transition, preserves file permissions, and recomputes the content
-receipt when the decision carries one. An incomplete review may still decline
-without a digest so a malformed message can be closed without first being
-repaired; the same unbound command can cancel a pending approval because it
-only removes send eligibility. This escape hatch can never approve or send a
-message. A drafted decline atomically changes only `status` to
+of the human no-send decision. Canceling an approval additionally requires
+`--confirm-not-sent`, which attests that the message was not already sent
+outside the ledger; omission fails before mutation so an unrecorded real send
+cannot be erased from the five-attempt experiment. It validates the complete
+ledger before and after the transition, preserves file permissions, and
+recomputes the content receipt when the decision carries one. An incomplete
+review may still decline without a digest so a malformed message can be closed
+without first being repaired; the same unbound command can cancel a pending
+approval because it only removes send eligibility. This escape hatch can never
+approve or send a message. A drafted decline atomically changes only `status` to
 `review-declined`; canceling an approval also clears `approved_on` and
 `approved_review_digest`. Missing confirmation, out-of-order aliases, stale
 bound review content, invalid ledger state, or write failures leave the file
-unchanged. The schema-3 private receipt contains no evidence URL or persisted
-decision date. It records whether the prior state was `drafted` or `approved`
-and reports both drafted and approved counts remaining. A positive draft count
-ends with a review command only when no approval remains; otherwise the receipt
-states that review is still blocked and emits no dead handoff. Replace the
+unchanged. The schema-4 private receipt contains no evidence URL or persisted
+decision date. It records whether the prior state was `drafted` or `approved`,
+whether absence of a prior send was explicitly confirmed, and reports both
+drafted and approved counts remaining. A positive draft count ends with a
+review command only when no approval remains; otherwise the receipt states that
+review is still blocked and emits no dead handoff. Replace the
 review command's `YYYY-MM-DD` placeholder with the actual UTC date when the next
 human review begins; leaving it unchanged fails before the ledger is read or
 modified. At zero for both counts, the receipt reports that the bounded review
@@ -310,7 +314,8 @@ and private notes path. Replace both placeholders with the actual UTC send
 date; an unchanged placeholder fails parsing instead of reusing the approval
 date. The schema-3 receipt returns the stored digest and reports the remaining
 drafted count. It also emits an alternate `--decline-next` handoff that can
-cancel the exact pending approval without recording an attempt. When that
+cancel the exact pending approval without recording an attempt, but only with
+both `--confirm-not-send` and `--confirm-not-sent`. When that
 count is nonzero, it emits a separate next-review command labeled for use only
 after the manual send has been recorded or that approval has been canceled. A
 content-bound approval preserves
@@ -323,8 +328,9 @@ dead review handoff.
 The ordering is fail-closed. If an approved row and another draft coexist,
 `--review-next`, `--approve-next`, decline of a later draft, and owner-only
 `--write-review` output all stop before output, mutation, or staging. The exact
-pending approved alias may instead use `--decline-next --confirm-not-send` to
-cancel the send without creating contact evidence. Otherwise, send the pending
+pending approved alias may instead use
+`--decline-next --confirm-not-send --confirm-not-sent` to cancel the send
+without creating contact evidence. Otherwise, send the pending
 approved message manually and record it with `--record-contact` before using
 the next-review handoff. The controlled barrier error omits aliases and
 evidence. Ledgers that already contain multiple approved rows remain readable

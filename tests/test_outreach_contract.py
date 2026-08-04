@@ -102,6 +102,10 @@ class DirectOutreachContractTests(unittest.TestCase):
             "Cancellation clears the approval date and stored review digest",
             normalized_readme,
         )
+        self.assertIn(
+            "confirmation attests that no external send already occurred",
+            normalized_readme,
+        )
 
     def test_playbook_preserves_offer_source_and_bounded_cadence(self) -> None:
         playbook = PLAYBOOK.read_text(encoding="utf-8")
@@ -195,6 +199,7 @@ class DirectOutreachContractTests(unittest.TestCase):
         self.assertIn("--confirm-reviewed", playbook)
         self.assertIn("--decline-next", playbook)
         self.assertIn("--confirm-not-send", playbook)
+        self.assertIn("--confirm-not-sent", playbook)
         self.assertIn(
             "atomically changes only `status` to `review-declined`",
             normalized_playbook,
@@ -210,7 +215,12 @@ class DirectOutreachContractTests(unittest.TestCase):
         )
         self.assertIn(
             "exact pending approved alias may instead use `--decline-next "
-            "--confirm-not-send`",
+            "--confirm-not-send --confirm-not-sent`",
+            normalized_playbook,
+        )
+        self.assertIn(
+            "an unrecorded real send cannot be erased from the five-attempt "
+            "experiment",
             normalized_playbook,
         )
         self.assertIn(

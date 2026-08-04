@@ -1259,7 +1259,9 @@ date placeholders;
 requiring the operator to replace them prevents a later manual send from
 inheriting the earlier approval date. Schema-3 approval receipts also report
 the remaining drafted count and emit a second, confirmed no-send command that
-can cancel the exact pending approval without recording contact. When another
+can cancel the exact pending approval without recording contact. Cancellation
+requires separate confirmation that no external send already occurred, so an
+operator cannot erase a real but not-yet-recorded attempt. When another
 draft remains and no earlier approval is pending, the text receipt emits a
 separate review command for use only after that contact record succeeds or the
 approval is canceled. A content-bound
@@ -1276,8 +1278,9 @@ draft decline, and owner-only review writing fail before output or mutation.
 The operator must either send the pending approved message manually and record
 it through the existing guarded contact transition or cancel that exact lowest
 approval with explicit no-send confirmation before the next draft can advance.
-Cancellation clears the approval date and stored review digest while retaining
-zero contact, follow-up, and attempt evidence. Reports still read legacy
+Cancellation also requires explicit no-prior-send confirmation before it clears
+the approval date and stored review digest while retaining zero contact,
+follow-up, and attempt evidence. Reports still read legacy
 ledgers with multiple approved rows and recover the lowest alias for contact or
 cancellation, so the boundary does not strand earlier evidence. This
 serializes the paid-offer experiment without forcing a send, inferring a send,
@@ -1285,13 +1288,16 @@ or creating demand or revenue evidence.
 
 When the human instead decides a draft or pending approved message must not be
 sent, guarded `--decline-next` requires the exact next drafted or lowest
-approved alias and an explicit no-send confirmation. A generated
+approved alias and an explicit no-send confirmation. Approved cancellation
+additionally requires `--confirm-not-sent`; without that historical attestation
+the ledger remains unchanged. A generated
 complete-review command revalidates the same content receipt before a drafted
 decline atomically changes only status to `review-declined`. Canceling an
 approval requires no draft repair because it only removes send eligibility;
 the transaction also clears `approved_on` and `approved_review_digest`. Both
 paths preserve the private file boundary, report the privacy-safe
-remaining-draft and approval counts, and record no action date. The receipt
+remaining-draft and approval counts, record whether no prior send was confirmed,
+and record no action date. The schema-4 receipt
 emits the next review command only while another draft remains and no approval
 does; otherwise it names the remaining block without emitting a dead handoff
 and ends truthfully when the bounded queue reaches zero.

@@ -104,7 +104,8 @@ they are not users, leads, or revenue.
   current notes were revalidated. The pending-approval barrier must continue to
   reject review, approval, and a later draft decision before that contact
   record, but the exact pending approved alias may use the receipt's confirmed
-  no-send cancellation without creating an attempt. Then record the one
+  no-send cancellation only after `--confirm-not-sent` attests that no external
+  send already occurred, without creating an attempt. Then record the one
   human-sent, day-seven follow-up through guarded
   `--record-follow-up`. Record any human-observed reply, pilot request, price
   objection, existing-solution objection, rejection, or opt-out through

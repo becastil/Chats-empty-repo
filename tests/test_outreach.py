@@ -250,7 +250,8 @@ class OutreachReportTests(unittest.TestCase):
         )
         self.assertIn(
             "repo-scout-outreach --as-of YYYY-MM-DD "
-            "--decline-next prospect-008 --confirm-not-send -- "
+            "--decline-next prospect-008 --confirm-not-send "
+            "--confirm-not-sent -- "
             "'private ledger.csv'",
             text,
         )
@@ -1825,6 +1826,37 @@ class OutreachReportTests(unittest.TestCase):
                 ),
             ]
             _write_ledger(ledger, original_rows)
+            before = ledger.read_bytes()
+            before_mode = ledger.stat().st_mode
+            rejected_stdout = io.StringIO()
+            rejected_stderr = io.StringIO()
+
+            with redirect_stdout(rejected_stdout), redirect_stderr(
+                rejected_stderr
+            ):
+                rejected_exit_code = main(
+                    [
+                        str(ledger),
+                        "--as-of",
+                        "2026-07-13",
+                        "--decline-next",
+                        "prospect-001",
+                        "--confirm-not-send",
+                    ]
+                )
+
+            self.assertEqual(rejected_exit_code, 2)
+            self.assertEqual(rejected_stdout.getvalue(), "")
+            self.assertIn(
+                "requires --confirm-not-sent",
+                rejected_stderr.getvalue(),
+            )
+            self.assertNotIn("prospect-001", rejected_stderr.getvalue())
+            self.assertEqual(ledger.read_bytes(), before)
+            self.assertEqual(ledger.stat().st_mode, before_mode)
+            self.assertEqual(
+                list(Path(tmp).glob(".repo-scout-ledger.*.tmp")), []
+            )
             stdout = io.StringIO()
 
             with redirect_stdout(stdout):
@@ -1836,6 +1868,7 @@ class OutreachReportTests(unittest.TestCase):
                         "--decline-next",
                         "prospect-001",
                         "--confirm-not-send",
+                        "--confirm-not-sent",
                         "--format",
                         "json",
                     ]
@@ -1872,7 +1905,8 @@ class OutreachReportTests(unittest.TestCase):
             self.assertEqual(review["review"]["prospect_id"], "prospect-002")
 
             receipt = json.loads(stdout.getvalue())
-            self.assertEqual(receipt["schema_version"], 3)
+            self.assertEqual(receipt["schema_version"], 4)
+            self.assertTrue(receipt["human_not_sent_confirmed"])
             self.assertEqual(
                 receipt["queue"],
                 {"drafts_remaining": 1, "approvals_remaining": 0},
@@ -1944,6 +1978,7 @@ class OutreachReportTests(unittest.TestCase):
                             "--decline-next",
                             "prospect-001",
                             "--confirm-not-send",
+                            "--confirm-not-sent",
                         ]
                     ),
                     0,
@@ -2234,6 +2269,7 @@ class OutreachReportTests(unittest.TestCase):
             )[1:]
             self.assertEqual(cancel_command.count(DATE_PLACEHOLDER), 1)
             self.assertIn("--confirm-not-send", cancel_command)
+            self.assertIn("--confirm-not-sent", cancel_command)
             self.assertNotIn("--review-digest", cancel_command)
 
             contact_command = shlex.split(
@@ -2955,9 +2991,10 @@ class OutreachReportTests(unittest.TestCase):
             self.assertEqual(review["review"]["prospect_id"], "prospect-002")
 
             receipt = json.loads(stdout.getvalue())
-            self.assertEqual(receipt["schema_version"], 3)
+            self.assertEqual(receipt["schema_version"], 4)
             self.assertTrue(receipt["private_output"])
             self.assertTrue(receipt["human_no_send_confirmed"])
+            self.assertFalse(receipt["human_not_sent_confirmed"])
             self.assertEqual(
                 receipt["queue"],
                 {"drafts_remaining": 1, "approvals_remaining": 0},
@@ -3077,7 +3114,17 @@ class OutreachReportTests(unittest.TestCase):
                 ),
                 (
                     ["--confirm-not-send"],
-                    "--confirm-not-send requires --decline-next",
+                    "--confirm-not-send and --confirm-not-sent require "
+                    "--decline-next",
+                ),
+                (
+                    [
+                        "--decline-next",
+                        "prospect-001",
+                        "--confirm-not-send",
+                        "--confirm-not-sent",
+                    ],
+                    "--confirm-not-sent applies only when canceling",
                 ),
             )
 

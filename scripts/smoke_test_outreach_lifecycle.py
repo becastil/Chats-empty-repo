@@ -776,9 +776,36 @@ def verify_outreach_lifecycle(
         )
         _require(
             "--confirm-not-send" in cancellation_arguments
+            and "--confirm-not-sent" in cancellation_arguments
             and "--review-digest" not in cancellation_arguments,
             "approved-message cancellation was not a bounded no-send handoff",
         )
+        unattested_cancellation = tuple(
+            argument
+            for argument in cancellation_arguments
+            if argument != "--confirm-not-sent"
+        )
+        unattested_cancellation = _replace_event_date(
+            unattested_cancellation,
+            event_date="2026-07-10",
+            action="unattested approval cancellation",
+            placeholder_count=1,
+        )
+        before_unattested_cancellation = continuation_ledger.read_bytes()
+        rejected_cancellation = _run_arguments(
+            outreach_command,
+            unattested_cancellation,
+            environment=environment,
+            expected_exit_code=2,
+        )
+        _require(
+            "requires --confirm-not-sent" in rejected_cancellation.stderr
+            and not rejected_cancellation.stdout
+            and continuation_ledger.read_bytes()
+            == before_unattested_cancellation,
+            "unattested approved-message cancellation changed evidence",
+        )
+        checked.append("unattested-approved-cancel-rejected")
         cancellation_arguments = _replace_event_date(
             cancellation_arguments,
             event_date="2026-07-10",
