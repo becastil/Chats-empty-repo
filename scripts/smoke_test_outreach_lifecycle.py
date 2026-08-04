@@ -754,6 +754,77 @@ def verify_outreach_lifecycle(
             )
         checked.append("owner-only-approval-continuation")
 
+        second_approval_arguments = _handoff_arguments(
+            approval_next_review_text,
+            action="--approve-next",
+            ledger=continuation_ledger,
+        )
+        second_approval_arguments = _replace_event_date(
+            second_approval_arguments,
+            event_date="2026-07-09",
+            action="second approval",
+        )
+        second_approval = _run_arguments(
+            outreach_command,
+            second_approval_arguments,
+            environment=environment,
+        )
+        cancellation_arguments = _handoff_arguments(
+            second_approval.stdout,
+            action="--decline-next",
+            ledger=continuation_ledger,
+        )
+        _require(
+            "--confirm-not-send" in cancellation_arguments
+            and "--review-digest" not in cancellation_arguments,
+            "approved-message cancellation was not a bounded no-send handoff",
+        )
+        cancellation_arguments = _replace_event_date(
+            cancellation_arguments,
+            event_date="2026-07-10",
+            action="approval cancellation",
+            placeholder_count=1,
+        )
+        cancellation = _run_arguments(
+            outreach_command,
+            cancellation_arguments,
+            environment=environment,
+        )
+        _require(
+            "pending approval was canceled" in cancellation.stdout
+            and "Drafts remaining: 0" in cancellation.stdout,
+            "approved-message cancellation did not close the pending send",
+        )
+        with continuation_ledger.open(
+            newline="", encoding="utf-8"
+        ) as ledger_file:
+            canceled_rows = {
+                row["prospect_id"]: row for row in csv.DictReader(ledger_file)
+            }
+        canceled_row = canceled_rows["prospect-002"]
+        _require(
+            canceled_row["status"] == "review-declined"
+            and not canceled_row["approved_on"]
+            and not canceled_row["approved_review_digest"]
+            and not canceled_row["contacted_on"]
+            and not canceled_row["next_action_on"],
+            "approved-message cancellation retained send eligibility or activity",
+        )
+        canceled_report = _report(
+            outreach_command,
+            continuation_ledger,
+            as_of="2026-07-10",
+            environment=environment,
+        )
+        canceled_summary = canceled_report.get("summary", {})
+        _require(
+            canceled_summary.get("approved") == 0
+            and canceled_summary.get("review_declined") == 1
+            and canceled_summary.get("attempted_prospects") == 1,
+            "approved-message cancellation changed attempted outreach",
+        )
+        checked.append("approved-send-canceled-without-contact")
+
         ledger = Path(tmp) / "outreach-ledger.csv"
         draft = _row(
             contacted_on="",

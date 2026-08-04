@@ -102,8 +102,10 @@ they are not users, leads, or revenue.
   identity remain explicitly unbound. Retain the schema-2 private contact
   receipt, which records durable approval identity separately from whether the
   current notes were revalidated. The pending-approval barrier must continue to
-  reject review, approval, and decline before that contact record. Then record
-  the one human-sent, day-seven follow-up through guarded
+  reject review, approval, and a later draft decision before that contact
+  record, but the exact pending approved alias may use the receipt's confirmed
+  no-send cancellation without creating an attempt. Then record the one
+  human-sent, day-seven follow-up through guarded
   `--record-follow-up`. Record any human-observed reply, pilot request, price
   objection, existing-solution objection, rejection, or opt-out through
   guarded `--record-outcome`; keep explicit price resistance and substitute

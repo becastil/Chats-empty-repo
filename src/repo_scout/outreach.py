@@ -32,7 +32,7 @@ elif os.name == "nt":
 SCHEMA_VERSION = 12
 REVIEW_SCHEMA_VERSION = 6
 APPROVAL_SCHEMA_VERSION = 3
-DECLINE_SCHEMA_VERSION = 2
+DECLINE_SCHEMA_VERSION = 3
 CONTACT_SCHEMA_VERSION = 2
 FOLLOW_UP_SCHEMA_VERSION = 1
 OUTCOME_SCHEMA_VERSION = 4
@@ -324,7 +324,7 @@ def decline_next_outreach_draft(
     if decline_confirmed is not True:
         raise OutreachInputError(
             "--decline-next requires --confirm-not-send after a human decides "
-            "the draft must not be sent"
+            "the draft or pending approved message must not be sent"
         )
     if not PROSPECT_ID_PATTERN.fullmatch(prospect_id):
         raise OutreachInputError("prospect_id must match prospect-NNN")
@@ -341,26 +341,50 @@ def decline_next_outreach_draft(
         )
     rows, ledger_revision = _load_outreach_snapshot(path)
     build_outreach_report(rows, as_of=report_date)
-    _require_no_pending_outreach_approval(rows)
-    next_draft = _next_status_row(rows, "drafted")
-    if next_draft is None:
-        raise OutreachInputError("no drafted prospects await a review decision")
-    if next_draft["prospect_id"] != prospect_id:
-        raise OutreachInputError(
-            f"next drafted prospect is {next_draft['prospect_id']}; "
-            "review and decide it first"
-        )
-    private_draft_guard = _verify_next_outreach_review(
-        rows,
-        as_of=report_date,
-        review_digest=review_digest,
-        private_drafts_path=reviewed_private_drafts_path,
+    next_approved = _next_status_row(rows, "approved")
+    canceling_approval = (
+        next_approved is not None
+        and next_approved["prospect_id"] == prospect_id
     )
+    if next_approved is not None and not canceling_approval:
+        _require_no_pending_outreach_approval(rows)
+        raise OutreachInputError(
+            f"next approved prospect is {next_approved['prospect_id']}; "
+            "cancel it or record contact first"
+        )
+    if canceling_approval:
+        private_draft_guard = _verify_approved_outreach_review(
+            rows,
+            prospect_id=prospect_id,
+            as_of=report_date,
+            review_digest=review_digest,
+            private_drafts_path=reviewed_private_drafts_path,
+        )
+    else:
+        next_draft = _next_status_row(rows, "drafted")
+        if next_draft is None:
+            raise OutreachInputError(
+                "no drafted prospects await a review decision"
+            )
+        if next_draft["prospect_id"] != prospect_id:
+            raise OutreachInputError(
+                f"next drafted prospect is {next_draft['prospect_id']}; "
+                "review and decide it first"
+            )
+        private_draft_guard = _verify_next_outreach_review(
+            rows,
+            as_of=report_date,
+            review_digest=review_digest,
+            private_drafts_path=reviewed_private_drafts_path,
+        )
 
     updated_rows = [dict(row) for row in rows]
     for row in updated_rows:
         if (row.get("prospect_id") or "").strip() == prospect_id:
             row["status"] = "review-declined"
+            if canceling_approval:
+                row["approved_on"] = ""
+                row["approved_review_digest"] = ""
             break
 
     updated_report = build_outreach_report(updated_rows, as_of=report_date)
@@ -377,14 +401,26 @@ def decline_next_outreach_draft(
         "human_no_send_confirmed": True,
         "queue": {
             "drafts_remaining": updated_report["summary"]["drafted"],
+            "approvals_remaining": updated_report["summary"]["approved"],
         },
         "decline": {
             "prospect_id": prospect_id,
+            "previous_status": (
+                "approved" if canceling_approval else "drafted"
+            ),
             "status": "review-declined",
         },
         "action_note": (
-            "The human no-send decision was recorded atomically. No outreach "
-            "was approved or sent, and no contact or follow-up date was created."
+            (
+                "The pending approval was canceled atomically. No outreach "
+                "was sent, and no contact or follow-up date was created."
+            )
+            if canceling_approval
+            else (
+                "The human no-send decision was recorded atomically. No "
+                "outreach was approved or sent, and no contact or follow-up "
+                "date was created."
+            )
         ),
     }
 
@@ -1768,8 +1804,9 @@ def _require_no_pending_outreach_approval(
         and _next_status_row(rows, "approved") is not None
     ):
         raise OutreachInputError(
-            "send the pending approved message manually, then record it with "
-            "--record-contact before reviewing or deciding another draft"
+            "send the pending approved message manually and record it with "
+            "--record-contact, or cancel it with --decline-next "
+            "--confirm-not-send, before reviewing or deciding another draft"
         )
 
 
@@ -1896,6 +1933,23 @@ def format_outreach_report(
                             "stored review digests, so the ledger-only handoff "
                             "cannot revalidate reviewed content.",
                         )
+                    ),
+                ]
+            )
+            lines.extend(
+                [
+                    (
+                        "If it must not be sent, replace YYYY-MM-DD with the "
+                        "actual UTC decision date and cancel the approval "
+                        "without recording an attempt:"
+                    ),
+                    _format_outreach_command(
+                        ledger,
+                        "--as-of",
+                        DATE_PLACEHOLDER,
+                        "--decline-next",
+                        next_approved["prospect_id"],
+                        "--confirm-not-send",
                     ),
                 ]
             )
@@ -2073,19 +2127,33 @@ def format_outreach_approval(
             "--reviewed-private-draft",
             str(private_drafts_path),
         ),
+        (
+            "If you decide not to send it, replace YYYY-MM-DD with the actual "
+            "UTC decision date and cancel the approval without recording an "
+            "attempt:"
+        ),
+        _format_outreach_command(
+            ledger,
+            "--as-of",
+            DATE_PLACEHOLDER,
+            "--decline-next",
+            approval["prospect_id"],
+            "--confirm-not-send",
+        ),
     ]
     if drafts_remaining:
         if private_drafts_path is not None:
             next_review_note = (
-                "After that send is recorded, replace YYYY-MM-DD with the "
-                "actual UTC review date and "
+                "After that send is recorded, or the approval is canceled, "
+                "replace YYYY-MM-DD with the actual UTC review date and "
                 f"{REVIEW_OUTPUT_PLACEHOLDER} with a new owner-only review "
                 "output path, then write the next complete review:"
             )
         else:
             next_review_note = (
-                "After that send is recorded, replace YYYY-MM-DD with the "
-                "actual UTC review date, then review the next drafted prospect:"
+                "After that send is recorded, or the approval is canceled, "
+                "replace YYYY-MM-DD with the actual UTC review date, then "
+                "review the next drafted prospect:"
             )
         lines.extend(
             [
@@ -2111,7 +2179,8 @@ def format_outreach_approval(
         )
     else:
         lines.append(
-            "After that send is recorded, the bounded review queue is complete."
+            "After that send is recorded, or the approval is canceled, the "
+            "bounded review queue is complete."
         )
     return "\n".join(lines)
 
@@ -2124,16 +2193,22 @@ def format_outreach_decline(
 ) -> str:
     decline = decline_report["decline"]
     drafts_remaining = decline_report["queue"]["drafts_remaining"]
+    approvals_remaining = decline_report["queue"]["approvals_remaining"]
     lines = [
-        "Repo Scout outreach review decline",
+        (
+            "Repo Scout outreach approval cancellation"
+            if decline["previous_status"] == "approved"
+            else "Repo Scout outreach review decline"
+        ),
         f"As of: {decline_report['as_of']}",
         f"Prospect alias: {decline['prospect_id']}",
         f"Status: {decline['status']}",
         "Private ledger updated atomically.",
         f"Boundary: {decline_report['action_note']}",
         f"Drafts remaining: {drafts_remaining}",
+        f"Approvals remaining: {approvals_remaining}",
     ]
-    if drafts_remaining:
+    if drafts_remaining and approvals_remaining == 0:
         if private_drafts_path is not None:
             next_review_note = (
                 "Next: replace YYYY-MM-DD with the actual UTC review date and "
@@ -2166,6 +2241,17 @@ def format_outreach_decline(
                     ),
                 ),
             ]
+        )
+    elif drafts_remaining:
+        lines.append(
+            "Review remains blocked: resolve each pending approved message "
+            "by recording contact or canceling it before reviewing the next "
+            "draft."
+        )
+    elif approvals_remaining:
+        lines.append(
+            "No drafted prospects remain; resolve each pending approved "
+            "message by recording contact or canceling it."
         )
     else:
         lines.append(
@@ -2383,8 +2469,8 @@ def build_parser() -> argparse.ArgumentParser:
         "--decline-next",
         metavar="PROSPECT_ID",
         help=(
-            "Record a human decision not to send the next reviewed draft, "
-            "without creating contact activity."
+            "Record a human decision not to send the next reviewed draft or "
+            "pending approved message, without creating contact activity."
         ),
     )
     action_group.add_argument(
@@ -2438,8 +2524,8 @@ def build_parser() -> argparse.ArgumentParser:
         "--confirm-not-send",
         action="store_true",
         help=(
-            "Confirm a human decided the selected draft must not be sent. "
-            "Required with --decline-next."
+            "Confirm a human decided the selected draft or pending approved "
+            "message must not be sent. Required with --decline-next."
         ),
     )
     parser.add_argument(

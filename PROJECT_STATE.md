@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 327 of
-1,000, with 673 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 328 of
+1,000, with 672 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -670,20 +670,22 @@ alignment take priority over commit volume.
   rejection of receipt-free approvals.
 - Schema-3 approval receipts that report the privacy-safe remaining-draft
   count, retain the approved review digest, terminate cleanly at zero, and
-  carry nonempty queues into a distinct post-contact review handoff rather than
-  leaving the next prospect stranded.
+  carry nonempty queues into a distinct post-contact-or-cancellation review
+  handoff rather than leaving the next prospect stranded.
 - Complete-review continuity after a content-bound approval, preserving
   private evidence, draft notes, and the exact notes path while requiring the
-  approved message to be sent and recorded before the emitted shell-quoted
-  `PRIVATE-REVIEW-PATH` command writes the next `600` bundle.
+  approved message to be sent and recorded or explicitly canceled before the
+  emitted shell-quoted `PRIVATE-REVIEW-PATH` command writes the next `600`
+  bundle.
 - A pending-approval queue barrier that rejects another `--review-next`,
-  `--approve-next`, `--decline-next`, or owner-only review write while an
-  approved message and a later draft coexist, without output, ledger mutation,
-  permission drift, or staging residue.
+  `--approve-next`, later-draft decline, or owner-only review write while an
+  approved message and a later draft coexist, while permitting only the exact
+  pending approved alias to be canceled through confirmed `--decline-next`,
+  without contact evidence, permission drift, or staging residue.
 - Backward-compatible recovery for ledgers that already contain multiple
   approved rows: aggregate and next-contact reporting remain valid so those
-  messages can be recorded one at a time without permitting another draft
-  decision.
+  messages can be recorded or canceled one at a time without permitting
+  another draft decision.
 - Schema-12 alias-only recovery of the next approved message after the one-time
   approval receipt is lost, regenerating a digest-bound contact command from
   durable ledger evidence while retaining machine-readable privacy
@@ -692,14 +694,19 @@ alignment take priority over commit volume.
 - A mutation-free `--require-counts-only` publication guard that emits no
   alias-bearing report and returns a dedicated exit code for CI automation.
 - Schema-6 pre-contact `review-declined` decisions that close an unsuitable
-  draft without approval, contact dates, or attempted-prospect inflation.
+  draft or cancel an approved-but-unsent message without contact dates or
+  attempted-prospect inflation.
 - A runtime-linked buyer-facing outreach contract that describes the packaged
   schema-6 approval and review-decline counts without calling released behavior
   unreleased.
-- Guarded `--decline-next` recording that requires the exact next alias and an
-  explicit human no-send confirmation before atomically changing only status.
-- Schema-2 decline receipts that report the privacy-safe remaining-draft count,
-  advance only nonempty queues, and terminate cleanly when no draft remains.
+- Guarded `--decline-next` recording that requires the exact next drafted or
+  pending approved alias and an explicit human no-send confirmation before
+  atomically changing status and, for cancellation, clearing the approval date
+  and review digest.
+- Schema-3 decline receipts that distinguish drafted rejection from approved
+  cancellation, report privacy-safe remaining draft and approval counts,
+  advance only reviewable queues, and suppress dead review handoffs while any
+  earlier approval remains.
 - Actual-date placeholders in nonterminal decline handoffs so a later review
   cannot silently inherit the prior draft's decision date.
 - Complete-review continuity after a content-bound decline, preserving private
@@ -988,8 +995,10 @@ only pre-schema-12 legacy approvals remain explicitly unbound. Only after the
 contact record succeeds, retain its schema-2 private receipt as the audit link
 between that attempted send and its approval identity, then use the approval
 receipt's separate next-review handoff, replace its shell-quoted
-`PRIVATE-REVIEW-PATH`, and review the next draft; the CLI now rejects that
-handoff before contact is recorded. When due, send that one follow-up manually
+`PRIVATE-REVIEW-PATH`, and review the next draft. If the approved message must
+not be sent, use the receipt's confirmed cancellation handoff instead; the CLI
+rejects the next-review handoff until either contact is recorded or that exact
+approval is canceled. When due, send that one follow-up manually
 and close its cadence through guarded
 `--record-follow-up`. Record any explicit `$299` resistance as the
 human-observed `price-objection` outcome instead of collapsing it into

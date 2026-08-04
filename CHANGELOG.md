@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Allowed the exact pending approved outreach message to be canceled through
+  confirmed `--decline-next`, clearing its approval eligibility without
+  fabricating contact, follow-up, attempt, or outcome evidence.
+- Advanced decline receipts to schema 3 with prior-state and remaining-approval
+  evidence, suppressing next-review handoffs until every earlier approval is
+  recorded or canceled; source, documentation, and installed-lifecycle tests
+  cover the bounded recovery path.
 - Required the live production audit's final response URL to remain the
   canonical buyer page, so a redirect to matching HTML on another host cannot
   certify the paid conversion path.

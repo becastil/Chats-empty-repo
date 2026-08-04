@@ -11,6 +11,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from repo_scout.outreach import (  # noqa: E402
     CONTACT_SCHEMA_VERSION,
+    DECLINE_SCHEMA_VERSION,
     DIRECT_OUTREACH_ROUTE,
     LEDGER_FIELDS,
     PUBLIC_PILOT_INTAKE_URL,
@@ -92,6 +93,15 @@ class DirectOutreachContractTests(unittest.TestCase):
         self.assertIn("stored `approved_review_digest`", normalized_readme)
         self.assertIn("separate `content_revalidated` boolean", normalized_readme)
         self.assertIn("legacy approval with current notes", normalized_readme)
+        self.assertIn(
+            "canceling that exact pending approval without recording an "
+            "attempt",
+            normalized_readme,
+        )
+        self.assertIn(
+            "Cancellation clears the approval date and stored review digest",
+            normalized_readme,
+        )
 
     def test_playbook_preserves_offer_source_and_bounded_cadence(self) -> None:
         playbook = PLAYBOOK.read_text(encoding="utf-8")
@@ -190,6 +200,20 @@ class DirectOutreachContractTests(unittest.TestCase):
             normalized_playbook,
         )
         self.assertIn(
+            "canceling an approval also clears `approved_on` and "
+            "`approved_review_digest`",
+            normalized_playbook,
+        )
+        self.assertIn(
+            f"The schema-{DECLINE_SCHEMA_VERSION} private receipt",
+            normalized_playbook,
+        )
+        self.assertIn(
+            "exact pending approved alias may instead use `--decline-next "
+            "--confirm-not-send`",
+            normalized_playbook,
+        )
+        self.assertIn(
             "counts as closed but never as attempted outreach",
             normalized_playbook,
         )
@@ -209,7 +233,10 @@ class DirectOutreachContractTests(unittest.TestCase):
             "prints only an alias-free confirmation",
             normalized_playbook,
         )
-        self.assertIn("number of drafts remaining", normalized_playbook)
+        self.assertIn(
+            "reports both drafted and approved counts remaining",
+            normalized_playbook,
+        )
         self.assertIn("emits no dead handoff", normalized_playbook)
         self.assertIn(
             "atomically changes `status`, `approved_on`, and "

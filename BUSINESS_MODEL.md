@@ -1258,32 +1258,43 @@ decision command. The approval receipt's contact handoff instead uses explicit
 date placeholders;
 requiring the operator to replace them prevents a later manual send from
 inheriting the earlier approval date. Schema-3 approval receipts also report
-the remaining drafted count. When another draft remains, the text receipt
-emits a separate command for use only after that contact record succeeds. A
-content-bound approval preserves the private evidence and draft flags, exact
-notes path, and shell-quoted owner-only review destination so the next
-prospect receives a fresh complete bundle instead of being stranded after a
-successful send. At zero, the receipt ends the bounded queue without a dead
-handoff. This removes manual command reconstruction without completing a
-review, sending a message, or treating operator activity as demand.
+the remaining drafted count and emit a second, confirmed no-send command that
+can cancel the exact pending approval without recording contact. When another
+draft remains and no earlier approval is pending, the text receipt emits a
+separate review command for use only after that contact record succeeds or the
+approval is canceled. A content-bound
+approval preserves the private evidence and draft flags, exact notes path, and
+shell-quoted owner-only review destination so the next prospect receives a
+fresh complete bundle instead of being stranded after either resolution. At
+zero, the receipt ends the bounded queue without a dead handoff. This removes
+manual command reconstruction without completing a review, sending a message,
+or treating operator activity as demand.
 
 That sequence is now enforced rather than merely described. While any approved
-message and another drafted row coexist, review, approval, decline, and
-owner-only review writing fail before output or mutation. The operator must
-send the pending approved message manually and record it through the existing
-guarded contact transition before the next draft can advance. Reports still
-read legacy ledgers with multiple approved rows and recover the lowest alias
-for contact recording, so the new boundary does not strand earlier evidence.
-This serializes the paid-offer experiment without sending outreach, inferring a
-send, or creating demand or revenue evidence.
+message and another drafted row coexist, review, another approval, a later
+draft decline, and owner-only review writing fail before output or mutation.
+The operator must either send the pending approved message manually and record
+it through the existing guarded contact transition or cancel that exact lowest
+approval with explicit no-send confirmation before the next draft can advance.
+Cancellation clears the approval date and stored review digest while retaining
+zero contact, follow-up, and attempt evidence. Reports still read legacy
+ledgers with multiple approved rows and recover the lowest alias for contact or
+cancellation, so the boundary does not strand earlier evidence. This
+serializes the paid-offer experiment without forcing a send, inferring a send,
+or creating demand or revenue evidence.
 
-When the human instead decides a draft must not be sent, guarded
-`--decline-next` requires the exact same next alias and an explicit no-send
-confirmation. The generated complete-review command revalidates the same
-content receipt before it atomically changes only status to `review-declined`,
-preserves the private file boundary, reports the privacy-safe remaining-draft
-count, and records no action date. It emits the next review command only while
-another draft remains and ends truthfully when the bounded queue reaches zero.
+When the human instead decides a draft or pending approved message must not be
+sent, guarded `--decline-next` requires the exact next drafted or lowest
+approved alias and an explicit no-send confirmation. A generated
+complete-review command revalidates the same content receipt before a drafted
+decline atomically changes only status to `review-declined`. Canceling an
+approval requires no draft repair because it only removes send eligibility;
+the transaction also clears `approved_on` and `approved_review_digest`. Both
+paths preserve the private file boundary, report the privacy-safe
+remaining-draft and approval counts, and record no action date. The receipt
+emits the next review command only while another draft remains and no approval
+does; otherwise it names the remaining block without emitting a dead handoff
+and ends truthfully when the bounded queue reaches zero.
 For a content-bound decline, that command retains the private evidence flag,
 draft flag, and exact notes path, then requires a new owner-only review output
 path before writing the next complete bundle. The

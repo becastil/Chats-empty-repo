@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after binding the production audit to its final destination:
-  327 / 1,000 (32.7%).
-- Remaining after binding the production audit to its final destination:
-  673 commits.
+- Progress after adding approved-outreach cancellation:
+  328 / 1,000 (32.8%).
+- Remaining after adding approved-outreach cancellation:
+  672 commits.
 
 ## Commit Standard
 

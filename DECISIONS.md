@@ -5496,3 +5496,25 @@ off-production destination.
 This strengthens monitoring of the existing paid conversion path. It does not
 change or deploy the site, create a visit or pilot request, collect payment, or
 record revenue.
+
+## 2026-08-04: Let Humans Cancel An Approved Outreach Send
+
+The one-at-a-time outreach barrier required every approved message to be sent
+and recorded before any later draft decision. If a human discovered a channel
+problem or changed the no-send judgment after approval, the guarded workflow
+offered no cancellation. The only paths were an unwanted send that created
+false attempt evidence or manual CSV editing outside the evidence boundary.
+
+Confirmed `--decline-next` now treats the exact lowest pending approved alias
+as the first decision target. Cancellation changes it to `review-declined`,
+clears `approved_on` and `approved_review_digest`, and retains blank contact,
+follow-up, next-action, and outcome evidence. A later draft still cannot bypass
+the pending approval. Decline receipt schema 3 records the prior status plus
+both remaining draft and approval counts, and emits a next-review handoff only
+when no approval remains. Legacy multiple approvals can therefore be recorded
+or canceled in order without producing a command that must fail.
+
+This qualifies the earlier send-first barrier while preserving serial review,
+atomic mutation, owner-only evidence, and explicit human confirmation. It does
+not send outreach, create an attempt or response, validate demand, collect
+payment, or record revenue.
