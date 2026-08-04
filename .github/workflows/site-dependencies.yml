@@ -7,7 +7,7 @@ on:
       - pyproject.toml
       - package.json
       - package-lock.json
-      - app/site-config.ts
+      - "app/**"
       - .github/dependabot.yml
       - ".github/workflows/**"
       - scripts/audit_action_pins.py
@@ -24,7 +24,7 @@ on:
       - pyproject.toml
       - package.json
       - package-lock.json
-      - app/site-config.ts
+      - "app/**"
       - .github/dependabot.yml
       - ".github/workflows/**"
       - scripts/audit_action_pins.py

@@ -763,14 +763,15 @@ staging now remain descriptor-bound through their acceptance and cleanup
 boundaries. This strengthens paid-distribution integrity without exporting
 source, saving or deploying a version, or creating customer or revenue
 evidence.
-A separate read-only hosted dependency contract runs for relevant lock and
-workflow changes, on manual dispatch, and weekly so a newly published advisory
-does not wait for another package edit. It uses the minimum supported Node
-version, installs only the committed lock, audits the complete dependency tree,
-builds and exercises the patched Sharp and Miniflare path, and lints. It has no
-repository secrets or write permission and cannot save or deploy a site. A
-passing contract protects the buyer path; it does not prove a visit, install,
-pilot request, payment, or revenue.
+A separate read-only hosted dependency contract runs for every source change
+under `app/`, relevant lock and workflow changes, manual dispatch, and a weekly
+schedule so a paid CTA or newly published advisory does not wait for an
+unrelated package edit. It uses the minimum supported Node version, installs
+only the committed lock, audits the complete dependency tree, builds and
+exercises the rendered buyer path plus the patched Sharp and Miniflare runtime,
+and lints. It has no repository secrets or write permission and cannot save or
+deploy a site. A passing contract protects the buyer path; it does not prove a
+visit, install, pilot request, payment, or revenue.
 That hosted contract caught high-severity denial-of-service advisories in React
 Server Components and every installed pre-`5.0.8` `brace-expansion` line on the
 day GitHub reviewed them. The repaired lock advances React, React DOM, and the

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Expanded both hosted site workflow trigger blocks from the release-config
+  leaf to `"app/**"`, so paid CTA, campaign, metadata, structured-data, and
+  styling changes receive the existing build, rendered-site, and lint checks.
+- Updated the workflow contract to require the app-wide trigger exactly once
+  in each pull-request and `main` push path block.
 - Made the decision-ready outreach payment preflight order-independent, so a
   nonpayment clause before the sole `$299` disclosure cannot receive a review
   digest or proceed toward approval.

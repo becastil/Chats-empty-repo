@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after making the outreach nonpayment gate order-independent:
-  325 / 1,000 (32.5%).
-- Remaining after making the outreach nonpayment gate order-independent:
-  675 commits.
+- Progress after routing all hosted app changes through site CI:
+  326 / 1,000 (32.6%).
+- Remaining after routing all hosted app changes through site CI:
+  674 commits.
 
 ## Commit Standard
 

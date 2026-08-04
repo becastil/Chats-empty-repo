@@ -8,8 +8,8 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 325 of
-1,000, with 675 remaining. Quality, test coverage, distribution, and revenue
+The delivery goal is 1,000 meaningful commits. This update is commit 326 of
+1,000, with 674 remaining. Quality, test coverage, distribution, and revenue
 alignment take priority over commit volume.
 
 ## Implemented
@@ -345,11 +345,11 @@ alignment take priority over commit volume.
   config bundle. The executable contract requires every resolved copy of the
   newly patched transitive packages to use those exact versions. Sites version
   47 contains the prior lock and is superseded; production is unchanged.
-- A read-only hosted site dependency contract that runs on relevant lock and
-  workflow changes, manual dispatch, and a weekly schedule. It installs the
-  exact lock on Node `22.13.0`, requires zero reported vulnerabilities, builds
-  and exercises the patched runtime, and lints without repository secrets or
-  write permissions.
+- A read-only hosted site dependency contract that runs on every hosted app
+  source change plus relevant lock and workflow changes, manual dispatch, and
+  a weekly schedule. It installs the exact lock on Node `22.13.0`, requires zero
+  reported vulnerabilities, builds and exercises the patched runtime, and
+  lints without repository secrets or write permissions.
 - Enabled repository vulnerability alerts and review-only automated security
   fixes, backed by a low-noise Dependabot policy. npm proposals are grouped and
   security-only; pinned GitHub Actions updates run weekly, group minor and patch

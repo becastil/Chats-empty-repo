@@ -5462,3 +5462,20 @@ ledger. Fixed-price wording such as `not negotiable at $299` remains valid.
 Source and installed-command regressions cover the pre-price contradiction.
 This protects the meaning of any future approved outreach attempt; it does not
 review or send a draft, create demand, collect payment, or record revenue.
+
+## 2026-08-04: Run Hosted Site CI For Every App Source Change
+
+The hosted dependency workflow built, tested, audited, and linted the site, but
+its pull-request and `main` push filters watched only `app/site-config.ts`.
+Changes to the buyer page, campaign attribution, metadata, structured data, or
+styles under the same `app/` tree could therefore skip the hosted contract even
+though those files define the paid conversion path exercised by `npm test`.
+
+Both event filters now watch `"app/**"`. The executable workflow contract
+requires that exact pattern twice, preserving the existing immutable action
+pins, read-only permissions, test order, timeout, manual dispatch, and weekly
+advisory schedule. A future paid CTA edit now selects the same build,
+rendered-page, dependency, and lint checks as a release-identity edit.
+
+This closes a hosted validation gap; it does not save or deploy a Sites version,
+visit the page, submit intake, collect payment, or record revenue.

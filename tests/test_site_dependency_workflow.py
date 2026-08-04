@@ -36,7 +36,7 @@ class SiteDependencyWorkflowContractTests(unittest.TestCase):
             "pyproject.toml",
             "package.json",
             "package-lock.json",
-            "app/site-config.ts",
+            '"app/**"',
             ".github/dependabot.yml",
             '".github/workflows/**"',
             "scripts/audit_action_pins.py",
@@ -48,6 +48,19 @@ class SiteDependencyWorkflowContractTests(unittest.TestCase):
             "tests/test_site_dependency_workflow.py",
         ):
             self.assertEqual(workflow.count(f"- {path}"), 2, path)
+
+        pull_request_paths = workflow.split("  pull_request:\n", 1)[1].split(
+            "  push:\n", 1
+        )[0]
+        push_paths = workflow.split("  push:\n", 1)[1].split(
+            "  schedule:\n", 1
+        )[0]
+        for event, path_block in (
+            ("pull_request", pull_request_paths),
+            ("push", push_paths),
+        ):
+            self.assertEqual(path_block.count('- "app/**"'), 1, event)
+            self.assertNotIn("- app/site-config.ts", path_block, event)
 
         self.assertRegex(
             workflow,
