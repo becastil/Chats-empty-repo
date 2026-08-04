@@ -8,10 +8,10 @@ revenue-producing developer tool.
 ## Progress
 
 - Baseline when the goal was established: 13 commits.
-- Progress after routing all hosted app changes through site CI:
-  326 / 1,000 (32.6%).
-- Remaining after routing all hosted app changes through site CI:
-  674 commits.
+- Progress after binding the production audit to its final destination:
+  327 / 1,000 (32.7%).
+- Remaining after binding the production audit to its final destination:
+  673 commits.
 
 ## Commit Standard
 

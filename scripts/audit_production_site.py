@@ -87,6 +87,7 @@ def load_project_version(root: Path) -> str:
 
 
 def fetch_html(url: str, timeout: float) -> str:
+    expected_url = url.rstrip("/") + "/"
     request = Request(
         url,
         headers={
@@ -96,6 +97,12 @@ def fetch_html(url: str, timeout: float) -> str:
     )
     try:
         with urlopen(request, timeout=timeout) as response:
+            final_url = response.geturl()
+            if final_url != expected_url:
+                raise ProductionSiteAuditError(
+                    "production URL redirected to "
+                    f"{final_url!r}, expected final URL {expected_url!r}"
+                )
             status = response.status
             content_type = response.headers.get_content_type()
             charset = response.headers.get_content_charset() or "utf-8"

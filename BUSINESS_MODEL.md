@@ -464,9 +464,11 @@ the revenue ledger until a buyer submits intake and the human-applied
 The maintainer production audit now fails when the deployed canonical metadata,
 free software offer, release version, structured portable download URL, or
 visitor-clickable portable download link drifts from the current project
-version. This protects the existing buyer path from sending a visitor to an
-obsolete artifact; it does not add a campaign, prove a visit, create demand, or
-record revenue.
+version. It also requires the browser's final response URL to be the canonical
+production page, preventing matching HTML reached on another host from
+certifying the paid conversion path. This protects the existing buyer path
+from sending a visitor to an obsolete artifact or unexpected destination; it
+does not add a campaign, prove a visit, create demand, or record revenue.
 The same check now runs daily in a read-only GitHub workflow and remains
 manually dispatchable after deployment. Before requesting the live page, the
 workflow runs its own permission and command-order contract plus the auditor's

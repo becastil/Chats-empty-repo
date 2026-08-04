@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Required the live production audit's final response URL to remain the
+  canonical buyer page, so a redirect to matching HTML on another host cannot
+  certify the paid conversion path.
+- Added fetch-level regressions for the accepted trailing-slash redirect and
+  rejected off-production destination.
 - Expanded both hosted site workflow trigger blocks from the release-config
   leaf to `"app/**"`, so paid CTA, campaign, metadata, structured-data, and
   styling changes receive the existing build, rendered-site, and lint checks.

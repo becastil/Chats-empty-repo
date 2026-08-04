@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from contextlib import redirect_stderr, redirect_stdout
+from email.message import Message
 from html import escape
 import importlib.util
 from io import StringIO
@@ -8,7 +9,7 @@ import json
 from pathlib import Path
 import sys
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -101,6 +102,42 @@ def page(
 
 
 class ProductionSiteAuditTests(unittest.TestCase):
+    def test_fetch_accepts_the_canonical_production_destination(self) -> None:
+        headers = Message()
+        headers["Content-Type"] = "text/html; charset=utf-8"
+        response = MagicMock()
+        response.status = 200
+        response.headers = headers
+        response.geturl.return_value = URL
+        response.read.return_value = b"<html>production</html>"
+        response.__enter__.return_value = response
+
+        with patch.object(audit_production_site, "urlopen", return_value=response):
+            html = audit_production_site.fetch_html(URL.rstrip("/"), 1.0)
+
+        self.assertEqual(html, "<html>production</html>")
+
+    def test_fetch_rejects_a_redirect_away_from_production(self) -> None:
+        headers = Message()
+        headers["Content-Type"] = "text/html; charset=utf-8"
+        response = MagicMock()
+        response.status = 200
+        response.headers = headers
+        response.geturl.return_value = "https://mirror.example/"
+        response.read.return_value = b"<html>mirror</html>"
+        response.__enter__.return_value = response
+
+        with (
+            patch.object(audit_production_site, "urlopen", return_value=response),
+            self.assertRaisesRegex(
+                audit_production_site.ProductionSiteAuditError,
+                "production URL redirected",
+            ),
+        ):
+            audit_production_site.fetch_html(URL, 1.0)
+
+        response.read.assert_not_called()
+
     def test_accepts_current_canonical_release_offer(self) -> None:
         checked = audit_production_site.audit_production_html(
             page(),

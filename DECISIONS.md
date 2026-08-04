@@ -5479,3 +5479,20 @@ rendered-page, dependency, and lint checks as a release-identity edit.
 
 This closes a hosted validation gap; it does not save or deploy a Sites version,
 visit the page, submit intake, collect payment, or record revenue.
+
+## 2026-08-04: Bind The Production Audit To Its Final Destination
+
+The dependency-free live audit followed HTTP redirects and then validated the
+returned canonical metadata, release identity, download, and paid pilot path.
+It did not compare the response's final URL with the requested production
+identity. A redirect to matching HTML on another host could therefore pass
+while buyers actually left the canonical Repo Scout page.
+
+The fetch boundary now normalizes the requested trailing slash and requires the
+final response URL to match it exactly before the HTML can certify production.
+Focused regressions retain a normal missing-slash redirect while rejecting an
+off-production destination.
+
+This strengthens monitoring of the existing paid conversion path. It does not
+change or deploy the site, create a visit or pilot request, collect payment, or
+record revenue.
