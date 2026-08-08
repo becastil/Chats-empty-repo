@@ -5539,3 +5539,42 @@ existing no-send decision.
 This protects the experiment denominator without inferring delivery or relying
 on ledger state to prove an external event. It does not send a message, record
 contact, create demand, collect payment, or create revenue.
+
+## 2026-08-08: Suspend The Commit Quota In Favor Of Moat Validation
+
+An objective market review found direct overlap from alint, Repolinter,
+Reposaur, GitHub controls, developer portals, and AI coding agents. Repo Scout's
+implementation quality is real, but code volume, hardening, and a 1,000-commit
+target do not create proprietary data, switching costs, distribution, trust, or
+validated willingness to pay. Continuing the hourly feature loop would deepen
+a reproducible product before validating the customer problem.
+
+The 1,000-commit objective is suspended at commit 330. The replacement is a
+90-day falsifiable cycle: 20 qualified interviews, 30 price-disclosed offers,
+three paid design partners, weekly use by two, one recurring conversion, and a
+permissioned corpus of resolved decisions and outcomes. Future implementation
+must follow observed customer evidence, paid delivery, or material reliability
+rather than a numerical commit cadence.
+
+## 2026-08-08: Keep Raw Policy Failures Beside Exact Expiring Decisions
+
+Repository-specific exceptions do not belong in the shared policy because they
+would fragment its normalized identity. Repo Scout therefore consumes a
+separate, explicitly selected exception ledger bound to one repository ID, one
+base-policy fingerprint, and exact evidence-derived violation IDs. Every
+decision names an owner and approver, records a bounded printable rationale,
+and expires within 366 days.
+
+An approved decision never rewrites the raw policy status or removes the raw
+finding. It creates a separate `pass-with-exceptions` enforcement result only
+when every current finding is covered and every ledger record is current and
+matched. Policy drift, changed observed evidence, untracked or outside-repo
+files, dirty worktrees, pending or expired records, stale approvals, and partial
+coverage fail closed. Schema-3 rollout evidence exports counts and fingerprints
+without rationales or actors, preserving local privacy while making exception
+load visible across repositories.
+
+This control point can accumulate useful customer decision and remediation
+history, but the schema itself is open and reproducible. It becomes a moat only
+if paid deployments produce permissioned longitudinal data, better
+recommendations, and lower future rollout effort.

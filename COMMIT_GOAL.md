@@ -1,34 +1,40 @@
 # Commit Goal
 
-## Target
+## Status
 
-Reach 1,000 meaningful commits on `main` while building Repo Scout into a
-revenue-producing developer tool.
+The 1,000-commit objective is suspended at 330 / 1,000 after the 2026-08-08
+market and moat review. The project reached 33.0% of the numerical target, but
+commit volume did not establish paid demand, proprietary data, switching costs,
+distribution, or another durable advantage.
 
-## Progress
+The hourly builder automation is paused. It must not be resumed with a commit
+quota or used to split work artificially. Future commits are justified by a
+validated customer problem, a paid delivery requirement, material reliability,
+or a measured distribution experiment.
 
-- Baseline when the goal was established: 13 commits.
-- Progress after requiring unsent cancellation evidence:
-  329 / 1,000 (32.9%).
-- Remaining after requiring unsent cancellation evidence:
-  671 commits.
+## Replacement Goal
+
+Run a 90-day moat-validation cycle:
+
+- 20 qualified customer interviews.
+- 30 personalized offers that disclose price.
+- Three paid design partners within 60 days.
+- Weekly use by at least two partners and one recurring conversion by day 90.
+- 100 permissioned resolved exception decisions with measurable remediation
+  and recurrence outcomes.
+- Evidence that repeated deployment reduces operator effort rather than
+  expanding bespoke consulting work.
 
 ## Commit Standard
 
-Every counted commit must:
+Every future commit must:
 
-- Deliver one coherent code, test, configuration, example, or documentation
-  improvement tied to implemented behavior or revenue execution.
-- Preserve or strengthen the free-to-paid product path in `BUSINESS_MODEL.md`.
-- Pass the relevant test suite before it is committed.
-- Update `PROJECT_STATE.md`, `CHANGELOG.md`, and this progress ledger.
-- Be pushed successfully to `origin/main`.
+- Deliver one coherent, tested improvement tied to observed customer evidence,
+  paid delivery, security, reliability, or a defined experiment.
+- Preserve the useful free local CLI and the privacy boundary in
+  `BUSINESS_MODEL.md`.
+- Update project state and the changelog when behavior or strategy changes.
+- Pass relevant tests before reaching `origin/main`.
 
-Empty commits, artificial commit splitting, and documentation churn created
-only to increase the count do not qualify.
-
-## Cadence
-
-The hourly builder should produce one focused commit per successful run. Larger
-work may span multiple runs when each intermediate commit is independently
-useful, tested, and shippable.
+Empty commits, artificial splitting, speculative feature accumulation, and
+documentation churn created to increase activity do not qualify.

@@ -1,6 +1,6 @@
 # Repo Scout Competitive Positioning
 
-Reviewed: 2026-08-01
+Reviewed: 2026-08-08
 
 ## Bottom Line
 
@@ -16,14 +16,22 @@ pays for policy design, rollout, remediation help, and a 90-day operating
 process. That is an implementation-service advantage, not a proven technical
 moat. Paid demand remains unvalidated until a team buys the pilot.
 
+The objective moat assessment is 2/10 today. Another capable team using coding
+agents could reproduce most buyer-visible scanner, policy, report, CI, and
+rollout behavior without reproducing the repository's implementation history.
+The plausible long-term advantage is permissioned customer decision and
+remediation history, not another generic rule.
+
 ## Market Map
 
 | Category | Representative options | What the category does well | Repo Scout's place |
 | --- | --- | --- | --- |
+| Repository policy linting | [alint](https://alint.org/), [Repolinter](https://todogroup.github.io/repolinter/), [Reposaur](https://docs.reposaur.com/) | Checks repository structure and content through configurable rules, CI output, and in some cases fixes or policy engines. Alint is active, local, zero-network, and directly overlaps much of Repo Scout's policy surface. | Direct competition. Repo Scout must win on completed rollout, exception decisions, remediation ownership, and longitudinal evidence rather than rule count. Archived projects show prior category supply but do not by themselves prove weak demand. |
 | Static application security testing | [Semgrep Code](https://docs.semgrep.dev/semgrep-code/overview), [SonarQube Server](https://docs.sonarsource.com/sonarqube-server/user-guide/rules/overview) | Analyzes source code with rules to find security, reliability, maintainability, and other code-level issues. | Complementary. Repo Scout does not inspect code semantics; it checks repository-operating standards and records reusable policy identity. |
 | Linter and formatter orchestration | [Trunk Code Quality](https://docs.trunk.io/code-quality/overview) | Runs and manages multiple linters, formatters, and security tools consistently across local and CI environments. | Complementary. Repo Scout does not install or orchestrate analyzers; it can enforce the surrounding repository requirements and preserve a stable rollout record. |
 | General policy as code | [Conftest](https://www.conftest.dev/), backed by [Open Policy Agent](https://www.openpolicyagent.org/docs/latest/) | Evaluates structured configuration against highly customizable Rego policies and supports shared policy libraries. | The strongest build-it-yourself substitute. Repo Scout is narrower and easier to adopt for repository standards, with dependency-free distribution, TOML policies, policy fingerprints, and a defined cross-repository evidence format. |
 | Git hosting governance | [GitHub rulesets](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets) | Controls branch, tag, and push behavior; organization rulesets can cover multiple repositories on eligible GitHub plans. | Complementary when GitHub is the control plane. Repo Scout runs locally or in CI and keeps the same policy and evidence model available across repositories without depending on an organization-wide hosting feature. |
+| Developer portals and scorecards | [Port](https://www.port.io/pricing), [OpsLevel](https://docs.opslevel.com/docs/introducing-opslevel), [Cortex](https://www.cortex.io/products/scorecard) | Provides organization-wide standards, scorecards, campaigns, workflows, and remediation across broader service catalogs. | A bundling threat and a poor segment to attack head-on. Repo Scout is credible only for smaller local-first teams that cannot justify or do not want a full platform. |
 | Internal scripts and templates | Shell scripts, copied CI YAML, checklists, and repository templates | Offers exact local control and no software license cost. | The default substitute. Repo Scout must beat it on rollout time, policy drift, comparable evidence, and remediation support, not on whether a capable engineer could recreate an individual check. |
 
 ## What Is Different Today
@@ -42,6 +50,10 @@ moat. Paid demand remains unvalidated until a team buys the pilot.
    and remediation help for 90 days.
 5. **A useful free boundary.** A team can keep using the scanner and policy
    gate without buying. Payment is for coordinated adoption and support.
+6. **Exact temporary decisions.** A repository-local ledger can preserve a
+   shared base policy while binding each exception to observed evidence,
+   ownership, review, and expiration. Rollup output reports privacy-safe counts
+   without exporting rationales or actors.
 
 These differences describe the current product and offer. They do not prove
 exclusive technology, durable defensibility, or willingness to pay.
@@ -90,16 +102,18 @@ plane.
 
 ## Validation Plan
 
-Use this positioning in the existing five-message outreach experiment. Record
+Use this positioning in 20 qualified interviews and 30 personalized,
+price-disclosed offers. Record
 an explicit tool or DIY preference as `existing-solution`, keep price resistance
 as `price-objection`, and ask respondents which part they already solve:
-policy authoring, rollout, evidence comparison, or remediation. The useful
+policy authoring, rollout, exception approval, evidence comparison, or
+remediation. The useful
 signal is not agreement with the comparison; it is a qualified pilot request,
 payment, successful multi-repository activation, and eventual renewal.
 
-Do not build billing or license enforcement before the first paid pilot. If the
-five attempts produce no qualified conversation, revise the buyer or problem
-before adding another acquisition asset.
+Do not build billing or license enforcement before the first paid pilot. Fewer
+than two paid design partners after the first 60 days requires revising the
+buyer or problem before adding another acquisition asset or product surface.
 
 ## Research Limits
 

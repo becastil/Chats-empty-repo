@@ -105,7 +105,7 @@ required_files = ["README.md"]
             (web, api),
             environment=environment,
         )
-        _require(report.get("schema_version") == 2, "summary schema changed")
+        _require(report.get("schema_version") == 3, "summary schema changed")
         _require(
             report.get("scope")
             == {
@@ -114,6 +114,7 @@ required_files = ["README.md"]
                 "shared_policy_verified": True,
                 "policy_fingerprint_coverage": 2,
                 "git_commit_coverage": 2,
+                "exception_ledger_coverage": 0,
                 "policy_versions": [4],
             },
             "rollout scope changed",
@@ -128,6 +129,16 @@ required_files = ["README.md"]
                 "policy_fail": 1,
                 "clean_worktrees": 1,
                 "total_policy_violations": 2,
+                "policy_enforcement_pass": 1,
+                "policy_enforcement_pass_with_exceptions": 0,
+                "policy_enforcement_fail": 1,
+                "repositories_with_applied_exceptions": 0,
+                "total_exception_decisions": 0,
+                "total_applied_exceptions": 0,
+                "total_expired_exceptions": 0,
+                "total_pending_exceptions": 0,
+                "total_stale_exceptions": 0,
+                "total_unresolved_violations": 2,
                 "repositories_with_attention": 1,
                 "total_attention_findings": 3,
             },
@@ -149,6 +160,8 @@ required_files = ["README.md"]
             "Bundle-reported ready for CI: 1",
             "Bundle-reported remediation required: 1",
             "Policy: 1 pass / 1 fail / 2 violations",
+            "Policy enforcement: 1 pass / 0 pass with exceptions / 1 fail / 2 unresolved",
+            "Exception decisions: 0 applied across 0 repositories / 0 expired / 0 pending / 0 stale; 0/2 ledgers",
             "Policy identity: 2/2 fingerprints; shared policy verified",
             "Git: 1 clean worktrees / 1 not clean",
             "Attention: 1 repository / 3 findings",

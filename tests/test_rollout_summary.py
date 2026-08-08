@@ -31,6 +31,7 @@ from repo_scout.rollout_summary import (
 )
 
 POLICY_FINGERPRINT = f"sha256:{'a' * 64}"
+EXCEPTION_LEDGER_FINGERPRINT = f"sha256:{'d' * 64}"
 GIT_COMMIT = "b" * 40
 
 
@@ -54,7 +55,7 @@ class RolloutSummaryTests(unittest.TestCase):
                 list(reversed(reports)), include_details=True
             ),
         )
-        self.assertEqual(summary["schema_version"], 2)
+        self.assertEqual(summary["schema_version"], 3)
         self.assertEqual(
             summary["scope"],
             {
@@ -63,6 +64,7 @@ class RolloutSummaryTests(unittest.TestCase):
                 "shared_policy_verified": True,
                 "policy_fingerprint_coverage": 2,
                 "git_commit_coverage": 2,
+                "exception_ledger_coverage": 0,
                 "policy_versions": [1],
             },
         )
@@ -76,6 +78,16 @@ class RolloutSummaryTests(unittest.TestCase):
                 "policy_fail": 1,
                 "clean_worktrees": 1,
                 "total_policy_violations": 2,
+                "policy_enforcement_pass": 1,
+                "policy_enforcement_pass_with_exceptions": 0,
+                "policy_enforcement_fail": 1,
+                "repositories_with_applied_exceptions": 0,
+                "total_exception_decisions": 0,
+                "total_applied_exceptions": 0,
+                "total_expired_exceptions": 0,
+                "total_pending_exceptions": 0,
+                "total_stale_exceptions": 0,
+                "total_unresolved_violations": 2,
                 "repositories_with_attention": 1,
                 "total_attention_findings": 4,
             },
@@ -86,14 +98,17 @@ class RolloutSummaryTests(unittest.TestCase):
         )
         text = format_rollout_summary(summary)
         self.assertIn("Scope: bundle-reported", text)
-        self.assertIn("shared policy verified by fingerprints", text)
+        self.assertIn("shared base policy verified by fingerprints", text)
         self.assertIn("Policy identity: 2/2 fingerprints", text)
         self.assertIn("Git identity: 2/2 commits recorded", text)
         self.assertIn("Repositories: 2", text)
         self.assertIn("Bundle-reported ready for CI: 1", text)
         self.assertIn("Bundle-reported remediation required: 1", text)
         self.assertIn(
-            "platform/api: ready-for-ci; policy pass (0 violations); Git clean",
+            (
+                "platform/api: ready-for-ci; policy pass (0 violations); "
+                "enforcement pass (0 unresolved, 0 exceptions applied); Git clean"
+            ),
             text,
         )
         self.assertIn("platform/web: remediation-required; policy fail", text)
@@ -160,6 +175,95 @@ class RolloutSummaryTests(unittest.TestCase):
                 POLICY_FINGERPRINT,
             )
             self.assertEqual(detailed["repositories"][0]["git_commit"], GIT_COMMIT)
+
+    def test_schema_three_reports_raw_failures_and_effective_exceptions(self) -> None:
+        api = self._metadata(
+            "platform/api",
+            schema_version=3,
+            policy_status="fail",
+            violations=1,
+            enforcement_status="pass-with-exceptions",
+            applied=1,
+            unresolved=0,
+        )
+        web = self._metadata("platform/web")
+
+        validated = validate_rollout_metadata(api)
+        summary = build_rollout_summary(
+            [("api.md", validated), ("web.md", web)], include_details=True
+        )
+
+        self.assertEqual(validated["readiness"], "ready-for-ci")
+        self.assertEqual(validated["policy"]["status"], "fail")
+        self.assertEqual(
+            validated["policy"]["enforcement_status"], "pass-with-exceptions"
+        )
+        self.assertEqual(summary["scope"]["exception_ledger_coverage"], 1)
+        self.assertEqual(
+            summary["summary"]["policy_enforcement_pass_with_exceptions"], 1
+        )
+        self.assertEqual(summary["summary"]["total_policy_violations"], 1)
+        self.assertEqual(summary["summary"]["total_applied_exceptions"], 1)
+        self.assertEqual(summary["summary"]["total_unresolved_violations"], 0)
+        text = format_rollout_summary(summary)
+        self.assertIn("1 pass with exceptions", text)
+        self.assertIn("1 applied across 1 repositories", text)
+        self.assertNotIn(EXCEPTION_LEDGER_FINGERPRINT, text.split("Repository details:")[0])
+
+    def test_schema_three_rejects_inconsistent_exception_evidence(self) -> None:
+        cases = []
+        wrong_total = self._metadata(
+            "api",
+            schema_version=3,
+            policy_status="fail",
+            violations=1,
+            enforcement_status="pass-with-exceptions",
+            applied=1,
+            unresolved=0,
+        )
+        wrong_total["policy"]["exception_decisions_total"] = 2
+        cases.append((wrong_total, "counts do not reconcile"))
+
+        unresolved_pass = self._metadata(
+            "api",
+            schema_version=3,
+            policy_status="fail",
+            violations=2,
+            enforcement_status="pass-with-exceptions",
+            applied=1,
+            unresolved=0,
+        )
+        unresolved_pass["policy"]["unresolved_violations"] = 1
+        cases.append((unresolved_pass, "pass-with-exceptions contradicts"))
+
+        invalid_fingerprint = self._metadata(
+            "api",
+            schema_version=3,
+            policy_status="fail",
+            violations=1,
+            enforcement_status="pass-with-exceptions",
+            applied=1,
+            unresolved=0,
+        )
+        invalid_fingerprint["policy"]["exception_ledger_fingerprint"] = "sha256:bad"
+        cases.append((invalid_fingerprint, "exception_ledger_fingerprint"))
+
+        missing_applied = self._metadata(
+            "api",
+            schema_version=3,
+            policy_status="fail",
+            violations=2,
+            enforcement_status="fail",
+            applied=1,
+            unresolved=0,
+        )
+        cases.append((missing_applied, "raw policy violations do not reconcile"))
+
+        for metadata, message in cases:
+            with self.subTest(message=message), self.assertRaisesRegex(
+                RolloutEvidenceError, message
+            ):
+                validate_rollout_metadata(metadata)
 
     def test_rejects_duplicate_repository_ids(self) -> None:
         metadata = self._metadata("api")
@@ -233,17 +337,21 @@ class RolloutSummaryTests(unittest.TestCase):
             parse_rollout_metadata(bundle, source="edited.md")
 
         unsupported = self._metadata("api")
-        unsupported["schema_version"] = 3
+        unsupported["schema_version"] = 4
         encoded = json.dumps(unsupported, indent=2, sort_keys=True)
         bundle = f"# Report\n\n{ROLLOUT_METADATA_START}{encoded}{ROLLOUT_METADATA_END}\n"
-        with self.assertRaisesRegex(RolloutEvidenceError, "schema_version must be 1 or 2"):
+        with self.assertRaisesRegex(
+            RolloutEvidenceError, "schema_version must be 1, 2, or 3"
+        ):
             parse_rollout_metadata(bundle, source="future.md")
 
         boolean_schema = self._metadata("api")
         boolean_schema["schema_version"] = True
         encoded = json.dumps(boolean_schema, indent=2, sort_keys=True)
         bundle = f"# Report\n\n{ROLLOUT_METADATA_START}{encoded}{ROLLOUT_METADATA_END}\n"
-        with self.assertRaisesRegex(RolloutEvidenceError, "schema_version must be 1 or 2"):
+        with self.assertRaisesRegex(
+            RolloutEvidenceError, "schema_version must be 1, 2, or 3"
+        ):
             parse_rollout_metadata(bundle, source="boolean.md")
 
         non_git_dirty = self._metadata(
@@ -786,6 +894,12 @@ class RolloutSummaryTests(unittest.TestCase):
         branch: str | None = "main",
         dirty_files: int = 0,
         attention_findings: int = 0,
+        enforcement_status: str | None = None,
+        applied: int = 0,
+        expired: int = 0,
+        pending: int = 0,
+        stale: int = 0,
+        unresolved: int | None = None,
     ) -> dict[str, object]:
         clean = is_repo and dirty_files == 0
         policy = {
@@ -803,12 +917,34 @@ class RolloutSummaryTests(unittest.TestCase):
         if schema_version >= 2:
             policy["fingerprint"] = POLICY_FINGERPRINT
             git["commit"] = GIT_COMMIT if is_repo else None
+        if schema_version >= 3:
+            effective_status = enforcement_status or policy_status
+            unresolved_count = (
+                violations if unresolved is None and effective_status == "fail" else 0
+                if unresolved is None
+                else unresolved
+            )
+            policy.update(
+                {
+                    "enforcement_status": effective_status,
+                    "exception_ledger_fingerprint": EXCEPTION_LEDGER_FINGERPRINT,
+                    "exception_decisions_total": applied + expired + pending + stale,
+                    "exception_decisions_applied": applied,
+                    "exception_decisions_expired": expired,
+                    "exception_decisions_pending": pending,
+                    "exception_decisions_stale": stale,
+                    "unresolved_violations": unresolved_count,
+                }
+            )
         return {
             "schema_version": schema_version,
             "repository_id": repository_id,
             "readiness": (
                 "ready-for-ci"
-                if policy_status == "pass" and clean
+                if (
+                    policy.get("enforcement_status", policy_status) != "fail"
+                    and clean
+                )
                 else "remediation-required"
             ),
             "policy": policy,

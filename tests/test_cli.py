@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from contextlib import redirect_stderr, redirect_stdout
+from datetime import datetime, timedelta, timezone
 import io
 import json
 import os
@@ -244,6 +245,184 @@ required_file_groups = [["package-lock.json", "pnpm-lock.yaml", "yarn.lock"]]
             self.assertEqual(
                 json.loads(passing_stdout.getvalue())["policy"]["status"], "pass"
             )
+
+    def test_cli_applies_tracked_exception_without_hiding_raw_failure(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "README.md").write_text("# Example\n", encoding="utf-8")
+            policy_path = root / "repo-scout-policy.toml"
+            policy_path.write_text(
+                'version = 1\n[repository]\nrequired_files = ["SECURITY.md"]\n',
+                encoding="utf-8",
+            )
+            self._commit_repository(root)
+
+            initial_stdout = io.StringIO()
+            with redirect_stdout(initial_stdout):
+                initial_exit = main(
+                    ["--format", "json", "--policy", str(policy_path), str(root)]
+                )
+            initial = json.loads(initial_stdout.getvalue())
+            self.assertEqual(initial_exit, 6)
+            policy = initial["policy"]
+
+            today = datetime.now(timezone.utc).date()
+            ledger_path = root / "repo-scout-exceptions.toml"
+            ledger_path.write_text(
+                f'''version = 1
+repository_id = "platform/api"
+policy_fingerprint = "{policy['fingerprint']}"
+
+[[exceptions]]
+id = "EXC-2026-001"
+violation_id = "{policy['violation_ids'][0]}"
+owner = "platform-team"
+approved_by = "engineering-lead"
+reason = "Migration is tracked in ENG-123."
+approved_on = {today.isoformat()}
+expires_on = {(today + timedelta(days=30)).isoformat()}
+''',
+                encoding="utf-8",
+            )
+            subprocess.run(
+                ["git", "-C", str(root), "add", ledger_path.name], check=True
+            )
+            subprocess.run(
+                ["git", "-C", str(root), "commit", "-qm", "Approve exception"],
+                check=True,
+            )
+
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        "--format",
+                        "json",
+                        "--policy",
+                        str(policy_path),
+                        "--exception-ledger",
+                        str(ledger_path),
+                        "--repository-id",
+                        "platform/api",
+                        str(root),
+                    ]
+                )
+
+            snapshot = json.loads(stdout.getvalue())
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(snapshot["policy"]["status"], "fail")
+            self.assertEqual(len(snapshot["policy"]["violations"]), 1)
+            exceptions = snapshot["policy"]["exceptions"]
+            self.assertEqual(
+                exceptions["enforcement_status"], "pass-with-exceptions"
+            )
+            self.assertEqual(exceptions["applied"][0]["exception"]["id"], "EXC-2026-001")
+            self.assertEqual(
+                exceptions["applied"][0]["exception"]["reason"],
+                "Migration is tracked in ENG-123.",
+            )
+
+            rollout_stdout = io.StringIO()
+            with redirect_stdout(rollout_stdout):
+                rollout_exit = main(
+                    [
+                        "--format",
+                        "markdown",
+                        "--policy",
+                        str(policy_path),
+                        "--exception-ledger",
+                        str(ledger_path),
+                        "--repository-id",
+                        "platform/api",
+                        "--rollout-checklist",
+                        str(root),
+                    ]
+                )
+            rollout_report = rollout_stdout.getvalue()
+            metadata = parse_rollout_metadata(rollout_report)
+            self.assertEqual(rollout_exit, 0)
+            self.assertEqual(metadata["schema_version"], 3)
+            self.assertEqual(metadata["readiness"], "ready-for-ci")
+            self.assertEqual(metadata["policy"]["status"], "fail")
+            self.assertEqual(
+                metadata["policy"]["enforcement_status"],
+                "pass-with-exceptions",
+            )
+            self.assertEqual(
+                metadata["policy"]["exception_decisions_applied"], 1
+            )
+            self.assertEqual(metadata["policy"]["unresolved_violations"], 0)
+            self.assertIn("`fail` raw / `pass-with-exceptions` enforcement", rollout_report)
+            self.assertIn("covered by 1 active exception decision", rollout_report)
+
+            (root / "SECURITY.md").write_text("# Security\n", encoding="utf-8")
+            subprocess.run(
+                ["git", "-C", str(root), "add", "SECURITY.md"], check=True
+            )
+            subprocess.run(
+                ["git", "-C", str(root), "commit", "-qm", "Resolve finding"],
+                check=True,
+            )
+            stale_stdout = io.StringIO()
+            with redirect_stdout(stale_stdout):
+                stale_exit = main(
+                    [
+                        "--format",
+                        "json",
+                        "--policy",
+                        str(policy_path),
+                        "--exception-ledger",
+                        str(ledger_path),
+                        "--repository-id",
+                        "platform/api",
+                        str(root),
+                    ]
+                )
+            stale = json.loads(stale_stdout.getvalue())
+            self.assertEqual(stale_exit, 6)
+            self.assertEqual(stale["policy"]["status"], "pass")
+            self.assertEqual(
+                stale["policy"]["exceptions"]["enforcement_status"], "fail"
+            )
+            self.assertEqual(
+                stale["policy"]["exceptions"]["stale"][0]["id"],
+                "EXC-2026-001",
+            )
+
+    def test_exception_ledger_requires_policy_repository_and_clean_tracking(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            policy_path = root / "policy.toml"
+            policy_path.write_text(
+                'version = 1\n[repository]\nrequired_files = ["README.md"]\n',
+                encoding="utf-8",
+            )
+            ledger_path = root / "exceptions.toml"
+            ledger_path.write_text("not valid yet\n", encoding="utf-8")
+
+            cases = (
+                (
+                    ["--exception-ledger", str(ledger_path), str(root)],
+                    "requires --policy",
+                ),
+                (
+                    [
+                        "--policy",
+                        str(policy_path),
+                        "--exception-ledger",
+                        str(ledger_path),
+                        str(root),
+                    ],
+                    "requires --repository-id",
+                ),
+            )
+            for argv, message in cases:
+                with self.subTest(message=message):
+                    stderr = io.StringIO()
+                    with redirect_stderr(stderr):
+                        exit_code = main(argv)
+                    self.assertEqual(exit_code, 2)
+                    self.assertIn(message, stderr.getvalue())
 
     def test_cli_appends_ready_first_repository_rollout_evidence(self) -> None:
         with TemporaryDirectory() as tmp:

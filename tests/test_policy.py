@@ -177,8 +177,17 @@ forbidden_file_patterns = ["**/.env", "*.pem"]
                     "repository.forbidden_file_patterns",
                 ],
             )
+            pattern_violation = result["violations"][1]
+            self.assertRegex(
+                pattern_violation["match_set_fingerprint"],
+                r"^sha256:[0-9a-f]{64}$",
+            )
             self.assertEqual(
-                result["violations"][1],
+                {
+                    key: value
+                    for key, value in pattern_violation.items()
+                    if key != "match_set_fingerprint"
+                },
                 {
                     "rule": "repository.forbidden_file_patterns",
                     "pattern": "**/.env",

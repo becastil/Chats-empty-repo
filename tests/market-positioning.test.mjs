@@ -11,10 +11,11 @@ test("grounds paid positioning in current official competitor categories", async
   const comparison = await readFile(comparisonUrl, "utf8");
   const normalized = comparison.replace(/\s+/g, " ");
 
-  assert.match(normalized, /Reviewed: 2026-08-01/i);
+  assert.match(normalized, /Reviewed: 2026-08-08/i);
   assert.match(normalized, /not a replacement for a source-code scanner/i);
   assert.match(normalized, /implementation-service advantage, not a proven technical moat/i);
   assert.match(normalized, /paid demand remains unvalidated/i);
+  assert.match(normalized, /objective moat assessment is 2\/10 today/i);
 
   const officialSources = [
     "https://docs.semgrep.dev/semgrep-code/overview",
@@ -23,6 +24,12 @@ test("grounds paid positioning in current official competitor categories", async
     "https://www.conftest.dev/",
     "https://www.openpolicyagent.org/docs/latest/",
     "https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets",
+    "https://alint.org/",
+    "https://todogroup.github.io/repolinter/",
+    "https://docs.reposaur.com/",
+    "https://www.port.io/pricing",
+    "https://docs.opslevel.com/docs/introducing-opslevel",
+    "https://www.cortex.io/products/scorecard",
   ];
 
   for (const source of officialSources) {
@@ -32,5 +39,6 @@ test("grounds paid positioning in current official competitor categories", async
   assert.match(normalized, /strongest build-it-yourself substitute/i);
   assert.match(normalized, /show whether submitted rollout bundles report the same normalized policy fingerprint/i);
   assert.match(normalized, /Do not build billing or license enforcement before the first paid pilot/i);
+  assert.match(normalized, /20 qualified interviews and 30 personalized/i);
   assert.match(normalized, /does not measure market share, customer satisfaction, total cost of ownership, or direct feature parity/i);
 });

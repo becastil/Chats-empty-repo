@@ -24,6 +24,7 @@ export const STRUCTURED_DATA = {
         "Local repository snapshots",
         "Version-controlled repository policies",
         "CI policy enforcement",
+        "Expiring repository exception decisions",
         "Cross-repository rollout evidence",
       ],
       offers: {
@@ -39,8 +40,8 @@ export const STRUCTURED_DATA = {
       "@id": `${SITE_URL}/#team-pilot`,
       name: "Repo Scout Founding Team Pilot",
       description:
-        "A 90-day repository policy and CI rollout pilot for up to 10 software projects without uploading source code.",
-      serviceType: "Repository policy and CI rollout support",
+        "A 90-day repository policy, exception decision, and CI rollout pilot for up to 10 software projects without uploading source code.",
+      serviceType: "Repository policy, exception, and CI rollout support",
       url: `${SITE_URL}/#team-pilot`,
       audience: {
         "@type": "BusinessAudience",

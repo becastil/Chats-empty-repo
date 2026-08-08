@@ -12,6 +12,8 @@ initial revenue before licensing or billing infrastructure is built.
 ## Ideal Customer
 
 - Software teams with 5 to 50 developers.
+- Teams operating roughly 20 to 100 repositories without a mature internal
+  developer-platform group.
 - Teams using coding agents across multiple repositories.
 - Engineering leads who own review quality, repository standards, or handoffs.
 - Security-conscious teams that prefer local tooling over source-code uploads.
@@ -37,6 +39,34 @@ objection answers, and claims to avoid are recorded in
 This is positioning evidence, not demand evidence or a moat. Billing and
 license enforcement remain deferred until a team pays for the pilot.
 
+## Defensibility Strategy
+
+The 2026-08-08 market review found no current AI-resistant moat. Local scanning,
+strict TOML rules, policy fingerprints, rollout bundles, and implementation
+support are useful packaging, but active and historical competitors already
+cover much of the category and coding agents can reproduce buyer-visible
+parity. Engineering depth is therefore treated as a time lead, not an economic
+advantage.
+
+The free execution engine remains open and useful. The paid product must earn a
+compounding advantage from permissioned customer operations: policy intent,
+repository archetype, exact exception decisions, approvers and owners,
+remediation paths, time-to-green, recurrence, and 30/60/90-day outcomes. Raw
+source stays local. Counts-only rollout evidence omits rationales and actors;
+any cross-customer learning requires explicit permission and anonymization.
+
+The first control point is a repository-local exception ledger. It preserves a
+shared base-policy fingerprint while binding every temporary decision to one
+repository, one exact observed violation, human review metadata, and a bounded
+expiration. Git review supplies history. Another AI can copy this schema, but
+it cannot recreate customer decision history or measured outcomes it never
+received. That advantage remains hypothetical until repeated paid deployments
+produce useful, permissioned records and lower future delivery effort.
+
+The project must not claim a moat until it has at least 10 paying teams or 50
+paid repositories, 100 resolved exception decisions, repeatable patterns in at
+least 30% of those decisions, one four-figure rollout, and recurring conversion.
+
 ## Offer
 
 ### Free Core
@@ -47,6 +77,8 @@ license enforcement remain deferred until a team pays for the pilot.
 - A copy-ready, read-only GitHub Actions policy gate with failure evidence.
 - Offline starter policies for baseline, Python, flexible Node, npm-only, and agent-ready services.
 - Exact required and forbidden file rules with stable policy fingerprints.
+- Repository-local, evidence-bound, expiring exception decisions that preserve
+  raw failures and produce privacy-safe rollout counts.
 - A no-install, single-file zipapp for the primary CLI.
 - Versioned GitHub release artifacts with checksums and verifiable build provenance.
 
@@ -181,11 +213,18 @@ prove customer activation, demand, payment, or revenue.
 
 Price: $299 for 90 days, covering up to 10 repositories.
 
+This price is a discovery offer for the first three design partners, not proven
+unit economics. Track operator time and do not expand the 90-day support scope
+informally. After three paid deliveries, test higher fixed rollout prices
+against measured implementation effort before building billing infrastructure.
+
 The pilot includes:
 
 - A shared, version-controlled repository policy.
 - CI enforcement guidance and rollout support.
 - One custom policy pack for the team's repository standards.
+- Exception decision setup, remediation ownership, and counts-only governance
+  evidence across the scoped repositories.
 - First-repository readiness evidence and a reusable rollout checklist.
 - Direct feedback access and priority fixes during the pilot.
 

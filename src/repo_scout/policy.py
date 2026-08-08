@@ -153,6 +153,7 @@ def evaluate_policy(
                     "pattern": pattern,
                     "paths": shown_paths,
                     "match_count": len(matched_paths),
+                    "match_set_fingerprint": _path_set_fingerprint(matched_paths),
                     "paths_truncated": truncated,
                     "message": (
                         f"Forbidden file pattern {pattern} matched "
@@ -209,13 +210,19 @@ def evaluate_policy(
                 }
             )
 
+    fingerprint = policy_fingerprint(policy)
+    violation_ids = [
+        violation_id(violation, policy_fingerprint=fingerprint)
+        for violation in violations
+    ]
     return {
         "version": policy["version"],
         "source": policy["source"],
-        "fingerprint": policy_fingerprint(policy),
+        "fingerprint": fingerprint,
         "status": "fail" if violations else "pass",
         "rules_checked": len(rules),
         "violations": violations,
+        "violation_ids": violation_ids,
     }
 
 
@@ -240,6 +247,58 @@ def policy_fingerprint(policy: dict[str, Any]) -> str:
         ensure_ascii=True,
         separators=(",", ":"),
         sort_keys=True,
+    ).encode("utf-8")
+    return f"sha256:{hashlib.sha256(canonical).hexdigest()}"
+
+
+def violation_id(
+    violation: dict[str, Any], *, policy_fingerprint: str
+) -> str:
+    """Return a stable identity for the policy condition that was violated."""
+    rule = violation.get("rule")
+    identity: dict[str, Any] = {
+        "version": 1,
+        "policy_fingerprint": policy_fingerprint,
+        "rule": rule,
+    }
+    if rule in {
+        "repository.required_files",
+        "repository.forbidden_files",
+    }:
+        identity["path"] = violation["path"]
+    elif rule == "repository.required_file_groups":
+        identity["paths"] = sorted(violation["paths"])
+    elif rule == "repository.forbidden_file_patterns":
+        identity["pattern"] = violation["pattern"]
+        identity["match_set_fingerprint"] = violation["match_set_fingerprint"]
+    elif rule in {
+        "repository.max_files",
+        "repository.max_total_bytes",
+    }:
+        identity["actual"] = violation["actual"]
+        identity["expected_max"] = violation["expected_max"]
+    elif rule == "repository.require_clean_git":
+        if "actual" in violation:
+            identity["actual"] = violation["actual"]
+        if "expected" in violation:
+            identity["expected"] = violation["expected"]
+    else:
+        raise PolicyError(f"cannot identify unsupported policy violation: {rule}")
+
+    canonical = json.dumps(
+        identity,
+        ensure_ascii=True,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
+    return f"sha256:{hashlib.sha256(canonical).hexdigest()}"
+
+
+def _path_set_fingerprint(paths: list[str]) -> str:
+    canonical = json.dumps(
+        sorted(paths),
+        ensure_ascii=True,
+        separators=(",", ":"),
     ).encode("utf-8")
     return f"sha256:{hashlib.sha256(canonical).hexdigest()}"
 

@@ -14,8 +14,8 @@ from ._file_evidence import (
 )
 
 
-ROLLOUT_SCHEMA_VERSION = 2
-SUPPORTED_ROLLOUT_SCHEMA_VERSIONS = {1, ROLLOUT_SCHEMA_VERSION}
+ROLLOUT_SCHEMA_VERSION = 3
+SUPPORTED_ROLLOUT_SCHEMA_VERSIONS = {1, 2, ROLLOUT_SCHEMA_VERSION}
 ROLLOUT_METADATA_START = "## Rollout Metadata\n\n```json\n"
 ROLLOUT_METADATA_END = "\n```"
 MAX_ROLLOUT_EVIDENCE_BYTES = 1024 * 1024
@@ -38,11 +38,17 @@ def build_rollout_metadata(
         raise RolloutEvidenceError("rollout evidence requires evaluated policy data")
 
     git = snapshot["git"]
-    policy_passes = policy["status"] == "pass"
+    exceptions = policy.get("exceptions")
+    schema_version = 3 if exceptions is not None else 2
+    policy_passes = (
+        exceptions["enforcement_status"] != "fail"
+        if exceptions is not None
+        else policy["status"] == "pass"
+    )
     git_clean = bool(git["is_repo"] and git["dirty_files"] == 0)
     has_commit = git["commit"] is not None
     return {
-        "schema_version": ROLLOUT_SCHEMA_VERSION,
+        "schema_version": schema_version,
         "repository_id": repository_id,
         "readiness": (
             "ready-for-ci"
@@ -55,6 +61,26 @@ def build_rollout_metadata(
             "status": policy["status"],
             "rules_checked": policy["rules_checked"],
             "violations": len(policy["violations"]),
+            **(
+                {
+                    "enforcement_status": exceptions["enforcement_status"],
+                    "exception_ledger_fingerprint": exceptions["fingerprint"],
+                    "exception_decisions_total": (
+                        len(exceptions["active"])
+                        + len(exceptions["pending"])
+                        + len(exceptions["expired"])
+                    ),
+                    "exception_decisions_applied": len(exceptions["applied"]),
+                    "exception_decisions_expired": len(exceptions["expired"]),
+                    "exception_decisions_pending": len(exceptions["pending"]),
+                    "exception_decisions_stale": len(exceptions["stale"]),
+                    "unresolved_violations": len(
+                        exceptions["unresolved_violation_ids"]
+                    ),
+                }
+                if exceptions is not None
+                else {}
+            ),
         },
         "git": {
             "is_repo": git["is_repo"],
@@ -202,7 +228,7 @@ def validate_rollout_metadata(metadata: Any) -> dict[str, Any]:
         or isinstance(schema_version, bool)
         or schema_version not in SUPPORTED_ROLLOUT_SCHEMA_VERSIONS
     ):
-        raise RolloutEvidenceError("schema_version must be 1 or 2")
+        raise RolloutEvidenceError("schema_version must be 1, 2, or 3")
     repository_id = validate_repository_id(metadata["repository_id"])
     if metadata["readiness"] not in {"ready-for-ci", "remediation-required"}:
         raise RolloutEvidenceError("readiness is unsupported")
@@ -213,6 +239,19 @@ def validate_rollout_metadata(metadata: Any) -> dict[str, Any]:
     policy_keys = {"version", "status", "rules_checked", "violations"}
     if schema_version >= 2:
         policy_keys.add("fingerprint")
+    if schema_version >= 3:
+        policy_keys.update(
+            {
+                "enforcement_status",
+                "exception_ledger_fingerprint",
+                "exception_decisions_total",
+                "exception_decisions_applied",
+                "exception_decisions_expired",
+                "exception_decisions_pending",
+                "exception_decisions_stale",
+                "unresolved_violations",
+            }
+        )
     _require_exact_keys(policy, policy_keys, "policy")
     if not _is_non_negative_integer(policy["version"]) or policy["version"] < 1:
         raise RolloutEvidenceError("policy.version must be positive")
@@ -235,6 +274,8 @@ def validate_rollout_metadata(metadata: Any) -> dict[str, Any]:
         raise RolloutEvidenceError(
             "policy.fingerprint must be a lowercase sha256 digest"
         )
+    if schema_version >= 3:
+        _validate_policy_exception_evidence(policy)
 
     git = metadata["git"]
     if not isinstance(git, dict):
@@ -272,9 +313,14 @@ def validate_rollout_metadata(metadata: Any) -> dict[str, Any]:
         raise RolloutEvidenceError("attention_findings must be non-negative")
 
     has_required_commit = schema_version == 1 or git["commit"] is not None
+    policy_ready = (
+        policy["enforcement_status"] != "fail"
+        if schema_version >= 3
+        else policy["status"] == "pass"
+    )
     expected_readiness = (
         "ready-for-ci"
-        if policy["status"] == "pass" and git["clean"] and has_required_commit
+        if policy_ready and git["clean"] and has_required_commit
         else "remediation-required"
     )
     if metadata["readiness"] != expected_readiness:
@@ -294,6 +340,32 @@ def validate_rollout_metadata(metadata: Any) -> dict[str, Any]:
             "status": policy["status"],
             "rules_checked": policy["rules_checked"],
             "violations": policy["violations"],
+            **(
+                {
+                    "enforcement_status": policy["enforcement_status"],
+                    "exception_ledger_fingerprint": policy[
+                        "exception_ledger_fingerprint"
+                    ],
+                    "exception_decisions_total": policy[
+                        "exception_decisions_total"
+                    ],
+                    "exception_decisions_applied": policy[
+                        "exception_decisions_applied"
+                    ],
+                    "exception_decisions_expired": policy[
+                        "exception_decisions_expired"
+                    ],
+                    "exception_decisions_pending": policy[
+                        "exception_decisions_pending"
+                    ],
+                    "exception_decisions_stale": policy[
+                        "exception_decisions_stale"
+                    ],
+                    "unresolved_violations": policy["unresolved_violations"],
+                }
+                if schema_version >= 3
+                else {}
+            ),
         },
         "git": {
             "is_repo": git["is_repo"],
@@ -304,6 +376,84 @@ def validate_rollout_metadata(metadata: Any) -> dict[str, Any]:
         },
         "attention_findings": attention_findings,
     }
+
+
+def _validate_policy_exception_evidence(policy: dict[str, Any]) -> None:
+    if policy["enforcement_status"] not in {
+        "pass",
+        "pass-with-exceptions",
+        "fail",
+    }:
+        raise RolloutEvidenceError(
+            "policy.enforcement_status must be pass, pass-with-exceptions, or fail"
+        )
+    ledger_fingerprint = policy["exception_ledger_fingerprint"]
+    if (
+        not isinstance(ledger_fingerprint, str)
+        or _POLICY_FINGERPRINT_PATTERN.fullmatch(ledger_fingerprint) is None
+    ):
+        raise RolloutEvidenceError(
+            "policy.exception_ledger_fingerprint must be a lowercase sha256 digest"
+        )
+
+    count_keys = (
+        "exception_decisions_total",
+        "exception_decisions_applied",
+        "exception_decisions_expired",
+        "exception_decisions_pending",
+        "exception_decisions_stale",
+        "unresolved_violations",
+    )
+    for key in count_keys:
+        if not _is_non_negative_integer(policy[key]):
+            raise RolloutEvidenceError(f"policy.{key} must be non-negative")
+
+    accounted = (
+        policy["exception_decisions_applied"]
+        + policy["exception_decisions_expired"]
+        + policy["exception_decisions_pending"]
+        + policy["exception_decisions_stale"]
+    )
+    if policy["exception_decisions_total"] != accounted:
+        raise RolloutEvidenceError(
+            "policy exception decision counts do not reconcile"
+        )
+    if policy["unresolved_violations"] > policy["violations"]:
+        raise RolloutEvidenceError(
+            "policy.unresolved_violations cannot exceed raw violations"
+        )
+    if policy["violations"] != (
+        policy["exception_decisions_applied"] + policy["unresolved_violations"]
+    ):
+        raise RolloutEvidenceError(
+            "raw policy violations do not reconcile to applied exceptions and "
+            "unresolved violations"
+        )
+
+    enforcement_status = policy["enforcement_status"]
+    clean_exception_pass = (
+        policy["exception_decisions_applied"] > 0
+        and policy["exception_decisions_expired"] == 0
+        and policy["exception_decisions_pending"] == 0
+        and policy["exception_decisions_stale"] == 0
+        and policy["unresolved_violations"] == 0
+    )
+    if enforcement_status == "pass-with-exceptions" and (
+        policy["status"] != "fail" or not clean_exception_pass
+    ):
+        raise RolloutEvidenceError(
+            "pass-with-exceptions contradicts policy exception evidence"
+        )
+    if enforcement_status == "pass" and (
+        policy["status"] != "pass"
+        or policy["violations"] != 0
+        or policy["exception_decisions_total"] != 0
+    ):
+        raise RolloutEvidenceError("passing enforcement contradicts policy evidence")
+    if enforcement_status != "fail" and policy["unresolved_violations"] != 0:
+        raise RolloutEvidenceError(
+            "non-failing enforcement cannot retain unresolved violations"
+        )
 
 
 def _validate_git_branch(value: Any) -> str | None:

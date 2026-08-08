@@ -11,6 +11,12 @@ from typing import Any, Sequence
 
 from .comparison import SnapshotReadError, compare_snapshot_files
 from .policy import PolicyError, evaluate_policy, load_policy
+from .policy_exceptions import (
+    PolicyExceptionError,
+    apply_policy_exceptions,
+    load_exception_ledger,
+    verify_exception_ledger_checkout,
+)
 from .rollout import (
     RolloutEvidenceError,
     build_rollout_metadata,
@@ -70,6 +76,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="Apply a version-controlled TOML team policy and exit 6 on violations.",
     )
     parser.add_argument(
+        "--exception-ledger",
+        metavar="PATH",
+        help=(
+            "Apply a repository-bound TOML exception ledger to policy violations. "
+            "Requires --policy and --repository-id."
+        ),
+    )
+    parser.add_argument(
         "--rollout-checklist",
         action="store_true",
         help=(
@@ -81,7 +95,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--repository-id",
         metavar="ID",
         help=(
-            "Stable logical repository name required for rollout evidence."
+            "Stable logical repository name required for rollout or exception evidence."
         ),
     )
     parser.add_argument(
@@ -138,9 +152,23 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         return 2
 
-    if args.repository_id and not args.rollout_checklist:
+    if args.repository_id and not (
+        args.rollout_checklist or args.exception_ledger
+    ):
         print(
-            "repo-scout: --repository-id requires --rollout-checklist",
+            "repo-scout: --repository-id requires --rollout-checklist or "
+            "--exception-ledger",
+            file=sys.stderr,
+        )
+        return 2
+
+    if args.exception_ledger and not args.policy:
+        print("repo-scout: --exception-ledger requires --policy", file=sys.stderr)
+        return 2
+
+    if args.exception_ledger and args.repository_id is None:
+        print(
+            "repo-scout: --exception-ledger requires --repository-id",
             file=sys.stderr,
         )
         return 2
@@ -184,6 +212,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         print("repo-scout: --policy cannot be used with --compare", file=sys.stderr)
         return 2
 
+
+    if args.compare and args.exception_ledger:
+        print(
+            "repo-scout: --exception-ledger cannot be used with --compare",
+            file=sys.stderr,
+        )
+        return 2
+
     if args.compare:
         try:
             comparison = compare_snapshot_files(*args.compare)
@@ -207,6 +243,15 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(f"repo-scout: {exc}", file=sys.stderr)
             return 2
 
+
+    exception_ledger = None
+    if args.exception_ledger:
+        try:
+            exception_ledger = load_exception_ledger(args.exception_ledger)
+        except PolicyExceptionError as exc:
+            print(f"repo-scout: {exc}", file=sys.stderr)
+            return 2
+
     try:
         snapshot = scan_project(
             args.path,
@@ -224,6 +269,19 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if policy is not None:
         snapshot["policy"] = evaluate_policy(snapshot, policy)
+        if exception_ledger is not None:
+            try:
+                verify_exception_ledger_checkout(
+                    snapshot["root"], exception_ledger, snapshot
+                )
+                snapshot["policy"] = apply_policy_exceptions(
+                    snapshot["policy"],
+                    exception_ledger,
+                    repository_id=args.repository_id,
+                )
+            except PolicyExceptionError as exc:
+                print(f"repo-scout: {exc}", file=sys.stderr)
+                return 2
 
     if args.format == "json":
         report = json.dumps(snapshot, indent=2, sort_keys=True)
@@ -240,7 +298,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     output_exit_code = _emit_report(report, args.output, args.force)
     if output_exit_code != 0:
         return output_exit_code
-    if snapshot.get("policy", {}).get("status") == "fail":
+    policy_result = snapshot.get("policy", {})
+    exceptions = policy_result.get("exceptions")
+    policy_fails = (
+        exceptions["enforcement_status"] == "fail"
+        if exceptions is not None
+        else policy_result.get("status") == "fail"
+    )
+    if policy_fails:
         return POLICY_EXIT_CODE
     if args.fail_on_attention and snapshot["attention"]["items"]:
         return ATTENTION_EXIT_CODE
@@ -352,8 +417,28 @@ def _append_text_policy(
         f"Policy: {policy['status']} ({policy['rules_checked']} rules) from {policy['source']}"
     )
     lines.extend(
-        f"  ! {violation['message']}" for violation in policy["violations"]
+        f"  ! {violation_id} {violation['message']}"
+        for violation_id, violation in zip(
+            policy["violation_ids"], policy["violations"], strict=True
+        )
     )
+    exceptions = policy.get("exceptions")
+    if exceptions is not None:
+        lines.append(
+            "Policy exceptions: "
+            f"{exceptions['enforcement_status']}; "
+            f"{len(exceptions['applied'])} applied / "
+            f"{len(exceptions['expired'])} expired / "
+            f"{len(exceptions['pending'])} pending / "
+            f"{len(exceptions['stale'])} stale / "
+            f"{len(exceptions['unresolved_violation_ids'])} unresolved"
+        )
+        for excepted in exceptions["applied"]:
+            record = excepted["exception"]
+            lines.append(
+                f"  ~ {record['id']} through {record['expires_on']}: "
+                f"{excepted['violation']['message']}"
+            )
 
 
 def _append_text_attention(lines: list[str], attention: dict[str, Any]) -> None:
@@ -418,16 +503,45 @@ def format_markdown(
                 "",
                 f"- Status: {_markdown_code(policy['status'])}",
                 f"- Source: {_markdown_code(policy['source'])}",
+                f"- Fingerprint: {_markdown_code(policy['fingerprint'])}",
                 f"- Rules checked: {policy['rules_checked']}",
             ]
         )
         if policy["violations"]:
             lines.extend(
-                f"- Violation: {violation['message']}"
-                for violation in policy["violations"]
+                f"- Violation {_markdown_code(violation_id)}: {violation['message']}"
+                for violation_id, violation in zip(
+                    policy["violation_ids"], policy["violations"], strict=True
+                )
             )
         else:
             lines.append("- Violations: none.")
+        exceptions = policy.get("exceptions")
+        if exceptions is not None:
+            lines.extend(
+                [
+                    "",
+                    "### Policy Exceptions",
+                    "",
+                    f"- Ledger: {_markdown_code(exceptions['source'])}",
+                    f"- Ledger fingerprint: {_markdown_code(exceptions['fingerprint'])}",
+                    f"- Evaluated on: {_markdown_code(exceptions['evaluated_on'])}",
+                    f"- Enforcement: {_markdown_code(exceptions['enforcement_status'])}",
+                    f"- Applied: {len(exceptions['applied'])}",
+                    f"- Expired: {len(exceptions['expired'])}",
+                    f"- Pending: {len(exceptions['pending'])}",
+                    f"- Stale: {len(exceptions['stale'])}",
+                    f"- Unresolved violations: {len(exceptions['unresolved_violation_ids'])}",
+                ]
+            )
+            lines.extend(
+                (
+                    f"- Excepted by {_markdown_code(item['exception']['id'])} "
+                    f"through {_markdown_code(item['exception']['expires_on'])}: "
+                    f"{item['violation']['message']}"
+                )
+                for item in exceptions["applied"]
+            )
 
     lines.extend(["", "## Attention Needed"])
     attention_items = snapshot["attention"]["items"]
@@ -481,7 +595,11 @@ def _append_rollout_checklist(
 
     git = snapshot["git"]
     metadata = build_rollout_metadata(snapshot, repository_id)
-    policy_passes = metadata["policy"]["status"] == "pass"
+    raw_policy_passes = metadata["policy"]["status"] == "pass"
+    enforcement_status = metadata["policy"].get(
+        "enforcement_status", metadata["policy"]["status"]
+    )
+    policy_passes = enforcement_status != "fail"
     is_clean_repository = metadata["git"]["clean"]
     readiness = metadata["readiness"]
     violation_count = len(policy["violations"])
@@ -497,7 +615,14 @@ def _append_rollout_checklist(
             "",
             f"- **Repository ID:** {_markdown_code(repository_id)}",
             f"- **Readiness:** {_markdown_code(readiness)}",
-            f"- **Policy evidence:** {_markdown_code(policy['status'])}",
+            (
+                f"- **Policy evidence:** {_markdown_code(policy['status'])}"
+                + (
+                    f" raw / {_markdown_code(enforcement_status)} enforcement"
+                    if enforcement_status != policy["status"]
+                    else ""
+                )
+            ),
             "",
             "### Automated Readiness",
             "",
@@ -508,13 +633,30 @@ def _append_rollout_checklist(
         ]
     )
 
-    if policy_passes:
+    if raw_policy_passes:
         lines.append("- [x] Repository baseline passes every configured policy rule.")
-    else:
+    elif policy_passes:
+        applied = metadata["policy"]["exception_decisions_applied"]
+        decision_label = "decision" if applied == 1 else "decisions"
         lines.append(
-            f"- [ ] Resolve {violation_count} policy {violation_label} before "
-            "enabling required CI."
+            f"- [x] {violation_count} raw policy {violation_label} covered by "
+            f"{applied} active exception {decision_label}."
         )
+    else:
+        unresolved = metadata["policy"].get(
+            "unresolved_violations", violation_count
+        )
+        unresolved_label = "violation" if unresolved == 1 else "violations"
+        if unresolved:
+            lines.append(
+                f"- [ ] Resolve {unresolved} policy {unresolved_label} before "
+                "enabling required CI."
+            )
+        else:
+            lines.append(
+                "- [ ] Reconcile expired, pending, or stale exception decisions "
+                "before enabling required CI."
+            )
 
     if git["is_repo"]:
         branch = git["branch"] or "detached HEAD"

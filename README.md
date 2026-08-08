@@ -193,6 +193,31 @@ means the scan completed and at least one team-policy rule failed. Policy
 failure takes precedence over exit code 5 when `--fail-on-attention` is also
 active.
 
+Record a temporary, reviewed exception without changing the shared policy:
+
+```bash
+repo-scout --format markdown --policy repo-scout-policy.toml \
+  --exception-ledger repo-scout-exceptions.toml \
+  --repository-id platform/api .
+```
+
+The exception ledger is explicit rather than auto-discovered. It must be a
+tracked direct regular file inside the scanned repository, the worktree must be
+clean, and the repository must have an initial commit. Every decision is bound
+to the exact repository ID, normalized policy fingerprint, and evidence-bound
+violation ID reported by an ordinary policy scan. Decisions require an owner,
+approver, single-line rationale, approval date, and expiration no more than 366
+days later. A changed policy, repository, numeric observation,
+forbidden-pattern match set, or Git finding cannot inherit the old approval.
+
+Repo Scout preserves the raw policy failure and reports a separate enforcement
+status. Exit code 0 is allowed only for `pass` or `pass-with-exceptions`;
+expired, pending, stale, unmatched, or partially covered decisions retain exit
+code 6 after evidence is written. Human names in the ledger are assertions,
+not authenticated identities, so protect changes with normal Git review and
+ownership controls. See [docs/policy-exceptions.md](docs/policy-exceptions.md)
+for the strict schema and operating sequence.
+
 Generate a first-repository rollout bundle from the same policy evidence:
 
 ```bash
@@ -218,8 +243,12 @@ The counts-only default omits repository IDs, branches, commits, policy
 fingerprints, and evidence paths; `--details` opts into repository-level
 output. Schema-2 bundles identify normalized policy rules and the scanned Git
 commit, so the aggregate can verify complete matching policy fingerprints
-across two or more repositories. Results remain bundle-reported and do not
-prove freshness. The aggregator accepts legacy schema-1 bundles, rejects
+across two or more repositories. When an exception ledger is supplied,
+schema-3 bundles retain the raw policy result and add only the ledger
+fingerprint plus decision, application, expiry, staleness, and unresolved
+counts. Rationales, owners, and approvers stay out of rollout metadata. Results
+remain bundle-reported and do not prove freshness. The aggregator accepts
+legacy schema-1 and schema-2 bundles, rejects
 duplicate IDs, duplicate JSON keys, and malformed or contradictory metadata,
 performs no uploads, and requires no API key. Duplicate-key errors JSON-escape
 the decoded key so presentation controls cannot create extra terminal lines.

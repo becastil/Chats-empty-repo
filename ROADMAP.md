@@ -2,17 +2,40 @@
 
 ## Delivery Goal
 
-- Reach 1,000 meaningful, tested commits without artificial commit splitting.
-- Update `COMMIT_GOAL.md` with the new count on every successful run.
+- Suspend the 1,000-commit objective at 330 commits. Market research found that
+  more implementation depth in the current category would increase code volume
+  without creating customer-derived defensibility.
+- Use the next 90 days to validate one narrow governance workflow with paying
+  teams and accumulate permissioned exception, remediation, and recurrence
+  evidence that a code clone would not possess.
 
 ## Near Term
 
-Revenue order follows the reviewed 2026-07-30 growth evidence: 135 additional
-primary artifact requests produced no attributed pilot request, and 130 of
-those requests were wheel traffic. Human-review the prepared outreach queue and
-execute only approved, source-identifiable attempts before adding another
-acquisition asset or paid-policy feature. Keep release counters directional;
-they are not users, leads, or revenue.
+The 2026-08-08 market review rates current defensibility at 2/10. Local
+execution, deterministic evidence, and hands-on rollout are a useful wedge but
+not a moat. Alint, Repolinter, Reposaur, GitHub rulesets, broader developer
+portals, and AI coding agents make generic scanning and policy checks a poor
+feature race.
+
+- Complete 20 qualified interviews and send 30 personalized, price-disclosed
+  design-partner offers. At least eight interviews must independently describe
+  the same cross-repository governance problem, and at least five must quantify
+  material engineering toil or risk.
+- Win three paid design partners within 60 days. Ask each buyer why GitHub
+  rulesets, alint, a portal, OPA, or an AI-written script does not solve the
+  problem. Fewer than two paid partners requires repositioning rather than more
+  product work.
+- Measure policy decisions, approved exceptions, remediation time, recurrence,
+  weekly CI use, and operator time. Keep raw source local and collect only
+  explicitly permissioned structured outcomes.
+- Do not build billing, license enforcement, generic checks, or another
+  acquisition asset before these conversations expose a repeated paid need.
+
+## Existing Operational Commitments
+
+The detailed distribution and outreach tasks below remain valid maintenance
+notes, but they are secondary to customer discovery and must not reactivate an
+hourly feature-production loop.
 
 - Resolve the active Sites plugin's trusted root packaging helper, allocate a
   fresh private candidate directory, and retain only the existing project's
@@ -139,7 +162,12 @@ they are not users, leads, or revenue.
 ## Revenue Validation
 
 - Sell three $299 pilots before building billing or license enforcement.
-- Validate weekly CI usage with at least two pilot teams.
+- Validate weekly CI usage with at least two of three pilot teams.
+- Convert at least one pilot to a recurring or annual agreement.
+- Reach 100 permissioned resolved exception decisions and show that at least
+  30% belong to repeatable patterns before claiming a data advantage.
+- Keep incremental onboarding below two operator hours per repository and
+  reduce rollout or remediation effort by 30% by the tenth deployment.
 
 ## Later
 

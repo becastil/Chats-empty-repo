@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+- Added explicit repository-local policy exception ledgers with strict schema,
+  exact repository, policy, and observed-violation binding, named human review,
+  bounded rationale, mandatory expiration, stable fingerprints, and tracked
+  clean-checkout enforcement.
+- Preserved raw policy failures beside a separate `pass-with-exceptions`
+  enforcement state; pending, expired, stale, unmatched, evidence-drifted, or
+  partially covered decisions now retain exit code 6 after report output.
+- Added privacy-safe rollout schema 3 and aggregate exception metrics without
+  exporting owners, approvers, or rationales, while preserving schema-1 and
+  schema-2 compatibility when no ledger is supplied.
+- Suspended the 1,000-commit objective at 330 and replaced it with a 90-day
+  customer-validation plan focused on paid design partners, repeat usage,
+  resolved exception decisions, remediation outcomes, and recurring revenue.
+- Expanded the dated competitor map with direct repository-policy tools and
+  developer-platform substitutes, explicitly rating current defensibility at
+  2/10 and prohibiting generic feature accumulation as a moat claim.
 - Required a separate `--confirm-not-sent` attestation before an approved
   outreach message can be canceled, preventing a real external send from being
   erased before its guarded contact record is written.

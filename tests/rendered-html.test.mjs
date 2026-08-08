@@ -33,7 +33,10 @@ test("server-renders the Repo Scout companion page", async () => {
 
   const html = await response.text();
   assert.match(html, /<title>Repo Scout \| Local repository policy for teams<\/title>/i);
-  assert.match(html, /One-file local repository snapshots/i);
+  assert.match(
+    html,
+    /Local repository policy, expiring exception decisions, and verifiable cross-repository rollout evidence/i,
+  );
   assert.match(html, /property="og:image" content="http:\/\/localhost\/og\.png"/i);
   assert.match(
     html,
@@ -63,11 +66,12 @@ test("server-renders the Repo Scout companion page", async () => {
   assert.doesNotMatch(html, /PYTHONPATH=src python3 -m repo_scout/i);
   assert.match(html, /Snapshot lab/i);
   assert.match(html, /id="why-teams-buy"/i);
-  assert.match(html, /Keep your scanners\. Add one repository-policy baseline across projects\./i);
+  assert.match(html, /One baseline\. Visible exceptions\. Evidence across projects\./i);
   assert.match(html, /Semgrep, SonarQube, linters, policy engines, and GitHub rulesets/i);
   assert.match(html, /One baseline around existing tools/i);
   assert.match(html, /Comparable evidence across 10 projects/i);
-  assert.match(html, /Hands-on help when projects differ/i);
+  assert.match(html, /Decisions without baseline drift/i);
+  assert.match(html, /reviewed exceptions record ownership, rationale, and expiration/i);
   assert.match(html, /No source upload to a hosted Repo Scout service\. The CLI stays free and open source\./i);
   assert.match(html, /Apply for the \$299 pilot/i);
   assert.match(html, /See the rollout evidence/i);
@@ -84,7 +88,7 @@ test("server-renders the Repo Scout companion page", async () => {
   assert.equal(countOccurrences(html, 'href="mailto:'), 1);
   assert.match(html, /id="team-pilot"/i);
   assert.ok(html.indexOf('id="why-teams-buy"') < html.indexOf('id="team-pilot"'));
-  assert.match(html, /Compare one policy across every pilot repository\./i);
+  assert.match(html, /Standardize policy and exceptions across 10 repositories\./i);
   assert.match(html, /submitted rollout bundles report the same normalized policy fingerprint/i);
   assert.doesNotMatch(html, /every rollout bundle enforced the same policy/i);
   assert.match(html, /\$299/i);
@@ -93,7 +97,8 @@ test("server-renders the Repo Scout companion page", async () => {
   assert.match(html, /reported policy \/ matched/i);
   assert.match(html, /3 \/ 3/i);
   assert.match(html, /policy fingerprints/i);
-  assert.match(html, /commits recorded/i);
+  assert.match(html, /exception applied/i);
+  assert.match(html, /ready \/ 1 exception/i);
   assert.match(html, /platform\/worker/i);
   assert.match(html, /remediation required/i);
   assert.match(html, /bundle-reported evidence/i);

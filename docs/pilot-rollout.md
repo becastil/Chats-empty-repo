@@ -148,7 +148,8 @@ request.
 
 1. Initialize or review the closest starter policy.
 2. Commit the policy and generate the first evidence bundle.
-3. Resolve policy violations and review additional attention findings.
+3. Resolve policy violations or commit an exact, expiring, customer-reviewed
+   exception decision; review additional attention findings.
 4. Add the verified GitHub Actions gate in a reviewed pull request.
 5. Require the check only after the baseline passes.
 6. Assign an owner and retain one week of CI evidence.
@@ -191,7 +192,8 @@ The $299 pilot is accepted through these concrete deliverables:
    pilot uses a customer-authored command integration or includes separately
    agreed custom integration work; do not imply shipped provider support.
 3. One current rollout bundle for every repository in the agreed scope,
-   recording either passing evidence or explicit remediation.
+   recording raw policy evidence, effective enforcement, any applied exception
+   count, or explicit remediation.
 4. One counts-only rollout summary, with repository details kept private unless
    the customer explicitly approves sharing them.
 5. One closeout record listing current readiness, approved exceptions, retained
@@ -209,6 +211,15 @@ repo-scout --format markdown \
   .
 repo-scout-rollout repo-scout-rollout.md second-repository-rollout.md
 ```
+
+When a reviewed exception is required, create and commit the repository-local
+ledger described in [policy-exceptions.md](policy-exceptions.md), then add
+`--exception-ledger repo-scout-exceptions.toml` to the repository command. Keep
+the full ledger and JSON report in the customer-approved private system.
+Schema-3 rollout metadata carries only decision counts and fingerprints; it
+does not export rationale, owner, or approver fields. A raw failure covered by
+current exact decisions may be `ready-for-ci`, but the raw failure remains
+visible and any stale, expired, pending, or unmatched decision blocks readiness.
 
 Apply `pilot-paid` only after payment is received. Apply `pilot-active` only
 after the first scoped repository has a reviewed policy committed, one

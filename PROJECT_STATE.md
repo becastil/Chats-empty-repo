@@ -8,9 +8,10 @@ The repository also includes a small hosted web companion that explains the CLI 
 
 Revenue is the primary product constraint. The free CLI is the adoption layer for a paid team policy and CI enforcement offer documented in `BUSINESS_MODEL.md`.
 
-The delivery goal is 1,000 meaningful commits. This update is commit 329 of
-1,000, with 671 remaining. Quality, test coverage, distribution, and revenue
-alignment take priority over commit volume.
+The former 1,000-commit delivery goal is suspended at commit 330 after the
+2026-08-08 market review found that additional implementation depth would not
+create defensibility. The active goal is a 90-day paid validation cycle around
+customer-specific governance decisions, remediation outcomes, and repeat use.
 
 ## Implemented
 
@@ -31,6 +32,15 @@ alignment take priority over commit volume.
 - CI gating with exit code 5 when attention findings are present.
 - Strict version-controlled TOML team policies for required files, repository size, and clean Git state.
 - Policy results in every report format with exit code 6 for CI violations.
+- Strict repository-local exception ledgers bound to the repository ID, shared
+  policy fingerprint, exact observed violation evidence, named owner and
+  approver, rationale, and a mandatory expiration of at most 366 days.
+- Raw policy failures preserved beside a separate `pass-with-exceptions`
+  enforcement result, with stale, pending, expired, partially covered, changed,
+  untracked, outside-repository, or dirty evidence failing closed.
+- Privacy-safe schema-3 rollout evidence and cross-repository totals for
+  exception ledger coverage, applied decisions, unresolved violations, expiry,
+  and staleness without exporting decision rationales or actors.
 - Five packaged starter profiles for baseline, Python, flexible Node, npm-only, and agent-ready services.
 - `repo-scout-policy` discovery, inspection, and overwrite-safe initialization commands.
 - A dogfooded GitHub Actions policy gate with read-only permissions and immutable action pins.
@@ -906,14 +916,27 @@ python3 scripts/audit_pilot_labels.py --repo becastil/Chats-empty-repo
 
 ## Next Small Task
 
-The reviewed 2026-07-30 growth baseline names acquisition as the current
-commercial bottleneck: primary artifact requests increased by 135, but no
-request entered the attributed pilot funnel. First human-review the five
-prepared outreach drafts below and execute only approved, source-identifiable
-attempts. Do not add another acquisition asset or paid-policy feature before
-five real attempts. The dated competitor-category review now supplies an
-honest response to scanner, policy-engine, hosting-control, and DIY objections;
-it does not change that execution priority or count as demand.
+Start the 90-day moat-validation cycle. Complete the first five of 20 qualified
+interviews and send the first five of 30 personalized, price-disclosed offers.
+Capture which substitute the buyer uses today, the measurable cost of the
+problem, why that substitute is insufficient, and whether exception history,
+remediation ownership, cross-host evidence, or implementation help changes the
+purchase decision. Do not count research, drafts, traffic, or free usage as
+demand, and do not add another generic scanner rule before customer evidence
+identifies a repeated paid need.
+
+For any paid design partner, use the versioned exception decision contract and
+record permissioned policy intent, repository archetype, decision outcome,
+time-to-green, recurrence, and 30/60/90-day use while keeping source and full
+rationales in the customer-approved private system. The first continuation
+gate is three paid partners within 60 days; fewer than two requires
+repositioning rather than another feature cycle.
+
+## Superseded Operational Backlog
+
+The earlier deployment and outreach notes below remain as maintenance context.
+They no longer define the primary roadmap and must not reactivate the paused
+hourly commit-count loop.
 
 The public site still advertises `v0.3.50`. Sites versions 46 and 47 are
 superseded and must not be deployed; version 47 predates the July 24 React

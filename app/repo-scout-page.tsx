@@ -63,17 +63,17 @@ const teamAdvantages = [
     copy: "Each submitted rollout bundle reports a normalized policy fingerprint, showing which projects match the baseline and which need review.",
   },
   {
-    title: "Hands-on help when projects differ",
-    copy: "Your team gets an agreed CI path, a rollout checklist, and help resolving projects that do not fit the standard neatly.",
+    title: "Decisions without baseline drift",
+    copy: "Keep raw failures visible while exact, reviewed exceptions record ownership, rationale, and expiration for repositories that cannot comply yet.",
   },
 ];
 
 const pilotBenefits = [
   "One shared TOML policy for up to 10 repositories",
   "Cross-repository rollout evidence with shared-policy verification",
+  "Reviewed exception decisions and remediation ownership",
   "CI rollout guidance for your existing workflow",
   "One custom policy pack for your repository standards",
-  "Direct feedback access and priority fixes",
 ];
 
 export default function RepoScoutPage({
@@ -218,12 +218,13 @@ export default function RepoScoutPage({
           <div className="moat-heading">
             <p className="section-number">04 / Why teams buy</p>
             <div>
-              <h2 id="moat-title">Keep your scanners. Add one repository-policy baseline across projects.</h2>
+              <h2 id="moat-title">One baseline. Visible exceptions. Evidence across projects.</h2>
               <p className="moat-lede">
                 Semgrep, SonarQube, linters, policy engines, and GitHub rulesets
                 solve different parts of code quality and governance. The $299
                 pilot pays for one local baseline, rollout across up to 10
-                projects, and help resolving mismatched evidence.
+                projects, exact temporary decisions, and help resolving
+                mismatched evidence.
               </p>
             </div>
           </div>
@@ -254,12 +255,13 @@ export default function RepoScoutPage({
         <section id="team-pilot" className="pilot-section" aria-labelledby="pilot-title">
           <div className="pilot-copy">
             <p className="section-number">05 / Founding team pilot</p>
-            <h2 id="pilot-title">Compare one policy across every pilot repository.</h2>
+            <h2 id="pilot-title">Standardize policy and exceptions across 10 repositories.</h2>
             <p className="pilot-lede">
               For software teams using coding agents across multiple repositories,
               Repo Scout turns local standards into comparable CI evidence and
               shows whether submitted rollout bundles report the same normalized
-              policy fingerprint, without uploading source code to a hosted Repo
+              policy fingerprint, which exceptions remain active, and what still
+              needs remediation without uploading source code to a hosted Repo
               Scout service.
             </p>
 
@@ -271,11 +273,11 @@ export default function RepoScoutPage({
               <div className="rollout-metrics" aria-label="Rollout evidence coverage">
                 <div><strong>3</strong><span>repositories</span></div>
                 <div><strong>3 / 3</strong><span>policy fingerprints</span></div>
-                <div><strong>3 / 3</strong><span>commits recorded</span></div>
+                <div><strong>1</strong><span>exception applied</span></div>
               </div>
               <ul className="rollout-repositories">
                 <li><code>platform/api</code><span>ready for CI</span></li>
-                <li><code>platform/web</code><span>ready for CI</span></li>
+                <li><code>platform/web</code><span>ready / 1 exception</span></li>
                 <li className="needs-action"><code>platform/worker</code><span>remediation required</span></li>
               </ul>
               <p className="rollout-caveat">

@@ -15,7 +15,7 @@ from .rollout import (
 )
 
 
-SUMMARY_SCHEMA_VERSION = 2
+SUMMARY_SCHEMA_VERSION = 3
 
 
 def build_rollout_summary(
@@ -59,8 +59,32 @@ def build_rollout_summary(
                 "policy_version": metadata["policy"]["version"],
                 "policy_fingerprint": metadata["policy"].get("fingerprint"),
                 "policy_status": metadata["policy"]["status"],
+                "policy_enforcement_status": metadata["policy"].get(
+                    "enforcement_status", metadata["policy"]["status"]
+                ),
                 "rules_checked": metadata["policy"]["rules_checked"],
                 "policy_violations": metadata["policy"]["violations"],
+                "exception_ledger_fingerprint": metadata["policy"].get(
+                    "exception_ledger_fingerprint"
+                ),
+                "exception_decisions_total": metadata["policy"].get(
+                    "exception_decisions_total", 0
+                ),
+                "exception_decisions_applied": metadata["policy"].get(
+                    "exception_decisions_applied", 0
+                ),
+                "exception_decisions_expired": metadata["policy"].get(
+                    "exception_decisions_expired", 0
+                ),
+                "exception_decisions_pending": metadata["policy"].get(
+                    "exception_decisions_pending", 0
+                ),
+                "exception_decisions_stale": metadata["policy"].get(
+                    "exception_decisions_stale", 0
+                ),
+                "unresolved_violations": metadata["policy"].get(
+                    "unresolved_violations", metadata["policy"]["violations"]
+                ),
                 "git_is_repo": metadata["git"]["is_repo"],
                 "git_branch": metadata["git"]["branch"],
                 "git_commit": metadata["git"].get("commit"),
@@ -80,6 +104,11 @@ def build_rollout_summary(
         for repository in repositories
         if repository["git_commit"] is not None
     ]
+    exception_fingerprints = [
+        repository["exception_ledger_fingerprint"]
+        for repository in repositories
+        if repository["exception_ledger_fingerprint"] is not None
+    ]
     shared_policy_verified = (
         len(repositories) > 1
         and len(fingerprints) == len(repositories)
@@ -94,6 +123,7 @@ def build_rollout_summary(
             "shared_policy_verified": shared_policy_verified,
             "policy_fingerprint_coverage": len(fingerprints),
             "git_commit_coverage": len(commits),
+            "exception_ledger_coverage": len(exception_fingerprints),
             "policy_versions": sorted(
                 {repository["policy_version"] for repository in repositories}
             ),
@@ -121,6 +151,47 @@ def build_rollout_summary(
             ),
             "total_policy_violations": sum(
                 repository["policy_violations"] for repository in repositories
+            ),
+            "policy_enforcement_pass": sum(
+                repository["policy_enforcement_status"] == "pass"
+                for repository in repositories
+            ),
+            "policy_enforcement_pass_with_exceptions": sum(
+                repository["policy_enforcement_status"]
+                == "pass-with-exceptions"
+                for repository in repositories
+            ),
+            "policy_enforcement_fail": sum(
+                repository["policy_enforcement_status"] == "fail"
+                for repository in repositories
+            ),
+            "repositories_with_applied_exceptions": sum(
+                repository["exception_decisions_applied"] > 0
+                for repository in repositories
+            ),
+            "total_exception_decisions": sum(
+                repository["exception_decisions_total"]
+                for repository in repositories
+            ),
+            "total_applied_exceptions": sum(
+                repository["exception_decisions_applied"]
+                for repository in repositories
+            ),
+            "total_expired_exceptions": sum(
+                repository["exception_decisions_expired"]
+                for repository in repositories
+            ),
+            "total_pending_exceptions": sum(
+                repository["exception_decisions_pending"]
+                for repository in repositories
+            ),
+            "total_stale_exceptions": sum(
+                repository["exception_decisions_stale"]
+                for repository in repositories
+            ),
+            "total_unresolved_violations": sum(
+                repository["unresolved_violations"]
+                for repository in repositories
             ),
             "repositories_with_attention": sum(
                 repository["attention_findings"] > 0
@@ -154,12 +225,14 @@ def format_rollout_summary(report: dict[str, Any]) -> str:
     )
     if scope["shared_policy_verified"]:
         scope_text = (
-            "Scope: bundle-reported; shared policy verified by fingerprints; "
+            "Scope: bundle-reported; shared base policy verified by fingerprints; "
             "freshness is not verified"
         )
         policy_identity_status = "shared policy verified"
     else:
-        scope_text = "Scope: bundle-reported; freshness and shared policy are not verified"
+        scope_text = (
+            "Scope: bundle-reported; freshness and shared base policy are not verified"
+        )
         policy_identity_status = "shared policy not verified"
 
     lines = [
@@ -175,6 +248,24 @@ def format_rollout_summary(report: dict[str, Any]) -> str:
             f"Policy: {summary['policy_pass']} pass / "
             f"{summary['policy_fail']} fail / "
             f"{summary['total_policy_violations']} {violation_label}"
+        ),
+        (
+            "Policy enforcement: "
+            f"{summary['policy_enforcement_pass']} pass / "
+            f"{summary['policy_enforcement_pass_with_exceptions']} "
+            "pass with exceptions / "
+            f"{summary['policy_enforcement_fail']} fail / "
+            f"{summary['total_unresolved_violations']} unresolved"
+        ),
+        (
+            "Exception decisions: "
+            f"{summary['total_applied_exceptions']} applied across "
+            f"{summary['repositories_with_applied_exceptions']} repositories / "
+            f"{summary['total_expired_exceptions']} expired / "
+            f"{summary['total_pending_exceptions']} pending / "
+            f"{summary['total_stale_exceptions']} stale; "
+            f"{scope['exception_ledger_coverage']}/"
+            f"{summary['input_reports']} ledgers"
         ),
         (
             f"Policy identity: {scope['policy_fingerprint_coverage']}/"
@@ -211,12 +302,19 @@ def format_rollout_summary(report: dict[str, Any]) -> str:
             f"  {repository['repository_id']}: {repository['readiness']}; "
             f"policy {repository['policy_status']} "
             f"({repository['policy_violations']} {repository_violation_label}); "
+            f"enforcement {repository['policy_enforcement_status']} "
+            f"({repository['unresolved_violations']} unresolved, "
+            f"{repository['exception_decisions_applied']} exceptions applied); "
             f"{git_status}; {repository['attention_findings']} attention "
             f"{repository_attention_label}"
         )
         lines.append(
             "    policy fingerprint: "
             f"{repository['policy_fingerprint'] or 'unavailable'}"
+        )
+        lines.append(
+            "    exception ledger fingerprint: "
+            f"{repository['exception_ledger_fingerprint'] or 'unavailable'}"
         )
         lines.append(
             f"    Git commit: {repository['git_commit'] or 'unavailable'}"
